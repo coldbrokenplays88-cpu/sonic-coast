@@ -1,0 +1,72 @@
+A full pixel-art pass across the game. Buildings, roofs, platforms, ramps, loops, rails, supports, spikes, enemies, springs, vents, monitors, signs, debris, water, effects, and UI. Everything should have deliberate, consistent pixel detail with Sonic Mania as the quality reference.
+
+Rebuild the city’s foreground architecture. Add varied building shapes and district details; match the purple/indigo, cyan, magenta, and fire-orange palette. Finish roofs, parapets, sides, and platform connections. Fix abrupt cutoffs and buildings extending awkwardly beyond their platforms, including the examples at 0:18–0:22 and 1:02.
+
+Refine the background. Preserve the burning-city composition while correcting the pixel-style mismatch with Sonic. Keep fire, smoke, and subtle sky motion consistent with the art. Add vertical background movement so the high route visibly gains altitude.
+
+Fix visual glitches and route visibility. Investigate the scenery popping, overlapping, or obscuring upcoming terrain throughout the level, particularly around Neon Switchback.
+
+Reveal secret interiors smoothly. Fade their covering facades to partial transparency as Sonic enters, keep the interior readable, and restore the facade smoothly after he leaves.
+
+Fix the camera. Investigate the jump at 0:04–0:07 and improve framing during fast movement, spring launches, vertical climbs, and landings.
+
+Check the tilted platform at 0:06. Fix the reported fall-through collision. If its upward tilt stays, add damage, broken supports, and debris to explain it visually.
+
+Improve falling-debris warnings. Larger, clearer, animated pixel-art warnings with enough advance notice to react.
+
+Build your new low route before the original tower:
+- Normal platforms lead onto a fallen, destroyed building.
+- Its lower spring catches players carrying momentum.
+- That spring sends Sonic into the burning, damaged first tower of the glass H-shaped building, with a scripted landing in the central pool.
+- The pool booster launches him toward the tilted second tower.
+- Rooftop platforms offer a leftward exploration branch to a boost monitor. Only the first four platforms are visible from the initial approach.
+- Going right passes an enemy and reaches the shared junction.
+- A short building climb reconnects to the original tower from 1:05.
+
+Build your new high route:
+- Reach the upper spring platform by slowing down and jumping from the fallen building.
+- Complete two forgiving spring jumps, then a third requiring slight aim.
+- Choose the left spring platform; the wrong rightward choice encounters an enemy and drops toward the lower route.
+- Aim for a horizontally moving spring platform. Repeated bounces remain possible while waiting for alignment.
+- The final spring launches onto a fast rail with enemies.
+- The rail rejoins the shared junction safely.
+- Tune the exact fall path and moving-platform timing during development.
+
+Fix speed transitions. Make rail and boost exits lead into usable landings, ramps, or connecting terrain before precise platforming. Check the earlier rooftop vent overshoot too.
+
+Review lift versus platforming balance. Compare traversal times, including catching the lift at its lowest point. Your three platforms cycling in a circle remain a proposed replacement, pending your mockup.
+
+Make a minimal base-speed increase. Preserve the quick feel you observed without boost, and tune braking, deceleration, sliding, and low-speed precision.
+
+Improve the spin dash. Hold to charge, release to launch, strong animation and sound feedback, sustained rolling momentum, and clear enemy-hit behavior.
+
+Introduce boost monitors.
+- Start each act with a full gauge.
+- Only lightning monitors replenish boost afterward; remove refills from rings, enemies, grinding, and other existing sources.
+- Releasing boost preserves the remainder.
+- Guaranteed monitors before mandatory boost sections; scarce optional ones for secrets.
+- Handle deaths and monitor resets so required sections remain possible.
+
+Give designated skip rails unlimited boost. Free boost lasts while grinding those rails and does not consume or refill the stored gauge. Check enemy visibility and the exit at full speed.
+
+Redesign Sonic using your reference. Lighter, brighter blue; slimmer, expressive proportions; swept quills; readable eyes, mouth, hands, and poses. Build the design to support future cutscenes.
+
+Renew Sonic’s animations. Prioritize expressiveness and fluidity, with enough distinct frames and clean transitions across movement states. Max-speed normal running uses open hands held back, forward lean, flowing quills, and a circular shoe cycle; boost keeps closed fists. Verify consistent foot placement and collision alignment.
+
+Replace the spring visuals and animation. Use your red-and-yellow spring reference, with compression, extension, rebound, and return-to-idle frames. Support the launch directions required by both routes.
+
+Create the pool booster. Use the Chemical Plant mechanism as the visual and motion reference, with animated arrows/spinning parts, readable underwater placement, and the launch toward the second tower.
+
+Revamp all sound effects across both acts. Original sounds inspired by Sonic Mania for movement, jumps, landings, spin dash, boost, rails, springs, vents, pool booster, rings, monitors, enemies, hazards, debris warnings, damage, death, checkpoints, menus, and completion. Balance volume and synchronize sounds with actions.
+
+Simplify the HUD. Ring asset and count left; unlabeled timer centered; lives beside pause right. Remove gameplay score and level/checkpoint text. Show score on the completion screen and reduce the bar’s visual weight.
+
+Add fullscreen and remove touchscreen controls. Keep keyboard play for your Magic Keyboard, with proper game/HUD sizing and an accessible fullscreen exit.
+
+Check checkpoint and recovery fairness. Sensible retries at the new junction, clear falls from missed spring jumps, and no trapping between structures or losing the camera.
+
+Verify the speed display. Check that its numbers consistently represent movement, including rail speed.
+
+Profile and improve performance. Compare before and after, optimize expensive scenery and effects where needed, and check busy rail, debris, fire, smoke, and spring sections. Actual iPad performance will need your device check.
+
+Verify the finished game. Both new routes, secrets, boost availability, respawns, moving platforms, collisions, camera, background ascent, animation transitions, sound, fullscreen, keyboard controls, and visual consistency throughout.

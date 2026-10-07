@@ -1,0 +1,29 @@
+{
+  "assets": [
+    {
+      "file": "assets/sonic-supplemental.png",
+      "sha256": "5011679c3a47f7988d8baa8ce1478bcc2f21d849183360f8cf9ca20a648d249d",
+      "size": [
+        1774,
+        887
+      ],
+      "frames": 32,
+      "source": "Generated supplement from supplied Sonic expression reference and October 7 atlas; source sheets unchanged."
+    },
+    {
+      "file": "assets/sonic-peelout-cycle.png",
+      "sha256": "e130c4bee80075b2b3dab6d6c61d32d2a5dbf8cd3b824aecb21dd4ddbf39053d",
+      "size": [
+        1774,
+        887
+      ],
+      "frames": 8,
+      "source": "Generated supplement from supplied Sonic expression reference and October 7 atlas; source sheets unchanged."
+    }
+  ],
+  "normalFast": "8 distinct open-handed circular-shoe poses",
+  "boost": "8 closed-fist poses",
+  "grind": "8 planted-foot quill-flow poses",
+  "transitions": "2 entry, 2 exit, 2 landing, 2 charge",
+  "normalization": "Uniform per-sheet scale based on source-cell width; eye-relative body anchors and common row foot baseline."
+}

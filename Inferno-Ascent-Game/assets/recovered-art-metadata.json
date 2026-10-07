@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-07",
+  "assets": [
+    {
+      "file": "assets/sonic-recovered-speedster.png",
+      "sha256": "ff44adfa2adaa1c12e4b4bc0a2dbfe4901c7a67f234d57489f91b7fc86dbd0d1",
+      "size": [
+        1448,
+        1086
+      ],
+      "frames": 48
+    },
+    {
+      "file": "assets/sonic-recovered-peelout.png",
+      "sha256": "fb94cf2c1f5db18eaf58e831b503a75b930c93b89454a3702f93e7179a37df4a",
+      "size": [
+        1448,
+        1086
+      ],
+      "frames": 48
+    },
+    {
+      "file": "assets/city-recovered-burning.png",
+      "sha256": "4774fc6c894e9a79ccb335314bc7f2ffecd7b26bb19d61561955a06883b2780f",
+      "size": [
+        1536,
+        1024
+      ]
+    }
+  ],
+  "notes": "Original uploads are byte-for-byte preserved. Runtime source rectangles map the 8x6 atlases; no source pixels were regenerated or recolored."
+}

@@ -12,12 +12,29 @@ const cityMaterials=[
  {body:'#283046',shade:'#151e31',light:'#53607a',edge:'#819099',window:'#769ab0',glow:'#b6d0d6',cool:'#c987a3'},
  {body:'#332b43',shade:'#1c1f32',light:'#65566d',edge:'#ac8b89',window:'#c48c77',glow:'#ebbd86',cool:'#777fa3'}
 ];
+const cityFacadeTiles=new Map();
 function cityFacade(left,right,roofY,seed=0,exposed=false,landmark=null){
- const p=cityMaterials[Math.abs(seed)%4],x1=Math.max(left,cam-40),x2=Math.min(right,cam+W/zoom+40),top=Math.max(roofY,camY-40),bottom=camY+H/zoom+80;if(x2<=x1||bottom<=top)return;
+ left=Math.floor(left/2)*2;right=Math.floor(right/2)*2;roofY=Math.floor(roofY/2)*2;
+ if(!document.createElement)return paintCityFacade(left,right,roofY,seed,exposed,landmark);
+ const x1=Math.max(left,cam-40),x2=Math.min(right,cam+W/zoom+40),y1=Math.max(roofY,camY-40),y2=camY+H/zoom+80;
+ if(x2<=x1||y2<=y1)return;
+ for(let y=Math.floor(y1/256)*256;y<y2;y+=256)for(let x=Math.floor(x1/256)*256;x<x2;x+=256){
+  const key=[left,right,roofY,seed,exposed,landmark,x,y].join('/');let texture=cityFacadeTiles.get(key);
+  if(!texture){texture=document.createElement('canvas');texture.width=128;texture.height=128;const dc=texture.getContext('2d');dc.scale(.5,.5);dc.translate(-x,-y);cityRasterContext=dc;
+   try{paintCityFacade(left,right,roofY,seed,exposed,landmark,{left:x,right:x+256,top:y,bottom:y+256})}finally{cityRasterContext=null}
+   if(cityFacadeTiles.size>=128)cityFacadeTiles.delete(cityFacadeTiles.keys().next().value);cityFacadeTiles.set(key,texture);
+  }
+  ctx.drawImage(texture,x,y,256,256);
+ }
+}
+function paintCityFacade(left,right,roofY,seed=0,exposed=false,landmark=null,clip){
+ left=Math.floor(left/2)*2;right=Math.floor(right/2)*2;roofY=Math.floor(roofY/2)*2;
+ const limitLeft=clip?.left??cam-40,limitRight=clip?.right??cam+W/zoom+40,limitTop=clip?.top??camY-40,limitBottom=clip?.bottom??camY+H/zoom+80;
+ const p=cityMaterials[Math.abs(seed)%4],x1=Math.max(left,limitLeft),x2=Math.min(right,limitRight),top=Math.max(roofY,limitTop),bottom=limitBottom;if(x2<=x1||bottom<=top)return;
  cityPixelRect(x1,top,x2-x1,bottom-top,p.body);
  // Solid side faces and masonry texture: no transparent foreground silhouettes.
  for(let yy=Math.ceil(top/32)*32;yy<bottom;yy+=32){cityPixelRect(x1,yy,x2-x1,2,p.shade);for(let xx=Math.ceil((x1-(Math.floor(yy/32)%2)*24)/48)*48+(Math.floor(yy/32)%2)*24;xx<x2;xx+=48){const k=Math.abs(Math.floor(xx/48)*7+Math.floor(yy/32)*13+seed)%7;cityPixelRect(xx+10,yy+12,6,2,k===0?p.edge:p.light);cityPixelRect(xx+29,yy+23,8,2,p.shade)}}
- const width=right-left,bay=exposed?150:110,start=Math.ceil((x1-left-12)/bay);
+ const width=right-left,bay=exposed?150:110,start=Math.max(0,Math.floor((x1-left-12)/bay));
  for(let c=start;c*bay+left+12<x2;c++){const x=left+12+c*bay,wide=Math.min(bay-18,right-x-12);if(wide<16)continue;
   cityPixelRect(x,top,wide,bottom-top,p.shade);cityPixelRect(x-4,top,4,bottom-top,p.light);cityPixelRect(x+wide,top,4,bottom-top,p.light);
   for(let y=roofY+24+Math.max(0,Math.floor((top-roofY-24)/96))*96;y<bottom;y+=96){const key=Math.abs(c*17+Math.floor((y-roofY)/64)*11+seed)%13;
@@ -27,18 +44,18 @@ function cityFacade(left,right,roofY,seed=0,exposed=false,landmark=null){
    if(key===0&&seed>35){cityPixelRect(x+wide/2,y+30,10,12,'#ff742e');cityPixelRect(x+wide/2+2,y+25,6,12,'#ffb747');cityPixelRect(x+wide/2+4,y+32,2,8,'#ffe39c')}
   }
  }
- if(left>=cam-40){cityPixelRect(left,top,6,bottom-top,p.edge);cityPixelRect(left+6,top,8,bottom-top,p.light)}
- if(right<cam+W/zoom+40){cityPixelRect(right-18,top,14,bottom-top,p.shade);cityPixelRect(right-4,top,4,bottom-top,'#0d1428')}
- if(landmark==='BROADCAST RELAY'){const x=right-66;for(let y=roofY+34+Math.max(0,Math.floor((top-roofY)/120))*120;y<bottom;y+=120){cityPixelRect(x,y,6,98,p.edge);cityPixelLine(x,y+30,x-30,y+45,p.light,6);cityPixelOval(x-34,y+45,24,12,p.edge);cityPixelOval(x-34,y+43,18,6,p.shade);cityPixelRect(x-36,y+30,4,14,p.cool)}}
+ if(left>=limitLeft){cityPixelRect(left,top,6,bottom-top,p.edge);cityPixelRect(left+6,top,8,bottom-top,p.light)}
+ if(right<limitRight){cityPixelRect(right-18,top,14,bottom-top,p.shade);cityPixelRect(right-4,top,4,bottom-top,'#0d1428')}
+ if(landmark==='BROADCAST RELAY'){const x=right-66;for(let y=roofY+34+Math.max(0,Math.floor((top-roofY-154)/120))*120;y<bottom+8;y+=120){cityPixelRect(x,y,6,98,p.edge);cityPixelLine(x,y+30,x-30,y+45,p.light,6);cityPixelOval(x-34,y+45,24,12,p.edge);cityPixelOval(x-34,y+43,18,6,p.shade);cityPixelRect(x-36,y+30,4,14,p.cool)}}
  else if(landmark==='NEON WORKS'){const x=left+24;cityPixelRect(x,top,54,bottom-top,p.shade);for(let y=roofY+34+Math.max(0,Math.floor((top-roofY)/96))*96;y<bottom;y+=96){cityPixelRect(x+8,y,36,56,p.body);cityPixelLine(x+17,y+8,x+32,y+22,'#c67baf',4);cityPixelLine(x+32,y+22,x+17,y+36,'#c67baf',4);cityPixelRect(x+8,y+48,32,2,'#6db1ba')}}
- else if(landmark==='WEST TOWER'){const x=left+width*.45;cityPixelRect(x,top,46,bottom-top,'#11182b');for(let y=Math.ceil(top/96)*96;y<bottom;y+=96){cityPixelRect(x-12,y+30,58,28,p.shade);cityPixelLine(x-30,y,x+45,y+70,p.edge,6)}}
- else if(landmark==='EAST WORKSITE'){const x=right-58;cityPixelRect(x,top,24,bottom-top,'#6a554a');for(let y=Math.ceil(top/64)*64;y<bottom;y+=64){cityPixelLine(x,y,x+22,y+54,'#c59562',4);cityPixelLine(x+22,y,x,y+54,'#a77958',4)}}
- else if(landmark==='HELIPAD ACCESS'){const x=right-95;cityPixelRect(x,top,54,bottom-top,'#343d4f');for(let y=Math.ceil(top/48)*48;y<bottom;y+=48){cityPixelRect(x+4,y,46,6,p.edge);cityPixelRect(x+12,y+10,26,24,p.shade)}}
+ else if(landmark==='WEST TOWER'){const x=left+width*.45;cityPixelRect(x,top,46,bottom-top,'#11182b');for(let y=Math.floor((top-96)/96)*96;y<bottom+8;y+=96){cityPixelRect(x-12,y+30,58,28,p.shade);cityPixelLine(x-30,y,x+45,y+70,p.edge,6)}}
+ else if(landmark==='EAST WORKSITE'){const x=right-58;cityPixelRect(x,top,24,bottom-top,'#6a554a');for(let y=Math.floor((top-64)/64)*64;y<bottom+8;y+=64){cityPixelLine(x,y,x+22,y+54,'#c59562',4);cityPixelLine(x+22,y,x,y+54,'#a77958',4)}}
+ else if(landmark==='HELIPAD ACCESS'){const x=right-95;cityPixelRect(x,top,54,bottom-top,'#343d4f');for(let y=Math.floor((top-48)/48)*48;y<bottom;y+=48){cityPixelRect(x+4,y,46,6,p.edge);cityPixelRect(x+12,y+10,26,24,p.shade)}}
 }
 function cityPillar(x,y,bottom,steel=false){const p=cityMaterials[steel?2:0];cityPixelRect(x,y,steel?16:30,bottom-y,p.shade);cityPixelRect(x,y,steel?4:6,bottom-y,p.edge);cityPixelRect(x+6,y,steel?6:16,bottom-y,p.body);for(let yy=Math.ceil(y/52)*52;yy<bottom;yy+=52){cityPixelRect(x-4,yy,steel?24:38,6,p.light);if(steel)cityPixelLine(x+4,yy+8,x+12,yy+45,p.light,2)}}
 function drawPixelCityStructures(){
- for(const b of level.buildings){if(b.scenery)continue;const roof=b.roofId&&level.surfaces.find(s=>s.id===b.roofId),top=roof?yOn(roof,b.x)+26:b.y;if(b.x+b.w<cam-40||b.x>cam+W/zoom+40)continue;cityFacade(b.x,b.x+b.w,top,b.seed,!!b.exposed,b.landmark)}
- for(const s of level.surfaces){if(!active(s)||s.wallCap)continue;const q=pose(s),left=Math.max(q.x1,cam-40),right=Math.min(q.x2,cam+W/zoom+40),type=s.cityType,bottom=camY+H/zoom+80;if(right<=left||Math.min(q.y1,q.y2)>bottom||type==='interior')continue;
+ for(const b of level.buildings){if(b.scenery)continue;const roof=b.roofId&&surfaceById(b.roofId),top=roof?Math.min(roof.y1,roof.y2)+26:b.y;if(b.x+b.w<cam-40||b.x>cam+W/zoom+40)continue;ctx.save();ctx.globalAlpha=b.interiorOpacity??1;if(roof&&roof.y1!==roof.y2){const left=Math.max(b.x,cam-40),right=Math.min(b.x+b.w,cam+W/zoom+40),bottom=camY+H/zoom+80;ctx.beginPath();ctx.moveTo(left,bottom);for(let x=Math.floor(left/2)*2;x<=right;x+=2){const y=Math.floor((yOn(roof,x)+26)/2)*2;ctx.lineTo(x,y);ctx.lineTo(x+2,y)}ctx.lineTo(right,bottom);ctx.closePath();ctx.clip()}cityFacade(b.x,b.x+b.w,top,b.seed,!!b.exposed,b.landmark);ctx.restore()}
+ for(const s of level.surfaces){if(!active(s)||s.wallCap||s.secretDepth>4&&!level.middleSection?.secretRevealed)continue;const q=pose(s),left=Math.max(q.x1,cam-40),right=Math.min(q.x2,cam+W/zoom+40),type=s.cityType,bottom=camY+H/zoom+80;if(right<=left||Math.min(q.y1,q.y2)>bottom||type==='interior')continue;
   if(type==='rooftop'&&!s.facade&&!s.roof){cityFacade(q.x1,q.x2,Math.min(q.y1,q.y2)+26,Math.floor(s.x1/810),false);continue}
   if(s.roof||s.facade){if(s.facade){for(const x of [q.x1+12,q.x2-24]){const y=yOn(s,x)+26;cityPixelLine(x,y,x+26,y+48,'#68778b',4);cityPixelRect(x+22,y+43,12,8,'#a28287')}}continue}
   if(s.kind==='moving'){
@@ -90,9 +107,17 @@ function paintPixelCityDeck(s,left,right){
 const ringPixels=[
  '.....gggggg.....','...ggwwwwwwgg...','..gwyyyyyywwgg..','.gwyggssssgywgg.','.wygs......sgwg.','gwyg........gywg','gyg..........gyg','gyg..........gyg','gyg..........gyg','gyg..........gyg','gwg..........gwg','.gwg........gwg.','.gywg......gwyg.','..gywwyyyywwyg..','...ggwwwwwwgg...','.....ssssss.....'
 ],ringPalette={g:'#efa900',y:'#f4ef00',w:'#f4f1ec',s:'#954100'};
-function drawPixelRing(x,y,scale=1){const width=Math.max(4,Math.round(16*scale)),left=Math.round(x-width/2),top=Math.round(y-12);for(let row=0;row<16;row++)for(let col=0;col<16;col++){const key=ringPixels[row][col];if(key==='.')continue;const a=left+Math.round(col*width/16),b=left+Math.round((col+1)*width/16);if(b>a){ctx.fillStyle=ringPalette[key];ctx.fillRect(a,top+Math.floor(row*1.5),b-a,Math.ceil((row+1)*1.5)-Math.floor(row*1.5))}}}
+const pixelRingTextures=new Map();
+function paintPixelRing(dc,width,left=0,top=0){for(let row=0;row<16;row++)for(let col=0;col<16;col++){const key=ringPixels[row][col];if(key==='.')continue;const a=left+Math.round(col*width/16),b=left+Math.round((col+1)*width/16);if(b>a){dc.fillStyle=ringPalette[key];dc.fillRect(a,top+Math.floor(row*1.5),b-a,Math.ceil((row+1)*1.5)-Math.floor(row*1.5))}}}
+function drawPixelRing(x,y,scale=1){const width=Math.max(4,Math.round(16*scale)),left=Math.round(x-width/2),top=Math.round(y-12);if(!document.createElement)return paintPixelRing(ctx,width,left,top);let texture=pixelRingTextures.get(width);if(!texture){texture=document.createElement('canvas');texture.width=width;texture.height=24;paintPixelRing(texture.getContext('2d'),width);pixelRingTextures.set(width,texture)}ctx.drawImage(texture,left,top)}
+
 function drawPixelAirDevice(d,spring=false){const pulse=runFrames-(d.firedAt??-100),y=d.y;if(d.hidden){for(let i=0;i<3;i++){const age=(runFrames*.003+i/3)%1;cityPixelRect(d.x-10+i*9,y-18-age*250,2,4,i%2?'#ac7e62':'#d59a64')}cityPixelRect(d.x-26,y-8,52,8,'#343342');for(let i=0;i<6;i++)cityPixelRect(d.x-22+i*8,y-7,4,5,'#171e30');return}
- if(spring){cityPixelRect(d.x-18,y-8,36,8,'#8b3f60');cityPixelRect(d.x-16,y-10,32,4,'#e7b883');for(let j=0;j<3;j++)cityPixelRect(d.x-11+j*7,y-5,4,5,'#e6dcb5');return}
+ if(spring){
+  // Keep the collision anchor fixed while the approved cap compresses and rebounds.
+  const firing=pulse>=0&&pulse<20,offset=firing?(pulse<3?4:-Math.round(Math.sin((pulse-3)/17*Math.PI)*9)*2):0;
+  if(firing){cityPixelRect(d.x-18,y-4,36,4,'#484455');for(let yy=y-6;yy>y-8+offset;yy-=4){cityPixelRect(d.x-10,yy,20,2,'#e6dcb5');cityPixelRect(d.x-8+(Math.floor((y-yy)/4)%2)*12,yy-2,4,2,'#92869c')}}
+  cityPixelRect(d.x-18,y-8+offset,36,8,'#8b3f60');cityPixelRect(d.x-16,y-10+offset,32,4,'#e7b883');for(let j=0;j<3;j++)cityPixelRect(d.x-11+j*7,y-5+offset,4,5,'#e6dcb5');return
+ }
  cityPixelRect(d.x-28,y-12,56,12,'#252c45');cityPixelRect(d.x-26,y-14,52,4,'#9aa8ac');cityPixelRect(d.x-26,y-10,52,4,'#5e7688');for(let x=d.x-20;x<d.x+22;x+=8){cityPixelRect(x,y-10,4,8,'#152438');cityPixelRect(x,y-10,4,2,'#b1bbc1')}
  for(let i=0;i<4;i++){const rise=(runFrames*.7+i*13)%56,xx=d.x-18+i*12;cityPixelRect(xx,y-20-rise,2,8,'#82b8c5');cityPixelRect(xx-2,y-22-rise,6,2,'#c3d7d8')}
  if(pulse>=0&&pulse<12){cityPixelRect(d.x-22,y-18,44,2,'#c3eef0');cityPixelRect(d.x-16,y-26-pulse*2,32,2,'#82b8c5')}

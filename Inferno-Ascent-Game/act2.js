@@ -2,12 +2,13 @@
 function selectAct(act){selectedAct=act===2?2:1;setup();mode='ready';show(selectedAct===2?'City on<br><em>the brink.</em>':'Ready.<br><em>Gotta go.</em>',selectedAct===2?'Through ruined streets and exposed towers.<br>Reach the rooftop helipad.':'Build momentum. Jump the rails and roll through tunnels.',selectedAct===2?'PLAY ACT 02':'PLAY ACT 01');$('#act-select').value=String(selectedAct)}
 function resetAct2(){if(level.act!==2)return;for(const group of level.collapseGroups||[])group.triggered=false;for(const d of level.debris){d.triggered=d.x<level.checkpoints[checkpoint].x;d.age=d.triggered?240:0}for(const e of level.events)e.age=e.trigger<level.checkpoints[checkpoint].x?150:-1;for(const l of level.loops){l.used=l.x<level.checkpoints[checkpoint].x;l.solved=false}for(const h of level.hazards)if(h.type==='breakable')h.broken=!!h.broken&&h.x<level.checkpoints[checkpoint].x}
 function launchAirDevice(device){
- p.airSpeedLimit=device.airSpeedLimit??null;if(p.airSpeedLimit)p.vx=Math.max(-p.airSpeedLimit,Math.min(p.airSpeedLimit,p.vx));p.jumpAttack=true;p.vy=-device.power;p.ground=false;p.surface=null;p.rolling=false;p.roll=true;p.poseJumpFrame=runFrames;p.brakeActive=false;p.stopFrame=-100;coyote=0;jumpBuffer=0;p.airLaunchUntil=runFrames+Math.ceil(device.power/.58);device.firedAt=runFrames;sparks(device.x,device.y-10,6,device.cityVent?'#9be3ef':'#ffe68b');beep(device.cityVent?560:750,.12);
+ if(device.launchX!==undefined)p.vx=device.launchX;if(device.id==='mid-low-spring')p.poolApproach=true;if(device.poolBooster)p.poolExit=true;
+ p.airSpeedLimit=device.airSpeedLimit??null;if(p.airSpeedLimit)p.vx=Math.max(-p.airSpeedLimit,Math.min(p.airSpeedLimit,p.vx));p.jumpAttack=true;p.vy=-device.power;p.ground=false;p.surface=null;p.rolling=false;p.roll=true;p.poseJumpFrame=runFrames;p.brakeActive=false;p.stopFrame=-100;coyote=0;jumpBuffer=0;p.airLaunchUntil=runFrames+Math.ceil(device.power/.58);device.firedAt=runFrames;sparks(device.x,device.y-10,6,device.cityVent?'#9be3ef':'#ffe68b');gameSound(device.poolBooster?'pool':device.cityVent?'vent':'spring',{launch:!!device.poolBooster});
 }
 function beginLoop(l){p.brakeActive=false;p.brakeAge=0;p.stopFrame=-100;p.loop={id:l.id,theta:0,speed:Math.abs(p.vx)};p.x=l.x;p.y=l.y-20;p.vy=0;p.ground=true;p.surface=null;l.used=true}
 function updateLoop(){const l=level.loops.find(l=>l.id===p.loop.id),q=p.loop;p.lastX=p.x;p.lastY=p.y;
- const want=keys.has('ShiftLeft')||keys.has('ShiftRight')||keys.has('KeyX')||keys.has('MouseBoost');p.boosting=want&&boost>0&&!p.boostLocked;
- if(p.boosting){q.speed+=(23-q.speed)*.14;boost=Math.max(0,boost-.5);if(!boost)p.boostLocked=true}else{q.speed+=-.58*Math.sin(q.theta)-.012+(keys.has('ArrowRight')||keys.has('KeyD')?.06:0);boost=Math.min(BOOST_MAX,boost+.008)}
+ const want=keys.has('ShiftLeft')||keys.has('ShiftRight')||keys.has('KeyX')||keys.has('MouseBoost');updateBoostState(want);
+ if(p.boosting){q.speed+=(23-q.speed)*.14;}else{q.speed+=-.58*Math.sin(q.theta)-.012+(keys.has('ArrowRight')||keys.has('KeyD')?.06:0);}
  q.speed=Math.min(24,q.speed);
  const detach=jumpBuffer>0||(q.speed<5.5&&q.theta>Math.PI*.3&&q.theta<Math.PI*1.3);
  if(detach){p.vx=Math.cos(q.theta)*Math.max(5,q.speed);p.vy=-Math.sin(q.theta)*q.speed-(jumpBuffer?8:0);if(jumpBuffer){p.jumpAttack=true;stats.jumps++;p.poseJumpFrame=runFrames}jumpBuffer=0;p.loop=null;p.ground=false;p.surface=null;return true}
@@ -18,11 +19,11 @@ function updateLoop(){const l=level.loops.find(l=>l.id===p.loop.id),q=p.loop;p.l
 function updateAct2(){if(level.act!==2)return;
  for(const l of level.loops)if(!p.loop&&!l.used&&p.ground&&p.vx>9&&p.lastX<=l.x&&p.x>=l.x&&Math.abs(feet()-l.y)<18)beginLoop(l);
  for(const e of level.events)if(e.age<0&&p.x>e.trigger){e.age=0;sparks(e.x,e.y,12,'#ff894d');shake=Math.max(shake,4)}else if(e.age>=0&&e.age<180)e.age++;
- for(const d of level.debris){if(!d.triggered&&(!d.entryX||p.x>=d.entryX)&&d.x-p.x>0&&d.x-p.x<Math.max(900,Math.abs(p.vx)*70)&&Math.abs(p.y-d.y)<550){d.triggered=true;d.age=0}
+ for(const d of level.debris){if(!d.triggered&&(!d.entryX||p.x>=d.entryX)&&d.x-p.x>0&&d.x-p.x<Math.max(900,Math.abs(p.vx)*70)&&Math.abs(p.y-d.y)<550){d.triggered=true;d.age=0;gameSound('warning',{pan:Math.max(-1,Math.min(1,(d.x-p.x)/600))})}
   if(!d.triggered||d.age>=d.warn+d.fall+120)continue;d.age++;
   if(d.age>=d.warn){const t=Math.min(1,(d.age-d.warn)/d.fall),y=d.y-460+(460)*t*t;
    if(p.x+13>d.x-d.w/2&&p.x-13<d.x+d.w/2&&feet()>y-44&&feet()-bodyHeight()<y)hurt(d.x);
-   if(d.age===d.warn+d.fall){sparks(d.x,d.y,10,'#ffb356');shake=Math.max(shake,3)}
+   if(d.age===d.warn+d.fall){if(Math.abs(d.x-p.x)<800)gameSound('hazard');sparks(d.x,d.y,10,'#ffb356');shake=Math.max(shake,3)}
   }
  }
 }
@@ -33,7 +34,9 @@ function predictLanding(){if(level.act!==2||p.ground||p.loop||Math.abs(p.vx)<9)r
   const x=p.x+p.vx*t;if(t<.5||t>60||x<q.x1-FOOT_RADIUS||x>q.x2+FOOT_RADIUS)continue;if(!best||t<best.t)best={id:s.id,x,y:yOn(s,x),t};
  }return best
 }
-function updateCamera(){const speed=Math.abs(p.vx),act2=level.act===2,targetZoom=speed>16?.76:.94;zoom+=(targetZoom-zoom)*.025;
+function updateCamera(){const speed=p.loop?p.loop.speed:Math.abs(p.vx),act2=level.act===2;
+ // Ease across the speed range, including the old threshold, without a target jump.
+ const speedBlend=Math.max(0,Math.min(1,(speed-8)/16)),targetZoom=.94-.18*speedBlend*speedBlend*(3-2*speedBlend);zoom+=(targetZoom-zoom)*.025;
  const vw=W/zoom,lead=Math.min(act2?340:230,Math.max(-180,p.vx*(act2?12:9))),anchor=act2?W/zoom*.38:280;
  cam+=(Math.max(0,Math.min(END-vw+260,p.x-anchor+lead))-cam)*.15;
  let targetY=act2?p.y-(p.ground&&speed<9?H/zoom*.68:H/zoom*.60)+Math.min(0,p.vy*8):Math.max(-110,Math.min(190,p.y-350));
@@ -49,26 +52,39 @@ function cityFlame(x,y,w,h,seed=0,alpha=1){const beat=Math.floor(step/2),unit=1;
 function citySmoke(x,y,size,seed=0,alpha=.2){ctx.save();for(let j=0;j<8;j++){const t=(step*.0022+j/8+seed*.071)%1,drift=t*size*.75+Math.sin(t*5+seed)*size*.16,cx=Math.round((x+drift)/2)*2,cy=Math.round((y-t*size*3)/2)*2,r=Math.round((size*(.25+t*.6))/2)*2;
  ctx.globalAlpha=alpha*(1-t)*.8;ctx.fillStyle=j%2?'#392441':'#221733';ctx.fillRect(cx-r,cy-r*.4,r*2,r);ctx.fillRect(cx-r*.7,cy-r*.8,r*1.5,r*1.7);ctx.fillStyle='#74526a';ctx.globalAlpha=alpha*(1-t)*.22;ctx.fillRect(cx-r*.65,cy-r*.75,r,r*.4);
  }ctx.restore()}
-function drawAct2Background(){const progress=Math.max(0,Math.min(1,p.x/END)),im=art.collapse||art.city;
- const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#100e30');sky.addColorStop(1,'#29113b');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
- if(im){const w=W*1.4,h=w*im.height/im.width,offset=((cam*.095)%w+w)%w,rise=Math.max(0,Math.min(1,-p.y/6950))*220,top=-145+rise;
-  const fires=[[353,363,23,65],[151,469,25,51],[1058,550,28,58],[1300,370,25,71],[1293,577,29,48],[632,644,35,39],[646,839,39,32],[183,702,32,45],[808,815,33,42],[960,932,44,58],[1115,741,27,54],[1455,796,32,42],[550,432,18,38]];
-  for(let tile=-1;tile<=1;tile++){const left=tile*w-offset;if(left+w<0||left>W)continue;drawCityBackdrop(im,left,top,w,h);const scale=w/1536;
+const skylineSmokeSprites=new Map();
+function drawSkylineSmoke(x,y,size,seed,alpha){
+ if(!document.createElement)return citySmoke(x,y,size,seed,alpha);
+ const variant=seed%8;let texture=skylineSmokeSprites.get(variant);
+ if(!texture){texture=document.createElement('canvas');texture.width=texture.height=64;const dc=texture.getContext('2d'),lobes=[[22,30,19],[40,25,17],[32,15,13],[42,40,16],[22,43,14]],colors=['#211032','#30143f','#421a4b','#582154'];
+  for(let yy=0;yy<64;yy+=2)for(let xx=0;xx<64;xx+=2){if(!lobes.some(([cx,cy,r])=>(xx-cx)**2+(yy-cy)**2<r*r))continue;const grain=Math.sin(xx*.53+yy*.31+variant*2.1);dc.fillStyle=colors[Math.max(0,Math.min(3,Math.floor(1.5+grain+(32-yy)*.025)))];dc.fillRect(xx,yy,2,2)}skylineSmokeSprites.set(variant,texture);
+ }
+ ctx.save();for(let j=0;j<6;j++){const t=(step*.0026+j/6+seed*.073)%1,span=Math.round(size*(.65+t*1.1)/2)*2,cx=Math.round((x+t*size*.8+Math.sin(t*5+seed)*size*.2)/2)*2,cy=Math.round((y-t*size*3.2)/2)*2;ctx.globalAlpha=alpha*Math.min(1,t*8)*(1-t);ctx.drawImage(texture,cx-span/2,cy-span/2,span,span)}ctx.restore();
+}
+function drawAct2Background(){const progress=Math.max(0,Math.min(1,p.x/END)),im=art.recoveredCity||art.collapse||art.city;
+ ctx.fillStyle='#100e30';ctx.fillRect(0,0,W,H);
+ if(im){const w=W*1.4,h=w*im.height/im.width,scroll=Math.round(cam*.095),first=Math.floor(scroll/w),rise=Math.max(0,Math.min(1,-camY/6950))*220,top=Math.round(-145+rise);
+  const fires=art.recoveredCity?[[345,321,22,70],[142,488,28,60],[633,468,24,64],[1380,616,32,82],[1480,890,27,52],[40,690,20,55],[840,780,25,45],[285,847,24,42],[962,940,34,48],[1120,760,28,48]]:[[353,363,23,65],[151,469,25,51],[1058,550,28,58],[1300,370,25,71],[1293,577,29,48],[632,644,35,39],[646,839,39,32],[183,702,32,45],[808,815,33,42],[960,932,44,58],[1115,741,27,54],[1455,796,32,42],[550,432,18,38]];
+  // Alternate reflected panoramas so adjacent edge columns match exactly.
+  // Global tile indices keep animation phases stable when the camera wraps.
+  for(let tile=first-1;tile<=first+1;tile++){const left=tile*w-scroll;if(left+w<0||left>W)continue;drawCityBackdrop(im,left,top,w,h,tile%2!==0,true)}
+  drawCityClouds(im,w,h,top);
+  for(let tile=first-1;tile<=first+1;tile++){const left=tile*w-scroll;if(left+w<-140||left>W+140)continue;const scale=w/1536,mirrored=tile%2!==0;
    // Overlay only the real fire sites in the city image, with independent phases.
-   for(let i=0;i<fires.length;i++){const [fx,fy,fw,fh]=fires[i],x=left+fx*scale,y=top+fy*scale;if(x<-60||x>W+60||y<0||y>H+100)continue;citySmoke(x,y-fh*scale,30*scale,i+tile*17,.2+progress*.07);cityFlame(x,y,fw*scale,fh*scale,i+tile*17,.68)}
+   for(let i=0;i<fires.length;i++){const [fx,fy,fw,fh]=fires[i],x=Math.round(left+(mirrored?1536-fx:fx)*scale),y=Math.round(top+fy*scale),seed=i+((tile%32+32)%32)*17;if(x<-90||x>W+90||y<0||y>H+140)continue;drawSkylineSmoke(x,y-fh*scale,42*scale,seed,.55+progress*.10);cityFlame(x,y,fw*scale*1.15,fh*scale,seed,.94)}
   }
  }
  ctx.fillStyle=`rgba(32,9,38,${.05+progress*.07})`;ctx.fillRect(0,0,W,H);
  for(let i=0;i<16+progress*18;i++){const x=((i*137-cam*.18+Math.sin(step*.012+i)*8)%W+W)%W,y=((i*91-step*(.5+progress*.6))%H+H)%H;ctx.fillStyle=i%3?'#ffb54c70':'#ff6b3160';ctx.fillRect(x,y,2,3)}
 }
-function drawAct2Structures(){drawPixelCityStructures();for(const b of level.buildings)drawCityCutaways(b)}
+function drawAct2Structures(){for(const b of level.buildings)drawCityCutaways(b);drawPixelCityStructures()}
 function drawAct2ServiceStructures(){for(const h of level.hazards.filter(h=>h.type==='breakable')){const left=h.x-200,right=h.x+850,top=h.floor-205;if(right<cam-50||left>cam+W/zoom+50||h.floor<camY-60||top>camY+H/zoom+60)continue;
  ctx.save();ctx.globalAlpha=.68;ctx.fillStyle='#171c35';ctx.beginPath();ctx.moveTo(left,h.floor+36);ctx.lineTo(left,top+95);ctx.lineTo(left+80,top+15);ctx.lineTo(right-100,top);ctx.lineTo(right,top+80);ctx.lineTo(right,h.floor+36);ctx.closePath();ctx.fill();ctx.strokeStyle='#6d4d64';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(left+20,h.floor);ctx.lineTo(left+20,top+95);ctx.lineTo(left+85,top+30);ctx.lineTo(right-110,top+15);ctx.lineTo(right-20,top+85);ctx.lineTo(right-20,h.floor);ctx.stroke();
  ctx.fillStyle='#38415a';for(let x=left+75;x<right-80;x+=125){ctx.fillRect(x,top+45,6,135);ctx.fillStyle='#764960';ctx.fillRect(x+6,top+45,3,135);ctx.fillStyle='#38415a'}ctx.fillStyle='#a97964';ctx.font='bold 17px monospace';ctx.fillText('RUINED SERVICE PASSAGE',left+220,top+68);ctx.fillStyle='#11172a';ctx.fillRect(left+100,top+90,right-left-250,15);ctx.restore()
 }}
 function drawAct2Bulkhead(h){const bottom=Math.min(h.y+h.h,camY+H/zoom+50),top=Math.max(h.y,camY-40),x=h.x;if(bottom<=top)return;
  ctx.fillStyle='#18233d';ctx.fillRect(x,top,h.w,bottom-top);ctx.fillStyle='#53647e';ctx.fillRect(x,top,5,bottom-top);ctx.fillStyle='#8c5972';ctx.fillRect(x+h.w-5,top,5,bottom-top);ctx.fillStyle='#77c8dc';ctx.fillRect(x,h.y,h.w,3);
- ctx.strokeStyle='#7891a155';ctx.lineWidth=3;for(let y=Math.ceil(top/64)*64;y<bottom;y+=64){ctx.beginPath();ctx.moveTo(x+8,y);ctx.lineTo(x+h.w-8,y+54);ctx.moveTo(x+h.w-8,y);ctx.lineTo(x+8,y+54);ctx.stroke();ctx.fillStyle='#8ba8b1';ctx.fillRect(x+5,y,4,4);ctx.fillRect(x+h.w-9,y,4,4)}
+ for(let y=Math.ceil(top/64)*64;y<bottom;y+=64){cityPixelLine(x+8,y,x+h.w-8,y+54,'#7891a155',2);cityPixelLine(x+h.w-8,y,x+8,y+54,'#7891a155',2);cityPixelRect(x+5,y,4,4,'#8ba8b1');cityPixelRect(x+h.w-9,y,4,4,'#8ba8b1')}
 }
 // Surface skins reuse collision tops; every solid highlight follows yOn exactly.
 function drawAct2CityDeck(s,left,right){drawPixelCityDeck(s,left,right)}
@@ -76,11 +92,10 @@ function drawAct2Supports(s,left,right){if(s.grindable)drawGrindRail(s,left,righ
 function drawAct2World(){
  for(const l of level.loops){if(l.x+l.r<cam-50||l.x-l.r>cam+W/zoom+50)continue;drawPixelCityLoop(l)}
  for(const d of level.debris){if(!d.triggered||d.age>d.warn+d.fall+120||d.x<cam-100||d.x>cam+W/zoom+100)continue;
-  if(d.age<d.warn){ctx.fillStyle=step%12<6?'#ffd158b0':'#ff913750';ctx.fillRect(d.x-d.w/2,d.y-6,d.w,6);ctx.strokeStyle='#ffd15890';ctx.setLineDash([8,10]);ctx.beginPath();ctx.moveTo(d.x,d.y-440);ctx.lineTo(d.x,d.y);ctx.stroke();ctx.setLineDash([]);drawDebrisBeacon(d)}
-  else{const t=Math.min(1,(d.age-d.warn)/d.fall),y=d.y-460+460*t*t;ctx.fillStyle='#452d4d';ctx.fillRect(d.x-d.w/2,y-44,d.w,44);ctx.fillStyle='#b3867c';ctx.fillRect(d.x-d.w/2,y-44,d.w,5);ctx.fillStyle='#fcba59';for(let x=d.x-d.w/2+8;x<d.x+d.w/2;x+=19)ctx.fillRect(x,y-31,8,6);ctx.fillStyle='#ff652d';ctx.fillRect(d.x-d.w/2,y-5,d.w,5)}
+  if(d.age<d.warn)drawDebrisWarning(d);else drawPixelDebris(d);
  }
- for(const e of level.events){if(e.age<0||e.age>150||e.x+e.width<cam||e.x>cam+W/zoom)continue;for(let i=0;i<8;i++){const x=e.x+i*e.width/8,y=e.y+e.age*e.age*.035+(i%3)*15;ctx.save();ctx.translate(x,y);ctx.rotate(e.age*.008*(i%2?1:-1));ctx.fillStyle=i%2?'#644060':'#203551';ctx.fillRect(-26,-8,70,18);ctx.fillStyle='#fb956e';ctx.fillRect(-26,-8,70,3);ctx.restore()}}
- const a=level.arena;if(a.x<cam+W/zoom+100&&a.x+a.w>cam){ctx.strokeStyle='#ffe694';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(a.x+850,a.y+6,240,19,0,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#ffe694';ctx.font='bold 28px monospace';ctx.fillText('H',a.x+840,a.y-1);for(const x of [a.x+80,a.x+a.w-180]){ctx.fillStyle='#565272';ctx.fillRect(x,a.y-150,8,150);ellipse(x+4,a.y-153,7,7,step%60<30?'#ff6851':'#ffbd64')}sign(a.x+1200,a.y-140,'ROOFTOP HELIPAD','sector')}
+ for(const e of level.events){if(e.age<0||e.age>150||e.x+e.width<cam||e.x>cam+W/zoom)continue;for(let i=0;i<8;i++){const x=e.x+i*e.width/8,y=e.y+e.age*e.age*.035+(i%3)*15;cityPixelRect(x-26,y-8,70,18,i%2?'#644060':'#203551');cityPixelRect(x-26,y-8,70,3,'#fb956e');cityPixelLine(x-12,y-4,x+8,y+8,'#121d30',4)}}
+ const a=level.arena;if(a.x<cam+W/zoom+100&&a.x+a.w>cam){for(let i=0;i<64;i++){const t=i*Math.PI/32,u=(i+1)*Math.PI/32;cityPixelLine(a.x+850+Math.cos(t)*240,a.y+6+Math.sin(t)*19,a.x+850+Math.cos(u)*240,a.y+6+Math.sin(u)*19,'#ffe694',2)}cityPixelRect(a.x+838,a.y-16,6,28,'#ffe694');cityPixelRect(a.x+858,a.y-16,6,28,'#ffe694');cityPixelRect(a.x+838,a.y-5,26,6,'#ffe694');for(const x of [a.x+80,a.x+a.w-180]){ctx.fillStyle='#565272';ctx.fillRect(x,a.y-150,8,150);cityPixelOval(x+4,a.y-153,7,7,step%60<30?'#ff6851':'#ffbd64')}sign(a.x+1200,a.y-140,'ROOFTOP HELIPAD','sector')}
 }
 
 // The gold rounded tube is a real collision surface, reserved for the skyline shortcut.
