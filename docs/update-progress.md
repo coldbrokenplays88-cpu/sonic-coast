@@ -8,7 +8,7 @@ This continuation adds 40 Sonic poses, the supplied music, damaged architecture,
 |---|---|---|
 | 1 | Full pixel-art pass | Pixel roofs/facades, ramps, loops, rails/supports, hazards, enemies, devices, signs, water, effects and HUD. Object renderer/cache tests and scene inspection; final art acceptance remains subjective. |
 | 2 | Foreground architecture | Solid buildings extend below roofs, clipped sloped facades, district details and connected supports. Six facade comparisons match uncached pixels exactly. |
-| 3 | Background refinement | New burning panorama has priority in Act 2, nearest-neighbor rendering, independent fire/smoke/sky motion and altitude-driven skyline movement. Core source PNG unchanged. |
+| 3 | Background refinement | New burning panorama has priority in Act 2; reflected tile edges join continuously, independent cloud scrolling and textured rising smoke/flames animate, and smoothed camera altitude moves the skyline. Nearest-neighbor rendering remains enabled. Core source PNG unchanged. |
 | 4 | Scenery glitches/visibility | Vertical culling, leaning-tower visibility, facade seams and downstream insertion offsets corrected. Inspected 22 checkpoint scenes across both acts and middle-route scenes. |
 | 5 | Secret interiors | Opaque covers fade smoothly to partial opacity and restore on exit; closed gates stay opaque. Rendering order keeps interiors visible. Regression tests pass. |
 | 6 | Camera | Continuous speed zoom; spring/landing prediction and vertical-climb framing. Threshold regression test and launch/climb scene checks. |
@@ -53,3 +53,11 @@ Renderer profile: Linux/headless Chromium, matching surface IDs and camera/zoom,
 | Summit arena |7.19|3.66|
 
 No merge or GitHub Pages deployment is claimed. The existing workflow publishes only a push to `main`; updating the development branch updates the unmerged PR. Hardware playtest and aesthetic approval should inform any further tuning. See [playtest guide](playtest-guide.md).
+
+## Background correction after playtest feedback
+
+The source PNG remains byte-identical. The renderer now reflects alternate city tiles at their shared edges, snaps background scroll to pixels, and uses global tile indices for fire/smoke phases. A separate cached sky-only crop scrolls at another speed; its boundary fades by source-pixel rows without a checkerboard stripe or image smoothing. Eight cached textured smoke variants rise/expand from mapped fires, with clearer flame motion. Off-screen tile margins retain plumes while they remain visible.
+
+`node scripts/verify-background.cjs <internal URL>` checks actual pixels: mean join-colour difference fell from 64.51 to 0.15; a subpixel camera wrap changes only 51 pixels, and an actual tile-index transition preserves eight shared effect seeds. A stationary-camera two-second interval changes 180,102 background pixels. Cloud-fade alpha is uniform across each pixel row. Existing 95 Node checks and integrated Chromium checks pass. An independent review checked actual tile transitions and found zero new canvas allocations in a warm 200-frame sweep.
+
+[Background motion preview](validation/background-motion.webm) is a browser-rendered preview of the renderer held still, panned across a join, then raised in altitude; it is not an uninterrupted gameplay run. Full supplied footage remains unavailable because its size exceeds the 32 MiB transfer limit; the original repo renderer was used for comparison. Actual iPad performance still needs hardware validation.

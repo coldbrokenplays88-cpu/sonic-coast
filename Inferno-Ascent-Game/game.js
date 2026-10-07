@@ -17,12 +17,29 @@ function cityTexture(im){if(cityTextureCache.has(im))return cityTextureCache.get
 const citySkyHeights=[350,350,240,240,240,305,305,350,400,420,395,395,270,270,270,315];
 const backdropScaleCache=new WeakMap();
 function sizedCityBackdrop(im,w,h){if(!document.createElement)return cityTexture(im);const width=Math.round(w*canvas.width/W),height=Math.round(h*canvas.height/H),key=width+'x'+height;let entries=backdropScaleCache.get(im);if(!entries){entries=new Map();backdropScaleCache.set(im,entries)}if(entries.has(key))return entries.get(key);const c=document.createElement('canvas');c.width=width;c.height=height;const dc=c.getContext('2d');dc.imageSmoothingEnabled=false;dc.drawImage(cityTexture(im),0,0,width,height);entries.set(key,c);return c}
-function drawCityBackdrop(im,x,y,w,h){const texture=sizedCityBackdrop(im,w,h),drift=Math.sin(step*.004)*18,unit=w/citySkyHeights.length;
+function drawCityBackdrop(im,x,y,w,h,mirrored=false,layered=false){const texture=sizedCityBackdrop(im,w,h),drift=Math.sin(step*.004)*18,unit=w/citySkyHeights.length;
+ if(layered){ctx.save();if(mirrored){ctx.translate(x+w,y);ctx.scale(-1,1);ctx.drawImage(texture,0,0,w,h)}else ctx.drawImage(texture,x,y,w,h);ctx.restore();return}
  ctx.drawImage(texture,x,y,w,h);ctx.save();ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+w,y);
  for(let i=citySkyHeights.length-1;i>=0;i--){const bottom=y+h*citySkyHeights[i]/1024;ctx.lineTo(x+(i+1)*unit,bottom);ctx.lineTo(x+i*unit,bottom)}
  ctx.closePath();ctx.clip();ctx.drawImage(texture,x+drift,y,w,h);
  // Neighboring tiles fill the narrow edges without seams or per-frame allocations.
  if(drift>0)ctx.drawImage(texture,x+drift-w,y,w,h);else if(drift<0)ctx.drawImage(texture,x+drift+w,y,w,h);ctx.restore()
+}
+const cityCloudLayers=new WeakMap();
+function cityCloudLayer(im,w,h){
+ const texture=sizedCityBackdrop(im,w,h);if(!document.createElement)return null;
+ let layer=cityCloudLayers.get(texture);if(layer)return layer;
+ const image=document.createElement('canvas');image.width=texture.width;image.height=Math.floor(texture.height*220/im.height/4)*4;
+ const dc=image.getContext('2d');dc.imageSmoothingEnabled=false;dc.drawImage(texture,0,0);dc.globalCompositeOperation='destination-out';
+ // Fade source-pixel rows; nearest-neighbor sampling keeps their edges sharp.
+ const fade=64;
+ for(let y=Math.max(0,image.height-fade);y<image.height;y+=4){dc.globalAlpha=(y-image.height+fade)/(fade-4);dc.fillRect(0,y,image.width,4)}
+ layer={image,height:image.height/(canvas.height/H)};cityCloudLayers.set(texture,layer);return layer;
+}
+function drawCityClouds(im,w,h,top){
+ const layer=cityCloudLayer(im,w,h);if(!layer)return;
+ const scroll=Math.round(cam*.035+step*.10),first=Math.floor(scroll/w);
+ for(let tile=first-1;tile<=first+1;tile++){const left=tile*w-scroll;if(left+w<0||left>W)continue;ctx.save();if(tile%2){ctx.translate(left+w,top);ctx.scale(-1,1);ctx.drawImage(layer.image,0,0,w,layer.height)}else ctx.drawImage(layer.image,left,top,w,layer.height);ctx.restore()}
 }
 function makeObjectOutline(im){if(!document.createElement)return null;const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const dc=c.getContext('2d');dc.fillStyle='#091426';dc.fillRect(0,0,c.width,c.height);dc.globalCompositeOperation='destination-in';dc.drawImage(im,0,0);dc.globalCompositeOperation='source-over';return c}
 function gameSound(name,options){return window.playGameSound?.(name,options)??false}

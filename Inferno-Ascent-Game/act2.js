@@ -52,13 +52,26 @@ function cityFlame(x,y,w,h,seed=0,alpha=1){const beat=Math.floor(step/2),unit=1;
 function citySmoke(x,y,size,seed=0,alpha=.2){ctx.save();for(let j=0;j<8;j++){const t=(step*.0022+j/8+seed*.071)%1,drift=t*size*.75+Math.sin(t*5+seed)*size*.16,cx=Math.round((x+drift)/2)*2,cy=Math.round((y-t*size*3)/2)*2,r=Math.round((size*(.25+t*.6))/2)*2;
  ctx.globalAlpha=alpha*(1-t)*.8;ctx.fillStyle=j%2?'#392441':'#221733';ctx.fillRect(cx-r,cy-r*.4,r*2,r);ctx.fillRect(cx-r*.7,cy-r*.8,r*1.5,r*1.7);ctx.fillStyle='#74526a';ctx.globalAlpha=alpha*(1-t)*.22;ctx.fillRect(cx-r*.65,cy-r*.75,r,r*.4);
  }ctx.restore()}
+const skylineSmokeSprites=new Map();
+function drawSkylineSmoke(x,y,size,seed,alpha){
+ if(!document.createElement)return citySmoke(x,y,size,seed,alpha);
+ const variant=seed%8;let texture=skylineSmokeSprites.get(variant);
+ if(!texture){texture=document.createElement('canvas');texture.width=texture.height=64;const dc=texture.getContext('2d'),lobes=[[22,30,19],[40,25,17],[32,15,13],[42,40,16],[22,43,14]],colors=['#211032','#30143f','#421a4b','#582154'];
+  for(let yy=0;yy<64;yy+=2)for(let xx=0;xx<64;xx+=2){if(!lobes.some(([cx,cy,r])=>(xx-cx)**2+(yy-cy)**2<r*r))continue;const grain=Math.sin(xx*.53+yy*.31+variant*2.1);dc.fillStyle=colors[Math.max(0,Math.min(3,Math.floor(1.5+grain+(32-yy)*.025)))];dc.fillRect(xx,yy,2,2)}skylineSmokeSprites.set(variant,texture);
+ }
+ ctx.save();for(let j=0;j<6;j++){const t=(step*.0026+j/6+seed*.073)%1,span=Math.round(size*(.65+t*1.1)/2)*2,cx=Math.round((x+t*size*.8+Math.sin(t*5+seed)*size*.2)/2)*2,cy=Math.round((y-t*size*3.2)/2)*2;ctx.globalAlpha=alpha*Math.min(1,t*8)*(1-t);ctx.drawImage(texture,cx-span/2,cy-span/2,span,span)}ctx.restore();
+}
 function drawAct2Background(){const progress=Math.max(0,Math.min(1,p.x/END)),im=art.recoveredCity||art.collapse||art.city;
  ctx.fillStyle='#100e30';ctx.fillRect(0,0,W,H);
- if(im){const w=W*1.4,h=w*im.height/im.width,offset=((cam*.095)%w+w)%w,rise=Math.max(0,Math.min(1,-p.y/6950))*220,top=-145+rise;
+ if(im){const w=W*1.4,h=w*im.height/im.width,scroll=Math.round(cam*.095),first=Math.floor(scroll/w),rise=Math.max(0,Math.min(1,-camY/6950))*220,top=Math.round(-145+rise);
   const fires=art.recoveredCity?[[345,321,22,70],[142,488,28,60],[633,468,24,64],[1380,616,32,82],[1480,890,27,52],[40,690,20,55],[840,780,25,45],[285,847,24,42],[962,940,34,48],[1120,760,28,48]]:[[353,363,23,65],[151,469,25,51],[1058,550,28,58],[1300,370,25,71],[1293,577,29,48],[632,644,35,39],[646,839,39,32],[183,702,32,45],[808,815,33,42],[960,932,44,58],[1115,741,27,54],[1455,796,32,42],[550,432,18,38]];
-  for(let tile=-1;tile<=1;tile++){const left=tile*w-offset;if(left+w<0||left>W)continue;drawCityBackdrop(im,left,top,w,h);const scale=w/1536;
+  // Alternate reflected panoramas so adjacent edge columns match exactly.
+  // Global tile indices keep animation phases stable when the camera wraps.
+  for(let tile=first-1;tile<=first+1;tile++){const left=tile*w-scroll;if(left+w<0||left>W)continue;drawCityBackdrop(im,left,top,w,h,tile%2!==0,true)}
+  drawCityClouds(im,w,h,top);
+  for(let tile=first-1;tile<=first+1;tile++){const left=tile*w-scroll;if(left+w<-140||left>W+140)continue;const scale=w/1536,mirrored=tile%2!==0;
    // Overlay only the real fire sites in the city image, with independent phases.
-   for(let i=0;i<fires.length;i++){const [fx,fy,fw,fh]=fires[i],x=left+fx*scale,y=top+fy*scale;if(x<-60||x>W+60||y<0||y>H+100)continue;citySmoke(x,y-fh*scale,30*scale,i+tile*17,.2+progress*.07);cityFlame(x,y,fw*scale,fh*scale,i+tile*17,.68)}
+   for(let i=0;i<fires.length;i++){const [fx,fy,fw,fh]=fires[i],x=Math.round(left+(mirrored?1536-fx:fx)*scale),y=Math.round(top+fy*scale),seed=i+((tile%32+32)%32)*17;if(x<-90||x>W+90||y<0||y>H+140)continue;drawSkylineSmoke(x,y-fh*scale,42*scale,seed,.55+progress*.10);cityFlame(x,y,fw*scale*1.15,fh*scale,seed,.94)}
   }
  }
  ctx.fillStyle=`rgba(32,9,38,${.05+progress*.07})`;ctx.fillRect(0,0,W,H);
