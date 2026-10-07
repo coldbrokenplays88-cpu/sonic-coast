@@ -1,17 +1,6 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-const fs=require('node:fs'),vm=require('node:vm');
-function boot(act=2){
- const tools=new Map(),elements=new Map(),events=new Map();
- const ctx=new Proxy({},{get:(_,name)=>name==='getTransform'?undefined:name==='createLinearGradient'?()=>({addColorStop(){}}):()=>{}});
- const element=()=>({style:{},classList:{add(){},remove(){}},getContext:()=>ctx,focus(){},addEventListener(){},setAttribute(){},matches:()=>false});
- const document={querySelector:s=>{if(!elements.has(s))elements.set(s,element());return elements.get(s)},querySelectorAll:()=>[],modelContext:{registerTool:t=>tools.set(t.name,t)}};
- const window={DEFAULT_ACT:act,addEventListener:(n,f)=>events.set(n,f)};
- const c=vm.createContext({document,window,Image:class{},AbortController,requestAnimationFrame(){},console});
- for(const file of ['level.js','level2-original.js','level2-restoration.js','level2.js','act2.js','pixel-world.js','game.js'])vm.runInContext(fs.readFileSync(file,'utf8'),c,{filename:file});
- vm.runInContext('start()',c);
- return {c,tools,events,run:s=>vm.runInContext(s,c),call:(name,arg={})=>{assert.ok(tools.has(name),'Missing tool: '+name);return tools.get(name).execute(arg)}};
-}
+const {boot}=require('./test-support.cjs');
 test('registers timed input tool',()=>{assert.ok(boot().tools.has('step_game_frames'));});
 for(const act of [1,2])test('held movement uses exact normal physics in act '+act,()=>{
  const a=boot(act),b=boot(act);
@@ -56,4 +45,63 @@ test('stops on death and releases all controls',()=>{
 test('restart restores ordinary playback',()=>{
  const a=boot();a.call('step_game_frames',{keys:[],frames:1});a.call('restart_game');
  assert.equal(a.run('testControlled'),false);assert.equal(a.run('runFrames'),0);
+});
+test('camera zoom changes continuously across the old speed threshold',()=>{
+ const a=boot();
+ const at=speed=>a.run(`p.vx=${speed};zoom=1;for(let i=0;i<400;i++)updateCamera();zoom`);
+ assert.ok(Math.abs(at(15.99)-at(16.01))<.001);
+ const values=[0,8,12,16,20,24].map(at);
+ for(let i=1;i<values.length;i++)assert.ok(values[i]<=values[i-1]);
+ assert.ok(values[2]<values[1]&&values[2]>values[4]);
+ assert.ok(Math.abs(values[0]-.94)<.0001);
+ assert.ok(Math.abs(values.at(-1)-.76)<.0001);
+});
+test('spring drawing compresses, extends and returns to rest after firing',()=>{
+ const a=boot();
+ a.run('const springVisual={x:100,y:420,firedAt:100};');
+ const render=frame=>{a.rects.length=0;a.run(`runFrames=${frame};drawPixelAirDevice(springVisual,true)`);return a.rects.map(r=>[...r]);};
+ const resting=render(99),compressed=render(100),extended=render(105);
+ assert.notDeepEqual(compressed,resting);
+ assert.notDeepEqual(extended,compressed);
+ assert.ok(Math.min(...extended.map(r=>r[1]))<Math.min(...resting.map(r=>r[1])));
+ assert.deepEqual(render(125),resting);
+ assert.equal(a.run('springVisual.y'),420);
+ for(const r of extended)for(const n of r)assert.equal(n%2,0);
+});
+for(const axis of ['x','y'])test('rider stays on an authored moving platform on axis '+axis,()=>{
+ const a=boot();
+ a.run(`const ride=level.surfaces.find(s=>s.kind==='moving'&&s.motion.axis==='${axis}');
+ level.surfaces=[ride];level.hazards=[];level.deathZones=[];level.floorAt=()=>1e6;
+ p.x=(pose(ride).x1+pose(ride).x2)/2;p.y=yOn(ride,p.x)-20;p.vx=0;p.vy=0;p.ground=true;p.surface=ride;
+ for(let i=0;i<60;i++){runFrames++;updateMovement();}`);
+ assert.equal(a.run('p.surface.id'),a.run('ride.id'));
+ assert.equal(a.run('p.ground'),true);
+ assert.ok(Math.abs(a.run('feet()-yOn(ride,p.x)'))<.0001);
+ assert.ok(Math.abs(a.run('p.x-(pose(ride).x1+pose(ride).x2)/2'))<.0001);
+});
+test('running on an authored angled deck follows its collision top',()=>{
+ const a=boot();
+ a.run(`const slopeDeck=level.surfaces.find(s=>s.y1!==s.y2&&!s.motion&&!s.sealedBy&&s.x2-s.x1>400);
+ level.surfaces=[slopeDeck];level.hazards=[];level.deathZones=[];level.floorAt=()=>1e6;
+ p.x=slopeDeck.x1+40;p.y=yOn(slopeDeck,p.x)-20;p.vx=5;p.vy=0;p.ground=true;p.surface=slopeDeck;
+ press('ArrowRight');for(let i=0;i<20;i++){runFrames++;updateMovement();}`);
+ assert.equal(a.run('p.ground'),true);
+ assert.equal(a.run('p.surface.id'),a.run('slopeDeck.id'));
+ assert.ok(Math.abs(a.run('feet()-yOn(slopeDeck,p.x)'))<.0001);
+});
+test('recovered sprites take priority for every active movement state',()=>{
+ const a=boot();
+ a.run('art.recoveredSpeedster={};art.recoveredPeelout={};');
+ const cases=[
+  ["p.ground=true;p.vx=0;runFrames=400",'idle'],
+  ["p.ground=true;p.vx=8;keys.add('ArrowRight')",'run'],
+  ["p.ground=true;p.vx=20;p.boosting=true",'boost'],
+  ["p.ground=true;p.vx=5;p.boosting=false;p.rolling=true",'roll'],
+  ["p.ground=false;p.rolling=false;p.vy=-12;p.poseJumpFrame=runFrames-10",'rise'],
+  ["p.ground=false;p.vy=10",'fall'],
+  ["p.ground=true;p.vx=10;p.brakeActive=true;keys.clear()",'brake'],
+  ["p.brakeActive=false;p.surface={grindable:true,x1:0,x2:100,y1:0,y2:0};p.vx=20",'grind-fast'],
+  ["p.surface=null;p.hurt=10",'hurt']
+ ];
+ for(const [setup,state]of cases){a.run(setup);const pose=a.run('sonicPose()');assert.equal(pose.state,state);assert.ok(['recoveredSpeedster','recoveredPeelout'].includes(pose.sheet));assert.ok(Number.isInteger(pose.frame)&&pose.frame>=0&&pose.frame<48);}
 });
