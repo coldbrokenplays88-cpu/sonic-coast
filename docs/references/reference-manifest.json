@@ -1,0 +1,110 @@
+[
+  {
+    "file": "sonic-ref.png",
+    "sha256": "a7742bd9823e819792b8a27e27fd589900e23085aced431773c7060cd65a9636",
+    "originalUpload": "sonic ref",
+    "size": [
+      546,
+      737
+    ]
+  },
+  {
+    "file": "midsection4.png",
+    "sha256": "e0101695444cf6de56eb95b9024383a4432602782ead7e6f64a4da51a3a12514",
+    "originalUpload": "midsection4",
+    "size": [
+      2752,
+      2064
+    ]
+  },
+  {
+    "file": "midsectionh2.jpg",
+    "sha256": "0b207b498d107474ebf48282620ed249587fe597e4741330161403614fc6e725",
+    "originalUpload": "midsectionh2",
+    "size": [
+      1536,
+      1152
+    ]
+  },
+  {
+    "file": "midsection3.png",
+    "sha256": "c4a9cc3773aee865f8c82fb0db14e2653dcae75002633e31b0b6f950096c1da8",
+    "originalUpload": "midsection3",
+    "size": [
+      2752,
+      2064
+    ]
+  },
+  {
+    "file": "boost-pickup.jpg",
+    "sha256": "00ca1a267f8658dfedef7d3a7112ebc1318d4af8ad4ee77e3fc8c2fa94b5c197",
+    "originalUpload": "boost pickup",
+    "size": [
+      1536,
+      1152
+    ]
+  },
+  {
+    "file": "boost-bar-new.png",
+    "sha256": "ed269a50b51fefb893e9632730469d2111019c591235be7aba5cf03a526960d5",
+    "originalUpload": "boost bar new",
+    "size": [
+      2752,
+      2064
+    ]
+  },
+  {
+    "file": "midsection1.png",
+    "sha256": "1d02a046239e6e281233880d988677af0702ff66c206fa8fe3844e7dcb214bbd",
+    "originalUpload": "midsection1",
+    "size": [
+      2752,
+      2064
+    ]
+  },
+  {
+    "file": "midsection2.jpg",
+    "sha256": "08fcd9bf7b5c1c03f7e4fbba4118df38616272c2788fb9aafd5168ede4d18d92",
+    "originalUpload": "midsection2",
+    "size": [
+      1536,
+      1152
+    ]
+  },
+  {
+    "file": "midsectionh3.png",
+    "sha256": "58ae9550c85d5f7973f026a6c2d1331c5850ed62a2faccfff8b07c8b0837c3cb",
+    "originalUpload": "midsectionh3",
+    "size": [
+      2752,
+      2064
+    ]
+  },
+  {
+    "file": "midsectionh4.png",
+    "sha256": "e0101695444cf6de56eb95b9024383a4432602782ead7e6f64a4da51a3a12514",
+    "originalUpload": "midsectionh4",
+    "size": [
+      2752,
+      2064
+    ]
+  },
+  {
+    "file": "midsectionh1.png",
+    "sha256": "2ae32c70645f76a18e355d06a25a066cda54a58fe0da26ae03886b3d2a1cb4b3",
+    "originalUpload": "midsectionh1",
+    "size": [
+      2752,
+      2064
+    ]
+  },
+  {
+    "file": "spring.png",
+    "sha256": "e6651d42c0268a1d2ab04c568b104bec536e62486b23c2b465fcbea9283aa37f",
+    "originalUpload": "spring",
+    "size": [
+      148,
+      125
+    ]
+  }
+]

@@ -45,7 +45,10 @@ function addMiddleSection(l){
  for(const c of l.routeChallenges||[]){const steps=c.steps.map(id=>l.surfaces.find(s=>s.id===id)).filter(Boolean);if(!steps.length)continue;c.x1=Math.min(...steps.map(s=>s.x1));c.x2=Math.max(...steps.map(s=>s.x2));c.exitX=steps.at(-1).x1;c.exitY=steps.at(-1).y1}
  return l;
 }
+function beginWrongRouteDrop(){p.wrongRouteDrop=true;p.poolApproach=false;p.poolTransfer=null;p.vx=-18;p.vy=3;p.ground=false;p.surface=null;coyote=0;jumpBuffer=0;}
 function updateMiddleMotion(){
+ if(p.wrongRouteDrop){const spring=level.springs.find(d=>d.id==='mid-low-spring');p.vx=p.x>spring.x+2?-18:0;}
+
  const t=p.poolTransfer;if(!t)return false;
  t.age++;const u=Math.min(1,t.age/24),ease=u*u*(3-2*u);p.x=t.x+(t.targetX-t.x)*ease;p.y=t.y+(t.targetY-t.y)*ease;p.vx=0;p.vy=0;p.ground=false;p.surface=null;p.inv=Math.max(p.inv,2);
  if(u===1){const floor=level.surfaces.find(s=>s.id===level.middleSection.pool.surfaceId);p.poolTransfer=null;p.poolApproach=false;land(floor,level.middleSection.pool.floor);if(typeof gameSound==='function')gameSound('pool')}

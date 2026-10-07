@@ -93,3 +93,13 @@ with `python3 -m http.server 8000 --bind 127.0.0.1` for internal browser tests.
 Test actual launch/landing trajectories and both stages in Chromium as well
 as the deterministic physics checks. Optional Google Fonts may be blocked;
 the CSS uses Arial as its fallback.
+
+## Resumed checkpoint — October 7, 2026
+
+The earlier “Continue here” section above is historical and superseded. The user supplied the original27-item checklist, eight middle-section drawings, Sonic/spring/pickup references and a new boost-bar requirement, then authorized development. These are preserved in`docs/references`. The original tower is identified by the supplied Neon Switchback screenshot; both new routes are now implemented before it. Do not ask again for these already-recovered mockups.
+
+Work continued from`1c4c473` on`codex/sonic-update-oct7`. This checkpoint adds40 supplemental animation poses without changing original PNGs; integrates the user's MP3; fixes wrong-choice falls and two vent landings; shows damaged architecture; and adds native secret-return/recovery tests. Detailed current28-item status, evidence and remaining device/manual checks are in`docs/update-progress.md`, with captures in`docs/validation`. The supplied music is an additional request beyond those28items.
+
+Required continuation checks:`node --test` in`Inferno-Ascent-Game` (currently95passed), then`scripts/verify-browser.cjs` against an internal Python static server. Rebuild sprite metadata only if authoring changes require it; the source PNGs must stay intact. The six-step interrupted-session ordering was never fully recovered; use the actual files and28-item ledger rather than inventing its stage numbers.
+
+The user created PR#1 and left it unmerged. Save/push changes to the same branch; do not merge or claim a Pages deployment. Source workflow deploys only`main`. Current independent code review found no critical/important regression. Remaining checks: actual iPad/Safari/MagicKeyboard behavior, uninterrupted manual full-game run and final aesthetic acceptance; circular lift replacement still awaits its specific mockup. Optional fonts may be blocked; game functionality uses its existing fallback.

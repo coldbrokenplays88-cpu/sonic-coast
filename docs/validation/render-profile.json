@@ -1,0 +1,46 @@
+{
+  "before": {
+    "neon-0": {
+      "surface": "neon-0",
+      "medianMs": 9.301666666660457,
+      "maxBatchMs": 12.071666666679084
+    },
+    "secret-shared-rooftop": {
+      "surface": "secret-shared-rooftop",
+      "medianMs": 7.613333333345751,
+      "maxBatchMs": 10.729999999981374
+    },
+    "vent-entry": {
+      "surface": "vent-entry",
+      "medianMs": 6.846666666679084,
+      "maxBatchMs": 7.381666666672875
+    },
+    "summit-arena": {
+      "surface": "summit-arena",
+      "medianMs": 7.186666666685293,
+      "maxBatchMs": 7.888333333345751
+    }
+  },
+  "after": {
+    "neon-0": {
+      "surface": "neon-0",
+      "medianMs": 4.716666666666667,
+      "maxBatchMs": 6.444999999987583
+    },
+    "secret-shared-rooftop": {
+      "surface": "secret-shared-rooftop",
+      "medianMs": 3.6,
+      "maxBatchMs": 7.168333333327125
+    },
+    "vent-entry": {
+      "surface": "vent-entry",
+      "medianMs": 3.8950000000186265,
+      "maxBatchMs": 3.996666666679084
+    },
+    "summit-arena": {
+      "surface": "summit-arena",
+      "medianMs": 3.6600000000248354,
+      "maxBatchMs": 3.7549999999813735
+    }
+  }
+}

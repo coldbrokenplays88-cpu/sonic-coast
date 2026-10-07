@@ -3,7 +3,7 @@ function freeRailBoost(){return !!(p.ground&&p.surface?.grindable&&p.surface.inf
 function updateBoostState(want){
  if(!want)p.boostLocked=false;
  const free=freeRailBoost();
- p.boosting=!!(want&&(free||boost>0&&!p.boostLocked)&&!charge&&!p.hurt);
+ p.boosting=!!(want&&(free||boost>0&&!p.boostLocked)&&!charge&&!p.hurt&&!p.wrongRouteDrop);
  if(p.boosting&&!free){boost=Math.max(0,boost-.5);if(!boost)p.boostLocked=true}
  return p.boosting;
 }

@@ -213,6 +213,7 @@ function updateCityInteriors(){
  }
 }
 function drawCityDetails(){
+ for(const s of level.surfaces||[])if(s.fallen||s.damaged)drawDamagedRoof(s);
  if(!level.buildings)return;
  for(const building of level.buildings){
   if(building.scenery||building.x+building.w<cam-40||building.x>cam+W/zoom+40)continue;
@@ -234,5 +235,24 @@ function drawCityDetails(){
    cityPixelRect(x-8,yy+66,32,8,'#17233a');cityPixelRect(x-6,yy+66,12,2,'#866d7b');cityPixelRect(x+10,yy+70,12,2,'#63758a');
   }
   ctx.globalAlpha=alpha;
+ }
+}
+function drawDamagedRoof(s){
+ const slope=(s.y2-s.y1)/(s.x2-s.x1),floor=x=>s.y1+(x-s.x1)*slope;
+ if(s.x2<cam-40||s.x1>cam+W/zoom+40||Math.min(s.y1,s.y2)>camY+H/zoom+40||Math.max(s.y1,s.y2)+190<camY-40)return;
+ // Fractured window bays, buckled steel and masonry stay below the solid roof.
+ const first=Math.max(0,Math.floor((cam-40-s.x1-30)/120));
+ for(let i=first,x=s.x1+30+i*120;x<s.x2-60&&x<cam+W/zoom+40;i++,x+=120){
+  const y=Math.ceil((floor(x)+38)/2)*2;
+  cityPixelRect(x,y,56,46,'#101a2d');cityPixelRect(x+2,y+2,52,4,'#71889a');
+  cityPixelRect(x+4,y+10,18,26,'#456e86');cityPixelRect(x+34,y+8,16,18,'#35506b');
+  cityPixelLine(x+18,y+4,x+30,y+18,'#101a2d',4);cityPixelLine(x+30,y+18,x+22,y+32,'#101a2d',4);
+  for(const [dx,dy]of [[20,34],[28,40],[42,30]]){cityPixelRect(x+dx,y+dy,6,4,'#82b7c3');cityPixelRect(x+dx+2,y+dy,2,2,'#c9e2df')}
+  const braceY=y+52;
+  cityPixelLine(x+4,braceY,x+24,braceY+24,'#121c30',10);cityPixelLine(x+4,braceY,x+24,braceY+24,'#6f6b7b',4);
+  cityPixelLine(x+28,braceY+40,x+48,braceY+56,'#121c30',10);cityPixelLine(x+28,braceY+40,x+48,braceY+56,'#9a7887',4);
+  cityPixelRect(x+20,braceY+24,8,6,'#b39b96');cityPixelRect(x+26,braceY+36,6,6,'#8f94a1');
+  cityPixelLine(x+64,y+10,x+72,y+30,'#0d172a',4);cityPixelLine(x+72,y+30,x+62,y+46,'#0d172a',4);
+  cityPixelRect(x+6,y+126,60,8,'#172238');cityPixelRect(x+10,y+120,14,8,'#767084');cityPixelRect(x+34,y+116,20,12,'#544e68');cityPixelRect(x+38,y+116,12,2,'#9b7f8f');
  }
 }

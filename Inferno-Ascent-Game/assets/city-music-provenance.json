@@ -1,0 +1,11 @@
+{
+  "source_file": "ScreenRecording_10-07-2026 15-35-15_1.mp3",
+  "asset": "city-music.mp3",
+  "provenance": "User-supplied MP3; copied byte-for-byte with no transcoding or audio changes.",
+  "sha256": "5a86880a8af816681a6637e648e56e72a1c5ad05a1d3e8518d6ee4b2fe1b0a99",
+  "bytes": 4918443,
+  "codec": "mp3",
+  "sample_rate_hz": 44100,
+  "channels": 2,
+  "duration_seconds": 176.404898
+}

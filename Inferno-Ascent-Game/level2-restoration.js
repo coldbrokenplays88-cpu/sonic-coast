@@ -31,6 +31,7 @@ function restoreCityDistricts(a){
   const section={name,prefix,x1:x,x2:x+to-from,entryId:map.get(selected[0].id),exitId:map.get(endSurface.id)};restored.push(section);return section;
  }
  add('CITY UNDER ATTACK',0,8500,0,420,'under-attack');
+ for(const s of a.surfaces)if(s.id.startsWith('under-attack-')&&s.y2<s.y1)s.damaged=true;
  add('SKYLINE FORK',8500,16500,8500,-450,'skyline-fork');
  add('SPLIT SKYLINE',50500,60600,a.surfaces.find(s=>s.id==='draw-hall-exit').x2,a.surfaces.find(s=>s.id==='draw-hall-exit').y2,'split-skyline');
  const climaxX=27290+16500+10100+900,climaxY=-5920-2470;

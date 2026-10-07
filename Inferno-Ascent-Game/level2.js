@@ -23,7 +23,7 @@ function makeLevel2(){
  challenge('arrival-climb','ROOFTOP APPROACH',[start.id,a.id,b.id,c.id,d.id]);bot('approach-guard',1610,210);Object.assign(enemies.at(-1),{range:65,rebound:false});pit(670,2460,650);
 
  // The earlier vent drawing is retained once, compactly, with meaningful failure.
- const roof=deck('vent-upper-roof',3350,3830,-100,-100,{kind:'express'}),upper1=deck('vent-upper-step',4020,4380,-140,-140,{kind:'express'}),upper2=deck('vent-upper-tail',4550,4940,-80,-80,{kind:'express'}),merge=deck('vent-later-merge',5060,5450,80);
+ const roof=deck('vent-upper-roof',3350,4550,-100,-100,{kind:'express',boostExit:true}),upper1=deck('vent-upper-step',4020,4380,-140,-140,{kind:'express'}),upper2=deck('vent-upper-tail',4550,4940,-80,-80,{kind:'express'}),merge=deck('vent-later-merge',5060,5450,80);
  const entryVent=vent('momentum-vent',d,2700,18.8,roof);
  const lows=[deck('vent-lower-1',3070,3740,250,250,{kind:'lower'}),ledge('vent-lower-2',3900,4160,310,{kind:'lower'}),deck('vent-lower-3',4340,4580,230,230,{kind:'lower'})];
  const lift=ledge('vent-lower-lift',4860,5220,132.5,{kind:'moving',cityType:'freight-lift',motion:{axis:'y',amp:92.5,period:360,phase:Math.PI/2}});
@@ -38,7 +38,7 @@ function makeLevel2(){
  const inside=deck('draw-glass-hall',7860,8340,-220,-220,{cityType:'interior',sealedBy:glass.id});
  const downhill=deck('draw-downhill',8340,9040,-220,60,{cityType:'concrete-ramp',sealedBy:glass.id});
  body('glass-tower',7860,-600,540,{gateId:glass.id,rooms:[{x1:7860,x2:8340,y:-220}]});
- const escape1=ledge('draw-fire-escape-1',10480,11190,-470),left1=ledge('draw-left-ledge',10140,10420,-580),escape2=ledge('draw-fire-escape-2',10700,11190,-690);
+ const escape1=ledge('draw-fire-escape-1',9940,11190,-470),left1=ledge('draw-left-ledge',10140,10420,-580),escape2=ledge('draw-fire-escape-2',10700,11190,-690);
  vent('draw-downhill-vent',downhill,8990,29,escape1);
  challenge('draw-fire-climb','FIRE ESCAPE TURN',[escape1.id,left1.id,escape2.id]);
  const blocked=ledge('draw-blocked-left',10230,10530,-800);spike('draw-left-spikes',10230,-800,300);
