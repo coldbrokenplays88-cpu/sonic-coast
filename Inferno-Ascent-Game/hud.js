@@ -51,7 +51,6 @@
  }
  function bitmap(ctx,rows,x,y,palette){for(let iy=0;iy<rows.length;iy++)for(let ix=0;ix<rows[iy].length;ix++){const color=palette[rows[iy][ix]];if(color){ctx.fillStyle=color;ctx.fillRect(x+ix,y+iy,1,1);}}}
  const ring=['.....333333.....','...3344444433...','..344222222443..','.34221....12243.','.3421......1243.','3421........1243','3421........1243','3421........1243','3421........1243','3421........1243','3421........1243','.3421......1243.','.34221....12243.','..344222222443..','...3344444433...','.....333333.....'];
- const head=['.......11111........','....1122222221......','..11222222222211....','.1222222222222221...','...1222222222222221.','...122222222233221..','.122222222223443221.','..12222222223443221.','...12222222234533221','..12222222233353321.','...122222266666661..','....1222266677761...','......12666777761...','.......166677761....','.........166661.....'];
  const stats=new Map(),state={rings:0,lives:3,time:0,score:0,boost:0,maxBoost:90,speed:0,mode:'ready',frame:0};
  function element(id){return document.getElementById(id);}
  function stat(id,value,paint){const canvas=element(id);if(!canvas||stats.get(id)===value)return;const ctx=canvas.getContext('2d');ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,canvas.width,canvas.height);paint(ctx);stats.set(id,value);}
@@ -63,7 +62,9 @@
   const pause=element('pause');if(pause){pause.setAttribute('data-paused',String(state.mode==='paused'));pause.setAttribute('aria-label',state.mode==='paused'?'Resume game':'Pause game');}
   stat('ring-stat',r,ctx=>{bitmap(ctx,ring,0,2,{'1':'#88541c','2':'#e69824','3':'#fff3a1','4':'#ffcf35'});text(ctx,r,24,6,2);});
   stat('timer-stat',t,ctx=>{const width=[...t].reduce((n,c)=>n+((glyphs[c]||glyphs[' '])[0].length+1)*2,0)-2;text(ctx,t,Math.max(0,Math.floor((72-width)/2)),3,2);});
-  stat('life-stat',l,ctx=>{bitmap(ctx,head,0,1,{'1':'#0b1839','2':'#397df5','3':'#edfaff','4':'#1fa674','5':'#101b30','6':'#ffbf78','7':'#ffde9a'});text(ctx,'X',24,6,1,'#b3cced');text(ctx,l,32,6,2);});
+  // Crop the standing pose's actual head from the recovered October 7 atlas.
+  // Include image readiness in the key so unchanged lives repaint after loading.
+  stat('life-stat',l+(state.lifeImage?'/sprite':'/loading'),ctx=>{if(state.lifeImage)ctx.drawImage(state.lifeImage,20,362,131,87,0,1,27,18);text(ctx,'X',32,6,1,'#b3cced');text(ctx,l,40,6,2);});
   stat('speed-stat',String(Math.round(state.speed)),ctx=>text(ctx,'SPD '+String(Math.max(0,Math.round(state.speed))),0,1,1,'#98eaff'));
   drawPixelBoostBar(element('pixel-boost'),state.maxBoost>0?state.boost/state.maxBoost:0,state.frame);
  }

@@ -27,7 +27,7 @@ This continuation adds 40 Sonic poses, the supplied music, damaged architecture,
 | 19 | Springs | Red/yellow cap, silver coils, directional launches, compression/extension/rebound/idle; moving devices follow their actual platforms. Animation/anchor tests pass. |
 | 20 | Pool booster | Original pixel arrows/rollers inspired by the supplied mechanism direction; animated underwater and launches to the leaning tower. Scripted capture plus real exit arc tested. |
 | 21 | Sound effects | Original bounded WebAudio synthesis covers both acts' movement, devices, hazards, pickups, damage, checkpoints, menus and clear. Opt-in, balanced/throttled voices; native action wiring and graph lifecycle tests pass. |
-| 22 | HUD | Ring icon/count left, unlabeled centered timer, lives/pause right; score hidden during play and visible at clear. Pixel stat rendering and pause semantics tested. |
+| 22 | HUD | Ring icon/count left, unlabeled centered timer, lives/pause right with the actual standing-sprite head cropped from the newest atlas; score hidden during play and visible at clear. Pixel stat rendering and pause semantics tested. |
 | 23 | Fullscreen/keyboard | Fullscreen entry/exit and fallback sizing; touchscreen buttons removed. Actual Chromium keyboard movement/P/F and desktop/tablet/mobile layouts pass. Safari/MagicKeyboard hardware check pending. |
 | 24 | Recovery/checkpoints | Controllable recovery decks, wrong-choice drop, pool capture and safe junction retry. Secret route returns to original tower without repositioning after its initial start. Death at junction keeps gauge empty and resets monitors. |
 | 25 | Speed display | Full slope-tangent/loop speed, converted to units/second consistently, including rails. Regression tests pass. |
