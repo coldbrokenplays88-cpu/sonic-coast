@@ -48,4 +48,4 @@
 - [x] Verify native-input fight, damage and recovery, pixel rendering, act tracks, both clip-equivalent camera ascents, no browser errors.
 - [x] Run Node suite and existing browser/background checks.
 - [x] Obtain fresh whole-branch review, fix important issues, save all evidence and commit.
-- [ ] Push a review branch; create/attach PR if API permits, otherwise provide compare link. Leave merge/deploy to user.
+- [x] Pushed `codex/egg-scorpion`. GitHub API rejected PR creation with Forbidden; use https://github.com/coldbrokenplays88-cpu/sonic-coast/compare/main...codex/egg-scorpion?expand=1 . Merge/deploy remains with the user.
