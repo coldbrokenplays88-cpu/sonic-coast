@@ -2,7 +2,8 @@
    Sound is opt-in. This adds no Web Audio nodes and keeps pause positions. */
 (function(root){
  'use strict';
- const SOURCE='assets/city-music.mp3', MAX_VOLUME=.3;
+ const SOURCES={1:'assets/neon-express-act1-music.mp3',2:'assets/city-music.mp3'},MAX_VOLUME=.3;
+ let source=SOURCES[2];
  let player=null,wanted=false,blocked=false,failed=false,pending=null;
  let volume=MAX_VOLUME,resetPending=false,generation=0;
 
@@ -15,7 +16,7 @@
   if(player)return true;
   if(failed||typeof root.Audio!=='function')return false;
   try{
-   player=new root.Audio(SOURCE);player.loop=true;player.preload='metadata';player.volume=volume;
+   player=new root.Audio(source);player.loop=true;player.preload='metadata';player.volume=volume;
    player.addEventListener('error',()=>{failed=true;blocked=false;pause();});
    player.addEventListener('loadedmetadata',applyReset);
    applyReset();return true;
@@ -50,6 +51,8 @@
  }
  function syncGameMusic(state={}){
   state=state&&typeof state==='object'?state:{};
+  const requested=SOURCES[state.act]||source;
+  if(requested!==source){generation++;source=requested;blocked=false;failed=false;resetPending=true;pause();if(player){player.src=source;try{player.load?.();}catch{}applyReset();}}
   const next=state.enabled===true&&state.mode==='playing';
   if(next!==wanted){generation++;blocked=false;}
   wanted=next;

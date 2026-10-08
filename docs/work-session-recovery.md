@@ -113,3 +113,15 @@ User authorized all collected fixes after reviewing the opening and both middle 
 Current verification:103 Node passes, integrated native Chromium with source/cached pillar parity, seamless/animated background checks,7 comparable route-phase replays, actual no-input aimed-spring miss recovery, bonus return to original tower, and optional high reconnection. Docs/update-progress.md contains captures, timings and measured draw-time limits. Device lag and route feel need another human playtest; no claim of optimal route timing or universal lag elimination.
 
 Prior PR1 was merged to main by the user (main8d4263e). New corrections are saved on the retained development branch and require a new PR/merge for Pages. GitHub API currently returns Forbidden; Git HTTPS read/push works. Never claim this pass live without the new merge and successful Pages workflow.
+
+### Pending final zone update: Act 1 music
+
+User supplied `ScreenRecording_10-07-2026 23-43-53_1.mp3` specifically for Neon Express Act 1. Preserved unchanged at `Inferno-Ascent-Game/assets/neon-express-act1-music.mp3`. Include act-specific track selection in the boss/cutscene update; retain `assets/city-music.mp3` for Act 2. This asset is saved locally, not yet wired into playback or published. The act-name edits are also pending locally for that combined update.
+
+### October 8 — approved boss update implemented
+
+Working branch: `codex/egg-scorpion`, based on the retained previous update commit; origin/main now contains merged PR #2 (`b11c135`). User approved the complete boss checklist with "ok make". Boss modules: `egg-scorpion.js` (deterministic state and shared geometry), `boss-art.js` (generated modular RGBA artwork on fixed pixel grid), `boss-game.js` (arena trigger, checkpoint/retry, camera and game glue). `game.js` now clears Act 2 only after boss defeat. Entrance is approximately 4 seconds; a successful three-opening browser replay includes entrance, tail/bite attacks, laser phase and destruction. Shadow/pod/rocket ending is still deferred by user request.
+
+Act-name changes and saved Act 1 music are now integrated. Recovered October 7 PNGs remain unchanged. New art source is `assets/egg-scorpion-parts.png`; the generated original also remains outside the repo in `/workspace/generated_images`.
+
+Camera now maintains eased anchor/lift/prediction/velocity state and resets it on respawn. Tests cover takeoff, landing, prediction cutoff and changing predicted floors; input replays cover actual early roof transfers. Final fresh reviewer identified eye-mask misalignment with the generated sprite, fixed by aligning eye geometry and masks with source glass centers. Browser pixel check observed 1,532 intact blue pixels and 0 after both panels shattered, with a failing-before/passing-after check.

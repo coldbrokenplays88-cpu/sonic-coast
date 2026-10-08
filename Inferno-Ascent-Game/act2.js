@@ -1,5 +1,5 @@
 'use strict';
-function selectAct(act){selectedAct=act===2?2:1;setup();mode='ready';show(selectedAct===2?'City on<br><em>the brink.</em>':'Ready.<br><em>Gotta go.</em>',selectedAct===2?'Through ruined streets and exposed towers.<br>Reach the rooftop helipad.':'Build momentum. Jump the rails and roll through tunnels.',selectedAct===2?'PLAY ACT 02':'PLAY ACT 01');$('#act-select').value=String(selectedAct)}
+function selectAct(act){selectedAct=act===2?2:1;setup();mode='ready';show(selectedAct===2?'City on<br><em>the brink.</em>':'Ready.<br><em>Gotta go.</em>',selectedAct===2?'Through ruined streets and exposed towers.<br>Reach the rooftop helipad.':'Build momentum. Jump the rails and roll through tunnels.',selectedAct===2?'PLAY ACT 2':'PLAY ACT 1');$('#act-select').value=String(selectedAct)}
 function resetAct2(){if(level.act!==2)return;for(const group of level.collapseGroups||[])group.triggered=false;for(const d of level.debris){d.triggered=d.x<level.checkpoints[checkpoint].x;d.age=d.triggered?240:0}for(const e of level.events)e.age=e.trigger<level.checkpoints[checkpoint].x?150:-1;for(const l of level.loops){l.used=l.x<level.checkpoints[checkpoint].x;l.solved=false}for(const h of level.hazards)if(h.type==='breakable')h.broken=!!h.broken&&h.x<level.checkpoints[checkpoint].x}
 function launchAirDevice(device){
  if(device.launchX!==undefined)p.vx=device.launchX;if(device.id==='mid-low-spring')p.poolApproach=true;if(device.poolBooster)p.poolExit=true;
@@ -34,17 +34,32 @@ function predictLanding(){if(level.act!==2||p.ground||p.loop||Math.abs(p.vx)<9)r
   const x=p.x+p.vx*t;if(t<.5||t>60||x<q.x1-FOOT_RADIUS||x>q.x2+FOOT_RADIUS)continue;if(!best||t<best.t)best={id:s.id,x,y:yOn(s,x),t};
  }return best
 }
-function updateCamera(){const speed=p.loop?p.loop.speed:Math.abs(p.vx),act2=level.act===2;
+const cameraTracking={anchor:.64,lift:0,prediction:0,velocity:0,lastY:null};
+function resetCameraTracking(){cameraTracking.anchor=.64;cameraTracking.lift=0;cameraTracking.prediction=0;cameraTracking.velocity=0;cameraTracking.lastY=p.y;}
+function updateCamera(){if(frameBossCamera())return;const speed=p.loop?p.loop.speed:Math.abs(p.vx),act2=level.act===2;
  // Ease across the speed range, including the old threshold, without a target jump.
  const speedBlend=Math.max(0,Math.min(1,(speed-8)/16)),targetZoom=.94-.18*speedBlend*speedBlend*(3-2*speedBlend);zoom+=(targetZoom-zoom)*.025;
  const vw=W/zoom,lead=Math.min(act2?340:230,Math.max(-180,p.vx*(act2?12:9))),anchor=act2?W/zoom*.38:280;
  cam+=(Math.max(0,Math.min(END-vw+260,p.x-anchor+lead))-cam)*.15;
  // Ground framing must ease too: the former speed<9 switch jerked the
  // entire scene during ordinary acceleration and braking, despite smooth zoom.
- const groundBlend=Math.max(0,Math.min(1,(speed-6)/6)),verticalAnchor=p.ground?.68-.08*groundBlend*groundBlend*(3-2*groundBlend):.60;
- let targetY=act2?p.y-H/zoom*verticalAnchor+Math.min(0,p.vy*8):Math.max(-110,Math.min(190,p.y-350));
- if(act2){const landing=predictLanding();if(landing)targetY=Math.min(p.y-H/zoom*.26,Math.max(targetY,landing.y-H/zoom*.84))}
- if(act2&&level.verticalCity)targetY=Math.max(p.y-H/zoom*.78,Math.min(p.y-H/zoom*.25,targetY));camY+=(targetY-camY)*(act2?.18:.08)
+ const groundBlend=Math.max(0,Math.min(1,(speed-6)/6)),groundAnchor=.68-.08*groundBlend*groundBlend*(3-2*groundBlend);
+ if(!act2){camY+=(Math.max(-110,Math.min(190,p.y-350))-camY)*.08;return;}
+ // Both takeoff lookahead and landing framing are continuous state, so changes
+ // in contact or predicted deck cannot immediately reframe the whole scene.
+ cameraTracking.anchor+=((p.ground?groundAnchor:.60)-cameraTracking.anchor)*.05;
+ cameraTracking.lift+=(Math.max(-100,Math.min(0,p.vy*6))-cameraTracking.lift)*.08;
+ const baseY=p.y-H/zoom*cameraTracking.anchor+cameraTracking.lift,landing=predictLanding();
+ let prediction=0;
+ if(landing){const confidence=Math.max(0,Math.min(1,(speed-9)/5));const framed=Math.min(p.y-H/zoom*.30,Math.max(baseY,landing.y-H/zoom*.82));prediction=(framed-baseY)*confidence*confidence*(3-2*confidence);}
+ cameraTracking.prediction+=(prediction-cameraTracking.prediction)*.045;
+ let targetY=baseY+cameraTracking.prediction;
+ if(level.verticalCity)targetY=Math.max(p.y-H/zoom*.78,Math.min(p.y-H/zoom*.25,targetY));
+ const movement=cameraTracking.lastY===null?0:p.y-cameraTracking.lastY;cameraTracking.lastY=p.y;
+ const limit=Math.min(25,Math.max(3,Math.max(Math.abs(p.vy),Math.abs(movement))*1.05+2));
+ cameraTracking.velocity+=(Math.max(-limit,Math.min(limit,(targetY-camY)*.14))-cameraTracking.velocity)*.3;
+ camY+=Math.max(-limit,Math.min(limit,cameraTracking.velocity));
+
 }
 // Small deterministic pixel effects keep fire and smoke anchored to the artwork.
 function cityFlame(x,y,w,h,seed=0,alpha=1){const beat=Math.floor(step/2),unit=1;ctx.save();ctx.globalAlpha=alpha;

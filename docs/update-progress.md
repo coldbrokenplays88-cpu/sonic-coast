@@ -76,3 +76,19 @@ User recordings `200538` (camera at0:03), `201724` (spring route), `202046` (low
 Validation:103 Node checks, integrated Chromium checks with pillar parity, background pixel regressions, both-route timing replays, and independent review. Review captures:[pool](validation/corrected-pool.png),[post-pool platforms](validation/corrected-platforms.png),[spring decks](validation/corrected-springs.png). Timing details:[route timings](validation/playtest-route-timing.json).
 
 Latest renderer sample compared this pass with the immediately preceding deployed-art commit `bd01214`, under headless Chromium, seven60-draw batches after warmup. Median batch draw times (before→after ms): Neon4.94→4.52, shared roof5.76→5.75, vent4.67→4.37, summit4.72→4.14. Runs varied; this is neither deviceFPS nor proof every lag spike is eliminated. Raw:[profile](validation/playtest-render-profile.json). Actual device performance still needs the user's retest.
+
+## October 8 — Egg Scorpion finale
+
+The user approved the boss checklist; Shadow's ending remains deferred. The existing level and October 7 recovered assets remain intact.
+
+- Added Egg Scorpion with generated modular pixel artwork, an eyes-first rooftop climb, claw anchoring, targeted tail strikes, horizontal moustache bites, lowered-eye openings, distinct shattered eye panels, an opening laser tail and armor destruction.
+- Three successful bite openings win. Missing an opening repeats the cycle. The third bite can finish a perfect fight; players who miss can continue rather than softlock.
+- The summit now starts the encounter instead of awarding the act clear. Death and boss game-over retry return to the arena with reset boss health. A full Restart deliberately starts the act again. Pause freezes choreography and resumes it.
+- Added original procedural boss sounds; no copied sound effects. Arena rings provide recoverable protection; boost remains governed by existing rules.
+- Smoothed takeoff lookahead, grounded/airborne framing and landing prediction. Representative native-input replays cover the recorded early roof climbs and the second skyline landing; hardware playtesting is still needed to judge feel.
+- Both acts now use Neon Express names. The user-supplied Act 1 MP3 loops on Act 1, and the original supplied city track remains on Act 2. Switching acts reuses one native audio player and invalidates old play requests.
+- Resolution remains 1920×1080. Boss parts are nearest-sampled onto a two-world-unit pixel grid; cached rotation stamps keep animation crisp and bounded.
+
+Validation artifacts: `docs/validation/boss-*.png`, `boss-replay.json`, `camera-replay.json`. Browser replay uses only normal directional/jump handlers after initial arena placement. Original clip inputs cannot be reconstructed exactly; camera tests reproduce those roof transitions rather than claiming an exact recording replay.
+
+Final validation: 123 Node tests passed. The Chromium input replay won on the third bite with zero deaths/hits, used nine cached sprite stamps, and decoded/played both actual act MP3s through one player. A separate pixel comparison found zero blue-glass pixels remaining after both eyes were shattered. Existing game/browser/background checks passed with zero page errors. This does not establish iPad/Safari frame pacing or player-perceived camera comfort.

@@ -12,6 +12,13 @@
  // Short attacks give tactile cues; quieter noise underlies movement instead of
  // a competing melody. Frequencies and note sequences are authored for this game.
  const cues={
+  bossReveal:{interval:1,priority:4,voices:()=>[tone(65,32,.9,.3,'sawtooth'),hiss(500,90,.8,.2,0,'lowpass')]},
+  bossAnchor:{interval:.4,priority:4,voices:()=>[tone(115,28,.35,.32,'triangle'),hiss(1900,130,.45,.3,0,'lowpass')]},
+  bossStrike:{interval:.25,priority:3,voices:()=>[tone(280,38,.2,.28,'square'),hiss(2500,150,.28,.24)]},
+  bossBite:{interval:.25,priority:3,voices:()=>[tone(170,65,.28,.26,'sawtooth'),hiss(1800,440,.2,.23)]},
+  bossLaser:{interval:.3,priority:3,voices:()=>[tone(1500,330,.48,.22,'sawtooth'),tone(2300,630,.38,.13,'square'),hiss(3200,1800,.4,.13)]},
+  bossHit:{interval:.3,priority:4,voices:()=>[hiss(5600,700,.35,.28),tone(670,110,.22,.24,'square'),tone(1400,1900,.15,.13,'sine',.04)]},
+  bossBreak:{interval:1,priority:4,voices:()=>[tone(140,25,.8,.3,'sawtooth'),hiss(2900,100,.85,.32),tone(85,30,.6,.2,'triangle',.2)]},
   start:{interval:.5,priority:2,voices:()=>[
    tone(340,345,.13,.24,'triangle'),tone(430,438,.15,.23,'triangle',.085),
    tone(540,552,.18,.21,'triangle',.17),tone(675,680,.26,.22,'sine',.255)]},

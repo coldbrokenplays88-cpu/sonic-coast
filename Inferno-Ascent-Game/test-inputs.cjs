@@ -58,7 +58,7 @@ test('camera zoom changes continuously across the old speed threshold',()=>{
 });
 test('vertical camera framing stays continuous when ground speed crosses nine',()=>{
  const a=boot();
- const at=speed=>a.run(`p.ground=true;p.loop=null;p.x=1800;p.y=-200;p.vx=${speed};p.vy=0;zoom=.94;camY=-560;updateCamera();(p.y-camY)*zoom`);
+ const at=speed=>a.run(`p.ground=true;p.loop=null;p.x=1800;p.y=-200;p.vx=${speed};p.vy=0;zoom=.94;camY=-560;resetCameraTracking();updateCamera();(p.y-camY)*zoom`);
  assert.ok(Math.abs(at(8.99)-at(9.01))<.1,'tiny speed changes must not jerk the scene vertically');
 });
 test('spring drawing compresses, extends and returns to rest after firing',()=>{
@@ -109,4 +109,19 @@ test('recovered sprites take priority for every active movement state',()=>{
   ["p.surface=null;p.hurt=10",'hurt']
  ];
  for(const [setup,state]of cases){a.run(setup);const pose=a.run('sonicPose()');assert.equal(pose.state,state);assert.ok(['recoveredSpeedster','recoveredPeelout'].includes(pose.sheet));assert.ok(Number.isInteger(pose.frame)&&pose.frame>=0&&pose.frame<48);}
+});
+test('jump takeoff and landing cannot abruptly change vertical framing',()=>{
+ const a=boot();a.run('p.x=1800;p.y=-200;p.vx=4;p.vy=0;p.ground=true;camY=p.y-H/.94*.64;zoom=.94;resetCameraTracking();for(let i=0;i<100;i++)updateCamera()');
+ const before=a.run('camY');a.run('p.ground=false;p.vy=-13.4;updateCamera()');assert.ok(Math.abs(a.run('camY')-before)<5,'takeoff lookahead must ease, not jump');
+ a.run('p.y=-500;p.vy=8;resetCameraTracking();camY=p.y-H/zoom*.6;updateCamera()');const airborne=a.run('camY');a.run('p.ground=true;p.vy=0;updateCamera()');assert.ok(Math.abs(a.run('camY')-airborne)<5,'landing anchor must ease');
+});
+test('landing predictor speed cutoff cannot snap vertical camera target',()=>{
+ const a=boot();a.run('p.ground=false;p.x=1800;p.y=-200;p.vy=2;camY=-560;zoom=.94;resetCameraTracking();predictLanding=()=>Math.abs(p.vx)>=9?{x:2200,y:400,t:20}:null');
+ const at=v=>a.run(`p.vx=${v};camY=-560;resetCameraTracking();updateCamera();camY`);
+ assert.ok(Math.abs(at(8.99)-at(9.01))<.1,'prediction entry must have no abrupt effect');
+});
+test('changing the predicted landing keeps bounded camera motion while following a climb',()=>{
+ const a=boot();a.run('p.ground=false;p.x=1800;p.y=-200;p.vx=12;p.vy=-10;zoom=.94;camY=-560;resetCameraTracking();predictLanding=()=>({x:2000,y:-400,t:20})');
+ let before=a.run('camY');for(let i=0;i<50;i++){a.run(`p.y-=10;predictLanding=()=>({x:2000,y:${i%2?-50:-500},t:20});updateCamera()`);const now=a.run('camY');assert.ok(Math.abs(now-before)<=14);before=now;}
+ assert.ok(a.run('(p.y-camY)*zoom')>80&&a.run('(p.y-camY)*zoom')<480,'Sonic stays in view during climb');
 });

@@ -97,6 +97,6 @@ function makeLevel2(){
  for(const c of routeChallenges){const last=surfaces.find(s=>s.id===c.steps.at(-1));c.exitX=last.x1;c.exitY=last.y1;const first=surfaces.find(s=>s.id===c.entryId);c.entryX=first.x1+40;c.x1=Math.min(...c.steps.map(id=>surfaces.find(s=>s.id===id).x1));c.x2=Math.max(...c.steps.map(id=>surfaces.find(s=>s.id===id).x2));}
  const routeCues=routeChallenges.flatMap(c=>c.steps.slice(0,-1).map((id,i)=>({id,nextId:c.steps[i+1]})));
  const {end,arena,restoredSections}=restored;
- return {act:2,title:'INFERNO ASCENT',verticalCity:true,end,arena,restoredSections,surfaces,hazards,enemies,pads,springs,rings,signs,checkpoints,sectors,loops,debris,events,buildings,routeChallenges,challenges:routeChallenges,ventSections:[ventSection],drawnSections,routeCues,deathZones,collapseGroups,
+ return {act:2,title:'NEON EXPRESS',verticalCity:true,end,arena,restoredSections,surfaces,hazards,enemies,pads,springs,rings,signs,checkpoints,sectors,loops,debris,events,buildings,routeChallenges,challenges:routeChallenges,ventSections:[ventSection],drawnSections,routeCues,deathZones,collapseGroups,
  floorAt(x){const a=sectors[Math.max(0,sectors.findLastIndex(s=>s.x<=x))];return a.y}}
 }
