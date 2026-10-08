@@ -1,6 +1,6 @@
 # Playtest the unmerged update
 
-The development branch is `codex/sonic-update-oct7`; its existing pull request is [#1](https://github.com/coldbrokenplays88-cpu/sonic-coast/pull/1). GitHub Pages still serves `main` until this PR is merged and its Pages workflow succeeds.
+The development branch is `codex/sonic-update-oct7`. Previous pull request [#1](https://github.com/coldbrokenplays88-cpu/sonic-coast/pull/1) was merged; the latest playtest corrections require a new pull request. GitHub Pages receives these corrections after that new PR is merged and its Pages workflow succeeds.
 
 1. Open the development branch on GitHub, choose **Code → Download ZIP**, and extract it.
 2. Open the extracted **Inferno-Ascent-Game** folder and double-click **RUN-GAME-WINDOWS.bat**. It uses Python to serve/open the game; leave its terminal open. Alternatively open `index.html` directly in your browser.
