@@ -90,6 +90,17 @@ function drawBoostMonitor(monitor){
 }
 function drawPoolBooster(device){
  if(!polishVisible(device.x,device.y,58,90))return;
+ if(device.poolBooster&&device.power===0){
+  const phase=Math.floor(runFrames/4)%4;
+  const runs=polishCached('ground-pool/'+phase,()=>polishCompile(polishRaster(37,13,({box,line,disk})=>{
+   box(1,9,35,4,'#18263a');box(2,8,33,2,'#a7c6d3');box(4,10,29,2,'#46586f');
+   box(9,2,19,6,'#992849');box(10,2,17,1,'#ef6970');box(10,7,17,1,'#4e253e');
+   for(let i=0;i<3;i++){const x=11+i*5;line(x,3,x+2,5,phase===i?'#d8ffff':'#70cbdc');line(x+2,5,x,7,phase===i?'#d8ffff':'#70cbdc')}
+   for(const x of [5,31]){disk(x,6,4,4,'#172639');disk(x,6,3,3,'#d6e6e8');disk(x,6,1,1,'#7a8592');const d=phase%2?1:0;line(x-2,6-d,x+2,6+d,'#b5344e')}
+   box(2,11,3,1,'#e8eff0');box(32,11,3,1,'#e8eff0');
+  }),0,18,12));
+  polishDraw(runs,device.x,device.y);return;
+ }
  const phase=Math.floor(runFrames/4)%4,angle=polishDirection(device);
  const runs=polishCached('pool/'+phase+'/'+angle,()=>polishCompile(polishRaster(37,32,({box,line,disk})=>{
   box(3,26,31,5,'#16223a');box(1,24,35,4,'#46566d');box(3,25,31,1,'#a5bdc7');box(5,28,27,2,'#28394e');

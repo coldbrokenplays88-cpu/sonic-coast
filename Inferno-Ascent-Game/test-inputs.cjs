@@ -56,6 +56,11 @@ test('camera zoom changes continuously across the old speed threshold',()=>{
  assert.ok(Math.abs(values[0]-.94)<.0001);
  assert.ok(Math.abs(values.at(-1)-.76)<.0001);
 });
+test('vertical camera framing stays continuous when ground speed crosses nine',()=>{
+ const a=boot();
+ const at=speed=>a.run(`p.ground=true;p.loop=null;p.x=1800;p.y=-200;p.vx=${speed};p.vy=0;zoom=.94;camY=-560;updateCamera();(p.y-camY)*zoom`);
+ assert.ok(Math.abs(at(8.99)-at(9.01))<.1,'tiny speed changes must not jerk the scene vertically');
+});
 test('spring drawing compresses, extends and returns to rest after firing',()=>{
  const a=boot();
  a.run('const springVisual={x:100,y:420,firedAt:100};');

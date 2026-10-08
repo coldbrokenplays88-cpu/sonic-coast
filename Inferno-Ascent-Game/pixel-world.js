@@ -52,10 +52,29 @@ function paintCityFacade(left,right,roofY,seed=0,exposed=false,landmark=null,cli
  else if(landmark==='EAST WORKSITE'){const x=right-58;cityPixelRect(x,top,24,bottom-top,'#6a554a');for(let y=Math.floor((top-64)/64)*64;y<bottom+8;y+=64){cityPixelLine(x,y,x+22,y+54,'#c59562',4);cityPixelLine(x+22,y,x,y+54,'#a77958',4)}}
  else if(landmark==='HELIPAD ACCESS'){const x=right-95;cityPixelRect(x,top,54,bottom-top,'#343d4f');for(let y=Math.floor((top-48)/48)*48;y<bottom;y+=48){cityPixelRect(x+4,y,46,6,p.edge);cityPixelRect(x+12,y+10,26,24,p.shade)}}
 }
-function cityPillar(x,y,bottom,steel=false){const p=cityMaterials[steel?2:0];cityPixelRect(x,y,steel?16:30,bottom-y,p.shade);cityPixelRect(x,y,steel?4:6,bottom-y,p.edge);cityPixelRect(x+6,y,steel?6:16,bottom-y,p.body);for(let yy=Math.ceil(y/52)*52;yy<bottom;yy+=52){cityPixelRect(x-4,yy,steel?24:38,6,p.light);if(steel)cityPixelLine(x+4,yy+8,x+12,yy+45,p.light,2)}}
+function paintCityPillar(x,y,bottom,steel=false){const p=cityMaterials[steel?2:0];cityPixelRect(x,y,steel?16:30,bottom-y,p.shade);cityPixelRect(x,y,steel?4:6,bottom-y,p.edge);cityPixelRect(x+6,y,steel?6:16,bottom-y,p.body);for(let yy=Math.ceil(y/52)*52;yy<bottom;yy+=52){cityPixelRect(x-4,yy,steel?24:38,6,p.light);if(steel)cityPixelLine(x+4,yy+8,x+12,yy+45,p.light,2)}}
+const cityPillarTextures=new Map();
+const cityPillarFrameSpans=new Map();
+let cityPillarPass=false;
+function cityPillar(x,y,bottom,steel=false){
+ if(bottom<=y)return;
+ if(!document.createElement)return paintCityPillar(x,y,bottom,steel);
+ let texture=cityPillarTextures.get(steel);
+ if(!texture){texture=document.createElement('canvas');texture.width=(steel?24:38)/2;texture.height=520;const dc=texture.getContext('2d');dc.scale(.5,.5);cityRasterContext=dc;
+  try{paintCityPillar(4,0,1040,steel)}finally{cityRasterContext=null}cityPillarTextures.set(steel,texture);
+ }
+ // World-anchored strips of twenty 52-unit repeats; crop the visible ends instead of allocating
+ // a new texture as the camera rises. Only two texture variants are retained.
+ const top=Math.max(Math.floor(y/2)*2,Math.floor((camY-40)/2)*2);let end=Math.min(Math.ceil(bottom/2)*2,Math.ceil((camY+H/zoom+80)/2)*2);
+ // Stacked decks share identical world-anchored columns. Draw their union,
+ // rather than repeatedly painting the same full-height steel over itself.
+ if(cityPillarPass){const key=Math.floor(x/2)+'/'+steel,covered=cityPillarFrameSpans.get(key);if(covered!==undefined)end=Math.min(end,covered);if(end<=top)return;cityPillarFrameSpans.set(key,top);}
+ for(let yy=Math.floor(top/1040)*1040;yy<end;yy+=1040){const cut=Math.max(0,top-yy),height=Math.min(1040-cut,end-yy-cut);if(height>0)ctx.drawImage(texture,0,cut/2,texture.width,height/2,Math.floor((x-4)/2)*2,yy+cut,texture.width*2,height);}
+}
 function drawPixelCityStructures(){
+ cityPillarFrameSpans.clear();cityPillarPass=true;try{
  for(const b of level.buildings){if(b.scenery)continue;const roof=b.roofId&&surfaceById(b.roofId),top=roof?Math.min(roof.y1,roof.y2)+26:b.y;if(b.x+b.w<cam-40||b.x>cam+W/zoom+40)continue;ctx.save();ctx.globalAlpha=b.interiorOpacity??1;if(roof&&roof.y1!==roof.y2){const left=Math.max(b.x,cam-40),right=Math.min(b.x+b.w,cam+W/zoom+40),bottom=camY+H/zoom+80;ctx.beginPath();ctx.moveTo(left,bottom);for(let x=Math.floor(left/2)*2;x<=right;x+=2){const y=Math.floor((yOn(roof,x)+26)/2)*2;ctx.lineTo(x,y);ctx.lineTo(x+2,y)}ctx.lineTo(right,bottom);ctx.closePath();ctx.clip()}cityFacade(b.x,b.x+b.w,top,b.seed,!!b.exposed,b.landmark);ctx.restore()}
- for(const s of level.surfaces){if(!active(s)||s.wallCap||s.secretDepth>4&&!level.middleSection?.secretRevealed)continue;const q=pose(s),left=Math.max(q.x1,cam-40),right=Math.min(q.x2,cam+W/zoom+40),type=s.cityType,bottom=camY+H/zoom+80;if(right<=left||Math.min(q.y1,q.y2)>bottom||type==='interior')continue;
+ for(const s of level.surfaces){if(!active(s)||s.wallCap||s.secretDepth>4&&!level.middleSection?.secretRevealed)continue;const q=pose(s),left=Math.max(q.x1,cam-40),right=Math.min(q.x2,cam+W/zoom+40),type=s.cityType,bottom=camY+H/zoom+80;if(right<=left||Math.min(q.y1,q.y2)>bottom||(type==='interior'||type==='glass-pool'))continue;
   if(type==='rooftop'&&!s.facade&&!s.roof){cityFacade(q.x1,q.x2,Math.min(q.y1,q.y2)+26,Math.floor(s.x1/810),false);continue}
   if(s.roof||s.facade){if(s.facade){for(const x of [q.x1+12,q.x2-24]){const y=yOn(s,x)+26;cityPixelLine(x,y,x+26,y+48,'#68778b',4);cityPixelRect(x+22,y+43,12,8,'#a28287')}}continue}
   if(s.kind==='moving'){
@@ -64,9 +83,11 @@ function drawPixelCityStructures(){
    else for(const x of [s.x1+8,s.x2-12]){const visibleTop=Math.max(top,camY-40),visibleBottom=Math.min(railBottom,bottom);cityPixelRect(x,visibleTop,4,visibleBottom-visibleTop,'#405066');cityPixelRect(x+4,visibleTop,2,visibleBottom-visibleTop,'#a2968a');cityPixelLine(x,yOn(s,x)+14,x,visibleTop,'#697b8e',2)}continue
   }
   if(s.grindable){for(let x=Math.ceil(left/260)*260;x<right;x+=260)cityPillar(x,yOn(s,x)+10,bottom,true);continue}
+  if(s.routeType==='skill'&&q.x2-q.x1<=64){const x=(q.x1+q.x2)/2,y=yOn(s,x)+26;cityPillar(x,Math.max(y,camY-40),bottom,true);cityPixelLine(q.x1+4,y,x,y+42,'#526277',4);continue}
   const spacing=type==='highway'||type==='concrete-ramp'?240:160;
   for(let x=Math.ceil((left-24)/spacing)*spacing;x<right;x+=spacing){if(x<q.x1+6||x>q.x2-24)continue;const y=yOn(s,x)+26;cityPillar(x,Math.max(y,camY-40),bottom,type!=='highway');const x2=Math.min(x+90,q.x2-8);cityPixelLine(x+4,y,x2,yOn(s,x2)+100,'#526277',4)}
  }
+ }finally{cityPillarPass=false}
 }
 const cityDeckTextures=new Map();
 const cityLoopTextures=new Map();

@@ -1,0 +1,61 @@
+{
+  "note": "Representative button-driven replays; these are not an optimal-speed proof or human playtest.",
+  "results": [
+    {
+      "phase": 0,
+      "lowFrames": 526,
+      "highFrames": 437,
+      "lowSeconds": 8.766666666666667,
+      "highSeconds": 7.283333333333333,
+      "savedSeconds": 1.4833333333333334
+    },
+    {
+      "phase": 40,
+      "lowFrames": 526,
+      "highFrames": 433,
+      "lowSeconds": 8.766666666666667,
+      "highSeconds": 7.216666666666667,
+      "savedSeconds": 1.55
+    },
+    {
+      "phase": 80,
+      "lowFrames": 526,
+      "highFrames": 434,
+      "lowSeconds": 8.766666666666667,
+      "highSeconds": 7.233333333333333,
+      "savedSeconds": 1.5333333333333334
+    },
+    {
+      "phase": 120,
+      "lowFrames": 526,
+      "highFrames": 433,
+      "lowSeconds": 8.766666666666667,
+      "highSeconds": 7.216666666666667,
+      "savedSeconds": 1.55
+    },
+    {
+      "phase": 180,
+      "lowFrames": 526,
+      "highFrames": 433,
+      "lowSeconds": 8.766666666666667,
+      "highSeconds": 7.216666666666667,
+      "savedSeconds": 1.55
+    },
+    {
+      "phase": 240,
+      "lowFrames": 526,
+      "highFrames": 436,
+      "lowSeconds": 8.766666666666667,
+      "highSeconds": 7.266666666666667,
+      "savedSeconds": 1.5
+    },
+    {
+      "phase": 280,
+      "lowFrames": 526,
+      "highFrames": 437,
+      "lowSeconds": 8.766666666666667,
+      "highSeconds": 7.283333333333333,
+      "savedSeconds": 1.4833333333333334
+    }
+  ]
+}
