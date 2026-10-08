@@ -33,6 +33,14 @@ const {chromium}=require('playwright');
    }
    ctx.restore();return different;
   });assert.equal(parity,0,'facade tile seams or changed pixels');
+  const pillarParity=await page.evaluate(()=>{
+   cam=0;camY=0;zoom=1;ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.imageSmoothingEnabled=false;let different=0;
+   for(const steel of [false,true]){
+    ctx.clearRect(0,0,W,H);paintCityPillar(180,0,520,steel);const a=ctx.getImageData(0,0,W,H).data;
+    ctx.clearRect(0,0,W,H);cityPillar(180,0,520,steel);const b=ctx.getImageData(0,0,W,H).data;
+    for(let i=0;i<a.length;i++)if(a[i]!==b[i])different++;
+   }ctx.restore();return {different,variants:cityPillarTextures.size};
+  });assert.equal(pillarParity.different,0,'cached pillars must preserve the source pixel pattern');assert.equal(pillarParity.variants,2);
   await page.evaluate(()=>{selectAct(2);start();testControlled=true;const d=level.springs.find(d=>d.id==='mid-low-spring');p.x=d.x;p.y=d.y-20;p.surface=surfaceById(d.surfaceId);p.ground=true;launchAirDevice(d);for(let i=0;i<160;i++){update();if(p.surface?.id==='mid-tilted-glass-roof')break}draw()});
   assert.equal(await page.evaluate(()=>p.surface?.id),'mid-tilted-glass-roof');
   await page.locator('#sound').click();assert.equal(await page.evaluate(()=>sound),true);

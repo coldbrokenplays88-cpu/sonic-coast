@@ -39,7 +39,10 @@ function updateCamera(){const speed=p.loop?p.loop.speed:Math.abs(p.vx),act2=leve
  const speedBlend=Math.max(0,Math.min(1,(speed-8)/16)),targetZoom=.94-.18*speedBlend*speedBlend*(3-2*speedBlend);zoom+=(targetZoom-zoom)*.025;
  const vw=W/zoom,lead=Math.min(act2?340:230,Math.max(-180,p.vx*(act2?12:9))),anchor=act2?W/zoom*.38:280;
  cam+=(Math.max(0,Math.min(END-vw+260,p.x-anchor+lead))-cam)*.15;
- let targetY=act2?p.y-(p.ground&&speed<9?H/zoom*.68:H/zoom*.60)+Math.min(0,p.vy*8):Math.max(-110,Math.min(190,p.y-350));
+ // Ground framing must ease too: the former speed<9 switch jerked the
+ // entire scene during ordinary acceleration and braking, despite smooth zoom.
+ const groundBlend=Math.max(0,Math.min(1,(speed-6)/6)),verticalAnchor=p.ground?.68-.08*groundBlend*groundBlend*(3-2*groundBlend):.60;
+ let targetY=act2?p.y-H/zoom*verticalAnchor+Math.min(0,p.vy*8):Math.max(-110,Math.min(190,p.y-350));
  if(act2){const landing=predictLanding();if(landing)targetY=Math.min(p.y-H/zoom*.26,Math.max(targetY,landing.y-H/zoom*.84))}
  if(act2&&level.verticalCity)targetY=Math.max(p.y-H/zoom*.78,Math.min(p.y-H/zoom*.25,targetY));camY+=(targetY-camY)*(act2?.18:.08)
 }
