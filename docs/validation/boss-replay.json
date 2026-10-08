@@ -36,60 +36,62 @@
       "hits": 0
     },
     {
-      "frame": 439,
+      "frame": 573,
       "state": "bite-windup",
-      "x": 413,
+      "x": 657,
       "hits": 0
     },
     {
-      "frame": 494,
+      "frame": 628,
       "state": "bite-lunge",
-      "x": 512,
+      "x": 599,
       "hits": 0
     },
     {
-      "frame": 518,
+      "frame": 652,
       "state": "bite-hold",
-      "x": 512,
+      "x": 599,
       "hits": 0
     },
     {
-      "frame": 540,
+      "frame": 674,
       "state": "bite-open",
-      "x": 513,
+      "x": 599,
       "hits": 0
     },
     {
-      "frame": 559,
+      "frame": 694,
       "state": "hit",
-      "x": 588,
+      "x": 685,
       "hits": 1
     },
     {
-      "frame": 1060,
+      "frame": 1328,
       "state": "laser-windup",
-      "x": 492,
+      "x": 493,
       "hits": 2
     },
     {
-      "frame": 1130,
+      "frame": 1398,
       "state": "laser-fire",
-      "x": 322,
+      "x": 658,
       "hits": 2
     },
     {
-      "frame": 1162,
+      "frame": 1430,
       "state": "laser-cool",
-      "x": 322,
+      "x": 658,
       "hits": 2
     },
     {
-      "frame": 1327,
+      "frame": 1890,
       "state": "destroyed",
-      "x": 583,
+      "x": 680,
       "hits": 3
     }
   ],
   "cache": 9,
-  "frames": 1478
+  "frames": 2041,
+  "tailStrikes": 4,
+  "laserShots": 3
 }

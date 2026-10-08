@@ -3,15 +3,17 @@
  'use strict';
  const clamp=(v,a,z)=>Math.max(a,Math.min(z,v)),ease=t=>{t=clamp(t,0,1);return t*t*(3-2*t)},mix=(a,z,t)=>a+(z-a)*ease(t);
  const durations={entrance:240,idle:65,'tail-windup':65,'tail-strike':24,'tail-retract':45,'bite-windup':55,'bite-lunge':24,'bite-hold':22,'bite-open':100,'bite-retract':42,hit:55,'laser-windup':70,'laser-fire':32,'laser-cool':45,destroyed:150};
- function createEggScorpion(arena){return {arena:{...arena},x:arena.x+1170,y:arena.y,state:'entrance',age:0,hits:0,shattered:[false,false],bites:0,laserMode:false,anchored:false,target:null,beam:null,event:'',sequence:0};}
+ function createEggScorpion(arena){return {arena:{...arena},x:arena.x+1170,y:arena.y,state:'entrance',age:0,hits:0,shattered:[false,false],bites:0,verticalAttacks:0,laserMode:false,anchored:false,target:null,beam:null,event:'',sequence:0};}
  function enter(b,state,p){b.state=state;b.age=0;b.sequence++;b.event=state;b.beam=null;
+  if(state==='idle')b.verticalAttacks=0;
+  if(state==='tail-strike'||state==='laser-fire')b.verticalAttacks++;
   if(state==='tail-windup'||state==='laser-windup')b.target={x:clamp(p.x,b.arena.x+260,b.x-115),y:b.y-20};
   if(state==='bite-windup'){b.biteX=clamp(p.x+90,b.arena.x+650,b.x-170);b.bites++;}
   if(state==='laser-fire'){const g=scorpionGeometry(b),a={...g.tip},dx=b.target.x-a.x,dy=b.target.y-a.y,t=(b.y+25-a.y)/dy;b.beam={a,z:{x:a.x+dx*t,y:b.y+25}};}
  }
  function tickEggScorpion(b,p){b.event='';if(b.state==='defeated')return b;b.age++;
   if(b.age<(durations[b.state]||1))return b;
-  const next={entrance:'idle',idle:b.laserMode?'laser-windup':'tail-windup','tail-windup':'tail-strike','tail-strike':'tail-retract','tail-retract':'bite-windup','bite-windup':'bite-lunge','bite-lunge':'bite-hold','bite-hold':'bite-open','bite-open':'bite-retract','bite-retract':'idle',hit:'idle','laser-windup':'laser-fire','laser-fire':'laser-cool','laser-cool':'bite-windup',destroyed:'defeated'}[b.state]||'idle';
+  const next={entrance:'idle',idle:b.laserMode?'laser-windup':'tail-windup','tail-windup':'tail-strike','tail-strike':'tail-retract','tail-retract':b.verticalAttacks<2?'tail-windup':'bite-windup','bite-windup':'bite-lunge','bite-lunge':'bite-hold','bite-hold':'bite-open','bite-open':'bite-retract','bite-retract':'idle',hit:'idle','laser-windup':'laser-fire','laser-fire':'laser-cool','laser-cool':b.verticalAttacks<3?'laser-windup':'bite-windup',destroyed:'defeated'}[b.state]||'idle';
   if(b.state==='entrance')b.anchored=true;enter(b,next,p);return b;
  }
  function scorpionGeometry(b){

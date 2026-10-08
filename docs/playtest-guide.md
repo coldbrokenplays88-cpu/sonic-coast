@@ -1,6 +1,6 @@
 # Playtest the unmerged update
 
-The finale development branch is `codex/egg-scorpion`. Previous updates [#1](https://github.com/coldbrokenplays88-cpu/sonic-coast/pull/1) and [#2](https://github.com/coldbrokenplays88-cpu/sonic-coast/pull/2) were merged. GitHub Pages receives the boss update after its new PR is merged and the Pages workflow succeeds.
+The current boss pacing branch is `codex/egg-scorpion-pacing`. Previous updates [#1](https://github.com/coldbrokenplays88-cpu/sonic-coast/pull/1) and [#2](https://github.com/coldbrokenplays88-cpu/sonic-coast/pull/2) were merged. GitHub Pages receives the boss update after its new PR is merged and the Pages workflow succeeds.
 
 1. Open the development branch on GitHub, choose **Code → Download ZIP**, and extract it.
 2. Open the extracted **Inferno-Ascent-Game** folder and double-click **RUN-GAME-WINDOWS.bat**. It uses Python to serve/open the game; leave its terminal open. Alternatively open `index.html` directly in your browser.
@@ -16,9 +16,9 @@ Cloud development: from `Inferno-Ascent-Game`, run `node --test`, start `python3
 
 ## Egg Scorpion update
 
-The finale update is on `codex/egg-scorpion`. Preview that branch by downloading it and following the local launch steps above; GitHub Pages changes after the new update PR is merged and deployed.
+The boss pacing follow-up is on `codex/egg-scorpion-pacing`. Preview that branch by downloading it and following the local launch steps above; GitHub Pages changes after the new update PR is merged and deployed.
 
-Reach the summit normally. Egg Scorpion climbs over the edge and anchors its pincers. Move off the marked spot before a tail strike. Stay out of the moustache bite, then jump into a blue eye while the head is lowered and the weakspot brackets appear. Each of the first two hits breaks a different glass panel. Once the tail opens, move out of its thin laser sight before the beam fires. After the next bite, hit an exposed socket to destroy the armor. Missed openings repeat.
+Reach the summit normally. Egg Scorpion climbs over the edge and anchors its pincers. Dodge two successive marked tail strikes before each armored-phase bite. Stay out of the moustache bite, then jump into a blue eye while the head is lowered and the weakspot brackets appear. Each of the first two hits breaks a different glass panel. Once the tail opens, dodge three successive, freshly targeted laser sights and beams before the next bite. After the next bite, hit an exposed socket to destroy the armor. Missed openings repeat.
 
 Deaths during the boss return to the arena and reset the boss. Even losing all lives allows an arena retry; using Restart deliberately restarts the whole act. Pause/blur freezes the entrance and fight. Shadow's ending scene is deferred, so armor destruction currently leads to the act results.
 
