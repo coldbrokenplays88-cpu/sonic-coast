@@ -83,3 +83,11 @@ test('delayed seek applies on metadata availability',async()=>{
  Object.defineProperty(a.audio(),'currentTime',{get:()=>time,set:value=>{if(!loaded)throw Error('No seek yet');time=value;}});
  a.sync({enabled:true,mode:'playing',restart:true});assert.equal(time,45);loaded=true;a.audio().emit('loadedmetadata');assert.equal(time,0);
 });
+test('act selection switches tracks on one player and starts the selected track at zero',async()=>{
+ const a=boot();a.sync({enabled:true,mode:'playing',act:1});await flush();assert.equal(a.audio().src,'assets/neon-express-act1-music.mp3');a.audio().currentTime=50;
+ a.sync({enabled:true,mode:'playing',act:2});await flush();assert.equal(a.audio().src,'assets/city-music.mp3');assert.equal(a.audio().currentTime,0);assert.equal(a.instances.length,1);
+ a.audio().currentTime=20;a.sync({enabled:true,mode:'paused',act:2});a.sync({enabled:true,mode:'playing',act:2});assert.equal(a.audio().currentTime,20);
+});
+test('act switch while play is pending cannot leave the previous source playing',async()=>{
+ const a=boot({deferred:true});a.sync({enabled:true,mode:'playing',act:1});a.sync({enabled:true,mode:'playing',act:2});assert.equal(a.audio().src,'assets/city-music.mp3');a.requests[0].resolve();await flush();assert.equal(a.audio().src,'assets/city-music.mp3');assert.equal(a.instances.length,1);a.requests.at(-1).resolve();await flush();
+});

@@ -1,0 +1,34 @@
+[
+  {
+    "from": "under-attack-act2-12",
+    "to": "under-attack-act2-13",
+    "firstShift": 0.7037177279999912,
+    "maxShift": 9.057883674741449,
+    "minScreen": 303.1655357945827,
+    "maxScreen": 373.43718106670303
+  },
+  {
+    "from": "under-attack-act2-13",
+    "to": "under-attack-act2-14",
+    "firstShift": 0.7037177279999912,
+    "maxShift": 9.057883674741449,
+    "minScreen": 303.1655357945827,
+    "maxScreen": 334.252917728
+  },
+  {
+    "from": "under-attack-act2-14",
+    "to": "under-attack-act2-15",
+    "firstShift": 0.734393687999966,
+    "maxShift": 9.53634401713178,
+    "minScreen": 301.1627900358566,
+    "maxScreen": 386.4215557533698
+  },
+  {
+    "from": "skyline-fork-act2-30",
+    "to": "skyline-fork-act2-31",
+    "firstShift": 0.7957456080000224,
+    "maxShift": 10.493264701912443,
+    "minScreen": 297.1572985184044,
+    "maxScreen": 390.3449293829584
+  }
+]
