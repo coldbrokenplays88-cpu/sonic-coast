@@ -2,6 +2,8 @@
 function selectAct(act){selectedAct=act===2?2:1;setup();mode='ready';show(selectedAct===2?'City on<br><em>the brink.</em>':'Ready.<br><em>Gotta go.</em>',selectedAct===2?'Through ruined streets and exposed towers.<br>Reach the rooftop helipad.':'Build momentum. Jump the rails and roll through tunnels.',selectedAct===2?'PLAY ACT 2':'PLAY ACT 1');$('#act-select').value=String(selectedAct)}
 function resetAct2(){if(level.act!==2)return;for(const group of level.collapseGroups||[])group.triggered=false;for(const d of level.debris){d.triggered=d.x<level.checkpoints[checkpoint].x;d.age=d.triggered?240:0}for(const e of level.events)e.age=e.trigger<level.checkpoints[checkpoint].x?150:-1;for(const l of level.loops){l.used=l.x<level.checkpoints[checkpoint].x;l.solved=false}for(const h of level.hazards)if(h.type==='breakable')h.broken=!!h.broken&&h.x<level.checkpoints[checkpoint].x}
 function launchAirDevice(device){
+ // Keep the existing aiming strength for the whole spring/vent flight.
+ p.scriptedLaunch=true;
  if(device.launchX!==undefined)p.vx=device.launchX;if(device.id==='mid-low-spring')p.poolApproach=true;if(device.poolBooster)p.poolExit=true;
  p.airSpeedLimit=device.airSpeedLimit??null;if(p.airSpeedLimit)p.vx=Math.max(-p.airSpeedLimit,Math.min(p.airSpeedLimit,p.vx));p.jumpAttack=true;p.vy=-device.power;p.ground=false;p.surface=null;p.rolling=false;p.roll=true;p.poseJumpFrame=runFrames;p.brakeActive=false;p.stopFrame=-100;coyote=0;jumpBuffer=0;p.airLaunchUntil=runFrames+Math.ceil(device.power/.58);device.firedAt=runFrames;sparks(device.x,device.y-10,6,device.cityVent?'#9be3ef':'#ffe68b');gameSound(device.poolBooster?'pool':device.cityVent?'vent':'spring',{launch:!!device.poolBooster});
 }
