@@ -12,6 +12,15 @@
  // Short attacks give tactile cues; quieter noise underlies movement instead of
  // a competing melody. Frequencies and note sequences are authored for this game.
  const cues={
+  endingRocket:{interval:.3,priority:3,voices:()=>[hiss(500,3600,.65,.22),tone(180,600,.45,.13,'sawtooth')]},
+  endingTeleport:{interval:.3,priority:4,voices:()=>[tone(420,1900,.24,.17,'sine'),tone(1470,320,.28,.14,'triangle'),hiss(2400,900,.18,.12)]},
+  endingKick:{interval:.2,priority:4,voices:()=>[tone(190,45,.13,.26,'triangle'),hiss(4100,680,.18,.24),tone(980,1300,.08,.1,'sine')]},
+  endingExplosion:{interval:.6,priority:4,voices:()=>[hiss(3300,110,.8,.3,0,'lowpass'),tone(105,24,.65,.27,'sawtooth'),hiss(1200,280,.45,.15,.16)]},
+  endingJetpack:{interval:.4,priority:3,voices:()=>[hiss(700,3200,1.1,.18),tone(180,580,1.05,.1,'sawtooth')]},
+  endingEmerald:{interval:.3,priority:2,voices:()=>[tone(990,1005,.3,.11,'sine'),tone(1490,1510,.36,.08,'sine',.06)]},
+  endingCharge:{interval:.4,priority:3,voices:()=>[tone(220,1260,.85,.14,'triangle'),tone(660,1980,.8,.09,'sine'),hiss(800,2900,.75,.1)]},
+  endingWarp:{interval:.4,priority:4,voices:()=>[tone(1800,240,.42,.18,'sine'),tone(630,2100,.3,.12,'triangle'),hiss(3800,400,.38,.12)]},
+  endingSigh:{interval:.5,priority:1,voices:()=>[hiss(600,190,.38,.06,0,'lowpass'),hiss(1100,300,.25,.025,.08)]},
   bossReveal:{interval:1,priority:4,voices:()=>[tone(65,32,.9,.3,'sawtooth'),hiss(500,90,.8,.2,0,'lowpass')]},
   bossAnchor:{interval:.4,priority:4,voices:()=>[tone(115,28,.35,.32,'triangle'),hiss(1900,130,.45,.3,0,'lowpass')]},
   bossStrike:{interval:.25,priority:3,voices:()=>[tone(280,38,.2,.28,'square'),hiss(2500,150,.28,.24)]},
