@@ -1,0 +1,7646 @@
+{
+  "before": [
+    {
+      "screen": "desktop",
+      "dpr": 1,
+      "checks": [
+        {
+          "name": "idle",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 16,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            44,
+            59
+          ],
+          "displayCel": [
+            44,
+            59
+          ],
+          "colors": 1524,
+          "occupied": 8408,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "run",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 3,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            50,
+            52
+          ],
+          "displayCel": [
+            50,
+            52
+          ],
+          "colors": 1350,
+          "occupied": 7448,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "boost",
+          "pose": {
+            "sheet": "supplemental",
+            "frame": 11,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            53,
+            50
+          ],
+          "displayCel": [
+            53,
+            50
+          ],
+          "colors": 1446,
+          "occupied": 8300,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "brake",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 35,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            64,
+            45
+          ],
+          "displayCel": [
+            64,
+            45
+          ],
+          "colors": 1531,
+          "occupied": 8588,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "grind",
+          "pose": {
+            "sheet": "supplemental",
+            "frame": 20,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0.2
+          },
+          "cache": [
+            54,
+            50
+          ],
+          "displayCel": [
+            54,
+            50
+          ],
+          "colors": 1470,
+          "occupied": 8696,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "roll",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 26,
+            "face": 1,
+            "ball": true,
+            "diameter": 38,
+            "rotation": 0.3
+          },
+          "cache": [
+            38,
+            36
+          ],
+          "displayCel": [
+            38,
+            36
+          ],
+          "colors": 840,
+          "occupied": 4648,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "kick",
+          "pose": {
+            "beat": "kick",
+            "age": 18,
+            "frame": 228,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "grin",
+              "sheet": "sonic",
+              "frame": 5,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72448,
+              "y": -9375.87429987479,
+              "visible": true,
+              "action": "kick",
+              "sheet": "shadow",
+              "frame": 4,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9547.672635420966,
+              "visible": true,
+              "sheet": "eggman",
+              "frame": 3,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": false,
+              "x": 72423,
+              "y": -9411.87429987479
+            },
+            "rocket": {
+              "x": 72471,
+              "y": -9413,
+              "angle": -0.5421546055276165,
+              "sheet": "eggman",
+              "frame": 9,
+              "alpha": 1
+            },
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": true,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            53,
+            65
+          ],
+          "displayCel": [
+            53,
+            65
+          ],
+          "colors": 1384,
+          "occupied": 6552,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "offer",
+          "pose": {
+            "beat": "offer",
+            "age": 60,
+            "frame": 468,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "unbothered",
+              "sheet": "sonic",
+              "frame": 11,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "offer",
+              "sheet": "shadow",
+              "frame": 20,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9552.517789322641,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            48,
+            62
+          ],
+          "displayCel": [
+            48,
+            62
+          ],
+          "colors": 1462,
+          "occupied": 7260,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "nod",
+          "pose": {
+            "beat": "nod",
+            "age": 15,
+            "frame": 573,
+            "sonic": {
+              "x": 72467,
+              "y": -9340,
+              "visible": true,
+              "action": "nod",
+              "sheet": "sonic",
+              "frame": 14,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "neutral",
+              "sheet": "shadow",
+              "frame": 20,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9551.315993031494,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            51,
+            65
+          ],
+          "displayCel": [
+            51,
+            65
+          ],
+          "colors": 1462,
+          "occupied": 7812,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "swing",
+          "pose": {
+            "beat": "swing",
+            "age": 27,
+            "frame": 747,
+            "sonic": {
+              "x": 72467,
+              "y": -9340,
+              "visible": true,
+              "action": "nod",
+              "sheet": "sonic",
+              "frame": 15,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "swing",
+              "sheet": "shadow",
+              "frame": 27,
+              "flip": true,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9552.970779237234,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72543,
+              "y": -9420
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": true,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            44,
+            72
+          ],
+          "displayCel": [
+            44,
+            72
+          ],
+          "colors": 1544,
+          "occupied": 7288,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "confused",
+          "pose": {
+            "beat": "realize",
+            "age": 35,
+            "frame": 791,
+            "sonic": {
+              "x": 72467,
+              "y": -9352.544,
+              "visible": true,
+              "action": "confused",
+              "sheet": "sonic",
+              "frame": 21,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "smirk",
+              "sheet": "shadow",
+              "frame": 28,
+              "flip": true,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9547.262299731296,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": true,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            63,
+            64
+          ],
+          "displayCel": [
+            63,
+            64
+          ],
+          "colors": 1615,
+          "occupied": 8868,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "eggman",
+          "pose": {
+            "beat": "jetpack",
+            "age": 4,
+            "frame": 328,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "disappointed",
+              "sheet": "sonic",
+              "frame": 8,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "neutral",
+              "sheet": "shadow",
+              "frame": 15,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9548.134342434103,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72919.6,
+              "y": -9713,
+              "visible": true,
+              "sheet": "eggman",
+              "frame": 5,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": false,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            86,
+            79
+          ],
+          "displayCel": [
+            86,
+            79
+          ],
+          "colors": 2673,
+          "occupied": 13964,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        }
+      ],
+      "errors": []
+    },
+    {
+      "screen": "retina",
+      "dpr": 2,
+      "checks": [
+        {
+          "name": "idle",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 16,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            44,
+            59
+          ],
+          "displayCel": [
+            44,
+            59
+          ],
+          "colors": 1524,
+          "occupied": 8408,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "run",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 3,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            50,
+            52
+          ],
+          "displayCel": [
+            50,
+            52
+          ],
+          "colors": 1350,
+          "occupied": 7448,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "boost",
+          "pose": {
+            "sheet": "supplemental",
+            "frame": 11,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            53,
+            50
+          ],
+          "displayCel": [
+            53,
+            50
+          ],
+          "colors": 1446,
+          "occupied": 8300,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "brake",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 35,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            64,
+            45
+          ],
+          "displayCel": [
+            64,
+            45
+          ],
+          "colors": 1531,
+          "occupied": 8588,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "grind",
+          "pose": {
+            "sheet": "supplemental",
+            "frame": 20,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0.2
+          },
+          "cache": [
+            54,
+            50
+          ],
+          "displayCel": [
+            54,
+            50
+          ],
+          "colors": 1470,
+          "occupied": 8696,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "roll",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 26,
+            "face": 1,
+            "ball": true,
+            "diameter": 38,
+            "rotation": 0.3
+          },
+          "cache": [
+            38,
+            36
+          ],
+          "displayCel": [
+            38,
+            36
+          ],
+          "colors": 840,
+          "occupied": 4648,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "kick",
+          "pose": {
+            "beat": "kick",
+            "age": 18,
+            "frame": 228,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "grin",
+              "sheet": "sonic",
+              "frame": 5,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72448,
+              "y": -9375.87429987479,
+              "visible": true,
+              "action": "kick",
+              "sheet": "shadow",
+              "frame": 4,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9547.672635420966,
+              "visible": true,
+              "sheet": "eggman",
+              "frame": 3,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": false,
+              "x": 72423,
+              "y": -9411.87429987479
+            },
+            "rocket": {
+              "x": 72471,
+              "y": -9413,
+              "angle": -0.5421546055276165,
+              "sheet": "eggman",
+              "frame": 9,
+              "alpha": 1
+            },
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": true,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            53,
+            65
+          ],
+          "displayCel": [
+            53,
+            65
+          ],
+          "colors": 1384,
+          "occupied": 6552,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "offer",
+          "pose": {
+            "beat": "offer",
+            "age": 60,
+            "frame": 468,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "unbothered",
+              "sheet": "sonic",
+              "frame": 11,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "offer",
+              "sheet": "shadow",
+              "frame": 20,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9552.517789322641,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            48,
+            62
+          ],
+          "displayCel": [
+            48,
+            62
+          ],
+          "colors": 1462,
+          "occupied": 7260,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "nod",
+          "pose": {
+            "beat": "nod",
+            "age": 15,
+            "frame": 573,
+            "sonic": {
+              "x": 72467,
+              "y": -9340,
+              "visible": true,
+              "action": "nod",
+              "sheet": "sonic",
+              "frame": 14,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "neutral",
+              "sheet": "shadow",
+              "frame": 20,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9551.315993031494,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            51,
+            65
+          ],
+          "displayCel": [
+            51,
+            65
+          ],
+          "colors": 1462,
+          "occupied": 7812,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "swing",
+          "pose": {
+            "beat": "swing",
+            "age": 27,
+            "frame": 747,
+            "sonic": {
+              "x": 72467,
+              "y": -9340,
+              "visible": true,
+              "action": "nod",
+              "sheet": "sonic",
+              "frame": 15,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "swing",
+              "sheet": "shadow",
+              "frame": 27,
+              "flip": true,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9552.970779237234,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72543,
+              "y": -9420
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": true,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            44,
+            72
+          ],
+          "displayCel": [
+            44,
+            72
+          ],
+          "colors": 1544,
+          "occupied": 7288,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "confused",
+          "pose": {
+            "beat": "realize",
+            "age": 35,
+            "frame": 791,
+            "sonic": {
+              "x": 72467,
+              "y": -9352.544,
+              "visible": true,
+              "action": "confused",
+              "sheet": "sonic",
+              "frame": 21,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "smirk",
+              "sheet": "shadow",
+              "frame": 28,
+              "flip": true,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9547.262299731296,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": true,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            63,
+            64
+          ],
+          "displayCel": [
+            63,
+            64
+          ],
+          "colors": 1615,
+          "occupied": 8868,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "eggman",
+          "pose": {
+            "beat": "jetpack",
+            "age": 4,
+            "frame": 328,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "disappointed",
+              "sheet": "sonic",
+              "frame": 8,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "neutral",
+              "sheet": "shadow",
+              "frame": 15,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9548.134342434103,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72919.6,
+              "y": -9713,
+              "visible": true,
+              "sheet": "eggman",
+              "frame": 5,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": false,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            86,
+            79
+          ],
+          "displayCel": [
+            86,
+            79
+          ],
+          "colors": 2673,
+          "occupied": 13964,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        }
+      ],
+      "errors": []
+    },
+    {
+      "screen": "tablet",
+      "dpr": 1,
+      "checks": [
+        {
+          "name": "idle",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 16,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            44,
+            59
+          ],
+          "displayCel": [
+            44,
+            59
+          ],
+          "colors": 1524,
+          "occupied": 8408,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            719.90625,
+            404.0625
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "run",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 3,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            50,
+            52
+          ],
+          "displayCel": [
+            50,
+            52
+          ],
+          "colors": 1350,
+          "occupied": 7448,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            719.90625,
+            404.0625
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "boost",
+          "pose": {
+            "sheet": "supplemental",
+            "frame": 11,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            53,
+            50
+          ],
+          "displayCel": [
+            53,
+            50
+          ],
+          "colors": 1446,
+          "occupied": 8300,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            719.90625,
+            404.0625
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "brake",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 35,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            64,
+            45
+          ],
+          "displayCel": [
+            64,
+            45
+          ],
+          "colors": 1531,
+          "occupied": 8588,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            719.90625,
+            404.0625
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "grind",
+          "pose": {
+            "sheet": "supplemental",
+            "frame": 20,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0.2
+          },
+          "cache": [
+            54,
+            50
+          ],
+          "displayCel": [
+            54,
+            50
+          ],
+          "colors": 1470,
+          "occupied": 8696,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            719.90625,
+            404.0625
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "roll",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 26,
+            "face": 1,
+            "ball": true,
+            "diameter": 38,
+            "rotation": 0.3
+          },
+          "cache": [
+            38,
+            36
+          ],
+          "displayCel": [
+            38,
+            36
+          ],
+          "colors": 840,
+          "occupied": 4648,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            719.90625,
+            404.0625
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "kick",
+          "pose": {
+            "beat": "kick",
+            "age": 18,
+            "frame": 228,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "grin",
+              "sheet": "sonic",
+              "frame": 5,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72448,
+              "y": -9375.87429987479,
+              "visible": true,
+              "action": "kick",
+              "sheet": "shadow",
+              "frame": 4,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9547.672635420966,
+              "visible": true,
+              "sheet": "eggman",
+              "frame": 3,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": false,
+              "x": 72423,
+              "y": -9411.87429987479
+            },
+            "rocket": {
+              "x": 72471,
+              "y": -9413,
+              "angle": -0.5421546055276165,
+              "sheet": "eggman",
+              "frame": 9,
+              "alpha": 1
+            },
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": true,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            53,
+            65
+          ],
+          "displayCel": [
+            53,
+            65
+          ],
+          "colors": 1384,
+          "occupied": 6552,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            719.90625,
+            404.0625
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "offer",
+          "pose": {
+            "beat": "offer",
+            "age": 60,
+            "frame": 468,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "unbothered",
+              "sheet": "sonic",
+              "frame": 11,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "offer",
+              "sheet": "shadow",
+              "frame": 20,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9552.517789322641,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            48,
+            62
+          ],
+          "displayCel": [
+            48,
+            62
+          ],
+          "colors": 1462,
+          "occupied": 7260,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            719.90625,
+            404.0625
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "nod",
+          "pose": {
+            "beat": "nod",
+            "age": 15,
+            "frame": 573,
+            "sonic": {
+              "x": 72467,
+              "y": -9340,
+              "visible": true,
+              "action": "nod",
+              "sheet": "sonic",
+              "frame": 14,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "neutral",
+              "sheet": "shadow",
+              "frame": 20,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9551.315993031494,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            51,
+            65
+          ],
+          "displayCel": [
+            51,
+            65
+          ],
+          "colors": 1462,
+          "occupied": 7812,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            719.90625,
+            404.0625
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "swing",
+          "pose": {
+            "beat": "swing",
+            "age": 27,
+            "frame": 747,
+            "sonic": {
+              "x": 72467,
+              "y": -9340,
+              "visible": true,
+              "action": "nod",
+              "sheet": "sonic",
+              "frame": 15,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "swing",
+              "sheet": "shadow",
+              "frame": 27,
+              "flip": true,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9552.970779237234,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72543,
+              "y": -9420
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": true,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            44,
+            72
+          ],
+          "displayCel": [
+            44,
+            72
+          ],
+          "colors": 1544,
+          "occupied": 7288,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            719.90625,
+            404.0625
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "confused",
+          "pose": {
+            "beat": "realize",
+            "age": 35,
+            "frame": 791,
+            "sonic": {
+              "x": 72467,
+              "y": -9352.544,
+              "visible": true,
+              "action": "confused",
+              "sheet": "sonic",
+              "frame": 21,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "smirk",
+              "sheet": "shadow",
+              "frame": 28,
+              "flip": true,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9547.262299731296,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": true,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            63,
+            64
+          ],
+          "displayCel": [
+            63,
+            64
+          ],
+          "colors": 1615,
+          "occupied": 8868,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            719.90625,
+            404.0625
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "eggman",
+          "pose": {
+            "beat": "jetpack",
+            "age": 4,
+            "frame": 328,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "disappointed",
+              "sheet": "sonic",
+              "frame": 8,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "neutral",
+              "sheet": "shadow",
+              "frame": 15,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9548.134342434103,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72919.6,
+              "y": -9713,
+              "visible": true,
+              "sheet": "eggman",
+              "frame": 5,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": false,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            86,
+            79
+          ],
+          "displayCel": [
+            86,
+            79
+          ],
+          "colors": 2673,
+          "occupied": 13964,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            719.90625,
+            404.0625
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        }
+      ],
+      "errors": []
+    },
+    {
+      "screen": "phone",
+      "dpr": 3,
+      "checks": [
+        {
+          "name": "idle",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 16,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            44,
+            59
+          ],
+          "displayCel": [
+            44,
+            59
+          ],
+          "colors": 1524,
+          "occupied": 8408,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            372.390625,
+            208.59375
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "run",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 3,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            50,
+            52
+          ],
+          "displayCel": [
+            50,
+            52
+          ],
+          "colors": 1350,
+          "occupied": 7448,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            372.390625,
+            208.59375
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "boost",
+          "pose": {
+            "sheet": "supplemental",
+            "frame": 11,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            53,
+            50
+          ],
+          "displayCel": [
+            53,
+            50
+          ],
+          "colors": 1446,
+          "occupied": 8300,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            372.390625,
+            208.59375
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "brake",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 35,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            64,
+            45
+          ],
+          "displayCel": [
+            64,
+            45
+          ],
+          "colors": 1531,
+          "occupied": 8588,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            372.390625,
+            208.59375
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "grind",
+          "pose": {
+            "sheet": "supplemental",
+            "frame": 20,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0.2
+          },
+          "cache": [
+            54,
+            50
+          ],
+          "displayCel": [
+            54,
+            50
+          ],
+          "colors": 1470,
+          "occupied": 8696,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            372.390625,
+            208.59375
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "roll",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 26,
+            "face": 1,
+            "ball": true,
+            "diameter": 38,
+            "rotation": 0.3
+          },
+          "cache": [
+            38,
+            36
+          ],
+          "displayCel": [
+            38,
+            36
+          ],
+          "colors": 840,
+          "occupied": 4648,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            372.390625,
+            208.59375
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "kick",
+          "pose": {
+            "beat": "kick",
+            "age": 18,
+            "frame": 228,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "grin",
+              "sheet": "sonic",
+              "frame": 5,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72448,
+              "y": -9375.87429987479,
+              "visible": true,
+              "action": "kick",
+              "sheet": "shadow",
+              "frame": 4,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9547.672635420966,
+              "visible": true,
+              "sheet": "eggman",
+              "frame": 3,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": false,
+              "x": 72423,
+              "y": -9411.87429987479
+            },
+            "rocket": {
+              "x": 72471,
+              "y": -9413,
+              "angle": -0.5421546055276165,
+              "sheet": "eggman",
+              "frame": 9,
+              "alpha": 1
+            },
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": true,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            53,
+            65
+          ],
+          "displayCel": [
+            53,
+            65
+          ],
+          "colors": 1384,
+          "occupied": 6552,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            372.390625,
+            208.59375
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "offer",
+          "pose": {
+            "beat": "offer",
+            "age": 60,
+            "frame": 468,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "unbothered",
+              "sheet": "sonic",
+              "frame": 11,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "offer",
+              "sheet": "shadow",
+              "frame": 20,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9552.517789322641,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            48,
+            62
+          ],
+          "displayCel": [
+            48,
+            62
+          ],
+          "colors": 1462,
+          "occupied": 7260,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            372.390625,
+            208.59375
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "nod",
+          "pose": {
+            "beat": "nod",
+            "age": 15,
+            "frame": 573,
+            "sonic": {
+              "x": 72467,
+              "y": -9340,
+              "visible": true,
+              "action": "nod",
+              "sheet": "sonic",
+              "frame": 14,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "neutral",
+              "sheet": "shadow",
+              "frame": 20,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9551.315993031494,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            51,
+            65
+          ],
+          "displayCel": [
+            51,
+            65
+          ],
+          "colors": 1462,
+          "occupied": 7812,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            372.390625,
+            208.59375
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "swing",
+          "pose": {
+            "beat": "swing",
+            "age": 27,
+            "frame": 747,
+            "sonic": {
+              "x": 72467,
+              "y": -9340,
+              "visible": true,
+              "action": "nod",
+              "sheet": "sonic",
+              "frame": 15,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "swing",
+              "sheet": "shadow",
+              "frame": 27,
+              "flip": true,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9552.970779237234,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72543,
+              "y": -9420
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": true,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            44,
+            72
+          ],
+          "displayCel": [
+            44,
+            72
+          ],
+          "colors": 1544,
+          "occupied": 7288,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            372.390625,
+            208.59375
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "confused",
+          "pose": {
+            "beat": "realize",
+            "age": 35,
+            "frame": 791,
+            "sonic": {
+              "x": 72467,
+              "y": -9352.544,
+              "visible": true,
+              "action": "confused",
+              "sheet": "sonic",
+              "frame": 21,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "smirk",
+              "sheet": "shadow",
+              "frame": 28,
+              "flip": true,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9547.262299731296,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": true,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            63,
+            64
+          ],
+          "displayCel": [
+            63,
+            64
+          ],
+          "colors": 1615,
+          "occupied": 8868,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            372.390625,
+            208.59375
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "eggman",
+          "pose": {
+            "beat": "jetpack",
+            "age": 4,
+            "frame": 328,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "disappointed",
+              "sheet": "sonic",
+              "frame": 8,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "neutral",
+              "sheet": "shadow",
+              "frame": 15,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9548.134342434103,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72919.6,
+              "y": -9713,
+              "visible": true,
+              "sheet": "eggman",
+              "frame": 5,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": false,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            86,
+            79
+          ],
+          "displayCel": [
+            86,
+            79
+          ],
+          "colors": 2673,
+          "occupied": 13964,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            372.390625,
+            208.59375
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        }
+      ],
+      "errors": []
+    },
+    {
+      "screen": "fullscreen",
+      "dpr": 1,
+      "checks": [
+        {
+          "name": "idle",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 16,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            44,
+            59
+          ],
+          "displayCel": [
+            44,
+            59
+          ],
+          "colors": 1524,
+          "occupied": 8408,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1920,
+            1080
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "run",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 3,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            50,
+            52
+          ],
+          "displayCel": [
+            50,
+            52
+          ],
+          "colors": 1350,
+          "occupied": 7448,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1920,
+            1080
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "boost",
+          "pose": {
+            "sheet": "supplemental",
+            "frame": 11,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            53,
+            50
+          ],
+          "displayCel": [
+            53,
+            50
+          ],
+          "colors": 1446,
+          "occupied": 8300,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1920,
+            1080
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "brake",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 35,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            64,
+            45
+          ],
+          "displayCel": [
+            64,
+            45
+          ],
+          "colors": 1531,
+          "occupied": 8588,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1920,
+            1080
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "grind",
+          "pose": {
+            "sheet": "supplemental",
+            "frame": 20,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0.2
+          },
+          "cache": [
+            54,
+            50
+          ],
+          "displayCel": [
+            54,
+            50
+          ],
+          "colors": 1470,
+          "occupied": 8696,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1920,
+            1080
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "roll",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 26,
+            "face": 1,
+            "ball": true,
+            "diameter": 38,
+            "rotation": 0.3
+          },
+          "cache": [
+            38,
+            36
+          ],
+          "displayCel": [
+            38,
+            36
+          ],
+          "colors": 840,
+          "occupied": 4648,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1920,
+            1080
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "kick",
+          "pose": {
+            "beat": "kick",
+            "age": 18,
+            "frame": 228,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "grin",
+              "sheet": "sonic",
+              "frame": 5,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72448,
+              "y": -9375.87429987479,
+              "visible": true,
+              "action": "kick",
+              "sheet": "shadow",
+              "frame": 4,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9547.672635420966,
+              "visible": true,
+              "sheet": "eggman",
+              "frame": 3,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": false,
+              "x": 72423,
+              "y": -9411.87429987479
+            },
+            "rocket": {
+              "x": 72471,
+              "y": -9413,
+              "angle": -0.5421546055276165,
+              "sheet": "eggman",
+              "frame": 9,
+              "alpha": 1
+            },
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": true,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            53,
+            65
+          ],
+          "displayCel": [
+            53,
+            65
+          ],
+          "colors": 1384,
+          "occupied": 6552,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1920,
+            1080
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "offer",
+          "pose": {
+            "beat": "offer",
+            "age": 60,
+            "frame": 468,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "unbothered",
+              "sheet": "sonic",
+              "frame": 11,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "offer",
+              "sheet": "shadow",
+              "frame": 20,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9552.517789322641,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            48,
+            62
+          ],
+          "displayCel": [
+            48,
+            62
+          ],
+          "colors": 1462,
+          "occupied": 7260,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1920,
+            1080
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "nod",
+          "pose": {
+            "beat": "nod",
+            "age": 15,
+            "frame": 573,
+            "sonic": {
+              "x": 72467,
+              "y": -9340,
+              "visible": true,
+              "action": "nod",
+              "sheet": "sonic",
+              "frame": 14,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "neutral",
+              "sheet": "shadow",
+              "frame": 20,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9551.315993031494,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            51,
+            65
+          ],
+          "displayCel": [
+            51,
+            65
+          ],
+          "colors": 1462,
+          "occupied": 7812,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1920,
+            1080
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "swing",
+          "pose": {
+            "beat": "swing",
+            "age": 27,
+            "frame": 747,
+            "sonic": {
+              "x": 72467,
+              "y": -9340,
+              "visible": true,
+              "action": "nod",
+              "sheet": "sonic",
+              "frame": 15,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "swing",
+              "sheet": "shadow",
+              "frame": 27,
+              "flip": true,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9552.970779237234,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72543,
+              "y": -9420
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": true,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            44,
+            72
+          ],
+          "displayCel": [
+            44,
+            72
+          ],
+          "colors": 1544,
+          "occupied": 7288,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1920,
+            1080
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "confused",
+          "pose": {
+            "beat": "realize",
+            "age": 35,
+            "frame": 791,
+            "sonic": {
+              "x": 72467,
+              "y": -9352.544,
+              "visible": true,
+              "action": "confused",
+              "sheet": "sonic",
+              "frame": 21,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "smirk",
+              "sheet": "shadow",
+              "frame": 28,
+              "flip": true,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9547.262299731296,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": true,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            63,
+            64
+          ],
+          "displayCel": [
+            63,
+            64
+          ],
+          "colors": 1615,
+          "occupied": 8868,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1920,
+            1080
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "eggman",
+          "pose": {
+            "beat": "jetpack",
+            "age": 4,
+            "frame": 328,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "disappointed",
+              "sheet": "sonic",
+              "frame": 8,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "neutral",
+              "sheet": "shadow",
+              "frame": 15,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9548.134342434103,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72919.6,
+              "y": -9713,
+              "visible": true,
+              "sheet": "eggman",
+              "frame": 5,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": false,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            86,
+            79
+          ],
+          "displayCel": [
+            86,
+            79
+          ],
+          "colors": 2673,
+          "occupied": 13964,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1920,
+            1080
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        }
+      ],
+      "errors": []
+    }
+  ],
+  "after": [
+    {
+      "screen": "desktop",
+      "dpr": 1,
+      "checks": [
+        {
+          "name": "idle",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 16,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            131,
+            178
+          ],
+          "displayCel": [
+            44,
+            59
+          ],
+          "colors": 5276,
+          "occupied": 8381,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "run",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 3,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            150,
+            155
+          ],
+          "displayCel": [
+            50,
+            52
+          ],
+          "colors": 4641,
+          "occupied": 7434,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "boost",
+          "pose": {
+            "sheet": "supplemental",
+            "frame": 11,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            193,
+            183
+          ],
+          "displayCel": [
+            53,
+            50
+          ],
+          "colors": 4892,
+          "occupied": 8281,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "brake",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 35,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            193,
+            135
+          ],
+          "displayCel": [
+            64,
+            45
+          ],
+          "colors": 5316,
+          "occupied": 8552,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "grind",
+          "pose": {
+            "sheet": "supplemental",
+            "frame": 20,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0.2
+          },
+          "cache": [
+            200,
+            184
+          ],
+          "displayCel": [
+            54,
+            50
+          ],
+          "colors": 4970,
+          "occupied": 8752,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "roll",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 26,
+            "face": 1,
+            "ball": true,
+            "diameter": 38,
+            "rotation": 0.3
+          },
+          "cache": [
+            119,
+            114
+          ],
+          "displayCel": [
+            38,
+            36
+          ],
+          "colors": 2581,
+          "occupied": 4699,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "kick",
+          "pose": {
+            "beat": "kick",
+            "age": 18,
+            "frame": 228,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "grin",
+              "sheet": "sonic",
+              "frame": 5,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72448,
+              "y": -9375.87429987479,
+              "visible": true,
+              "action": "kick",
+              "sheet": "shadow",
+              "frame": 4,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9547.672635420966,
+              "visible": true,
+              "sheet": "eggman",
+              "frame": 3,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": false,
+              "x": 72423,
+              "y": -9411.87429987479
+            },
+            "rocket": {
+              "x": 72471,
+              "y": -9413,
+              "angle": -0.5421546055276165,
+              "sheet": "eggman",
+              "frame": 9,
+              "alpha": 1
+            },
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": true,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            185,
+            225
+          ],
+          "displayCel": [
+            53,
+            65
+          ],
+          "colors": 4814,
+          "occupied": 6569,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "offer",
+          "pose": {
+            "beat": "offer",
+            "age": 60,
+            "frame": 468,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "unbothered",
+              "sheet": "sonic",
+              "frame": 11,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "offer",
+              "sheet": "shadow",
+              "frame": 20,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9552.517789322641,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            166,
+            215
+          ],
+          "displayCel": [
+            48,
+            62
+          ],
+          "colors": 4952,
+          "occupied": 7240,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "nod",
+          "pose": {
+            "beat": "nod",
+            "age": 15,
+            "frame": 573,
+            "sonic": {
+              "x": 72467,
+              "y": -9340,
+              "visible": true,
+              "action": "nod",
+              "sheet": "sonic",
+              "frame": 14,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "neutral",
+              "sheet": "shadow",
+              "frame": 20,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9551.315993031494,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            182,
+            233
+          ],
+          "displayCel": [
+            51,
+            65
+          ],
+          "colors": 4986,
+          "occupied": 7828,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "swing",
+          "pose": {
+            "beat": "swing",
+            "age": 27,
+            "frame": 747,
+            "sonic": {
+              "x": 72467,
+              "y": -9340,
+              "visible": true,
+              "action": "nod",
+              "sheet": "sonic",
+              "frame": 15,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "swing",
+              "sheet": "shadow",
+              "frame": 27,
+              "flip": true,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9552.970779237234,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72543,
+              "y": -9420
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": true,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            151,
+            251
+          ],
+          "displayCel": [
+            44,
+            72
+          ],
+          "colors": 5303,
+          "occupied": 7311,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "confused",
+          "pose": {
+            "beat": "realize",
+            "age": 35,
+            "frame": 791,
+            "sonic": {
+              "x": 72467,
+              "y": -9352.544,
+              "visible": true,
+              "action": "confused",
+              "sheet": "sonic",
+              "frame": 21,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "smirk",
+              "sheet": "shadow",
+              "frame": 28,
+              "flip": true,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9547.262299731296,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": true,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            223,
+            228
+          ],
+          "displayCel": [
+            63,
+            64
+          ],
+          "colors": 5392,
+          "occupied": 8863,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "eggman",
+          "pose": {
+            "beat": "jetpack",
+            "age": 4,
+            "frame": 328,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "disappointed",
+              "sheet": "sonic",
+              "frame": 8,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "neutral",
+              "sheet": "shadow",
+              "frame": 15,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9548.134342434103,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72919.6,
+              "y": -9713,
+              "visible": true,
+              "sheet": "eggman",
+              "frame": 5,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": false,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            294,
+            272
+          ],
+          "displayCel": [
+            86,
+            79
+          ],
+          "colors": 8617,
+          "occupied": 13923,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        }
+      ],
+      "errors": []
+    },
+    {
+      "screen": "retina",
+      "dpr": 2,
+      "checks": [
+        {
+          "name": "idle",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 16,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            131,
+            178
+          ],
+          "displayCel": [
+            44,
+            59
+          ],
+          "colors": 5276,
+          "occupied": 8381,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "run",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 3,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            150,
+            155
+          ],
+          "displayCel": [
+            50,
+            52
+          ],
+          "colors": 4641,
+          "occupied": 7434,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "boost",
+          "pose": {
+            "sheet": "supplemental",
+            "frame": 11,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            193,
+            183
+          ],
+          "displayCel": [
+            53,
+            50
+          ],
+          "colors": 4892,
+          "occupied": 8281,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "brake",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 35,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            193,
+            135
+          ],
+          "displayCel": [
+            64,
+            45
+          ],
+          "colors": 5316,
+          "occupied": 8552,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "grind",
+          "pose": {
+            "sheet": "supplemental",
+            "frame": 20,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0.2
+          },
+          "cache": [
+            200,
+            184
+          ],
+          "displayCel": [
+            54,
+            50
+          ],
+          "colors": 4970,
+          "occupied": 8752,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "roll",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 26,
+            "face": 1,
+            "ball": true,
+            "diameter": 38,
+            "rotation": 0.3
+          },
+          "cache": [
+            119,
+            114
+          ],
+          "displayCel": [
+            38,
+            36
+          ],
+          "colors": 2581,
+          "occupied": 4699,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "kick",
+          "pose": {
+            "beat": "kick",
+            "age": 18,
+            "frame": 228,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "grin",
+              "sheet": "sonic",
+              "frame": 5,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72448,
+              "y": -9375.87429987479,
+              "visible": true,
+              "action": "kick",
+              "sheet": "shadow",
+              "frame": 4,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9547.672635420966,
+              "visible": true,
+              "sheet": "eggman",
+              "frame": 3,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": false,
+              "x": 72423,
+              "y": -9411.87429987479
+            },
+            "rocket": {
+              "x": 72471,
+              "y": -9413,
+              "angle": -0.5421546055276165,
+              "sheet": "eggman",
+              "frame": 9,
+              "alpha": 1
+            },
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": true,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            185,
+            225
+          ],
+          "displayCel": [
+            53,
+            65
+          ],
+          "colors": 4814,
+          "occupied": 6569,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "offer",
+          "pose": {
+            "beat": "offer",
+            "age": 60,
+            "frame": 468,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "unbothered",
+              "sheet": "sonic",
+              "frame": 11,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "offer",
+              "sheet": "shadow",
+              "frame": 20,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9552.517789322641,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            166,
+            215
+          ],
+          "displayCel": [
+            48,
+            62
+          ],
+          "colors": 4952,
+          "occupied": 7240,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "nod",
+          "pose": {
+            "beat": "nod",
+            "age": 15,
+            "frame": 573,
+            "sonic": {
+              "x": 72467,
+              "y": -9340,
+              "visible": true,
+              "action": "nod",
+              "sheet": "sonic",
+              "frame": 14,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "neutral",
+              "sheet": "shadow",
+              "frame": 20,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9551.315993031494,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            182,
+            233
+          ],
+          "displayCel": [
+            51,
+            65
+          ],
+          "colors": 4986,
+          "occupied": 7828,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "swing",
+          "pose": {
+            "beat": "swing",
+            "age": 27,
+            "frame": 747,
+            "sonic": {
+              "x": 72467,
+              "y": -9340,
+              "visible": true,
+              "action": "nod",
+              "sheet": "sonic",
+              "frame": 15,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "swing",
+              "sheet": "shadow",
+              "frame": 27,
+              "flip": true,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9552.970779237234,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72543,
+              "y": -9420
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": true,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            151,
+            251
+          ],
+          "displayCel": [
+            44,
+            72
+          ],
+          "colors": 5303,
+          "occupied": 7311,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "confused",
+          "pose": {
+            "beat": "realize",
+            "age": 35,
+            "frame": 791,
+            "sonic": {
+              "x": 72467,
+              "y": -9352.544,
+              "visible": true,
+              "action": "confused",
+              "sheet": "sonic",
+              "frame": 21,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "smirk",
+              "sheet": "shadow",
+              "frame": 28,
+              "flip": true,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9547.262299731296,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": true,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            223,
+            228
+          ],
+          "displayCel": [
+            63,
+            64
+          ],
+          "colors": 5392,
+          "occupied": 8863,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "eggman",
+          "pose": {
+            "beat": "jetpack",
+            "age": 4,
+            "frame": 328,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "disappointed",
+              "sheet": "sonic",
+              "frame": 8,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "neutral",
+              "sheet": "shadow",
+              "frame": 15,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9548.134342434103,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72919.6,
+              "y": -9713,
+              "visible": true,
+              "sheet": "eggman",
+              "frame": 5,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": false,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            294,
+            272
+          ],
+          "displayCel": [
+            86,
+            79
+          ],
+          "colors": 8617,
+          "occupied": 13923,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1198,
+            673
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        }
+      ],
+      "errors": []
+    },
+    {
+      "screen": "tablet",
+      "dpr": 1,
+      "checks": [
+        {
+          "name": "idle",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 16,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            131,
+            178
+          ],
+          "displayCel": [
+            44,
+            59
+          ],
+          "colors": 5276,
+          "occupied": 8381,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            719.90625,
+            404.0625
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "run",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 3,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            150,
+            155
+          ],
+          "displayCel": [
+            50,
+            52
+          ],
+          "colors": 4641,
+          "occupied": 7434,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            719.90625,
+            404.0625
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "boost",
+          "pose": {
+            "sheet": "supplemental",
+            "frame": 11,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            193,
+            183
+          ],
+          "displayCel": [
+            53,
+            50
+          ],
+          "colors": 4892,
+          "occupied": 8281,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            719.90625,
+            404.0625
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "brake",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 35,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            193,
+            135
+          ],
+          "displayCel": [
+            64,
+            45
+          ],
+          "colors": 5316,
+          "occupied": 8552,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            719.90625,
+            404.0625
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "grind",
+          "pose": {
+            "sheet": "supplemental",
+            "frame": 20,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0.2
+          },
+          "cache": [
+            200,
+            184
+          ],
+          "displayCel": [
+            54,
+            50
+          ],
+          "colors": 4970,
+          "occupied": 8752,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            719.90625,
+            404.0625
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "roll",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 26,
+            "face": 1,
+            "ball": true,
+            "diameter": 38,
+            "rotation": 0.3
+          },
+          "cache": [
+            119,
+            114
+          ],
+          "displayCel": [
+            38,
+            36
+          ],
+          "colors": 2581,
+          "occupied": 4699,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            719.90625,
+            404.0625
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "kick",
+          "pose": {
+            "beat": "kick",
+            "age": 18,
+            "frame": 228,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "grin",
+              "sheet": "sonic",
+              "frame": 5,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72448,
+              "y": -9375.87429987479,
+              "visible": true,
+              "action": "kick",
+              "sheet": "shadow",
+              "frame": 4,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9547.672635420966,
+              "visible": true,
+              "sheet": "eggman",
+              "frame": 3,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": false,
+              "x": 72423,
+              "y": -9411.87429987479
+            },
+            "rocket": {
+              "x": 72471,
+              "y": -9413,
+              "angle": -0.5421546055276165,
+              "sheet": "eggman",
+              "frame": 9,
+              "alpha": 1
+            },
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": true,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            185,
+            225
+          ],
+          "displayCel": [
+            53,
+            65
+          ],
+          "colors": 4814,
+          "occupied": 6569,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            719.90625,
+            404.0625
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "offer",
+          "pose": {
+            "beat": "offer",
+            "age": 60,
+            "frame": 468,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "unbothered",
+              "sheet": "sonic",
+              "frame": 11,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "offer",
+              "sheet": "shadow",
+              "frame": 20,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9552.517789322641,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            166,
+            215
+          ],
+          "displayCel": [
+            48,
+            62
+          ],
+          "colors": 4952,
+          "occupied": 7240,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            719.90625,
+            404.0625
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "nod",
+          "pose": {
+            "beat": "nod",
+            "age": 15,
+            "frame": 573,
+            "sonic": {
+              "x": 72467,
+              "y": -9340,
+              "visible": true,
+              "action": "nod",
+              "sheet": "sonic",
+              "frame": 14,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "neutral",
+              "sheet": "shadow",
+              "frame": 20,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9551.315993031494,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            182,
+            233
+          ],
+          "displayCel": [
+            51,
+            65
+          ],
+          "colors": 4986,
+          "occupied": 7828,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            719.90625,
+            404.0625
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "swing",
+          "pose": {
+            "beat": "swing",
+            "age": 27,
+            "frame": 747,
+            "sonic": {
+              "x": 72467,
+              "y": -9340,
+              "visible": true,
+              "action": "nod",
+              "sheet": "sonic",
+              "frame": 15,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "swing",
+              "sheet": "shadow",
+              "frame": 27,
+              "flip": true,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9552.970779237234,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72543,
+              "y": -9420
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": true,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            151,
+            251
+          ],
+          "displayCel": [
+            44,
+            72
+          ],
+          "colors": 5303,
+          "occupied": 7311,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            719.90625,
+            404.0625
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "confused",
+          "pose": {
+            "beat": "realize",
+            "age": 35,
+            "frame": 791,
+            "sonic": {
+              "x": 72467,
+              "y": -9352.544,
+              "visible": true,
+              "action": "confused",
+              "sheet": "sonic",
+              "frame": 21,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "smirk",
+              "sheet": "shadow",
+              "frame": 28,
+              "flip": true,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9547.262299731296,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": true,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            223,
+            228
+          ],
+          "displayCel": [
+            63,
+            64
+          ],
+          "colors": 5392,
+          "occupied": 8863,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            719.90625,
+            404.0625
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "eggman",
+          "pose": {
+            "beat": "jetpack",
+            "age": 4,
+            "frame": 328,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "disappointed",
+              "sheet": "sonic",
+              "frame": 8,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "neutral",
+              "sheet": "shadow",
+              "frame": 15,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9548.134342434103,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72919.6,
+              "y": -9713,
+              "visible": true,
+              "sheet": "eggman",
+              "frame": 5,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": false,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            294,
+            272
+          ],
+          "displayCel": [
+            86,
+            79
+          ],
+          "colors": 8617,
+          "occupied": 13923,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            719.90625,
+            404.0625
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        }
+      ],
+      "errors": []
+    },
+    {
+      "screen": "phone",
+      "dpr": 3,
+      "checks": [
+        {
+          "name": "idle",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 16,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            131,
+            178
+          ],
+          "displayCel": [
+            44,
+            59
+          ],
+          "colors": 5276,
+          "occupied": 8381,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            372.390625,
+            208.59375
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "run",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 3,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            150,
+            155
+          ],
+          "displayCel": [
+            50,
+            52
+          ],
+          "colors": 4641,
+          "occupied": 7434,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            372.390625,
+            208.59375
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "boost",
+          "pose": {
+            "sheet": "supplemental",
+            "frame": 11,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            193,
+            183
+          ],
+          "displayCel": [
+            53,
+            50
+          ],
+          "colors": 4892,
+          "occupied": 8281,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            372.390625,
+            208.59375
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "brake",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 35,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            193,
+            135
+          ],
+          "displayCel": [
+            64,
+            45
+          ],
+          "colors": 5316,
+          "occupied": 8552,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            372.390625,
+            208.59375
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "grind",
+          "pose": {
+            "sheet": "supplemental",
+            "frame": 20,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0.2
+          },
+          "cache": [
+            200,
+            184
+          ],
+          "displayCel": [
+            54,
+            50
+          ],
+          "colors": 4970,
+          "occupied": 8752,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            372.390625,
+            208.59375
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "roll",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 26,
+            "face": 1,
+            "ball": true,
+            "diameter": 38,
+            "rotation": 0.3
+          },
+          "cache": [
+            119,
+            114
+          ],
+          "displayCel": [
+            38,
+            36
+          ],
+          "colors": 2581,
+          "occupied": 4699,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            372.390625,
+            208.59375
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "kick",
+          "pose": {
+            "beat": "kick",
+            "age": 18,
+            "frame": 228,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "grin",
+              "sheet": "sonic",
+              "frame": 5,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72448,
+              "y": -9375.87429987479,
+              "visible": true,
+              "action": "kick",
+              "sheet": "shadow",
+              "frame": 4,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9547.672635420966,
+              "visible": true,
+              "sheet": "eggman",
+              "frame": 3,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": false,
+              "x": 72423,
+              "y": -9411.87429987479
+            },
+            "rocket": {
+              "x": 72471,
+              "y": -9413,
+              "angle": -0.5421546055276165,
+              "sheet": "eggman",
+              "frame": 9,
+              "alpha": 1
+            },
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": true,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            185,
+            225
+          ],
+          "displayCel": [
+            53,
+            65
+          ],
+          "colors": 4814,
+          "occupied": 6569,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            372.390625,
+            208.59375
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "offer",
+          "pose": {
+            "beat": "offer",
+            "age": 60,
+            "frame": 468,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "unbothered",
+              "sheet": "sonic",
+              "frame": 11,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "offer",
+              "sheet": "shadow",
+              "frame": 20,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9552.517789322641,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            166,
+            215
+          ],
+          "displayCel": [
+            48,
+            62
+          ],
+          "colors": 4952,
+          "occupied": 7240,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            372.390625,
+            208.59375
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "nod",
+          "pose": {
+            "beat": "nod",
+            "age": 15,
+            "frame": 573,
+            "sonic": {
+              "x": 72467,
+              "y": -9340,
+              "visible": true,
+              "action": "nod",
+              "sheet": "sonic",
+              "frame": 14,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "neutral",
+              "sheet": "shadow",
+              "frame": 20,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9551.315993031494,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            182,
+            233
+          ],
+          "displayCel": [
+            51,
+            65
+          ],
+          "colors": 4986,
+          "occupied": 7828,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            372.390625,
+            208.59375
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "swing",
+          "pose": {
+            "beat": "swing",
+            "age": 27,
+            "frame": 747,
+            "sonic": {
+              "x": 72467,
+              "y": -9340,
+              "visible": true,
+              "action": "nod",
+              "sheet": "sonic",
+              "frame": 15,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "swing",
+              "sheet": "shadow",
+              "frame": 27,
+              "flip": true,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9552.970779237234,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72543,
+              "y": -9420
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": true,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            151,
+            251
+          ],
+          "displayCel": [
+            44,
+            72
+          ],
+          "colors": 5303,
+          "occupied": 7311,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            372.390625,
+            208.59375
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "confused",
+          "pose": {
+            "beat": "realize",
+            "age": 35,
+            "frame": 791,
+            "sonic": {
+              "x": 72467,
+              "y": -9352.544,
+              "visible": true,
+              "action": "confused",
+              "sheet": "sonic",
+              "frame": 21,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "smirk",
+              "sheet": "shadow",
+              "frame": 28,
+              "flip": true,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9547.262299731296,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": true,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            223,
+            228
+          ],
+          "displayCel": [
+            63,
+            64
+          ],
+          "colors": 5392,
+          "occupied": 8863,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            372.390625,
+            208.59375
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "eggman",
+          "pose": {
+            "beat": "jetpack",
+            "age": 4,
+            "frame": 328,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "disappointed",
+              "sheet": "sonic",
+              "frame": 8,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "neutral",
+              "sheet": "shadow",
+              "frame": 15,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9548.134342434103,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72919.6,
+              "y": -9713,
+              "visible": true,
+              "sheet": "eggman",
+              "frame": 5,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": false,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            294,
+            272
+          ],
+          "displayCel": [
+            86,
+            79
+          ],
+          "colors": 8617,
+          "occupied": 13923,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            372.390625,
+            208.59375
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        }
+      ],
+      "errors": []
+    },
+    {
+      "screen": "fullscreen",
+      "dpr": 1,
+      "checks": [
+        {
+          "name": "idle",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 16,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            131,
+            178
+          ],
+          "displayCel": [
+            44,
+            59
+          ],
+          "colors": 5276,
+          "occupied": 8381,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1920,
+            1080
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "run",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 3,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            150,
+            155
+          ],
+          "displayCel": [
+            50,
+            52
+          ],
+          "colors": 4641,
+          "occupied": 7434,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1920,
+            1080
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "boost",
+          "pose": {
+            "sheet": "supplemental",
+            "frame": 11,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            193,
+            183
+          ],
+          "displayCel": [
+            53,
+            50
+          ],
+          "colors": 4892,
+          "occupied": 8281,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1920,
+            1080
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "brake",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 35,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0
+          },
+          "cache": [
+            193,
+            135
+          ],
+          "displayCel": [
+            64,
+            45
+          ],
+          "colors": 5316,
+          "occupied": 8552,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1920,
+            1080
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "grind",
+          "pose": {
+            "sheet": "supplemental",
+            "frame": 20,
+            "face": 1,
+            "ball": false,
+            "diameter": 38,
+            "rotation": 0.2
+          },
+          "cache": [
+            200,
+            184
+          ],
+          "displayCel": [
+            54,
+            50
+          ],
+          "colors": 4970,
+          "occupied": 8752,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1920,
+            1080
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "roll",
+          "pose": {
+            "sheet": "recoveredSpeedster",
+            "frame": 26,
+            "face": 1,
+            "ball": true,
+            "diameter": 38,
+            "rotation": 0.3
+          },
+          "cache": [
+            119,
+            114
+          ],
+          "displayCel": [
+            38,
+            36
+          ],
+          "colors": 2581,
+          "occupied": 4699,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1920,
+            1080
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "kick",
+          "pose": {
+            "beat": "kick",
+            "age": 18,
+            "frame": 228,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "grin",
+              "sheet": "sonic",
+              "frame": 5,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72448,
+              "y": -9375.87429987479,
+              "visible": true,
+              "action": "kick",
+              "sheet": "shadow",
+              "frame": 4,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9547.672635420966,
+              "visible": true,
+              "sheet": "eggman",
+              "frame": 3,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": false,
+              "x": 72423,
+              "y": -9411.87429987479
+            },
+            "rocket": {
+              "x": 72471,
+              "y": -9413,
+              "angle": -0.5421546055276165,
+              "sheet": "eggman",
+              "frame": 9,
+              "alpha": 1
+            },
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": true,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            185,
+            225
+          ],
+          "displayCel": [
+            53,
+            65
+          ],
+          "colors": 4814,
+          "occupied": 6569,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1920,
+            1080
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "offer",
+          "pose": {
+            "beat": "offer",
+            "age": 60,
+            "frame": 468,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "unbothered",
+              "sheet": "sonic",
+              "frame": 11,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "offer",
+              "sheet": "shadow",
+              "frame": 20,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9552.517789322641,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            166,
+            215
+          ],
+          "displayCel": [
+            48,
+            62
+          ],
+          "colors": 4952,
+          "occupied": 7240,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1920,
+            1080
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "nod",
+          "pose": {
+            "beat": "nod",
+            "age": 15,
+            "frame": 573,
+            "sonic": {
+              "x": 72467,
+              "y": -9340,
+              "visible": true,
+              "action": "nod",
+              "sheet": "sonic",
+              "frame": 14,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "neutral",
+              "sheet": "shadow",
+              "frame": 20,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9551.315993031494,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            182,
+            233
+          ],
+          "displayCel": [
+            51,
+            65
+          ],
+          "colors": 4986,
+          "occupied": 7828,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1920,
+            1080
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "swing",
+          "pose": {
+            "beat": "swing",
+            "age": 27,
+            "frame": 747,
+            "sonic": {
+              "x": 72467,
+              "y": -9340,
+              "visible": true,
+              "action": "nod",
+              "sheet": "sonic",
+              "frame": 15,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "swing",
+              "sheet": "shadow",
+              "frame": 27,
+              "flip": true,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9552.970779237234,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72543,
+              "y": -9420
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": true,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            151,
+            251
+          ],
+          "displayCel": [
+            44,
+            72
+          ],
+          "colors": 5303,
+          "occupied": 7311,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1920,
+            1080
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "confused",
+          "pose": {
+            "beat": "realize",
+            "age": 35,
+            "frame": 791,
+            "sonic": {
+              "x": 72467,
+              "y": -9352.544,
+              "visible": true,
+              "action": "confused",
+              "sheet": "sonic",
+              "frame": 21,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "smirk",
+              "sheet": "shadow",
+              "frame": 28,
+              "flip": true,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9547.262299731296,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72790,
+              "y": -9550,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 4,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": true,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": true,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            223,
+            228
+          ],
+          "displayCel": [
+            63,
+            64
+          ],
+          "colors": 5392,
+          "occupied": 8863,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1920,
+            1080
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        },
+        {
+          "name": "eggman",
+          "pose": {
+            "beat": "jetpack",
+            "age": 4,
+            "frame": 328,
+            "sonic": {
+              "x": 72320,
+              "y": -9340,
+              "visible": true,
+              "action": "disappointed",
+              "sheet": "sonic",
+              "frame": 8,
+              "flip": false,
+              "alpha": 1
+            },
+            "shadow": {
+              "x": 72555,
+              "y": -9340,
+              "visible": true,
+              "action": "neutral",
+              "sheet": "shadow",
+              "frame": 15,
+              "flip": false,
+              "alpha": 1
+            },
+            "pod": {
+              "x": 72790,
+              "y": -9548.134342434103,
+              "visible": false,
+              "sheet": "eggman",
+              "frame": 0,
+              "alpha": 1
+            },
+            "eggman": {
+              "x": 72919.6,
+              "y": -9713,
+              "visible": true,
+              "sheet": "eggman",
+              "frame": 5,
+              "alpha": 1
+            },
+            "emerald": {
+              "color": "yellow",
+              "visible": false,
+              "x": 72530,
+              "y": -9376
+            },
+            "rocket": null,
+            "contact": {
+              "x": 72471,
+              "y": -9413
+            },
+            "blast": {
+              "x": 72770,
+              "y": -9605
+            },
+            "effects": {
+              "arrival": false,
+              "kick": false,
+              "explosion": false,
+              "teleport": false,
+              "warp": false,
+              "dust": false,
+              "sigh": false
+            }
+          },
+          "cache": [
+            294,
+            272
+          ],
+          "displayCel": [
+            86,
+            79
+          ],
+          "colors": 8617,
+          "occupied": 13923,
+          "backing": [
+            1920,
+            1080
+          ],
+          "display": [
+            1920,
+            1080
+          ],
+          "camera": [
+            71900,
+            -9845,
+            0.8
+          ]
+        }
+      ],
+      "errors": []
+    }
+  ]
+}
