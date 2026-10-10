@@ -1,0 +1,236 @@
+{
+  "note": "Chromium batch-average drawing times on this cloud machine; not hardware FPS guarantees.",
+  "before": {
+    "desktop": {
+      "camera": [
+        71900,
+        -9845,
+        0.8
+      ],
+      "cameraAfter": [
+        71900,
+        -9845,
+        0.8
+      ],
+      "nativeCelBytes": 13023888,
+      "exposedCels": 65,
+      "supplementalCels": 0,
+      "poses": [
+        {
+          "beat": "kick",
+          "age": 18,
+          "medianMs": 5.1433333337306975,
+          "maxBatchMs": 5.45,
+          "extraWorldCanvases": 0,
+          "extraEndingCanvases": 0
+        },
+        {
+          "beat": "return",
+          "age": 26,
+          "medianMs": 5.230000000198682,
+          "maxBatchMs": 5.366666666666666,
+          "extraWorldCanvases": 0,
+          "extraEndingCanvases": 0
+        },
+        {
+          "beat": "swing",
+          "age": 31,
+          "medianMs": 4.193333333730697,
+          "maxBatchMs": 4.939999999602636,
+          "extraWorldCanvases": 0,
+          "extraEndingCanvases": 0
+        },
+        {
+          "beat": "realize",
+          "age": 25,
+          "medianMs": 4.62333333392938,
+          "maxBatchMs": 4.860000000397364,
+          "extraWorldCanvases": 0,
+          "extraEndingCanvases": 0
+        },
+        {
+          "beat": "sigh",
+          "age": 40,
+          "medianMs": 3.176666667064031,
+          "maxBatchMs": 5.396666665871938,
+          "extraWorldCanvases": 0,
+          "extraEndingCanvases": 0
+        }
+      ]
+    },
+    "laptop": {
+      "camera": [
+        71900,
+        -9845,
+        0.8
+      ],
+      "cameraAfter": [
+        71900,
+        -9845,
+        0.8
+      ],
+      "nativeCelBytes": 13023888,
+      "exposedCels": 65,
+      "supplementalCels": 0,
+      "poses": [
+        {
+          "beat": "kick",
+          "age": 18,
+          "medianMs": 5.433333333333334,
+          "maxBatchMs": 6.043333333730698,
+          "extraWorldCanvases": 0,
+          "extraEndingCanvases": 0
+        },
+        {
+          "beat": "return",
+          "age": 26,
+          "medianMs": 5.166666666666667,
+          "maxBatchMs": 5.8966666668653485,
+          "extraWorldCanvases": 0,
+          "extraEndingCanvases": 0
+        },
+        {
+          "beat": "swing",
+          "age": 31,
+          "medianMs": 4.369999999801318,
+          "maxBatchMs": 4.463333333532016,
+          "extraWorldCanvases": 0,
+          "extraEndingCanvases": 0
+        },
+        {
+          "beat": "realize",
+          "age": 25,
+          "medianMs": 4.380000000198682,
+          "maxBatchMs": 4.930000000198683,
+          "extraWorldCanvases": 0,
+          "extraEndingCanvases": 0
+        },
+        {
+          "beat": "sigh",
+          "age": 40,
+          "medianMs": 2.95,
+          "maxBatchMs": 6.563333333532015,
+          "extraWorldCanvases": 0,
+          "extraEndingCanvases": 0
+        }
+      ]
+    }
+  },
+  "after": {
+    "desktop": {
+      "camera": [
+        71900,
+        -9845,
+        0.8
+      ],
+      "cameraAfter": [
+        71900,
+        -9845,
+        0.8
+      ],
+      "nativeCelBytes": 26645212,
+      "exposedCels": 77,
+      "supplementalCels": 56,
+      "poses": [
+        {
+          "beat": "kick",
+          "age": 18,
+          "medianMs": 5.976666667064031,
+          "maxBatchMs": 7.143333332737287,
+          "extraWorldCanvases": 0,
+          "extraEndingCanvases": 0
+        },
+        {
+          "beat": "return",
+          "age": 26,
+          "medianMs": 5.533333333333333,
+          "maxBatchMs": 6.413333333532015,
+          "extraWorldCanvases": 0,
+          "extraEndingCanvases": 0
+        },
+        {
+          "beat": "swing",
+          "age": 31,
+          "medianMs": 3.55,
+          "maxBatchMs": 5.643333332737287,
+          "extraWorldCanvases": 0,
+          "extraEndingCanvases": 0
+        },
+        {
+          "beat": "realize",
+          "age": 25,
+          "medianMs": 5.096666666865349,
+          "maxBatchMs": 5.22666666607062,
+          "extraWorldCanvases": 0,
+          "extraEndingCanvases": 0
+        },
+        {
+          "beat": "sigh",
+          "age": 40,
+          "medianMs": 3.4733333329359692,
+          "maxBatchMs": 5.95,
+          "extraWorldCanvases": 0,
+          "extraEndingCanvases": 0
+        }
+      ]
+    },
+    "laptop": {
+      "camera": [
+        71900,
+        -9845,
+        0.8
+      ],
+      "cameraAfter": [
+        71900,
+        -9845,
+        0.8
+      ],
+      "nativeCelBytes": 26645212,
+      "exposedCels": 77,
+      "supplementalCels": 56,
+      "poses": [
+        {
+          "beat": "kick",
+          "age": 18,
+          "medianMs": 5.683333333333334,
+          "maxBatchMs": 6.056666666269303,
+          "extraWorldCanvases": 0,
+          "extraEndingCanvases": 0
+        },
+        {
+          "beat": "return",
+          "age": 26,
+          "medianMs": 5.5266666660706205,
+          "maxBatchMs": 6.263333333532016,
+          "extraWorldCanvases": 0,
+          "extraEndingCanvases": 0
+        },
+        {
+          "beat": "swing",
+          "age": 31,
+          "medianMs": 2.956666666269302,
+          "maxBatchMs": 5.330000000198682,
+          "extraWorldCanvases": 0,
+          "extraEndingCanvases": 0
+        },
+        {
+          "beat": "realize",
+          "age": 25,
+          "medianMs": 4.9700000007947285,
+          "maxBatchMs": 5.1099999994039536,
+          "extraWorldCanvases": 0,
+          "extraEndingCanvases": 0
+        },
+        {
+          "beat": "sigh",
+          "age": 40,
+          "medianMs": 2.793333333730698,
+          "maxBatchMs": 5.956666666269302,
+          "extraWorldCanvases": 0,
+          "extraEndingCanvases": 0
+        }
+      ]
+    }
+  },
+  "supplementalRetry": true
+}

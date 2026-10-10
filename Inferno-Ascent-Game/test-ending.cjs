@@ -12,10 +12,10 @@ test('rocket meets the high kick then returns to the pod without a position disc
  const position=pose.rocket;a.tickEndingScene(s);const next=a.endingPose(s).rocket;assert.ok(next.x>position.x);assert.ok(next.y<position.y);
  const impact=at('explode').pose;assert.equal(impact.pod.visible,false);assert.equal(impact.effects.explosion,true);assert.equal(impact.sonic.action,'disappointed');
 });
-test('the emerald is yellow and activation swings upward while Sonic is still confidently nodding',()=>{
+test('the yellow Emerald rises while Sonic nods, then charges after the catch',()=>{
  const invitation=at('offer',50).pose;assert.equal(invitation.emerald.color,'yellow');assert.equal(invitation.sonic.action,'unbothered');
- const early=at('swing',0).pose,late=at('swing',35).pose;
- assert.ok(late.emerald.y<early.emerald.y-25);assert.equal(early.sonic.action,'nod');assert.equal(late.sonic.action,'nod');assert.equal(late.effects.teleport,true);
+ const early=at('swing',0).pose,late=at('swing',31).pose;
+ assert.ok(late.emerald.y<early.emerald.y-25);assert.equal(early.sonic.action,'nod');assert.equal(late.sonic.action,'nod');assert.equal(late.effects.teleport,false);assert.equal(at('swing',65).pose.effects.teleport,true);
  assert.equal(at('realize',25).pose.sonic.action,'confused');assert.equal(at('realize',25).pose.shadow.action,'smirk');
 });
 test('Sonic nods through a real frame cycle and only Sonic disappears',()=>{
