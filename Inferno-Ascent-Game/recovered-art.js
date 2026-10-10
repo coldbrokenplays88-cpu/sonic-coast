@@ -25,7 +25,7 @@ function recoveredSonicPose(){
  const phase=runFrames%240;return out('idle',phase<180?16:phase<190?17:phase<220?18:19);
 }
 
-// Normalize each source pose once, then draw at an integer backing-pixel scale.
+// Cache untouched source pixels; keep the established display dimensions and anchors.
 // Original images stay intact; resizing never allocates work during a warm frame.
 const recoveredSpriteTextures=new Map();
 function drawRecoveredSonicFrame(q){
@@ -35,15 +35,17 @@ function drawRecoveredSonicFrame(q){
  let sprite=recoveredSpriteTextures.get(key);
  if(!sprite){
   const scale=q.ball?q.diameter/Math.max(sw,sh):(descriptor.scale??1/3);
-  const image=document.createElement('canvas');image.width=Math.max(1,Math.round(sw*scale));image.height=Math.max(1,Math.round(sh*scale));
-  const dc=image.getContext('2d');dc.imageSmoothingEnabled=false;dc.drawImage(im,left,top,sw,sh,0,0,image.width,image.height);
-  sprite={image,x:Math.round(descriptor.anchor[0]*scale),y:Math.round(descriptor.anchor[1]*scale)};recoveredSpriteTextures.set(key,sprite);
+  const image=document.createElement('canvas');image.width=sw;image.height=sh;
+  const width=Math.max(1,Math.round(sw*scale)),height=Math.max(1,Math.round(sh*scale));
+  const dc=image.getContext('2d');dc.imageSmoothingEnabled=false;dc.drawImage(im,left,top,sw,sh,0,0,sw,sh);
+  sprite={image,width,height,x:Math.round(descriptor.anchor[0]*scale),y:Math.round(descriptor.anchor[1]*scale)};recoveredSpriteTextures.set(key,sprite);
  }
  const transform=ctx.getTransform(),worldScale=Math.hypot(transform.a,transform.b),integerScale=Math.max(1,Math.round(worldScale)),ratio=integerScale/worldScale;
  const foot=q.ball?(p.ground?6:1):20;
  ctx.save();ctx.setTransform(transform.a*ratio,transform.b*ratio,transform.c*ratio,transform.d*ratio,Math.round(transform.e+transform.c*foot),Math.round(transform.f+transform.d*foot));
  if(q.rotation)ctx.rotate(q.rotation);
- ctx.drawImage(sprite.image,q.ball?-Math.round(sprite.image.width/2):-sprite.x,q.ball?-Math.round(sprite.image.height/2):-sprite.y);
+ ctx.imageSmoothingEnabled=false;
+ ctx.drawImage(sprite.image,q.ball?-Math.round(sprite.width/2):-sprite.x,q.ball?-Math.round(sprite.height/2):-sprite.y,sprite.width,sprite.height);
  ctx.restore();
 }
 // Source rectangles and stable body/foot anchors for the untouched October 7 atlases.

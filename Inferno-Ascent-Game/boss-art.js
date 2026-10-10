@@ -1,18 +1,25 @@
-/* Articulated pixel sprites. Source is retained; stamps use a fixed 2-world-unit grid. */
+/* Articulated source-resolution sprites with the original 2-world-unit anchor grid. */
 const scorpionParts=new Map(),scorpionStamps=new Map();
 const scorpionBounds={body:[16,125,430,503,132],head:[455,88,811,460,84],jaw:[800,177,1184,485,64],claw:[1198,54,1534,506,58],tail:[65,520,327,991,46],stinger:[369,573,779,958,65],cannon:[796,562,1169,966,65],eyes:[1176,674,1535,991,74]};
 function prepareScorpionArt(image){
+ scorpionStamps.clear();
  for(const [name,[x,y,r,b,width]]of Object.entries(scorpionBounds)){
-  const c=document.createElement('canvas');c.width=width;c.height=Math.round((b-y)*width/(r-x));const dc=c.getContext('2d');dc.imageSmoothingEnabled=false;dc.drawImage(image,x,y,r-x,b-y,0,0,c.width,c.height);scorpionParts.set(name,c);
+  const c=document.createElement('canvas');c.width=r-x;c.height=b-y;const dc=c.getContext('2d');dc.imageSmoothingEnabled=false;dc.drawImage(image,x,y,r-x,b-y,0,0,c.width,c.height);
+  scorpionParts.set(name,{image:c,width,height:Math.round((b-y)*width/(r-x))});
  }
 }
 function scorpionStamp(name,angle=0,mirror=false){
  const part=scorpionParts.get(name);if(!part)return null;
  const turn=Math.round(angle/(Math.PI/16)),key=name+':'+turn+':'+mirror;if(scorpionStamps.has(key))return scorpionStamps.get(key);
- const c=document.createElement('canvas'),size=Math.ceil(Math.hypot(part.width,part.height))+4;c.width=size;c.height=size;
- const dc=c.getContext('2d');dc.imageSmoothingEnabled=false;dc.translate(Math.floor(size/2),Math.floor(size/2));dc.rotate(turn*Math.PI/16);if(mirror)dc.scale(-1,1);dc.drawImage(part,-Math.floor(part.width/2),-Math.floor(part.height/2));scorpionStamps.set(key,c);return c;
+ // Cache the transform, not a rotated low-resolution copy of the artwork.
+ const size=Math.ceil(Math.hypot(part.width,part.height))+4;
+ const stamp={...part,angle:turn*Math.PI/16,mirror,offset:2*Math.floor(size/2)-size};scorpionStamps.set(key,stamp);return stamp;
 }
-function scorpionPart(name,x,y,angle=0,mirror=false){const stamp=scorpionStamp(name,angle,mirror);if(!stamp)return;ctx.drawImage(stamp,Math.round(x/2)*2-stamp.width,Math.round(y/2)*2-stamp.height,stamp.width*2,stamp.height*2);}
+function scorpionPart(name,x,y,angle=0,mirror=false){
+ const stamp=scorpionStamp(name,angle,mirror);if(!stamp)return;
+ ctx.save();ctx.translate(Math.round(x/2)*2+stamp.offset,Math.round(y/2)*2+stamp.offset);ctx.rotate(stamp.angle);if(stamp.mirror)ctx.scale(-1,1);ctx.imageSmoothingEnabled=false;
+ ctx.drawImage(stamp.image,-Math.floor(stamp.width/2)*2,-Math.floor(stamp.height/2)*2,stamp.width*2,stamp.height*2);ctx.restore();
+}
 function drawScorpionLink(a,z,width=20){cityPixelLine(a.x,a.y,z.x,z.y,'#07101d',width+8);cityPixelLine(a.x,a.y,z.x,z.y,'#354254',width);cityPixelLine(a.x-4,a.y-3,z.x-4,z.y-3,'#72869a',4);cityPixelLine(a.x+7,a.y,z.x+7,z.y,'#c91d2b',4);}
 function renderEggScorpion(b){
  const g=window.scorpionGeometry(b),s=b.state,roof=b.y;

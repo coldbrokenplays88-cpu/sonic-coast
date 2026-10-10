@@ -1,5 +1,5 @@
 /* Cached native-pixel cels. No filtering, per-frame image reads, or camera cuts. */
-const endingSprites=new Map(),endingRotations=new Map(),endingLoadErrors=new Set();
+const endingSprites=new Map(),endingLoadErrors=new Set();
 function prepareEndingArt(name,image){
  const source=document.createElement('canvas');source.width=image.width;source.height=image.height;
  const sc=source.getContext('2d',{willReadFrequently:true});sc.drawImage(image,0,0);
@@ -16,9 +16,9 @@ function prepareEndingArt(name,image){
   }
   for(let i=0;i<keep.length;i++)pixels[i*4+3]=keep[i]?255:0;
   const crop=document.createElement('canvas');crop.width=w;crop.height=h;crop.getContext('2d').putImageData(data,0,0);
-  const cel=document.createElement('canvas');cel.width=Math.ceil(w*d.scale);cel.height=Math.ceil(h*d.scale);
-  const dc=cel.getContext('2d');dc.imageSmoothingEnabled=false;dc.drawImage(crop,0,0,w,h,0,0,cel.width,cel.height);
-  frames.push({image:cel,x:Math.round((d.anchor[0]-l)*d.scale),y:cel.height,gem:d.gem?{x:Math.round((d.gem[0]-d.anchor[0])*d.scale),y:Math.round((d.gem[1]-b)*d.scale)}:null});
+  // Retain the complete masked source crop. Scale only in the final draw.
+  const width=Math.ceil(w*d.scale),height=Math.ceil(h*d.scale);
+  frames.push({image:crop,width,height,x:Math.round((d.anchor[0]-l)*d.scale),y:height,gem:d.gem?{x:Math.round((d.gem[0]-d.anchor[0])*d.scale),y:Math.round((d.gem[1]-b)*d.scale)}:null});
  }
  endingSprites.set(name,frames);endingLoadErrors.delete(name);
 }
@@ -38,10 +38,10 @@ function endingActor(actor){
  ctx.save();ctx.setTransform(tr.a*ratio,tr.b*ratio,tr.c*ratio,tr.d*ratio,px,py);ctx.imageSmoothingEnabled=false;ctx.globalAlpha=actor.alpha??1;
  if(actor.flip)ctx.scale(-1,1);
  if(actor.angle!==undefined){
-  const turn=Math.round(actor.angle/(Math.PI/32)),key=actor.sheet+'/'+actor.frame+'/'+turn;let stamp=endingRotations.get(key);
-  if(!stamp){const c=document.createElement('canvas'),size=Math.ceil(Math.hypot(cel.image.width,cel.image.height))+4;c.width=size;c.height=size;const dc=c.getContext('2d');dc.imageSmoothingEnabled=false;dc.translate(Math.floor(size/2),Math.floor(size/2));dc.rotate(turn*Math.PI/32);dc.drawImage(cel.image,-cel.image.width/2,-cel.image.height/2);stamp=c;endingRotations.set(key,stamp);}
-  ctx.drawImage(stamp,-Math.floor(stamp.width/2),-Math.floor(stamp.height/2));
- }else ctx.drawImage(cel.image,-cel.x,-cel.y);
+  // Quantize the same angle, but rotate source pixels directly on the game canvas.
+  const turn=Math.round(actor.angle/(Math.PI/32));ctx.rotate(turn*Math.PI/32);
+  ctx.drawImage(cel.image,-cel.width/2,-cel.height/2,cel.width,cel.height);
+ }else ctx.drawImage(cel.image,-cel.x,-cel.y,cel.width,cel.height);
  ctx.restore();return cel.gem?{x:actor.x+cel.gem.x*ratio*(actor.flip?-1:1),y:actor.y+cel.gem.y*ratio}:null;
 }
 function endingStar(x,y,size,color){cityPixelRect(x-size,y-1,size*2+2,2,color);cityPixelRect(x-1,y-size,2,size*2+2,color);cityPixelRect(x-3,y-3,6,6,color);}
