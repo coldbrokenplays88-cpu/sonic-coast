@@ -42,11 +42,17 @@ const samples=[['kick',18],['return',26],['swing',31],['realize',25],['sigh',40]
        if(endingAllocations)throw Error('warm ending draw allocated a cel');
        poses.push({beat,age,medianMs:times[2],maxBatchMs:times.at(-1),extraWorldCanvases:canvasCount-warmCount,extraEndingCanvases:endingAllocations});
       }
-      return {camera,cameraAfter:[cam,camY,zoom],nativeCelBytes:nativeBytes,exposedCels:used.size,supplementalCels:[...used].filter(k=>k.includes('-polish')).length,poses};
+      return {camera,cameraAfter:[cam,camY,zoom],nativeCelBytes:nativeBytes,exposedCels:used.size,usedCels:[...used].sort(),supplementalCels:[...used].filter(k=>k.includes('-polish')).length,poses};
      }finally{document.createElement=nativeCreate;ending=scene;}
     },{samples,label});
     assert.deepEqual(result.cameraAfter,result.camera);assert.deepEqual(errors,[]);
-    if(label==='after')assert.equal(result.supplementalCels,56,'all authored supplemental cels must be reachable');
+    if(label==='after'){
+     // Reviewed acting keys matter more than forcing every generated cel into
+     // playback. Never regress to the defective supplemental floating face.
+     assert.ok(!result.usedCels.includes('sonic-polish:23'));
+     for(const cel of ['sonic:12','sonic:15','sonic:16','sonic:17'])assert.ok(!result.usedCels.includes(cel),'three-hand cel '+cel);
+     for(const cel of ['sonic-polish:5','sonic:8','sonic:11','sonic:13','sonic:14','sonic:22','sonic:23','shadow:23','shadow:27','shadow:31'])assert.ok(result.usedCels.includes(cel),'missing clean storyboard key '+cel);
+    }
     output[label][screen]=result;await page.close();
    }
   }

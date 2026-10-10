@@ -1,32 +1,45 @@
-# Neon Express Act 2 — ending animation polish
+# Neon Express Act 2 — targeted ending refinement
 
-Refines the existing ending from `f118a1f`. The story, fixed camera, character designs, original key artwork, gameplay physics, collision boxes, level geometry and route layouts are preserved.
+The ending uses main (`f118a1f`) as its acting baseline and retains the useful action transitions from the previous polish (`8cc8c4c`). All changes stay on `codex/ending-animation-polish`. No new PR or merge is part of this update.
 
-## Animation changes
+## Character acting
 
-- 56 supplemental authored cels: 24 Sonic, 24 Shadow, 8 Eggman. Sonic gains blinks, gesture transitions, a steady-hand nod cycle and gradual surprise. Shadow gains kick anticipation/recoil, landing compression/recovery, a turn, release/catch poses and sigh follow-through. Eggman gains button press, firing brace/recoil, laughter and returning-rocket reactions. All 56 are exposed in the final timeline.
-- Shadow remains airborne during his return travel, plants his feet once horizontal travel ends, compresses, rises and turns toward Sonic. This removes the previous grounded slide.
-- The preserved kick key drawing meets the rocket at the forward boot. The projectile rotates around its nose; its smoke begins behind the rendered tail. Impact remains at kick frame 18.
-- The yellow Emerald is lowered, released, follows a continuous airborne arc, is caught, and settles back into Shadow's hand. The airborne prop uses pixels extracted from the original Shadow atlas. Chaos Control starts after the catch, while Sonic is still nodding; only Sonic teleports away.
-- Total duration remains **966 simulation frames / 16.1 seconds**. Offer is 90 frames (previously 108), nod 108 (120), and toss/catch 66 (36). The remaining beat durations and their order are unchanged. The charge sound moves from toss frame 18 to frame 52, after the catch. All nine original sound cues still occur exactly once.
+- Sonic keeps his cocky confrontation and excited toothy rocket reaction. He notices Shadow's interception as the rocket is reflected, lowers his hands into the existing clear disappointed frown (`sonic-polish:5`) for **24 ticks / 0.4 seconds** rather than six ticks, and holds the original disappointed side-eye (`sonic:8`) through Eggman's escape. The smiling blink previously inserted into disappointment is removed.
+- His invitation uses the original one- and two-handed shrug (`sonic:10/11`), with the broad shrug held **39 ticks / 0.65 seconds** and clean supplemental gesture transitions. After his dash/landing, two brief cocky gesture asides punctuate confident closed-eye head nods. Clean original head-lift keys (`sonic:13/14`) and supplemental dips preserve the stronger performance without malformed hands. He remains obliviously nodding while Shadow becomes annoyed and prepares Chaos Control.
+- Sonic opens his eyes, raises both hands, becomes confused, then floats away using all six clean original reaction keys (`sonic:18–23`). The final clean floating pose carries through the fade instead of alternating between facial drawings.
+- Shadow's kick anticipation, recoil, airborne return, planted landing, compression and turn remain. The rocket still meets his forward boot, and its smoke begins behind its tail.
+- Shadow's original annoyance progression (`shadow:21–23`) returns. The yellow Emerald toss and catch remain intact; afterward, his caught-gem arm rises overhead through the original activation keys (`shadow:25–27`). His restrained smirk, blink, relieved exhale and settle remain, ending in the original eyes-closed, hands-down resting pose (`shadow:31`). The Emerald stays in the same front hand during his sigh.
+- Eggman's button press, firing recoil, laughter and returning-rocket reactions remain.
 
-## Rendering and assets
+## Visual diagnosis and corrections
 
-The three original ending PNGs and all gameplay artwork remain unchanged. Supplemental PNGs are generated from those existing ending sheets and copied without pixel editing. Source hashes and provenance are recorded in `Inferno-Ascent-Game/assets/ending-polish-art-metadata.json`.
+The extra-eye appearance came from **supplemental Sonic frame 23's source artwork**: an additional white eye-shaped wedge beside the intended eyes. The same defect was visible in the isolated native crop, so it was not a facial overlay, neighboring cel leaking into the crop or a filtering issue. That cel is excluded from playback; clean original confusion/floating artwork preserves the expressions. The PNG is preserved unchanged rather than regenerated.
 
-Native-resolution connected-component crops remain cached at full source resolution, with nearest-neighbor scaling only in the final draw. Feet stay on the existing world baseline. Fixed authoring scales normalize the new atlas sizes; no animated scaling, stretching, camera zoom or intermediate low-resolution character raster is introduced.
+A fresh visual review also found **three gloves in original Sonic nod frames 12, 15, 16 and 17**. Those cels are excluded too. Clean existing head nods and separate broad gesture asides carry the same cocky acting. The review caught the held Emerald changing sides when flipped original sigh keys were mixed with unflipped polish keys; a consistent left-facing relief sequence fixes that continuity.
 
-## Validation
+No new images were generated. All six existing ending PNGs, character designs, proportions and native-resolution crop/rendering code remain unchanged. No face layers, animated scaling, interpolation, camera zoom or low-resolution intermediate raster are added. The script URL version is incremented so browsers fetch the revised timeline.
 
-- `node --test`: **177 passed, zero failures or skips**.
-- Complete 483-frame, 1080p/30fps rendered replay: all 16 beats, nine cues, no page errors; camera, game clock and statistics stay fixed. Asset retry, pause/resume and act switching passed.
-- Manual inspection of the rendered kick, landing, offer/nod, toss/catch, surprise and final sigh sequences. A fresh review caught hidden rocket smoke after the anchor change; the fix has a regression test and was rechecked in Chromium.
-- Normal-input boss-to-ending replay: three hits/three bites, four tail strikes, three laser shots, no damage or deaths, final results shown after the ending.
-- Existing browser checks passed for both acts, movement/boost, pool, facade parity, actual MP3/SFX wiring, keyboard/fullscreen and tablet/mobile layout.
-- `scripts/verify-ending-polish.cjs` exercises every exposed cel, compares desktop 1440×1000/DPR1 and laptop 1280×800/DPR2 layouts against an unchanged checkout, and blocks/retries a supplemental atlas download. Warm draw batches allocate no additional ending or world canvases after cache warm-up. Measurements are in [ending-polish-profile.json](validation/ending-polish-profile.json).
+## Timing and scope
 
-Native ending-cel storage increases from **12.42 MiB to 25.41 MiB**, plus browser image/texture overhead; the supplemental downloads total approximately 5.8 MiB. This is a one-time loading/cache cost. Final batch-median draw times ranged from 3.18–5.23 ms before / 3.47–5.98 ms after at the desktop viewport, and 2.95–5.43 ms before / 2.79–5.68 ms after at the laptop viewport. Some poses cost slightly more to draw; the toss samples contain fewer teleport effects because activation now follows the catch. Drawing profiles measure this cloud Chromium instance, not physical-device FPS. Firefox, Safari and physical laptop hardware were not exercised.
+**966 ticks / 16.1 seconds**, the same as both comparison versions. All 16 beats and nine sound cues remain in their established order; impact stays at kick tick 18 and charge at toss tick 52, after the catch. The existing polish offer/nod/toss durations remain 90/108/66 ticks. Physics, controls, collision boxes, geometry, routes, boss attacks, music and gameplay animations are unchanged.
 
-The [preview](validation/ending-polished-preview.mp4) is a **silent** capture of the actual 1920×1080 canvas at 30fps. The playable game retains its music and sound effects. [Replay results](validation/ending-polish-replay.json) and [a catch frame](validation/ending-polish-catch.png) are included.
+## Review and validation
 
-For local playback, serve `Inferno-Ascent-Game` with `python3 -m http.server`, play Act 2 and defeat Egg Scorpion. Run `ENDING_SKIP_CAPTURE=1 ENDING_OUTPUT=/tmp/ending-check node scripts/verify-ending.cjs <local URL>` for lifecycle verification without modifying tracked preview files.
+- `node --test`: **184 passed, zero failures or skips**. New regression checks cover readable disappointment, clean expressive gestures, excluded malformed faces/hands, overhead activation and consistent Emerald-hand continuity. They failed before the corrections. Frame existence/count tests are not treated as proof of good acting.
+- Complete **483-frame, native 1920×1080, 30fps** replays compare main, previous polish and the refinement using identical character positions, camera and viewport. Actual rendered gesture, kick/landing, toss/catch, reaction and relief sequences and every exposed native cel were inspected. The fresh reviewer identified the extra-glove and hand-continuity issues above; both received regression checks and corrections.
+- Full ending integration verifies camera, timer and stats remain frozen, all nine cues occur once, results follow the ending, and asset retry, pause/resume and switching acts work.
+- Normal-input boss replay reaches the ending and results after three hits/three bites, four tail attacks and three lasers, without damage or deaths. Existing browser checks cover both acts, boost/controls, pool/facades, audio, keyboard/fullscreen and tablet/mobile layout without page errors.
+- Warm Chromium drawing profiles at desktop 1440×1000/DPR1 and laptop 1280×800/DPR2 compare with both baselines. Native ending-cel storage remains **25.41 MiB**, identical to the existing polish; no new PNG downloads are added. Warm draws allocate no additional ending canvases. Compared with the previous polish, per-pose batch-median drawing times were **2.71–5.28 ms → 2.97–5.17 ms** on desktop and **2.78–5.14 ms → 2.97–4.96 ms** on laptop. Detailed measurements are saved with the previews. The original main uses 12.42 MiB; the extra storage remains the earlier polish's cache cost.
+
+The full preview is a **silent capture** of the actual game canvas; the playable scene retains music and effects. The acting comparison crops the same fixed-camera recordings for visibility, without changing the game's framing. The versions keep their authored timing, so a few later beats occur at slightly different timestamps. Drawing profiles describe this cloud Chromium instance, not guaranteed physical-device FPS; Firefox, Safari and physical laptop hardware were not tested.
+
+- [Full updated preview](validation/ending-polished-preview.mp4)
+- [Main / previous polish / updated acting comparison](validation/ending-acting-comparison.mp4)
+- [Face-source comparison](validation/ending-face-source-comparison.png)
+- [Rendered acting comparison](validation/ending-acting-comparison.png)
+- [Rendered teleport faces](validation/ending-face-comparison.png)
+- [Replay results](validation/ending-polish-replay.json)
+- [Main comparison profile](validation/ending-refinement-profile-main.json)
+- [Previous polish comparison profile](validation/ending-refinement-profile-previous.json)
+
+For local playback, serve `Inferno-Ascent-Game` with `python3 -m http.server`, play Act 2 and defeat Egg Scorpion. Run `ENDING_SKIP_CAPTURE=1 ENDING_OUTPUT=/tmp/ending-check node scripts/verify-ending.cjs <local URL>` for lifecycle verification without modifying tracked previews. Run `node scripts/verify-ending-polish.cjs <baseline URL> <updated URL>` for cel selection, cache, fixed-camera, drawing-profile and supplemental-download retry checks.

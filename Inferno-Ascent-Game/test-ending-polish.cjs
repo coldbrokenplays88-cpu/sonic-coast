@@ -4,7 +4,7 @@ function at(beat,age=0){const s=createEndingScene({x:1000,y:-500},{x:1600},{x:12
 test('long holds include authored blink and reaction cels',()=>{
  const poses=new Set(Array.from({length:108},(_,a)=>{const p=at('escape',a).sonic;return p.sheet+':'+p.frame;}));
  assert.ok(poses.size>=4,'Sonic must blink and settle instead of holding one drawing');
- assert.equal(at('explode',3).sonic.sheet,'sonic-polish');
+ assert.equal(at('return',16).sonic.sheet,'sonic-polish');
  assert.equal(at('rocket',4).pod.sheet,'eggman-polish');
 });
 test('the landing stays airborne until horizontal travel ends',()=>{
@@ -39,9 +39,9 @@ test('Emerald release, flight and catch stay distinct from Chaos Control',()=>{
  const final=at('swing',ENDING_BEATS.find(b=>b.name==='swing').duration-1);
  assert.equal(final.emerald.phase,'held');assert.equal(final.effects.teleport,true);
 });
-test('new acting cels preserve nodding, yellow Emerald and the original duration',()=>{
+test('storyboard nod keys, yellow Emerald and the original duration are preserved',()=>{
  assert.equal(ENDING_BEATS.reduce((n,b)=>n+b.duration,0),966);
- const frames=new Set();for(let a=0;a<48;a++){const p=at('nod',a);assert.equal(p.sonic.sheet,'sonic-polish');frames.add(p.sonic.frame);}
+ const frames=new Set();for(let a=18;a<66;a++){const p=at('nod',a);frames.add(p.sonic.sheet+':'+p.sonic.frame);}
  assert.ok(frames.size>=5);assert.equal(at('offer',50).emerald.color,'yellow');
  assert.equal(at('kick',18).effects.kick,true);assert.equal(at('sigh',40).sonic.visible,false);
 });
