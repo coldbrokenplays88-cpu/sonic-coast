@@ -1,0 +1,31 @@
+{
+  "assets": [
+    {
+      "file": "assets/ending-sonic-polish.png",
+      "frames": 24,
+      "sha256": "a5f55115294b2f9094a932c8eec800a49cee119d82bbe8e070333d3cd651574c",
+      "reference": "assets/ending-sonic.png",
+      "referenceSha256": "70525dafef69ba40cc7ab71f804b839f113acc9ae468aa328f7a84b86d7f406e",
+      "source": "Generated supplemental poses referenced directly to existing ending atlas; original PNG preserved unchanged."
+    },
+    {
+      "file": "assets/ending-shadow-polish.png",
+      "frames": 24,
+      "sha256": "1abab7cf51d9f6c3e165a7f2f239f4bb649b331ced51af6e22e495943f4e92a2",
+      "reference": "assets/ending-shadow.png",
+      "referenceSha256": "1ab0bc9b8123c42b06b34e37bf2e22c5530fedaa215d6a78421d16ccc8067e9e",
+      "source": "Generated supplemental poses referenced directly to existing ending atlas; original PNG preserved unchanged."
+    },
+    {
+      "file": "assets/ending-eggman-polish.png",
+      "frames": 8,
+      "sha256": "f279523b13f92c0efaf20d5576d6979e9d87e94789b9f630a8d76128b092d3ed",
+      "reference": "assets/ending-eggman.png",
+      "referenceSha256": "17311a3dbeca801400c174e12bdf1ae6cfbc8fe3c2a10c02bd69602cfc4e3113",
+      "source": "Generated supplemental poses referenced directly to existing ending atlas; original PNG preserved unchanged."
+    }
+  ],
+  "rendering": "Full native-resolution masked cels; scale only on final nearest-neighbor draw. Standing feet remain on the original world baseline.",
+  "normalization": "Sonic uses original atlas scale. Shadow action/gesture rows use .26, sigh row .243 because its source cels are taller; Eggman pod uses .246. Fixed authoring scales, never animated stretching.",
+  "emerald": "Independent prop extracted at native resolution from the existing Shadow atlas; original pixels and PNG unchanged."
+}
