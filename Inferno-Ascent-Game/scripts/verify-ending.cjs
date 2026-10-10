@@ -1,0 +1,17 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const {chromium}=require('playwright');
+(async()=>{const out=process.env.ENDING_OUTPUT||'/tmp/sonic-ending-validation';fs.mkdirSync(out,{recursive:true});const browser=await chromium.launch({executablePath:process.env.SONIC_CHROMIUM||'/usr/bin/chromium',headless:true,args:['--no-sandbox']});
+try{const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto(process.argv[2]||'http://127.0.0.1:8004');await page.waitForFunction(()=>endingArtReady()&&art.recoveredSpeedster&&art.scorpion);
+await page.evaluate(()=>{start();testControlled=true;const roof=surfaceById('summit-arena');p.x=level.arena.x+650;p.y=roof.y1-20;p.surface=roof;p.ground=true;update();boss.state='defeated';boss.hits=3;cam=level.arena.x+210;camY=level.arena.y-505;zoom=.8;update();window.sceneBaseline=JSON.stringify([clock,runFrames,stats,cam,camY,zoom]);});
+const beats=[],events=[];let frames=0;
+while(true){const state=await page.evaluate(()=>{const result={beat:ending.beat,frame:ending.frame,done:ending.done,mode,frozen:JSON.stringify([clock,runFrames,stats,cam,camY,zoom])===window.sceneBaseline,events:[]};for(let i=0;i<3&&!ending.done;i++){update();result.events.push(...ending.events);}draw();return result;});
+assert.ok(state.frozen,'camera, clock and stats must stay fixed');events.push(...state.events);if(beats.at(-1)!==state.beat)beats.push(state.beat);if(state.done){assert.equal(state.mode,'win');break;}assert.equal(state.mode,'playing');
+if(!process.env.ENDING_SKIP_CAPTURE)await page.locator('#game').screenshot({path:path.join(out,`frame-${String(frames).padStart(4,'0')}.png`)});frames++;
+}
+assert.deepEqual(beats,['escape','aim','rocket','kick','return','explode','jetpack','offer','approach','nod','annoy','swing','realize','vanish','sigh','end']);assert.equal(events.length,9);assert.equal(new Set(events).size,9);assert.deepEqual(errors,[]);
+const retryPage=await browser.newPage();let fail=true;await retryPage.route('**/assets/ending-shadow.png*',r=>fail?r.abort():r.continue());await retryPage.goto(process.argv[2]||'http://127.0.0.1:8004');await retryPage.waitForFunction(()=>endingLoadErrors.has('shadow'));
+await retryPage.evaluate(()=>{start();testControlled=true;const roof=surfaceById('summit-arena');p.x=level.arena.x+650;p.y=roof.y1-20;p.surface=roof;p.ground=true;update();boss.state='defeated';boss.hits=3;update();for(let i=0;i<60;i++)update();});assert.equal(await retryPage.evaluate(()=>ending.frame),0);assert.equal(await retryPage.locator('#ending-loading').isVisible(),true);fail=false;await retryPage.locator('#ending-retry').click();await retryPage.waitForFunction(()=>endingArtReady());
+assert.deepEqual(await retryPage.evaluate(()=>{for(let i=0;i<228;i++)update();pause();const n=ending.frame;for(let i=0;i<60;i++)update();const held=ending.frame===n;start();update();return [held,ending.frame===n+1];}),[true,true]);
+await retryPage.evaluate(()=>{selectAct(1);start();testControlled=true;press('ArrowRight');for(let i=0;i<20;i++)update();});assert.equal(await retryPage.evaluate(()=>ending===null&&p.vx>0),true);
+const result={frames,captureFps:20,seconds:frames/20,beats,events,errors,assetRetry:true,pauseResume:true,actSwitch:true};fs.writeFileSync(path.join(out,'replay.json'),JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify(result));
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

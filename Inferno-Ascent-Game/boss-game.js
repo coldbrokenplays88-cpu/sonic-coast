@@ -1,11 +1,27 @@
 /* Glue to existing movement, checkpoint, camera and result systems. */
-let boss=null,bossCheckpoint=false;
-function setupBossEncounter(){boss=null;bossCheckpoint=false;if(level.act!==2)return;level.arena.boss=true;
+let boss=null,bossCheckpoint=false,ending=null;
+function setupBossEncounter(){boss=null;bossCheckpoint=false;ending=null;$('#ending-loading').hidden=true;if(level.act!==2)return;level.arena.boss=true;
  for(let i=0;i<12;i++)level.rings.push({x:level.arena.x+460+i*22,y:level.arena.y-38,taken:false,bossRing:true});
 }
-function bossOwnsControls(){return boss&&['entrance','destroyed','defeated'].includes(boss.state);}
-function resetBossAttempt(){if(!bossCheckpoint||level.act!==2)return;
+function bossOwnsControls(){return ending||boss&&['entrance','destroyed','defeated'].includes(boss.state);}
+function resetBossAttempt(){ending=null;$('#ending-loading').hidden=true;if(!bossCheckpoint||level.act!==2)return;
  boss=window.createEggScorpion(level.arena);boss.state='idle';boss.anchored=true;boss.age=0;keys.clear();p.inv=100;boost=BOOST_MAX;
+}
+function beginEndingScene(){
+ if(ending||level.act!==2)return;
+ ending=window.createEndingScene(level.arena,p,{x:cam,y:camY,zoom});ending.waitFrames=0;
+ keys.clear();charge=0;jumpBuffer=0;p.vx=0;p.vy=0;p.boosting=false;shake=0;toastTime=0;$('#toast').style.display='none';
+ $('#ending-loading').hidden=endingArtReady();$('#ending-retry').onclick=retryEndingArt;
+}
+function updateEndingScene(){
+ if(!endingArtReady()){
+  ending.waitFrames++;$('#ending-loading').hidden=false;$('#ending-retry').hidden=endingLoadErrors.size===0;
+  if(ending.waitFrames%180===0)retryEndingArt();return;
+ }
+ $('#ending-loading').hidden=true;keys.clear();window.tickEndingScene(ending);
+ const cues={rocketFire:'endingRocket',shadowTeleport:'endingTeleport',kickImpact:'endingKick',podExplosion:'endingExplosion',jetpack:'endingJetpack',emeraldOffer:'endingEmerald',chaosCharge:'endingCharge',chaosWarp:'endingWarp',relievedSigh:'endingSigh'};
+ for(const event of ending.events)gameSound(cues[event]);
+ if(ending.done)finishAct();
 }
 function updateBossEncounter(){
  if(level.act!==2)return;
@@ -30,9 +46,10 @@ function updateBossEncounter(){
  else {const left=level.arena.x+250,right=level.arena.x+1300;if(p.x<left){p.x=left;p.vx=Math.max(0,p.vx);}if(p.x>right){p.x=right;p.vx=Math.min(0,p.vx);}}
 }
 function frameBossCamera(){if(!boss)return false;
+ if(ending){cam=ending.camera.x;camY=ending.camera.y;zoom=ending.camera.zoom;return true;}
  const targetZoom=.80;zoom+=(targetZoom-zoom)*.035;const targetX=level.arena.x+210,targetY=level.arena.y-505;
  cam+=Math.max(-14,Math.min(14,(targetX-cam)*.07));camY+=Math.max(-12,Math.min(12,(targetY-camY)*.07));return true;
 }
-function drawBossEncounter(){if(!boss)return;renderEggScorpion(boss);
+function drawBossEncounter(){if(!boss||ending)return;renderEggScorpion(boss);
  if(!['entrance','destroyed','defeated'].includes(boss.state)){drawPixelSign(level.arena.x+760,level.arena.y-400,'EGG SCORPION','danger');for(let i=0;i<3;i++)cityPixelRect(level.arena.x+690+i*48,level.arena.y-380,36,6,i<3-boss.hits?'#ff614d':'#354052');}
 }

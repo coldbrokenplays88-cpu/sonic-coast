@@ -1,0 +1,11 @@
+# Shadow ending: approved storyboard
+
+The user approved implementation with “ok start” after confirming the full sequence, single camera angle, immediate boss-defeat trigger, full animation and reference-only character designs. Implement directly in the existing game on the merged physics base. No further design gate is needed.
+
+After Egg Scorpion armor destruction: Eggman rises in his pod; Sonic is confident/cocky; Eggman fires; Sonic shows an excited toothy grin; Shadow teleports in and kicks the rocket back; the pod explodes; Sonic is visibly disappointed; Sonic Mania Eggman jetpacks away; Shadow presents a yellow Chaos Emerald inviting Sonic; Sonic is unbothered, dashes closer and confidently nods his head back and forth, eyes closed, teasing; Shadow becomes annoyed, swings his emerald arm upward to trigger teleport (not a forward thrust); Sonic initially keeps nodding unaware, then opens his eyes confused; Shadow slightly smirks; Sonic disappears; Shadow remains, relieved, and sighs. No dialogue, captions or voice lines.
+
+One fixed rooftop camera throughout the scene. Controls locked; pause/resume works. Results only after the scene; restart/act switch discards scene state. Freeze gameplay timer and statistics during cinematic so the boss/level rank remains fair. Animation is a continuous in-game performance with sprite frames and movement/effects, not storyboard panels.
+
+Use the existing lighter-blue Sonic sprite identity, approved modern manga Shadow design (black/red quills, white chest tuft, inhibitor rings, hover shoes; nuanced expressions), and Sonic Mania Eggman reference. Drawings specify poses, expression and composition only. Pixel art, nearest-neighbor integer-scaled drawing, no blurred scaling. Keep supplied game assets intact.
+
+Use a deterministic fixed-step scene timeline separate from collision/gameplay. Generate additional character atlases; reuse existing Sonic run frames. Animate teleport, emerald, rocket, impact, pod explosion, jetpack, smoke and body acting. Preserve gameplay and boss combat. Scene duration follows the beats (approximately 16–18 seconds after armor collapse), not the abandoned 30-second target. Sound effects are original synthesized cues; no copied audio. Existing sound preference is respected.

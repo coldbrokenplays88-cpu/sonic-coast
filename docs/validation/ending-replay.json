@@ -1,0 +1,38 @@
+{
+  "frames": 322,
+  "captureFps": 20,
+  "seconds": 16.1,
+  "beats": [
+    "escape",
+    "aim",
+    "rocket",
+    "kick",
+    "return",
+    "explode",
+    "jetpack",
+    "offer",
+    "approach",
+    "nod",
+    "annoy",
+    "swing",
+    "realize",
+    "vanish",
+    "sigh",
+    "end"
+  ],
+  "events": [
+    "rocketFire",
+    "shadowTeleport",
+    "kickImpact",
+    "podExplosion",
+    "jetpack",
+    "emeraldOffer",
+    "chaosCharge",
+    "chaosWarp",
+    "relievedSigh"
+  ],
+  "errors": [],
+  "assetRetry": true,
+  "pauseResume": true,
+  "actSwitch": true
+}

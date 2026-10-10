@@ -2,7 +2,7 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const modulePath=path.join(__dirname,'game-audio.js');
-const names=['bossReveal','bossAnchor','bossStrike','bossBite','bossLaser','bossHit','bossBreak','start','jump','land','run','brake','spindashCharge','spindashRelease','boost','grind','spring','vent','pool','ring','monitor','enemy','hazard','warning','hurt','death','checkpoint','pause','menu','clear'];
+const names=['endingRocket','endingTeleport','endingKick','endingExplosion','endingJetpack','endingEmerald','endingCharge','endingWarp','endingSigh','bossReveal','bossAnchor','bossStrike','bossBite','bossLaser','bossHit','bossBreak','start','jump','land','run','brake','spindashCharge','spindashRelease','boost','grind','spring','vent','pool','ring','monitor','enemy','hazard','warning','hurt','death','checkpoint','pause','menu','clear'];
 
 // The fake models scheduled AudioParams, source lifetimes and connections: these
 // are the browser-owned effects of the production audio graph, not internal mocks.
