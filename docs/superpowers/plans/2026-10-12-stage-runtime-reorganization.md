@@ -104,8 +104,10 @@
 - [x] Profile warmed world/ending draws sequentially on desktop/laptop viewport settings, with no competing browser benchmarks; compare canvas allocations and cache growth. Report timing noise without promising hardware FPS.
 - [x] Request one fresh whole-branch review, covering the approved spec, complete diff and recorded evidence. Resolve meaningful findings and rerun only affected checks plus final gates. No repeated full-review cycle for documentation-only fixes.
 - [x] Document the new boundaries and exact stage phases, how a future stage will extend them, what was preserved, before/after measurements and verification limits. Do not add hypothetical hazard code or claim exhaustive human/device testing.
-- [ ] Commit and push explicitly to `codex/stage-runtime-reorganization`. Create an unmerged PR if GitHub API access permits and attach its URL. If API access returns Forbidden, supply the pushed branch comparison link and prepared PR description; never merge or trigger deployment.
+- [x] Commit and push explicitly to `codex/stage-runtime-reorganization`. Create an unmerged PR if GitHub API access permits and attach its URL. If API access returns Forbidden, supply the pushed branch comparison link and prepared PR description; never merge or trigger deployment.
 
 ## Plan self-review
 
 The four tasks cover every approved boundary and preserve legacy/global/test tooling. New phase functions have explicit names, signatures, positions and ownership. Numerical/contact tests, adapter isolation tests, tick-order tests and actual browser comparisons cover the five review risks. No unrelated renderer/UI/audio/asset rewrite or next-zone implementation is included. Native execution minimizes repeated context while the tasks modify the same update path; one final independent review provides a whole-branch check.
+
+Delivery outcome: branch pushed; GitHub PR API returned Forbidden. Comparison link and review description prepared; no merge/deployment.

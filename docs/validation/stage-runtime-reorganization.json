@@ -547,5 +547,11 @@
       "exhaustive gameplay",
       "deployed Pages"
     ]
+  },
+  "delivery": {
+    "branchPushed": true,
+    "prApi": "Forbidden on GET/POST",
+    "merged": false,
+    "deployed": false
   }
 }
