@@ -61,10 +61,10 @@ test('vertical camera framing stays continuous when ground speed crosses nine',(
  const at=speed=>a.run(`p.ground=true;p.loop=null;p.x=1800;p.y=-200;p.vx=${speed};p.vy=0;zoom=.94;camY=-560;resetCameraTracking();updateCamera();(p.y-camY)*zoom`);
  assert.ok(Math.abs(at(8.99)-at(9.01))<.1,'tiny speed changes must not jerk the scene vertically');
 });
-test('spring drawing compresses, extends and returns to rest after firing',()=>{
+test('active spring drawing compresses, extends and returns to rest after firing',()=>{
  const a=boot();
  a.run('const springVisual={x:100,y:420,firedAt:100};');
- const render=frame=>{a.rects.length=0;a.run(`runFrames=${frame};drawPixelAirDevice(springVisual,true)`);return a.rects.map(r=>[...r]);};
+ const render=frame=>{a.rects.length=0;a.run(`runFrames=${frame};drawPolishedSpring(springVisual)`);return a.rects.map(r=>[...r]);};
  const resting=render(99),compressed=render(100),extended=render(105);
  assert.notDeepEqual(compressed,resting);
  assert.notDeepEqual(extended,compressed);

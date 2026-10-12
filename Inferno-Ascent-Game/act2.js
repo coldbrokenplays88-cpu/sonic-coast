@@ -98,16 +98,11 @@ function drawAct2Background(){const progress=Math.max(0,Math.min(1,p.x/END)),im=
  for(let i=0;i<16+progress*18;i++){const x=((i*137-cam*.18+Math.sin(step*.012+i)*8)%W+W)%W,y=((i*91-step*(.5+progress*.6))%H+H)%H;ctx.fillStyle=i%3?'#ffb54c70':'#ff6b3160';ctx.fillRect(x,y,2,3)}
 }
 function drawAct2Structures(){for(const b of level.buildings)drawCityCutaways(b);drawPixelCityStructures()}
-function drawAct2ServiceStructures(){for(const h of level.hazards.filter(h=>h.type==='breakable')){const left=h.x-200,right=h.x+850,top=h.floor-205;if(right<cam-50||left>cam+W/zoom+50||h.floor<camY-60||top>camY+H/zoom+60)continue;
- ctx.save();ctx.globalAlpha=.68;ctx.fillStyle='#171c35';ctx.beginPath();ctx.moveTo(left,h.floor+36);ctx.lineTo(left,top+95);ctx.lineTo(left+80,top+15);ctx.lineTo(right-100,top);ctx.lineTo(right,top+80);ctx.lineTo(right,h.floor+36);ctx.closePath();ctx.fill();ctx.strokeStyle='#6d4d64';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(left+20,h.floor);ctx.lineTo(left+20,top+95);ctx.lineTo(left+85,top+30);ctx.lineTo(right-110,top+15);ctx.lineTo(right-20,top+85);ctx.lineTo(right-20,h.floor);ctx.stroke();
- ctx.fillStyle='#38415a';for(let x=left+75;x<right-80;x+=125){ctx.fillRect(x,top+45,6,135);ctx.fillStyle='#764960';ctx.fillRect(x+6,top+45,3,135);ctx.fillStyle='#38415a'}ctx.fillStyle='#a97964';ctx.font='bold 17px monospace';ctx.fillText('RUINED SERVICE PASSAGE',left+220,top+68);ctx.fillStyle='#11172a';ctx.fillRect(left+100,top+90,right-left-250,15);ctx.restore()
-}}
 function drawAct2Bulkhead(h){const bottom=Math.min(h.y+h.h,camY+H/zoom+50),top=Math.max(h.y,camY-40),x=h.x;if(bottom<=top)return;
  ctx.fillStyle='#18233d';ctx.fillRect(x,top,h.w,bottom-top);ctx.fillStyle='#53647e';ctx.fillRect(x,top,5,bottom-top);ctx.fillStyle='#8c5972';ctx.fillRect(x+h.w-5,top,5,bottom-top);ctx.fillStyle='#77c8dc';ctx.fillRect(x,h.y,h.w,3);
  for(let y=Math.ceil(top/64)*64;y<bottom;y+=64){cityPixelLine(x+8,y,x+h.w-8,y+54,'#7891a155',2);cityPixelLine(x+h.w-8,y,x+8,y+54,'#7891a155',2);cityPixelRect(x+5,y,4,4,'#8ba8b1');cityPixelRect(x+h.w-9,y,4,4,'#8ba8b1')}
 }
 // Surface skins reuse collision tops; every solid highlight follows yOn exactly.
-function drawAct2CityDeck(s,left,right){drawPixelCityDeck(s,left,right)}
 function drawAct2Supports(s,left,right){if(s.grindable)drawGrindRail(s,left,right);else drawPixelCityDeck(s,left,right)}
 function drawAct2World(){
  for(const l of level.loops){if(l.x+l.r<cam-50||l.x-l.r>cam+W/zoom+50)continue;drawPixelCityLoop(l)}
@@ -122,46 +117,6 @@ function drawAct2World(){
 function drawGrindRail(s,left,right){for(let x=Math.floor(left/2)*2;x<right;x+=2){const y=yOn(s,x);cityPixelRect(x,y,2,12,'#29364b');cityPixelRect(x,y+2,2,3,'#ffe1a0');cityPixelRect(x,y+5,2,4,'#bd855b');cityPixelRect(x,y+9,2,3,'#74505a')}}
 
 // Paint and structural detail always sit below the real collision edge.
-function drawRoofFrontage(s,left,right,height){const style=Math.floor(s.x1/7100)%3;
- for(let x=Math.ceil(left/110)*110;x<right-28;x+=110){const y=yOn(s,x);ctx.fillStyle=style===1?'#182335':'#232b43';ctx.fillRect(x,y+30,36,height-50);
-  if(style===1){ctx.strokeStyle='#596072';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x+2,y+35);ctx.lineTo(x+32,y+height-26);ctx.moveTo(x+32,y+35);ctx.lineTo(x+2,y+height-26);ctx.stroke()}
-  else for(let row=0;row<Math.floor((height-70)/38);row++){ctx.fillStyle=(row+Math.floor(x/110))%3?'#557788':'#7b687e';ctx.fillRect(x+5,y+39+row*38,style===2?24:10,style===2?8:17)}
- }
- ctx.strokeStyle='#677083';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(left,yOn(s,left)+height-14);ctx.lineTo(right,yOn(s,right)+height-14);ctx.stroke();
- if(style===2){ctx.strokeStyle='#48576b';ctx.lineWidth=4;for(let x=Math.ceil(left/350)*350;x<right-80;x+=350){const y=yOn(s,x);ctx.beginPath();ctx.moveTo(x,y+25);ctx.lineTo(x,y+145);ctx.lineTo(x+50,y+145);ctx.stroke();ctx.fillStyle='#9b805f';ctx.fillRect(x-7,y+82,14,5)}}
-}
 function drawClimbCue(s,left,right){const cue=level.routeCues?.find(c=>c.id===s.id);if(!cue||right-left<70)return;const next=level.surfaces.find(v=>v.id===cue.nextId),q=pose(s),dir=next.x1+next.x2<q.x1+q.x2?-1:1,x=Math.max(left+30,Math.min(right-30,(q.x1+q.x2)/2)),y=yOn(s,x)+14;
  ctx.fillStyle='#152033';ctx.fillRect(x-23,y-6,46,13);ctx.strokeStyle=s.kind==='moving'?'#91fcbb':s.kind==='crumble'?'#ffae55':'#91ccdb';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-6*dir,y-3);ctx.lineTo(x+2*dir,y);ctx.lineTo(x-6*dir,y+3);ctx.moveTo(x+3*dir,y-3);ctx.lineTo(x+11*dir,y);ctx.lineTo(x+3*dir,y+3);ctx.stroke()
 }
-function drawFacadeBays(b){if(!b.exposed||!b.attachmentIds)return;for(const id of b.attachmentIds){const s=level.surfaces.find(s=>s.id===id),q=pose(s),left=Math.max(q.x1-10,b.x+9),right=Math.min(q.x2+10,b.x+b.w-15);if(left>=right)continue;const y=yOn(s,left);if(y<camY-120||y>camY+H/zoom+120)continue;
- ctx.fillStyle='#0b1426';ctx.fillRect(left,y-86,right-left,112);ctx.fillStyle='#344151';ctx.fillRect(left-4,y-86,5,112);ctx.fillRect(right-4,y-86,5,112);ctx.fillStyle='#6b5a66';for(let x=left+12;x<right-8;x+=63)ctx.fillRect(x,y-83,22,4);
- ctx.strokeStyle='#566478';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(left,yOn(s,left)+26);ctx.lineTo(right,yOn(s,right)+26);ctx.moveTo(left,yOn(s,left)+26);ctx.lineTo(Math.min(left+45,right),yOn(s,left)+62);ctx.stroke()
- }
- if(b.landmark&&b.y>camY-80&&b.y<camY+H/zoom){ctx.fillStyle='#152039';ctx.fillRect(b.x+14,b.y+8,Math.min(210,b.w-28),27);ctx.fillStyle='#b09079';ctx.font='bold 15px monospace';ctx.fillText(b.landmark,b.x+24,b.y+27)}
-}
-
-// Large, muted structural forms identify towers without suggesting new collision edges.
-function drawDistrictArchitecture(b){if(!b.exposed||!b.landmark)return;const left=b.x,top=Math.max(b.y,camY-100),bottom=Math.min(b.y+b.h,camY+H/zoom+100),w=b.w;
- if(bottom<=top)return;ctx.save();
- if(b.landmark==='BROADCAST RELAY'){
-  const x=left+w*.76;ctx.fillStyle='#142437';ctx.fillRect(x-34,top,75,bottom-top);ctx.fillStyle='#536878';ctx.fillRect(x-8,top,16,bottom-top);
-  for(let y=b.y+45+Math.max(0,Math.floor((top-b.y)/115))*115;y<bottom;y+=115){ctx.strokeStyle='#75818c';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x-8,y);ctx.lineTo(x+8,y+45);ctx.moveTo(x+8,y);ctx.lineTo(x-8,y+45);ctx.stroke();const dir=Math.floor((y-b.y)/115)%2?1:-1;ctx.strokeStyle='#4f657b';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(x,y+30);ctx.lineTo(x+dir*45,y+45);ctx.stroke();ctx.fillStyle='#667a86';ctx.beginPath();ctx.ellipse(x+dir*48,y+42,22,13,dir*.45,0,Math.PI*2);ctx.fill();ctx.fillStyle='#23394b';ctx.beginPath();ctx.ellipse(x+dir*48,y+42,15,8,dir*.45,0,Math.PI*2);ctx.fill()}
- }else if(b.landmark==='NEON WORKS'){
-  for(const x of [left+24,left+w-105]){ctx.fillStyle='#172136';ctx.fillRect(x,top,80,bottom-top);ctx.fillStyle='#7b487e';ctx.fillRect(x+4,top,4,bottom-top);ctx.fillStyle='#47798b';ctx.fillRect(x+68,top,4,bottom-top);
-   for(let y=b.y+35+Math.max(0,Math.floor((top-b.y)/105))*105;y<bottom;y+=105){ctx.fillStyle='#35283f';ctx.fillRect(x+12,y,48,73);ctx.strokeStyle=Math.floor((y-b.y)/105)%3?'#906084':'#6595a0';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x+23,y+13);ctx.lineTo(x+46,y+25);ctx.lineTo(x+23,y+40);ctx.lineTo(x+46,y+54);ctx.stroke()}}
- }else if(b.landmark==='WEST TOWER'){
-  const x=left+w*.45;ctx.fillStyle='#0b1628';ctx.beginPath();ctx.moveTo(left+20,top);ctx.lineTo(x+55,top);for(let y=top;y<bottom;y+=95){ctx.lineTo(x+(Math.floor((y-b.y)/95)%2?55:5),y);ctx.lineTo(x-35,y+48)}ctx.lineTo(x+20,bottom);ctx.lineTo(left+20,bottom);ctx.closePath();ctx.fill();
-  ctx.fillStyle='#625668';ctx.fillRect(x+55,top,12,bottom-top);for(let y=b.y+50+Math.max(0,Math.floor((top-b.y)/120))*120;y<bottom;y+=120){ctx.strokeStyle='#594958';ctx.lineWidth=9;ctx.beginPath();ctx.moveTo(left+32,y);ctx.lineTo(x+58,y+75);ctx.stroke();ctx.fillStyle='#746471';ctx.fillRect(x+51,y+64,18,13)}
- }else if(b.landmark==='TRANSIT CONTROL'){
-  for(const x of [left+w*.15,left+w*.78]){ctx.fillStyle='#3e4554';ctx.fillRect(x,top,65,bottom-top);ctx.fillStyle='#252e40';ctx.fillRect(x+14,top,37,bottom-top);for(let y=b.y+70+Math.max(0,Math.floor((top-b.y)/140))*140;y<bottom;y+=140){ctx.fillStyle='#59616a';ctx.fillRect(x-6,y,77,14)}}
- }else if(b.landmark==='EAST WORKSITE'){
-  const x=left+w-75;ctx.fillStyle='#363441';ctx.fillRect(x-22,top,44,bottom-top);ctx.strokeStyle='#8a7355';ctx.lineWidth=4;for(let y=top;y<bottom;y+=65){ctx.beginPath();ctx.moveTo(x-18,y);ctx.lineTo(x+18,y+54);ctx.moveTo(x+18,y);ctx.lineTo(x-18,y+54);ctx.stroke()}
-  ctx.strokeStyle='#746351';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(left+25,b.y+14);ctx.lineTo(x,b.y+14);ctx.stroke();ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x,b.y+14);ctx.lineTo(left+25,b.y+65);ctx.stroke();
- }else if(b.landmark==='HELIPAD ACCESS'){
-  const x=left+w*.62;ctx.fillStyle='#293946';ctx.fillRect(x,top,73,bottom-top);ctx.fillStyle='#63747c';ctx.fillRect(x+8,top,7,bottom-top);for(let y=top+20;y<bottom;y+=78){ctx.fillStyle='#53646e';ctx.fillRect(x+4,y,65,6)}ctx.strokeStyle='#56647b';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(left+25,top);ctx.lineTo(left+25,bottom);ctx.stroke();
- }
- ctx.restore()
-}
-function drawDebrisBeacon(d){const y=d.y-124;ctx.fillStyle='#14203be8';ctx.beginPath();ctx.moveTo(d.x,y-20);ctx.lineTo(d.x-20,y+15);ctx.lineTo(d.x+20,y+15);ctx.closePath();ctx.fill();ctx.strokeStyle='#ffd158';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#ffe09c';ctx.fillRect(d.x-2,y-10,4,12);ctx.fillRect(d.x-2,y+6,4,4);for(let i=0;i<2;i++){const yy=y+26+i*15+step%15*.5;ctx.strokeStyle='#ffd15890';ctx.beginPath();ctx.moveTo(d.x-7,yy);ctx.lineTo(d.x,yy+5);ctx.lineTo(d.x+7,yy);ctx.stroke()}}
-
-function drawExposedFloorBody(s,left,right){const q=pose(s),center=(q.x1+q.x2)/2,lower=level.surfaces.find(v=>v.kind==='recovery'&&center>=v.x1&&center<=v.x2&&v.y1>q.y1&&v.y1-q.y1<350);if(!lower)return;const top=yOn(s,center)+46,bottom=yOn(lower,center);ctx.save();ctx.globalAlpha=.8;ctx.fillStyle='#20273b';for(const x of [q.x1+4,q.x2-20]){ctx.fillRect(x,top,16,bottom-top);ctx.fillStyle='#5a5364';ctx.fillRect(x,top,3,bottom-top);ctx.fillStyle='#20273b'}ctx.fillStyle='#2d3045';ctx.fillRect(q.x1+20,top,Math.min(52,q.x2-q.x1-40),Math.max(35,bottom-top-44));ctx.strokeStyle='#765c65';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(q.x1+25,top+30);ctx.lineTo(q.x1+65,top+42);ctx.lineTo(q.x1+42,top+69);ctx.stroke();ctx.restore()}

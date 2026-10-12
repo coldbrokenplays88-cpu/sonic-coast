@@ -1,7 +1,6 @@
 'use strict';
 // Two world-unit pixels, a small material palette, and world-anchored patterns.
 // Geometry remains in the physics builder; all architectural bodies render behind decks.
-const CITY_PIXEL=2;
 let cityRasterContext=null;
 function cityPixelRect(x,y,w,h,color){if(w<=0||h<=0)return;const dc=cityRasterContext||ctx;dc.fillStyle=color;dc.fillRect(Math.floor(x/2)*2,Math.floor(y/2)*2,Math.ceil(w/2)*2,Math.ceil(h/2)*2)}
 function cityPixelLine(x1,y1,x2,y2,color,width=2){const steps=Math.max(1,Math.ceil(Math.max(Math.abs(x2-x1),Math.abs(y2-y1))/2));for(let i=0;i<=steps;i++){const t=i/steps;cityPixelRect(x1+(x2-x1)*t-width/2,y1+(y2-y1)*t-width/2,width,width,color)}}
@@ -132,17 +131,6 @@ const pixelRingTextures=new Map();
 function paintPixelRing(dc,width,left=0,top=0){for(let row=0;row<16;row++)for(let col=0;col<16;col++){const key=ringPixels[row][col];if(key==='.')continue;const a=left+Math.round(col*width/16),b=left+Math.round((col+1)*width/16);if(b>a){dc.fillStyle=ringPalette[key];dc.fillRect(a,top+Math.floor(row*1.5),b-a,Math.ceil((row+1)*1.5)-Math.floor(row*1.5))}}}
 function drawPixelRing(x,y,scale=1){const width=Math.max(4,Math.round(16*scale)),left=Math.round(x-width/2),top=Math.round(y-12);if(!document.createElement)return paintPixelRing(ctx,width,left,top);let texture=pixelRingTextures.get(width);if(!texture){texture=document.createElement('canvas');texture.width=width;texture.height=24;paintPixelRing(texture.getContext('2d'),width);pixelRingTextures.set(width,texture)}ctx.drawImage(texture,left,top)}
 
-function drawPixelAirDevice(d,spring=false){const pulse=runFrames-(d.firedAt??-100),y=d.y;if(d.hidden){for(let i=0;i<3;i++){const age=(runFrames*.003+i/3)%1;cityPixelRect(d.x-10+i*9,y-18-age*250,2,4,i%2?'#ac7e62':'#d59a64')}cityPixelRect(d.x-26,y-8,52,8,'#343342');for(let i=0;i<6;i++)cityPixelRect(d.x-22+i*8,y-7,4,5,'#171e30');return}
- if(spring){
-  // Keep the collision anchor fixed while the approved cap compresses and rebounds.
-  const firing=pulse>=0&&pulse<20,offset=firing?(pulse<3?4:-Math.round(Math.sin((pulse-3)/17*Math.PI)*9)*2):0;
-  if(firing){cityPixelRect(d.x-18,y-4,36,4,'#484455');for(let yy=y-6;yy>y-8+offset;yy-=4){cityPixelRect(d.x-10,yy,20,2,'#e6dcb5');cityPixelRect(d.x-8+(Math.floor((y-yy)/4)%2)*12,yy-2,4,2,'#92869c')}}
-  cityPixelRect(d.x-18,y-8+offset,36,8,'#8b3f60');cityPixelRect(d.x-16,y-10+offset,32,4,'#e7b883');for(let j=0;j<3;j++)cityPixelRect(d.x-11+j*7,y-5+offset,4,5,'#e6dcb5');return
- }
- cityPixelRect(d.x-28,y-12,56,12,'#252c45');cityPixelRect(d.x-26,y-14,52,4,'#9aa8ac');cityPixelRect(d.x-26,y-10,52,4,'#5e7688');for(let x=d.x-20;x<d.x+22;x+=8){cityPixelRect(x,y-10,4,8,'#152438');cityPixelRect(x,y-10,4,2,'#b1bbc1')}
- for(let i=0;i<4;i++){const rise=(runFrames*.7+i*13)%56,xx=d.x-18+i*12;cityPixelRect(xx,y-20-rise,2,8,'#82b8c5');cityPixelRect(xx-2,y-22-rise,6,2,'#c3d7d8')}
- if(pulse>=0&&pulse<12){cityPixelRect(d.x-22,y-18,44,2,'#c3eef0');cityPixelRect(d.x-16,y-26-pulse*2,32,2,'#82b8c5')}
-}
 
 // Opaque frontage hides undiscovered routes; breaches reveal a restrained cutaway.
 function drawCityCutaways(b){
