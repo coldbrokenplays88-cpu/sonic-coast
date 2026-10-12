@@ -76,9 +76,9 @@ Browser tools require Playwright and Chromium. No product dependency was install
 
 ## Decisions and limits
 
-- **Legacy identity:** The shipped Act 1 builder omits `level.act`. Recognize that exact legacy format only with `selectedAct === 1`, while also supporting explicit act 1 and rejecting unsupported identifiers/missing Act 2 identity. This preserves serialized level data. If wrong, the risk is stage misselection; tests cover it.
 - **Skill tooling:** Cloud skill helper/review-template resources were unavailable. Equivalent manual task briefs, BASE ranges, an ignored progress ledger and explicit verification records preserve the approved execution workflow. If wrong, the risk is recovery/bookkeeping ambiguity; there is no runtime effect.
+- **Legacy identity:** The shipped Act 1 builder omits `level.act`. Recognize that exact legacy format only with `selectedAct === 1`, while also supporting explicit act 1 and rejecting unsupported identifiers/missing Act 2 identity. This preserves serialized level data. If wrong, the risk is stage misselection; tests cover it.
 
-Independent whole-branch review is pending. Its final findings and disposition will be recorded before delivery.
+Independent whole-branch review found **no critical, important or minor issues**. The reviewer independently passed all 226 Node tests, 59 JS/CJS syntax checks, diff whitespace and the full Chromium parity/fallback comparison. They verified served baseline/reviewed sources and twelve extracted helper bodies against baseline (ignoring whitespace). Their parity results match the committed evidence exactly. They inspected performance, historical-precision, Pages-prefix and normal-input boss evidence without repeating those checks; those were run by the primary agent.
 
 These are actual automated Chromium and Node checks, not exhaustive human playtesting or a human audio-listening pass. Desktop/laptop viewport profiles and tablet/mobile layouts are simulated; physical devices, Safari and Firefox were not tested. Rare route/input/error combinations remain a residual regression risk. GitHub Pages compatibility is checked locally; no deployment or merge is performed. State encapsulation, rendering/camera refactors, CSS cleanup and the next zone remain separate work.

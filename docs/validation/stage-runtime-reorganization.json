@@ -506,15 +506,46 @@
   },
   "decisions": [
     {
-      "decision": "Recognize legacy Act 1 without an act field only with selectedAct===1; reject unknown identifiers and missing Act 2 identity.",
-      "reason": "Preserve the original serialized level schema.",
-      "costIfWrong": "Stage misselection."
-    },
-    {
       "decision": "Use equivalent manual task briefs, BASE ledger and explicit verification records when cloud skill helper/template resources cannot be read.",
       "reason": "Tool resources unavailable; keep the approved execution/review workflow.",
       "costIfWrong": "Recovery/bookkeeping ambiguity; no runtime effect."
+    },
+    {
+      "decision": "Recognize legacy Act 1 without an act field only with selectedAct===1; reject unknown identifiers and missing Act 2 identity.",
+      "reason": "Preserve the original serialized level schema.",
+      "costIfWrong": "Stage misselection."
     }
   ],
-  "independentReview": "Pending fresh whole-branch review."
+  "independentReview": {
+    "base": "559d132",
+    "reviewedHead": "99c5ab8966b8482885b72eb5258772e76ea486ad",
+    "findings": {
+      "critical": 0,
+      "important": 0,
+      "minor": 0
+    },
+    "nodeTests": 226,
+    "jsCjsSyntaxFiles": 59,
+    "browserParityMatchesCommittedEvidence": true,
+    "extractedHelpersMatchBaselineIgnoringWhitespace": 12,
+    "independentlyRepeated": [
+      "Node suite",
+      "JS/CJS syntax",
+      "whitespace",
+      "served source identities",
+      "full browser parity and fallback renders"
+    ],
+    "evidenceInspectedWithoutIndependentRepeat": [
+      "performance profiles",
+      "historical precision comparison",
+      "Pages prefix checks",
+      "normal-input boss replay"
+    ],
+    "limitations": [
+      "physical devices",
+      "human audio quality",
+      "exhaustive gameplay",
+      "deployed Pages"
+    ]
+  }
 }
