@@ -1,0 +1,520 @@
+{
+  "baselineCommit": "559d132",
+  "branch": "codex/stage-runtime-reorganization",
+  "metrics": {
+    "before": {
+      "controllerBytes": 47452,
+      "controllerLines": 264,
+      "runtimeScripts": 22,
+      "runtimeJsBytes": 240049,
+      "runtimeJsGzipBytes": 88366,
+      "assetBytes": 50192520
+    },
+    "after": {
+      "controllerBytes": 33882,
+      "controllerLines": 186,
+      "runtimeScripts": 26,
+      "runtimeJsBytes": 242392,
+      "runtimeJsGzipBytes": 90820,
+      "assetBytes": 50192520
+    },
+    "protectedFilesChanged": []
+  },
+  "parity": {
+    "acts": [
+      {
+        "act": 1,
+        "surfaces": 69,
+        "enemies": 4,
+        "checkpoints": 6,
+        "geometrySha256": "f8ab9ba2e769919b0e89c4213dc35bfead62bcbadbbfe0bb15d8cb8af9f4c48f"
+      },
+      {
+        "act": 2,
+        "surfaces": 241,
+        "enemies": 31,
+        "checkpoints": 16,
+        "geometrySha256": "d979529c243d9065dcb56ef410b62ba8b4b326aecd2150445db25a5e36dd659e"
+      }
+    ],
+    "renderedViews": 324,
+    "pixelHashesMatched": 1290,
+    "endingFrames": 966,
+    "endingPoseTicksMatched": 966,
+    "movementTicksMatched": 1440,
+    "soundCallsMatched": 525,
+    "fallbackFramesMatched": 80,
+    "fallbackCases": [
+      "single-recovered-sheet-missing",
+      "legacy-sonic",
+      "procedural-sonic",
+      "older-city",
+      "no-city"
+    ],
+    "renderHashesSha256": "5696cf7e37b7698b5dba77b58f7e68a9727ec19a70a2c8c4d74fc9ed2dfdb379",
+    "endingPixelsSha256": "377b66b4ec461b3de0270edbb9f03359dcd6a3d8bd1fd8295562961c8fa2b882",
+    "movementTraceSha256": "8ad2c9d78d98daec844ea11325edb751d1a72259dc653cb3c7c14f75c023bdbc",
+    "soundCallsSha256": "1d9c80bdefcb13486c9fb66387ec566f16faa12308c16f2d72490777fe83e86e",
+    "fallbackSha256": "bc77d4bb7efc7090cb0b19dc38609f3ee45aa21926187a2b616efda77d0efa69",
+    "assetRequestsIdentical": true,
+    "pageErrors": [],
+    "endingResult": "win"
+  },
+  "checks": {
+    "baselineNodeTests": 184,
+    "finalNodeTests": 226,
+    "newRegressionTests": 42,
+    "failures": 0,
+    "skipped": 0,
+    "jsCjsSyntaxFiles": 59,
+    "pythonSyntax": true,
+    "assetFilesByteIdentical": 31,
+    "existingBrowserSuite": true,
+    "nativeKeyboardAndMedia": true,
+    "endingRetryPauseActSwitch": {
+      "frames": 322,
+      "captureFps": 20,
+      "seconds": 16.1,
+      "beats": [
+        "escape",
+        "aim",
+        "rocket",
+        "kick",
+        "return",
+        "explode",
+        "jetpack",
+        "offer",
+        "approach",
+        "nod",
+        "annoy",
+        "swing",
+        "realize",
+        "vanish",
+        "sigh",
+        "end"
+      ],
+      "events": [
+        "rocketFire",
+        "shadowTeleport",
+        "kickImpact",
+        "podExplosion",
+        "jetpack",
+        "emeraldOffer",
+        "chaosCharge",
+        "chaosWarp",
+        "relievedSigh"
+      ],
+      "errors": [],
+      "assetRetry": true,
+      "pauseResume": true,
+      "actSwitch": true
+    },
+    "routeTimingMatchesBaseline": true,
+    "routePhases": [
+      {
+        "phase": 0,
+        "lowFrames": 526,
+        "highFrames": 437,
+        "lowSeconds": 8.766666666666667,
+        "highSeconds": 7.283333333333333,
+        "savedSeconds": 1.4833333333333334
+      },
+      {
+        "phase": 40,
+        "lowFrames": 526,
+        "highFrames": 433,
+        "lowSeconds": 8.766666666666667,
+        "highSeconds": 7.216666666666667,
+        "savedSeconds": 1.55
+      },
+      {
+        "phase": 80,
+        "lowFrames": 526,
+        "highFrames": 434,
+        "lowSeconds": 8.766666666666667,
+        "highSeconds": 7.233333333333333,
+        "savedSeconds": 1.5333333333333334
+      },
+      {
+        "phase": 120,
+        "lowFrames": 526,
+        "highFrames": 433,
+        "lowSeconds": 8.766666666666667,
+        "highSeconds": 7.216666666666667,
+        "savedSeconds": 1.55
+      },
+      {
+        "phase": 180,
+        "lowFrames": 526,
+        "highFrames": 433,
+        "lowSeconds": 8.766666666666667,
+        "highSeconds": 7.216666666666667,
+        "savedSeconds": 1.55
+      },
+      {
+        "phase": 240,
+        "lowFrames": 526,
+        "highFrames": 436,
+        "lowSeconds": 8.766666666666667,
+        "highSeconds": 7.266666666666667,
+        "savedSeconds": 1.5
+      },
+      {
+        "phase": 280,
+        "lowFrames": 526,
+        "highFrames": 437,
+        "lowSeconds": 8.766666666666667,
+        "highSeconds": 7.283333333333333,
+        "savedSeconds": 1.4833333333333334
+      }
+    ],
+    "background": {
+      "seamJump": 0.15353535353535352,
+      "wrapChanged": 51,
+      "animationChanged": 180102,
+      "alphaMin": 119,
+      "alphaMax": 119,
+      "stableAnchors": 8
+    },
+    "backgroundMatchesBaseline": true,
+    "historicalPrecisionBaseline": "9f94cc4",
+    "historicalPrecisionBrowserPassed": true,
+    "pagesPrefix": "/sonic-coast/",
+    "pagesPrefixBrowserPassed": true,
+    "workflowChanged": false,
+    "boss": {
+      "status": "win",
+      "hits": 3,
+      "bites": 3,
+      "frames": 2041,
+      "tailStrikes": 4,
+      "laserShots": 3,
+      "deaths": 0,
+      "damage": 0
+    }
+  },
+  "performance": {
+    "update": {
+      "note": "Cloud Chromium medians of five batch averages, milliseconds per fixed update; steady early-stage running, not full-route FPS.",
+      "before": {
+        "1": {
+          "act": 1,
+          "surface": "rail-0",
+          "medianMs": 0.06629999998211861,
+          "maxBatchMs": 0.07665000000596046
+        },
+        "2": {
+          "act": 2,
+          "surface": "arrival",
+          "medianMs": 0.1,
+          "maxBatchMs": 0.10735000002384186
+        }
+      },
+      "after": {
+        "1": {
+          "act": 1,
+          "surface": "rail-0",
+          "medianMs": 0.06880000001192092,
+          "maxBatchMs": 0.07390000000596046
+        },
+        "2": {
+          "act": 2,
+          "surface": "arrival",
+          "medianMs": 0.09175,
+          "maxBatchMs": 0.09509999999403954
+        }
+      }
+    },
+    "worldDraw": {
+      "before": {
+        "rail-0": {
+          "surface": "rail-0",
+          "medianMs": 4.290000000596047,
+          "maxBatchMs": 4.788333333532015
+        },
+        "rail-33": {
+          "surface": "rail-33",
+          "medianMs": 3.5200000007947287,
+          "maxBatchMs": 4.929999999205271
+        },
+        "neon-0": {
+          "surface": "neon-0",
+          "medianMs": 4.166666666666667,
+          "maxBatchMs": 5.840000000596047
+        },
+        "secret-shared-rooftop": {
+          "surface": "secret-shared-rooftop",
+          "medianMs": 5.855000000198682,
+          "maxBatchMs": 5.996666666865349
+        },
+        "vent-entry": {
+          "surface": "vent-entry",
+          "medianMs": 4.206666667262713,
+          "maxBatchMs": 4.926666667064031
+        },
+        "summit-arena": {
+          "surface": "summit-arena",
+          "medianMs": 4.230000000198682,
+          "maxBatchMs": 4.62666666607062
+        }
+      },
+      "after": {
+        "rail-0": {
+          "surface": "rail-0",
+          "medianMs": 3.830000000198682,
+          "maxBatchMs": 4.579999999205271
+        },
+        "rail-33": {
+          "surface": "rail-33",
+          "medianMs": 3.091666666666667,
+          "maxBatchMs": 4.35
+        },
+        "neon-0": {
+          "surface": "neon-0",
+          "medianMs": 4.013333333532016,
+          "maxBatchMs": 6.088333333532016
+        },
+        "secret-shared-rooftop": {
+          "surface": "secret-shared-rooftop",
+          "medianMs": 5.336666666467985,
+          "maxBatchMs": 5.468333332737287
+        },
+        "vent-entry": {
+          "surface": "vent-entry",
+          "medianMs": 4.136666667461395,
+          "maxBatchMs": 4.176666667064031
+        },
+        "summit-arena": {
+          "surface": "summit-arena",
+          "medianMs": 4.1466666668653485,
+          "maxBatchMs": 6.340000000596047
+        }
+      }
+    },
+    "endingDraw": {
+      "before": {
+        "desktop": {
+          "viewport": [
+            1440,
+            1000,
+            1
+          ],
+          "nativeCelBytes": 26645212,
+          "exposedCels": 86,
+          "poses": [
+            {
+              "beat": "kick",
+              "age": 18,
+              "medianMs": 5.34667,
+              "maxBatchMs": 6.65333,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "return",
+              "age": 26,
+              "medianMs": 4.97333,
+              "maxBatchMs": 5.89333,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "swing",
+              "age": 31,
+              "medianMs": 2.76,
+              "maxBatchMs": 4.78333,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "realize",
+              "age": 25,
+              "medianMs": 4.41333,
+              "maxBatchMs": 4.88667,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "sigh",
+              "age": 40,
+              "medianMs": 2.79,
+              "maxBatchMs": 5.34667,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            }
+          ]
+        },
+        "laptop": {
+          "viewport": [
+            1280,
+            800,
+            2
+          ],
+          "nativeCelBytes": 26645212,
+          "exposedCels": 86,
+          "poses": [
+            {
+              "beat": "kick",
+              "age": 18,
+              "medianMs": 5.08,
+              "maxBatchMs": 5.85,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "return",
+              "age": 26,
+              "medianMs": 4.74,
+              "maxBatchMs": 5.72333,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "swing",
+              "age": 31,
+              "medianMs": 2.87333,
+              "maxBatchMs": 5.20333,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "realize",
+              "age": 25,
+              "medianMs": 4.27333,
+              "maxBatchMs": 4.31333,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "sigh",
+              "age": 40,
+              "medianMs": 2.8,
+              "maxBatchMs": 5.08667,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            }
+          ]
+        }
+      },
+      "after": {
+        "desktop": {
+          "viewport": [
+            1440,
+            1000,
+            1
+          ],
+          "nativeCelBytes": 26645212,
+          "exposedCels": 86,
+          "poses": [
+            {
+              "beat": "kick",
+              "age": 18,
+              "medianMs": 4.80667,
+              "maxBatchMs": 5.01,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "return",
+              "age": 26,
+              "medianMs": 5.23667,
+              "maxBatchMs": 5.96667,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "swing",
+              "age": 31,
+              "medianMs": 2.79667,
+              "maxBatchMs": 5.56333,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "realize",
+              "age": 25,
+              "medianMs": 4.90333,
+              "maxBatchMs": 5.02667,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "sigh",
+              "age": 40,
+              "medianMs": 2.71667,
+              "maxBatchMs": 5.11333,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            }
+          ]
+        },
+        "laptop": {
+          "viewport": [
+            1280,
+            800,
+            2
+          ],
+          "nativeCelBytes": 26645212,
+          "exposedCels": 86,
+          "poses": [
+            {
+              "beat": "kick",
+              "age": 18,
+              "medianMs": 4.76,
+              "maxBatchMs": 5.04,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "return",
+              "age": 26,
+              "medianMs": 4.68333,
+              "maxBatchMs": 4.77667,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "swing",
+              "age": 31,
+              "medianMs": 2.55,
+              "maxBatchMs": 4.69667,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "realize",
+              "age": 25,
+              "medianMs": 4.17,
+              "maxBatchMs": 4.21667,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "sigh",
+              "age": 40,
+              "medianMs": 2.47333,
+              "maxBatchMs": 4.66,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            }
+          ]
+        }
+      }
+    },
+    "supplementalAtlasRetry": true,
+    "limits": "Cloud Chromium timings and automated desktop/laptop viewport checks; no physical device/FPS guarantee, human audio listening, Safari/Firefox or deployed Pages test."
+  },
+  "decisions": [
+    {
+      "decision": "Recognize legacy Act 1 without an act field only with selectedAct===1; reject unknown identifiers and missing Act 2 identity.",
+      "reason": "Preserve the original serialized level schema.",
+      "costIfWrong": "Stage misselection."
+    },
+    {
+      "decision": "Use equivalent manual task briefs, BASE ledger and explicit verification records when cloud skill helper/template resources cannot be read.",
+      "reason": "Tool resources unavailable; keep the approved execution/review workflow.",
+      "costIfWrong": "Recovery/bookkeeping ambiguity; no runtime effect."
+    }
+  ],
+  "independentReview": "Pending fresh whole-branch review."
+}

@@ -167,3 +167,37 @@ for(const act of [1,2])test(`actual interior visibility remains shared in act ${
   Object.assign(p,{x:300,y:380,vx:0,vy:0,ground:true,surface:roomRoof,inv:1000});update();`);
  near(a.run('level.buildings[0].interiorOpacity'),.9088);
 });
+
+function snapshotFixture(){
+ return {acts:[{act:1,geometry:'{"end":29000}',surfaces:1,enemies:0,checkpoints:1}],
+  renders:[{act:1,id:'roof',hash:'roof-pixels'}],ending:['ending-pixels'],endingPoses:[{sonic:'confused'}],
+  traces:[{act:1,action:'run',states:[{p:{x:120,vx:14}}]}],sounds:[{name:'rocket'},{name:'kick'}],
+  fallbacks:[{name:'legacy',frames:[{act:1,state:'idle',hash:'fallback-pixels'}]}],
+  requests:['sonic.png'],errors:[],finalMode:'win'};
+}
+function compareSnapshots(before,after){return require('./scripts/verify-stage-runtime.cjs').compareSnapshots(before,after)}
+test('browser comparison accepts matching completed snapshots',()=>{
+ const before=snapshotFixture(),result=compareSnapshots(before,structuredClone(before));
+ assert.equal(result.movementTicksMatched,1);assert.equal(result.endingFrames,1);assert.equal(result.fallbackFramesMatched,1);
+});
+for(const [label,mutate,pattern]of [
+ ['geometry',s=>s.acts[0].geometry='{"end":28000}',/acts/],
+ ['movement',s=>s.traces[0].states[0].p.vx=13.9,/traces/],
+ ['sound ordering',s=>s.sounds.reverse(),/sounds/],
+ ['asset requests',s=>s.requests.push('unexpected.png'),/requests/],
+ ['fallback rendering',s=>s.fallbacks[0].frames[0].hash='different-pixels',/fallbacks/]
+])test(`browser comparison detects a regression in ${label}`,()=>{
+ const before=snapshotFixture(),after=structuredClone(before);mutate(after);
+ assert.throws(()=>compareSnapshots(before,after),pattern);
+});
+test('browser comparison detects ending pixel and actor-pose differences',()=>{
+ const before=snapshotFixture(),pixels=structuredClone(before),pose=structuredClone(before);
+ pixels.ending[0]='malformed-face';pose.endingPoses[0].sonic='wrong-expression';
+ assert.throws(()=>compareSnapshots(before,pixels),/ending/);assert.throws(()=>compareSnapshots(before,pose),/endingPoses/);
+});
+test('browser comparison refuses matching snapshots with browser errors or incomplete endings',()=>{
+ const error=snapshotFixture();error.errors=['startup failure'];
+ assert.throws(()=>compareSnapshots(error,structuredClone(error)),/page errors/);
+ const incomplete=snapshotFixture();incomplete.finalMode='playing';
+ assert.throws(()=>compareSnapshots(incomplete,structuredClone(incomplete)),/ending must complete/);
+});

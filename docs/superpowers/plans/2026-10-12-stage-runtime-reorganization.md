@@ -1,6 +1,6 @@
 # Stage Runtime Reorganization Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task in the current session, followed by one fresh whole-branch review. Native execution is recommended; await the user's plan review and execution-method selection before implementation.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task in the current session, followed by one fresh whole-branch review. Native execution and the written plan were approved by the user on 2026-10-12.
 
 **Goal:** Separate shared movement/collisions and world interactions from stage-specific behavior, preserving the existing game exactly.
 
@@ -41,13 +41,13 @@
 - `updateMovement()` calls `resolveHazards(p.lastX, p.lastY)` after surface integration. These are the original pre-integration coordinates, set by that block; do not allocate a new snapshot object per tick.
 - Shared state/constants remain in `game.js`; new extracted files must not read them during script initialization.
 
-- [ ] Archive main `559d132` outside the repo. Record fresh 184-test baseline and browser/route/ending evidence against that unchanged archive before edits.
-- [ ] Add failing collision-boundary tests: an airborne player crosses two surfaces in one tick and lands on the earliest; a player follows a connected angled seam without snapping across a gap; grounded carry follows both x/y moving surfaces. Call the new solver boundary directly and assert player coordinates, grounded/surface identity and velocity, using existing `boot()` fixtures. Retain existing movement/launch assertions.
-- [ ] Run `node --test test-stage-runtime.cjs` from the game directory. The new solver tests must fail because the helper is undefined, not because the fixture fails to boot.
-- [ ] Move the named functions and extract the two specified blocks without changing calculations, loop iteration order, early returns or state assignments. Keep moving carry before clamping/integration, hazard resolution after contact, and death checks after hazard/braking effects.
-- [ ] Load `surface-collision.js?v=1` and `player-movement.js?v=1` immediately before `game.js` in HTML and at the matching position in `test-support.cjs`. Preserve all prior script ordering. Advance the controller cache version.
-- [ ] Run all Node tests and JS/CJS syntax checks. Compare both acts' movement traces and authored surface renders against the immutable baseline before continuing.
-- [ ] Commit the passing extraction: `refactor: separate player movement and surface collision`.
+- [x] Archive main `559d132` outside the repo. Record fresh 184-test baseline and browser/route/ending evidence against that unchanged archive before edits.
+- [x] Add failing collision-boundary tests: an airborne player crosses two surfaces in one tick and lands on the earliest; a player follows a connected angled seam without snapping across a gap; grounded carry follows both x/y moving surfaces. Call the new solver boundary directly and assert player coordinates, grounded/surface identity and velocity, using existing `boot()` fixtures. Retain existing movement/launch assertions.
+- [x] Run `node --test test-stage-runtime.cjs` from the game directory. The new solver tests must fail because the helper is undefined, not because the fixture fails to boot.
+- [x] Move the named functions and extract the two specified blocks without changing calculations, loop iteration order, early returns or state assignments. Keep moving carry before clamping/integration, hazard resolution after contact, and death checks after hazard/braking effects.
+- [x] Load `surface-collision.js?v=1` and `player-movement.js?v=1` immediately before `game.js` in HTML and at the matching position in `test-support.cjs`. Preserve all prior script ordering. Advance the controller cache version.
+- [x] Run all Node tests and JS/CJS syntax checks. Compare both acts' movement traces and authored surface renders against the immutable baseline before continuing.
+- [x] Commit the passing extraction: `refactor: separate player movement and surface collision`.
 
 ## Task 2: Isolate stage-specific behavior
 
@@ -63,13 +63,13 @@
 - `stageDeathLimit(): number` returns 800 for Act 1 or `level.floorAt(p.x) + 950` for Act 2. Invoke only after the existing death-zone early return, preserving short-circuit behavior.
 - `updateStageCompletion(): void` retains Act 1's exact goal/main-landing condition and Act 2's boss-defeated ending transition at the original completion slot.
 
-- [ ] Add failing tests for explicit selection and unsupported acts, Act 1 no-op isolation, Act 2 reset dispatch, consumed-tick short circuit, wrong-route correction before contact, pool rolling state before a buffered jump, and distinct death/completion rules. Spy existing stage functions where necessary and assert ordering/state, not the adapters' internal representation.
-- [ ] Run the focused tests; confirm missing dispatch functions cause the expected failures.
-- [ ] Implement the two adapters and dispatch functions. Select immediately after level construction, preserving the existing `END` assignment and boss-setup position. Replace only the identified stage-specific calls/conditions. Retain existing Act 2/middle/boss implementations and camera/drawing code.
-- [ ] Insert `stage-runtime.js?v=1` before the controller in HTML and the VM boot list. Bump changed script URLs. Ensure definitions do not access uninitialized globals during load.
-- [ ] Run all Node tests and syntax checks. Execute the existing historical precision comparison using its unchanged `9f94cc4` source baseline, with output redirected/copied to temporary locations so existing review artifacts are not overwritten. If extracted scripts affect the historical page, adjust its loader compatibility rather than change that baseline or its assertions.
-- [ ] Compare wrong-route/pool, spring/vent, both-route timing, reset/act-switch and ordinary movement outcomes against main `559d132`.
-- [ ] Commit the passing adapters: `refactor: isolate Neon Express stage behavior`.
+- [x] Add failing tests for explicit selection and unsupported acts, Act 1 no-op isolation, Act 2 reset dispatch, consumed-tick short circuit, wrong-route correction before contact, pool rolling state before a buffered jump, and distinct death/completion rules. Spy existing stage functions where necessary and assert ordering/state, not the adapters' internal representation.
+- [x] Run the focused tests; confirm missing dispatch functions cause the expected failures.
+- [x] Implement the two adapters and dispatch functions. Select immediately after level construction, preserving the existing `END` assignment and boss-setup position. Replace only the identified stage-specific calls/conditions. Retain existing Act 2/middle/boss implementations and camera/drawing code.
+- [x] Insert `stage-runtime.js?v=1` before the controller in HTML and the VM boot list. Bump changed script URLs. Ensure definitions do not access uninitialized globals during load.
+- [x] Run all Node tests and syntax checks. Execute the existing historical precision comparison using its unchanged `9f94cc4` source baseline, with output redirected/copied to temporary locations so existing review artifacts are not overwritten. If extracted scripts affect the historical page, adjust its loader compatibility rather than change that baseline or its assertions.
+- [x] Compare wrong-route/pool, spring/vent, both-route timing, reset/act-switch and ordinary movement outcomes against main `559d132`.
+- [x] Commit the passing adapters: `refactor: isolate Neon Express stage behavior`.
 
 ## Task 3: Extract world interactions and verify tick order
 
@@ -83,13 +83,13 @@
 - `updateWorldCheckpoints()` copies the checkpoint loop and following sector assignment, preserving their order.
 - Boss/monitor calls stay in the controller between devices and enemies. Scattered-ring particles remain in `updateParticles()`.
 
-- [ ] Add failing order tests by recording phase calls from a normal `update()`: platforms → movement → stage world → shared interiors → rings → devices → monitors → boss → enemies → checkpoints → completion → particles → camera → HUD. Assert the shared interior call occurs in both acts and before the existing mode guard.
-- [ ] Add branch tests: paused update does no gameplay work; ending update calls only ending/HUD after the global `step` increment; boss-owned entrance omits ordinary movement/stage interactions; destroyed armor retains its movement call; movement failure or post-stage death retains the current HUD/return behavior. Check clock/run-frame freezing where applicable.
-- [ ] Run focused tests; confirm the missing world-interaction functions cause failure.
-- [ ] Extract the five loops into their specified functions. Replace them with calls at precisely the original positions. Do not introduce new early exits inside enemy/device loops or change behavior after damage/death.
-- [ ] Insert `world-interactions.js?v=1` after movement/collision and before stage-runtime/controller in both loaders; final new-file order is surface collision → player movement → world interactions → stage runtime → controller. Bump the controller's cache URL.
-- [ ] Run all Node tests/syntax checks and both-act input/route comparisons. Verify existing sound event ordering and timer/camera behavior.
-- [ ] Commit the passing orchestration: `refactor: separate world interaction phases`.
+- [x] Add failing order tests by recording phase calls from a normal `update()`: platforms → movement → stage world → shared interiors → rings → devices → monitors → boss → enemies → checkpoints → completion → particles → camera → HUD. Assert the shared interior call occurs in both acts and before the existing mode guard.
+- [x] Add branch tests: paused update does no gameplay work; ending update calls only ending/HUD after the global `step` increment; boss-owned entrance omits ordinary movement/stage interactions; destroyed armor retains its movement call; movement failure or post-stage death retains the current HUD/return behavior. Check clock/run-frame freezing where applicable.
+- [x] Run focused tests; confirm the missing world-interaction functions cause failure.
+- [x] Extract the five loops into their specified functions. Replace them with calls at precisely the original positions. Do not introduce new early exits inside enemy/device loops or change behavior after damage/death.
+- [x] Insert `world-interactions.js?v=1` after movement/collision and before stage-runtime/controller in both loaders; final new-file order is surface collision → player movement → world interactions → stage runtime → controller. Bump the controller's cache URL.
+- [x] Run all Node tests/syntax checks and both-act input/route comparisons. Verify existing sound event ordering and timer/camera behavior.
+- [x] Commit the passing orchestration: `refactor: separate world interaction phases`.
 
 ## Task 4: Browser parity, review and delivery
 
@@ -97,13 +97,13 @@
 
 **Interfaces:** `node scripts/verify-stage-runtime.cjs <baseline URL> <working URL>` runs Chromium comparisons with a seeded random source and controlled fixed ticks, exiting nonzero on any mismatch. Write compact evidence to `STAGE_OUTPUT` or `/tmp/sonic-stage-runtime-validation`; do not overwrite unrelated repository previews. Existing public input helpers and normal controls remain the execution interface.
 
-- [ ] Create the reusable browser comparison using the existing audit methodology: serialize both acts; hash identical authored/hidden surface views; compare full player/camera/boost/stats traces; compare all ending pixels and actor poses. Compare ordered sound-event records as well as final state. Use the immutable `559d132` server for every before result.
-- [ ] Run the full Node suite and JS/CJS/Python syntax checks; `git diff --check` must pass. Retain all original tests/assertions and report the added test count accurately.
-- [ ] Run the new parity script, existing `verify-browser.cjs`, `verify-route-timing.cjs`, `verify-ending.cjs`, background checks and normal-input boss replay on the refactored server. Redirect authoring/preview outputs outside the repository. Verify secrets, pool/wrong-route behavior, all moving-platform phases, empty-gauge rails, spring/vent launch protection, physical-input recovery and ending retry/pause/act switching.
-- [ ] Repeat the forced sprite/background failure comparisons at matching poses. Run browser checks under a simulated `/sonic-coast/` project prefix. Confirm assets, level builders, camera/ending/audio files and Pages workflow remain unchanged except any explicitly necessary integration call.
-- [ ] Profile warmed world/ending draws sequentially on desktop/laptop viewport settings, with no competing browser benchmarks; compare canvas allocations and cache growth. Report timing noise without promising hardware FPS.
+- [x] Create the reusable browser comparison using the existing audit methodology: serialize both acts; hash identical authored/hidden surface views; compare full player/camera/boost/stats traces; compare all ending pixels and actor poses. Compare ordered sound-event records as well as final state. Use the immutable `559d132` server for every before result.
+- [x] Run the full Node suite and JS/CJS/Python syntax checks; `git diff --check` must pass. Retain all original tests/assertions and report the added test count accurately.
+- [x] Run the new parity script, existing `verify-browser.cjs`, `verify-route-timing.cjs`, `verify-ending.cjs`, background checks and normal-input boss replay on the refactored server. Redirect authoring/preview outputs outside the repository. Verify secrets, pool/wrong-route behavior, all moving-platform phases, empty-gauge rails, spring/vent launch protection, physical-input recovery and ending retry/pause/act switching.
+- [x] Repeat the forced sprite/background failure comparisons at matching poses. Run browser checks under a simulated `/sonic-coast/` project prefix. Confirm assets, level builders, camera/ending/audio files and Pages workflow remain unchanged except any explicitly necessary integration call.
+- [x] Profile warmed world/ending draws sequentially on desktop/laptop viewport settings, with no competing browser benchmarks; compare canvas allocations and cache growth. Report timing noise without promising hardware FPS.
 - [ ] Request one fresh whole-branch review, covering the approved spec, complete diff and recorded evidence. Resolve meaningful findings and rerun only affected checks plus final gates. No repeated full-review cycle for documentation-only fixes.
-- [ ] Document the new boundaries and exact stage phases, how a future stage will extend them, what was preserved, before/after measurements and verification limits. Do not add hypothetical hazard code or claim exhaustive human/device testing.
+- [x] Document the new boundaries and exact stage phases, how a future stage will extend them, what was preserved, before/after measurements and verification limits. Do not add hypothetical hazard code or claim exhaustive human/device testing.
 - [ ] Commit and push explicitly to `codex/stage-runtime-reorganization`. Create an unmerged PR if GitHub API access permits and attach its URL. If API access returns Forbidden, supply the pushed branch comparison link and prepared PR description; never merge or trigger deployment.
 
 ## Plan self-review

@@ -1,6 +1,6 @@
 # Stage runtime reorganization
 
-Status: design approved by the user on 2026-10-12; implementation plan pending review. No game code changed yet.
+Status: design approved by the user on 2026-10-12; implementation plan and Native execution also approved. Implementation is on the separate review branch.
 
 Baseline: main `559d132`, including the approved ending, precision movement and merged conservative cleanup. Work branch: `codex/stage-runtime-reorganization`. Never merge or deploy automatically.
 
