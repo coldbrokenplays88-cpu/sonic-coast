@@ -45,13 +45,6 @@ function drawCityClouds(im,w,h,top){
 function gameSound(name,options){return window.playGameSound?.(name,options)??false}
 function notify(t){$('#toast').textContent=t;toastTime=160;$('#toast').style.display='block'}
 function sparks(x,y,n=8,color='#ffda56'){for(let i=0;i<n;i++)particles.push({x,y,vx:(Math.random()-.5)*7,vy:-Math.random()*6,life:25,color})}
-function pose(s,t=runFrames){let dx=0,dy=0;if(s.motion){const n=Math.sin(t/s.motion.period*Math.PI*2+s.motion.phase)*s.motion.amp;if(s.motion.axis==='x')dx=n;else dy=n}return {x1:s.x1+dx,x2:s.x2+dx,y1:s.y1+dy,y2:s.y2+dy,slope:(s.y2-s.y1)/(s.x2-s.x1)}}
-function yOn(s,x,t=runFrames){const q=pose(s,t);return q.y1+(x-q.x1)*q.slope}
-function active(s){return (!s.sealedBy||level.hazards.find(h=>h.id===s.sealedBy)?.broken)&&(!s.restoreAt||runFrames>=s.restoreAt)}
-function topAt(x,below=-Infinity){let result=null;for(const s of level.surfaces){const q=pose(s);if(active(s)&&x>=q.x1&&x<=q.x2){const y=yOn(s,x);if(y>=below&&(!result||y<result.y))result={s,y}}}return result}
-function bodyHeight(){return p.ground&&p.roll?26:!p.ground?38:48}
-function feet(){return p.y+20}
-function resetPlatforms(){for(const s of level.surfaces){s.crumbleTimer=-1;s.restoreAt=0}}
 function setup(){window.syncGameMusic?.({enabled:sound,mode:'ready',act:selectedAct,restart:true});testControlled=false;level=configureBoostMonitors(selectedAct===2?addMiddleSection(makeLevel2()):makeLevel());END=level.end;setupBossEncounter();rings=level.rings;enemies=level.enemies.map((e,i)=>({...e,alive:true,phase:i*1.3}));particles=[];clock=0;runFrames=0;count=0;score=0;lives=tuning.lives;checkpoint=0;charge=0;cam=0;camY=0;zoom=1;boost=BOOST_MAX;stage=0;shake=0;keys.clear();visited.clear();stats={jumps:0,rolls:0,hits:0,deaths:0,expressLandings:0,recoveries:0,rebound:0,maxSpeed:0,loops:0,barriers:0};respawn();updateHud();$('#toast').style.display='none';$('#act-title').textContent=level.title||'NEON EXPRESS';$('.brand-sub').textContent=level.title||'NEON EXPRESS';$('#act-select').value=String(selectedAct)}
 function respawn(){const c=level.checkpoints[checkpoint];resetPlatforms();Object.assign(p,{x:c.x,y:c.y-20,vx:0,vy:0,ground:true,face:1,inv:80,roll:false,boosting:false,surface:level.surfaces.find(s=>s.id===c.surfaceId)??level.surfaces.find(s=>c.x>=s.x1&&c.x<=s.x2&&Math.abs(yOn(s,c.x)-c.y)<2)??topAt(c.x)?.s??null,hurt:0,jumpAttack:false,airSpeedLimit:null,scriptedLaunch:false,jumpHeld:false,jumpCut:false,boostLocked:false,rolling:false,rollAge:0,lowRollFrames:0,rollSpent:false,downHeld:false,rollBuffer:0,brakeActive:false,brakeAge:0,brakeSpeed:0,brakeFace:1,stopFrame:-100,landFrame:-1,landKind:null,poseJumpFrame:-100,poseLandingFrame:-100,grindEntryFrame:-100,grindExitFrame:-100,grindFast:false,grindFromFast:false,loop:null,airLaunchUntil:0,lastX:c.x,lastY:c.y-20});charge=0;p.poolTransfer=null;p.wrongRouteDrop=false;p.poolApproach=false;p.poolExit=false;resetBoostMonitors();coyote=tuning.coyote;jumpBuffer=0;cam=Math.max(0,p.x-230);camY=level.act===2?p.y-H*.6:0;resetAct2();resetCameraTracking();resetBossAttempt();visited.clear();for(const r of rings)if(r.x>=c.x&&r.x<c.x+550)r.taken=false}
 function start(){testControlled=false;if(mode==='over'&&bossCheckpoint){lives=tuning.lives;respawn();}else if(['ready','over','win'].includes(mode))setup();mode='playing';$('#overlay').classList.add('hidden');$('#pause').textContent='Ⅱ';keys.clear();canvas.focus();gameSound('start');updateHud()}
@@ -63,74 +56,6 @@ function press(k,automated=false){if(!automated)testControlled=false;if((k==='Ar
 function release(k,automated=false){if(!automated)testControlled=false;keys.delete(k);if(JUMP_KEYS.includes(k)){p.jumpHeld=false;p.jumpCut=true;if(p.vy<-5&&runFrames>=(p.airLaunchUntil||0))p.vy=-5}}
 function restart(){setup();mode='playing';$('#overlay').classList.add('hidden');$('#pause').textContent='Ⅱ';canvas.focus();gameSound('start');updateHud()}
 function updateHud(){window.syncGameMusic?.({enabled:sound,mode,act:selectedAct});if(typeof window.updatePixelHud==='function')window.updatePixelHud({rings:count,lives,lifeImage:art.recoveredSpeedster,time:clock,score,boost,maxBoost:BOOST_MAX,speed:Math.round(measurementSpeed()*60),mode,frame:step});$('#progress-fill').style.width=(mode==='win'?100:Math.min(100,p.x/END*100))+'%'}
-function jump(){p.scriptedLaunch=false;p.jumpAttack=true;if(p.surface?.grindable)p.grindExitFrame=runFrames;p.poseJumpFrame=runFrames;const slope=p.surface?pose(p.surface).slope:0;const speedLift=Math.max(0,Math.abs(p.vx)-14)*.25;p.vy=-(13.4+Math.min(2.4,speedLift))+Math.max(-3.5,Math.min(0,slope*p.vx*.45));if(p.jumpCut)p.vy=-6.8;p.ground=false;p.surface=null;coyote=0;jumpBuffer=0;stats.jumps++;gameSound('jump')}
-function land(s,y){p.scriptedLaunch=false;if(p.wrongRouteDrop&&s.fallen){p.wrongRouteDrop=false;p.vx=0;}if(s.grindable&&p.surface!==s){p.grindEntryFrame=runFrames;p.grindFromFast=p.boosting||Math.abs(p.vx)>17;p.grindFast=Math.abs(p.vx)>18||p.boosting;p.rolling=false;p.roll=false;p.brakeActive=false;p.stopFrame=-100;charge=0}else if(p.surface?.grindable&&!s.grindable){p.grindExitFrame=runFrames;}if(!p.ground){p.poseLandingFrame=runFrames;gameSound(s.grindable?'grind':'land',{speed:Math.abs(p.vx),volume:.7})}p.landFrame=runFrames;p.landKind=s.kind;const changed=p.surface!==s||!p.ground;p.y=y-20;p.vy=0;p.ground=true;p.jumpAttack=false;p.airSpeedLimit=null;p.surface=s;if(s.poolCurve){p.poolApproach=false;p.rolling=true;p.roll=true;p.rollAge=0;p.lowRollFrames=0;}if(changed&&!visited.has(s.id)){visited.add(s.id);if(s.kind==='express'){stats.expressLandings++;score+=400;sparks(p.x,p.y+20,5,'#ffdf72')}if(s.kind==='recovery'||s.kind==='lower')stats.recoveries++}if(s.kind==='crumble'&&s.crumbleTimer<0)s.crumbleTimer=s.crumbleDelay;for(const group of level.collapseGroups||[])if(group.entryId===s.id&&!group.triggered){group.triggered=true;for(const id of group.tailIds){const tail=level.surfaces.find(v=>v.id===id);if(tail)tail.crumbleTimer=group.delay}}if(changed&&jumpBuffer>0)jump()}
-function canStand(){const foot=feet();return !level.hazards.some(h=>h.type==='gate'&&p.x+13>h.x&&p.x-13<h.x+h.w&&foot>h.y&&foot-48<h.y+h.h)}
-function updateRoll(down){
- if(down&&!p.downHeld){p.rollBuffer=6;p.rollSpent=false}if(!down)p.rollSpent=false;p.downHeld=down;
- if(p.ground&&!p.surface?.grindable&&p.rollBuffer>0&&!p.rollSpent&&!p.rolling){p.rolling=true;p.rollAge=0;p.lowRollFrames=0;p.rollBuffer=0;stats.rolls++}
- if(p.rollBuffer>0)p.rollBuffer--;
- if(p.rolling){p.rollAge++;if(p.ground&&Math.abs(p.vx)<7)p.lowRollFrames++;else if(Math.abs(p.vx)>=7)p.lowRollFrames=0;
-  const expired=p.lowRollFrames>=90||p.rollAge>=240;
-  if(((!down&&p.rollAge>6)||expired)&&canStand()){p.rolling=false;if(expired)p.rollSpent=true}}
- p.roll=p.rolling||charge>0||!p.ground;
-}
-function updateMovement(){if(updateMiddleMotion())return true;if(p.loop)return updateLoop();const beforeSpeed=Math.abs(p.vx),recoveryGrip=p.ground&&['recovery','lower'].includes(p.surface?.kind);const down=keys.has('ArrowDown')||keys.has('KeyS');const dir=Number(keys.has('ArrowRight')||keys.has('KeyD'))-Number(keys.has('ArrowLeft')||keys.has('KeyA'));updateRoll(down);
- if(p.ground)coyote=tuning.coyote;else if(coyote>0)coyote--;
- if(jumpBuffer>0&&coyote>0&&!charge)jump();else if(jumpBuffer>0)jumpBuffer--;
- if(charge&&down&&JUMP_KEYS.some(k=>keys.has(k))){charge=Math.min(20,charge+.2);if(runFrames%10===0){sparks(p.x-15*p.face,p.y+18,3,'#69efff');if(typeof gameSound==='function')gameSound('spindashCharge',{charge:charge/20})}}
- if(charge&&!down){gameSound('spindashRelease',{charge:charge/20});p.vx=p.face*(12+charge*.55);charge=0;p.rolling=true;p.rollAge=0;p.lowRollFrames=0;sparks(p.x,p.y+15,10,'#4bd9ff')}
- const wantBoost=keys.has('ShiftLeft')||keys.has('ShiftRight')||keys.has('KeyX')||keys.has('MouseBoost');if(!wantBoost)p.boostLocked=false;
- updateBoostState(wantBoost);
- if(p.boosting){if(dir&&Math.sign(p.vx)===dir)p.face=dir;p.vx+=(p.face*23-p.vx)*.14;if(runFrames%3===0)particles.push({x:p.x-25*p.face,y:p.y,vx:-p.face*2,vy:0,life:14,color:'#43e5ff',trail:true})}
- else if(p.ground&&p.surface?.grindable){p.rolling=false;p.roll=false;charge=0;if(dir&&dir!==Math.sign(p.vx))p.vx+=dir*.45;else if(dir&&Math.abs(p.vx)<14)p.vx+=dir*.08;}
- else if(charge)p.vx*=.66;
- else{const precisionBrake=!p.rolling&&!p.scriptedLaunch&&!p.wrongRouteDrop&&!p.surface?.boostExit;
-  if(!p.hurt&&dir){if(p.ground&&p.rolling){if(dir!==Math.sign(p.vx)&&Math.abs(p.vx)>.1){p.vx+=dir*(Math.abs(p.vx)<=8?(recoveryGrip?1.3:.85):(recoveryGrip?1.1:.5));p.face=dir}else if(Math.abs(p.vx)<3)p.vx=Math.max(-3,Math.min(3,p.vx+dir*.16));}
-   else if(Math.abs(p.vx)<14||dir!==Math.sign(p.vx)){
-    const speed=Math.min(1,Math.abs(p.vx)/14),opposing=dir!==Math.sign(p.vx)&&Math.abs(p.vx)>(precisionBrake?0:.1);
-    let a=p.ground?(opposing?(recoveryGrip?(Math.abs(p.vx)<=14?2.5:1.4):(Math.abs(p.vx)<8?1:.82)):.52*Math.pow(1-speed,1.5)+.035):(opposing?.2:.12);
-    // Countersteering stops at zero; normal acceleration begins on the next frame.
-    // Intentional propulsion retains its previous steering and friction.
-    if(opposing&&precisionBrake)a=Math.min(Math.abs(p.vx),a*movementTuning.counterBrake);
-    p.vx+=dir*a;p.face=dir;if(Math.abs(p.vx)>14&&dir===Math.sign(p.vx))p.vx=dir*14
-   }}
-  else if(p.ground){if(p.rolling)p.vx*=.997;else{const drag=precisionBrake&&Math.abs(p.vx)<movementTuning.precisionSpeed?(recoveryGrip?movementTuning.recoveryGrip:movementTuning.groundGrip):Math.abs(p.vx)<=8?(recoveryGrip?.65:.5):(recoveryGrip?.4:.22+(Math.abs(p.vx)-8)*.002);p.vx=Math.sign(p.vx)*Math.max(0,Math.abs(p.vx)-drag)}}
-  if(Math.abs(p.vx)>14&&!p.surface?.boostExit)p.vx*=p.ground?.998:.999;}
- if(p.ground&&p.rolling){const drag=.0015+Math.min(.022,Math.max(0,p.rollAge-90)*.00016);p.vx*=1-drag}
- if(p.ground&&p.surface){const slope=pose(p.surface).slope;if(!p.surface.grindable&&Math.abs(p.vx)>1)p.vx+=slope*(p.rolling?.65:p.surface.boostExit?.08:.28);const prev=pose(p.surface,runFrames-1),now=pose(p.surface);p.x+=now.x1-prev.x1;p.y+=now.y1-prev.y1}
- p.vx=Math.max(-24,Math.min(24,p.vx));if(Math.abs(p.vx)<.03)p.vx=0;stats.maxSpeed=Math.max(stats.maxSpeed,Math.abs(p.vx));anim+=Math.abs(p.vx)*.08;
- if(!p.ground&&p.airSpeedLimit)p.vx=Math.max(-p.airSpeedLimit,Math.min(p.airSpeedLimit,p.vx));
- const oldX=p.x,oldY=p.y,oldFoot=feet(),oldSurface=p.surface,wasGround=p.ground;p.lastX=oldX;p.lastY=oldY;p.x=Math.max(24,Math.min(END+250,p.x+p.vx));
- // Follow connected slopes without launching or snapping across a void.
- if(wasGround&&oldSurface&&active(oldSurface)){const q=pose(oldSurface);if(p.x>=q.x1-FOOT_RADIUS&&p.x<=q.x2+FOOT_RADIUS){p.y=yOn(oldSurface,Math.max(q.x1,Math.min(q.x2,p.x)))-20;p.vy=0}else{let join=null;for(const s of level.surfaces){const z=pose(s),y=yOn(s,p.x);const seam=p.vx>=0?q.x2:q.x1,edgeY=p.vx>=0?q.y2:q.y1,connected=seam>=z.x1-2&&seam<=z.x2+2&&Math.abs(yOn(s,seam)-edgeY)<2;if(active(s)&&p.x>=z.x1&&p.x<=z.x2&&(Math.abs(y-oldFoot)<11||connected)){join={s,y};break}}if(join)land(join.s,join.y);else{p.ground=false;p.surface=null;p.vy=Math.min(0,q.slope*p.vx)}}}else{p.ground=false;p.surface=null}
- if(!p.ground){p.vy=Math.min(20,p.vy+.58);p.y+=p.vy;let hit=null;
-  for(const s of level.surfaces){if(p.wrongRouteDrop&&!s.fallen)continue;if(!active(s)||(s.entrySpeed&&!s.solidAtAnySpeed&&Math.abs(p.vx)<s.entrySpeed))continue;const q=pose(s),oldQ=pose(s,runFrames-1);
-   const oldFloor=oldQ.y1+(oldX-oldQ.x1)*oldQ.slope,newFloor=yOn(s,p.x),d0=oldFoot-oldFloor,d1=feet()-newFloor;
-   if(d0>5||d1<0||d1-d0<=0)continue;const t=Math.max(0,-d0/(d1-d0)),crossX=oldX+(p.x-oldX)*t;
-   const left=oldQ.x1+(q.x1-oldQ.x1)*t,right=oldQ.x2+(q.x2-oldQ.x2)*t;
-   if(t<=1&&crossX>=left-FOOT_RADIUS&&crossX<=right+FOOT_RADIUS&&(!hit||t<hit.t))hit={s,q,t};}
-  if(hit){const x=Math.max(hit.q.x1,Math.min(hit.q.x2,p.x));land(hit.s,yOn(hit.s,x));
-   if(p.ground&&(p.x<hit.q.x1-FOOT_RADIUS||p.x>hit.q.x2+FOOT_RADIUS)){p.ground=false;p.surface=null;p.vy=Math.min(0,hit.q.slope*p.vx);coyote=tuning.coyote}
-   if(p.ground&&p.rollBuffer>0&&!p.rollSpent){p.rolling=true;p.rollAge=0;p.lowRollFrames=0;p.rollBuffer=0;stats.rolls++}}}
- p.roll=p.rolling||charge>0||!p.ground;
- resolveHazards(oldX,oldY);updateBrakingPose(dir,beforeSpeed);if(p.ground&&p.surface?.grindable&&Math.abs(p.vx)>2&&runFrames%3===0){const fast=p.boosting||Math.abs(p.vx)>18;particles.push({x:p.x+7*Math.sign(p.vx),y:feet()-1,vx:-Math.sign(p.vx)*(fast?4:2),vy:fast?-1.5:-.7,life:fast?12:8,color:fast?'#ffdb72':'#ffe4a4',grind:true,trail:false});if(fast&&runFrames%6===0)particles.push({x:p.x-10*Math.sign(p.vx),y:feet()+1,vx:-Math.sign(p.vx)*5,vy:0,life:7,color:'#ffa65b',grind:true,trail:true})}
- if(level.deathZones?.some(z=>p.x>=z.x1&&p.x<=z.x2&&feet()>z.y)){die();return false}if(feet()>(level.act===2?level.floorAt(p.x)+950:800)){die();return false}return true}
-// Visual state tracks resisted momentum; it never gates jump, roll, or direction inputs.
-function updateBrakingPose(dir,incoming){
- const speed=Math.abs(p.vx),opposing=dir&&dir!==Math.sign(p.vx),resisting=p.ground&&!p.surface?.grindable&&!p.rolling&&!charge&&!p.boosting&&!p.hurt&&(!dir||opposing);
- if(resisting&&(speed>.03||p.brakeActive)){
-  if(!p.brakeActive){p.brakeAge=0;p.brakeSpeed=incoming;p.brakeFace=Math.sign(p.vx)||p.face}p.brakeActive=speed>.03;p.brakeAge++;p.brakeSpeed=Math.max(p.brakeSpeed||0,incoming);
-  if(!speed){p.stopFrame=runFrames;p.brakeActive=false}
-  if(speed>2&&(p.brakeAge===1||runFrames%3===0)){const force=Math.min(1,p.brakeSpeed/23);particles.push({x:p.x+8*p.brakeFace,y:feet()-2,vx:-p.brakeFace*(.5+force*2),vy:-.5-force*.9,life:12+force*8,color:'#bbc0cd',skid:true,size:3+force*4});if(force>.5)particles.push({x:p.x,y:feet()-1,vx:-p.brakeFace,vy:0,life:9,color:'#ffe1a0',trail:true,skid:true})}
- }else{p.brakeActive=false;if(dir||!p.ground||p.rolling||p.boosting||p.hurt)p.stopFrame=-100}
-}
-function resolveHazards(oldX,oldY){for(const h of level.hazards){if(h.broken)continue;if(p.x+13<h.x||p.x-13>h.x+h.w)continue;const foot=feet(),height=bodyHeight(),top=foot-height;if(foot<=h.y||top>=h.y+h.h)continue;if(h.type==='breakable'&&(p.boosting||!h.boostOnly&&Math.abs(p.vx)>=h.threshold)){h.broken=true;gameSound('hazard');score+=350;stats.barriers=(stats.barriers||0)+1;sparks(h.x,h.floor-40,18,'#ffcc70');continue}if(h.type==='spikes'){hurt(h.x+h.w/2);continue}
- // Gantries remain solid during damage immunity. A correct roll keeps every bit of speed.
- const previousTop=oldY+20-height;if(oldY+20<=h.y&&p.vy>=0){p.y=h.y-20;p.vy=0;p.ground=false}
- else if(previousTop>=h.y+h.h&&p.vy<0){p.y=h.y+h.h+height-20;p.vy=1}
- else{const fromLeft=oldX<h.x+h.w/2;p.x=fromLeft?h.x-14:h.x+h.w+14;p.vx=0;p.boosting=false}
-}}
 function update(){step++;if(mode!=='playing')return;if(ending){updateEndingScene();updateHud();return;}clock+=1/60;runFrames++;if(p.inv>0)p.inv--;if(p.hurt>0)p.hurt--;if(shake>0)shake--;if(toastTime>0&&!--toastTime)$('#toast').style.display='none';
  for(const s of level.surfaces){if(s.restoreAt&&runFrames>=s.restoreAt){s.restoreAt=0;s.crumbleTimer=-1}if(s.crumbleTimer>=0&&!s.restoreAt){s.crumbleTimer--;if(s.crumbleTimer===0){s.restoreAt=runFrames+240;s.crumbleTimer=-1;sparks((s.x1+s.x2)/2,s.y1,10,'#ffac54')}}}
  if(bossOwnsControls()){if(boss.state==='destroyed')updateMovement();updateParticles();updateBossEncounter();if(boss?.state==='defeated')beginEndingScene();updateCamera();updateHud();return;}
