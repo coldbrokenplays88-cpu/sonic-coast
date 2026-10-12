@@ -54,7 +54,7 @@
 **Files:** Create `Inferno-Ascent-Game/stage-runtime.js`; modify `game.js`, `player-movement.js`, `surface-collision.js`, `index.html`, `test-support.cjs`, `test-stage-runtime.cjs`. Inspect `scripts/verify-precision-physics.cjs` for historical-source compatibility; change only if required.
 
 **Interfaces:**
-- `selectStageRuntime(): void` selects one of two stable, explicit adapters using the built level's act, once per setup. Unsupported values throw a descriptive setup error. Do not add future stage IDs or a generic plugin registry.
+- `selectStageRuntime(): void` selects one of two stable, explicit adapters using the built level's act, once per setup. Recognize the unchanged legacy Act 1 builder's absent act field only with `selectedAct === 1`. Unsupported values throw a descriptive setup error. Do not add future stage IDs or a generic plugin registry.
 - `resetStageRuntime(): void` calls existing Act 2 reset behavior at the original respawn slot; Act 1 is a no-op.
 - `updateStageMotion(): boolean` calls `updateMiddleMotion()` for Act 2 and returns false for Act 1, at the existing first movement slot. Preserve the following loop-motion branch.
 - `beforeStageLanding(s): void` contains the wrong-route/fallen correction at its original point before contact assignments. `afterStageLanding(s): void` contains pool entry at its original point after `p.surface = s` and before visited/collapse/buffered-jump work. Both are no-ops in Act 1.
