@@ -57,17 +57,14 @@ function release(k,automated=false){if(!automated)testControlled=false;keys.dele
 function restart(){setup();mode='playing';$('#overlay').classList.add('hidden');$('#pause').textContent='Ⅱ';canvas.focus();gameSound('start');updateHud()}
 function updateHud(){window.syncGameMusic?.({enabled:sound,mode,act:selectedAct});if(typeof window.updatePixelHud==='function')window.updatePixelHud({rings:count,lives,lifeImage:art.recoveredSpeedster,time:clock,score,boost,maxBoost:BOOST_MAX,speed:Math.round(measurementSpeed()*60),mode,frame:step});$('#progress-fill').style.width=(mode==='win'?100:Math.min(100,p.x/END*100))+'%'}
 function update(){step++;if(mode!=='playing')return;if(ending){updateEndingScene();updateHud();return;}clock+=1/60;runFrames++;if(p.inv>0)p.inv--;if(p.hurt>0)p.hurt--;if(shake>0)shake--;if(toastTime>0&&!--toastTime)$('#toast').style.display='none';
- for(const s of level.surfaces){if(s.restoreAt&&runFrames>=s.restoreAt){s.restoreAt=0;s.crumbleTimer=-1}if(s.crumbleTimer>=0&&!s.restoreAt){s.crumbleTimer--;if(s.crumbleTimer===0){s.restoreAt=runFrames+240;s.crumbleTimer=-1;sparks((s.x1+s.x2)/2,s.y1,10,'#ffac54')}}}
+ updateWorldPlatforms();
  if(bossOwnsControls()){if(boss.state==='destroyed')updateMovement();updateParticles();updateBossEncounter();if(boss?.state==='defeated')beginEndingScene();updateCamera();updateHud();return;}
  if(!updateMovement()||mode!=='playing'){updateHud();return}updateStageWorld();updateCityInteriors();if(mode!=='playing'){updateHud();return}
- for(const r of rings)if(!r.taken&&(!r.sealedBy||level.hazards.find(h=>h.id===r.sealedBy)?.broken)&&Math.hypot(r.x-p.x,r.y-p.y)<29){r.taken=true;count++;score+=100;gameSound('ring');sparks(r.x,r.y,3)}
- for(const pad of level.pads)if(p.ground&&Math.abs(p.x-pad.x)<25&&Math.abs(feet()-pad.y)<8&&(pad.cityVent||pad.poolBooster||p.vx>0)&&(!pad.sealedBy||level.hazards.find(h=>h.id===pad.sealedBy)?.broken)){if(pad.poolBooster){p.vx=Math.max(p.vx,pad.launchX);p.rolling=true;p.roll=true;p.rollAge=0;p.poolExit=true;pad.firedAt=runFrames;gameSound('pool',{launch:true})}else if(pad.cityVent)launchAirDevice(pad);else p.vx=Math.max(p.vx,18.5)}
- for(const spring of level.springs||[]){const device=airDevicePose(spring);if(p.ground&&p.surface?.id===spring.surfaceId&&Math.abs(p.x-device.x)<23)launchAirDevice(spring);}
+ collectWorldRings();
+ activateWorldDevices();
  collectBoostMonitors();updateBossEncounter();
- for(const e of enemies){if(!e.alive)continue;e.x=e.base+Math.sin(runFrames*.018+e.phase)*e.range;e.y=e.baseY+(e.kind==='drone'?Math.sin(runFrames*.027+e.phase)*12:0);if(Math.hypot(p.x-e.x,p.y-e.y)<33){const stomp=p.vy>0&&feet()<=e.y+12&&!e.jumpImmune,jumpHit=!p.ground&&p.jumpAttack&&p.hurt===0&&!e.jumpImmune;if(p.boosting||p.ground&&p.roll&&Math.abs(p.vx)>3||stomp||jumpHit){e.alive=false;score+=500;sparks(e.x,e.y,14,'#ff9556');if(stomp&&!p.boosting&&e.rebound!==false){p.vy=p.jumpHeld?-16:-8;p.poseJumpFrame=runFrames;p.ground=false;p.surface=null;stats.rebound++;gameSound('enemy')}else gameSound('enemy')}else if(!p.inv){hurt(e.x);handleStageEnemyDamage(e)}}}
- // Checkpoints require a safe main-road landing, so falling past a marker cannot skip a challenge.
- for(let i=checkpoint+1;i<level.checkpoints.length;i++){const c=level.checkpoints[i];if(p.x>=c.x&&p.ground&&['main','express'].includes(p.surface?.kind)&&(!level.verticalCity||p.surface.id===c.surfaceId)&&Math.abs(feet()-c.y)<150){checkpoint=i;stage=i;if(level.act!==2)notify(c.hint||level.sectors[level.sectors.findLastIndex(s=>s.x<=c.x)].hint);gameSound('checkpoint')}}
- stage=Math.max(0,level.sectors.findLastIndex(s=>p.x>=s.x));
+ updateWorldEnemies();
+ updateWorldCheckpoints();
  updateStageCompletion();
  updateParticles();
  if(charge)gameSound('spindashCharge',{charge:charge/20});else if(p.brakeActive)gameSound('brake',{speed:Math.abs(p.vx)});else if(p.boosting)gameSound('boost',{speed:measurementSpeed()});else if(p.ground&&p.surface?.grindable)gameSound('grind',{speed:measurementSpeed()});else if(p.ground&&!p.roll&&Math.abs(p.vx)>2)gameSound('run',{speed:Math.abs(p.vx)});updateCamera();updateHud()}

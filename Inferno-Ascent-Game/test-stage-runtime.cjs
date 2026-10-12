@@ -115,3 +115,55 @@ test('an explicit death zone short-circuits the stage floor query',()=>{
   Object.assign(p,{x:300,y:50000,vx:0,vy:0,ground:false,surface:null});updateMovement();`);
  assert.equal(a.run('stats.deaths'),1);assert.equal(a.run('lives'),2);
 });
+
+function phaseBoot(act=2){
+ const a=boot(act);
+ a.run(`const phaseOriginals={updateWorldPlatforms,collectWorldRings,activateWorldDevices,updateWorldEnemies,updateWorldCheckpoints};
+  const calls=[];
+  updateWorldPlatforms=()=>calls.push('platforms');updateMovement=()=>{calls.push('movement');return true};
+  updateStageWorld=()=>calls.push('stage');updateCityInteriors=()=>calls.push('interiors');
+  collectWorldRings=()=>calls.push('rings');activateWorldDevices=()=>calls.push('devices');
+  collectBoostMonitors=()=>calls.push('monitors');updateBossEncounter=()=>calls.push('boss');
+  updateWorldEnemies=()=>calls.push('enemies');updateWorldCheckpoints=()=>calls.push('checkpoints');
+  updateStageCompletion=()=>calls.push('completion');updateParticles=()=>calls.push('particles');
+  updateCamera=()=>calls.push('camera');updateHud=()=>calls.push('hud');
+  updateEndingScene=()=>calls.push('ending');gameSound=()=>{};`);
+ return a;
+}
+for(const act of [1,2])test(`normal world phases preserve their order and shared interiors in act ${act}`,()=>{
+ const a=phaseBoot(act);a.run('update()');
+ assert.deepEqual(read(a,'calls'),['platforms','movement','stage','interiors','rings','devices','monitors','boss','enemies','checkpoints','completion','particles','camera','hud']);
+ assert.equal(a.run('runFrames'),1);near(a.run('clock'),1/60);
+});
+test('paused ticks advance only the presentation step',()=>{
+ const a=phaseBoot();a.run("const beforeStep=step;mode='paused';update()");
+ assert.deepEqual(read(a,'calls'),[]);assert.equal(a.run('step'),a.run('beforeStep+1'));
+ assert.equal(a.run('clock'),0);assert.equal(a.run('runFrames'),0);
+});
+test('ending ticks bypass world work and freeze gameplay time',()=>{
+ const a=phaseBoot();a.run('const beforeStep=step;ending={done:false};update()');
+ assert.deepEqual(read(a,'calls'),['ending','hud']);assert.equal(a.run('step'),a.run('beforeStep+1'));
+ assert.equal(a.run('clock'),0);assert.equal(a.run('runFrames'),0);
+});
+for(const state of ['entrance','destroyed'])test(`boss-owned ${state} keeps its established world bypass`,()=>{
+ const a=phaseBoot();a.run(`boss={state:'${state}'};update()`);
+ assert.deepEqual(read(a,'calls'),['platforms',...(state==='destroyed'?['movement']:[]),'particles','boss','camera','hud']);
+ assert.equal(a.run('runFrames'),1);near(a.run('clock'),1/60);
+});
+for(const changedMode of [false,true])test(`movement ${changedMode?'death':'failure'} returns before stage work`,()=>{
+ const a=phaseBoot();a.run(`updateMovement=()=>{calls.push('movement');${changedMode?"mode='over';return true":"return false"}};update()`);
+ assert.deepEqual(read(a,'calls'),['platforms','movement','hud']);
+});
+test('post-stage death keeps the shared interior update before the mode guard',()=>{
+ const a=phaseBoot();a.run("updateStageWorld=()=>{calls.push('stage');mode='over'};update()");
+ assert.deepEqual(read(a,'calls'),['platforms','movement','stage','interiors','hud']);
+});
+for(const act of [1,2])test(`actual interior visibility remains shared in act ${act}`,()=>{
+ const a=boot(act);a.run(`updateWorldPlatforms();
+  const roomRoof={id:'room-roof',x1:0,x2:1000,y1:400,y2:400,kind:'main'};
+  level.surfaces=[roomRoof];level.hazards=[];level.pads=[];level.springs=[];level.monitors=[];
+  level.loops=[];level.debris=[];level.events=[];rings=[];enemies=[];
+  level.buildings=[{rooms:[{x1:200,x2:500,y:400}],interiorOpacity:1}];
+  Object.assign(p,{x:300,y:380,vx:0,vy:0,ground:true,surface:roomRoof,inv:1000});update();`);
+ near(a.run('level.buildings[0].interiorOpacity'),.9088);
+});
