@@ -1,0 +1,446 @@
+{
+  "baselineCommit": "cb5e4db112227776ed61274763b4f53a85839c64",
+  "branch": "codex/conservative-codebase-audit",
+  "metrics": {
+    "before": {
+      "trackedFiles": 171,
+      "sourceFiles": 55,
+      "sourcePhysicalLines": 3731,
+      "sourceBytes": 397320,
+      "runtimeScriptCount": 22,
+      "runtimeJSBytes": 250512,
+      "runtimeJSGzipBytes": 91444,
+      "runtimeJSPhysicalLines": 2228,
+      "trackedTreeBytes": 94498627,
+      "productionFolderBytes": 50605243,
+      "assetBytes": 50192520,
+      "docsBytes": 43892555
+    },
+    "after": {
+      "trackedFiles": 174,
+      "sourceFiles": 55,
+      "sourcePhysicalLines": 3670,
+      "sourceBytes": 386859,
+      "runtimeScriptCount": 22,
+      "runtimeJSBytes": 240049,
+      "runtimeJSGzipBytes": 88366,
+      "runtimeJSPhysicalLines": 2167,
+      "trackedTreeBytes": 94518713,
+      "productionFolderBytes": 50594782,
+      "assetBytes": 50192520,
+      "docsBytes": 43923102
+    }
+  },
+  "countingNotes": [
+    "Physical lines, not statements. Source excludes dependencies and ending-frames.js, ending-polish-frames.js, supplemental-frames.js.",
+    "Runtime totals include every external script in index.html, including generated metadata. Gzip is an estimate, not measured network compression.",
+    "Tracked repository file-content bytes include the added report, plan and this evidence. Git object history is not measured or rewritten.",
+    "Production folder is the entire static game directory uploaded by the unchanged Pages workflow. No bundler exists."
+  ],
+  "files": {
+    "modified": 6,
+    "addedAuditRecords": 3,
+    "deleted": 0,
+    "obsoleteFunctionsRemoved": 10
+  },
+  "startup": {
+    "removedRequest": "assets/objects.png",
+    "removedImageFileBytes": 787609,
+    "fileRetained": true,
+    "unusedOutlineDimensions": [
+      2164,
+      727
+    ],
+    "nominalOutlineRgbaBytesAvoided": 6292912
+  },
+  "parity": {
+    "baseline": "cb5e4db",
+    "browser": "Chromium",
+    "acts": [
+      {
+        "act": 1,
+        "surfaces": 69,
+        "enemies": 4,
+        "checkpoints": 6,
+        "geometrySha256": "f8ab9ba2e769919b0e89c4213dc35bfead62bcbadbbfe0bb15d8cb8af9f4c48f"
+      },
+      {
+        "act": 2,
+        "surfaces": 241,
+        "enemies": 31,
+        "checkpoints": 16,
+        "geometrySha256": "d979529c243d9065dcb56ef410b62ba8b4b326aecd2150445db25a5e36dd659e"
+      }
+    ],
+    "renderedViews": 324,
+    "pixelHashesMatched": 1290,
+    "endingFrames": 966,
+    "endingPoseTicksMatched": 966,
+    "movementTicksMatched": 1440,
+    "renderHashesSha256": "5696cf7e37b7698b5dba77b58f7e68a9727ec19a70a2c8c4d74fc9ed2dfdb379",
+    "endingPixelsSha256": "377b66b4ec461b3de0270edbb9f03359dcd6a3d8bd1fd8295562961c8fa2b882",
+    "movementTraceSha256": "8ad2c9d78d98daec844ea11325edb751d1a72259dc653cb3c7c14f75c023bdbc",
+    "endingResult": "win",
+    "baselineRetiredRendererCalls": {
+      "drawAct2ServiceStructures": 0,
+      "drawAct2CityDeck": 0,
+      "drawRoofFrontage": 0,
+      "drawFacadeBays": 0,
+      "drawDistrictArchitecture": 0,
+      "drawDebrisBeacon": 0,
+      "drawExposedFloorBody": 0,
+      "drawPixelAirDevice": 0,
+      "sprite": 0
+    },
+    "removedRequests": [
+      "objects.png"
+    ],
+    "addedRequests": [],
+    "pageErrors": [],
+    "routeReplayPhases": 7,
+    "routeTimingIdentical": true
+  },
+  "fallback": {
+    "cases": [
+      "single-recovered-sheet-missing",
+      "legacy-sonic",
+      "procedural-sonic",
+      "older-city",
+      "no-city"
+    ],
+    "matchedFrames": 80,
+    "pageErrors": []
+  },
+  "checks": {
+    "nodeBefore": {
+      "pass": 184,
+      "fail": 0,
+      "skipped": 0
+    },
+    "nodeAfter": {
+      "pass": 184,
+      "fail": 0,
+      "skipped": 0
+    },
+    "jsCjsSyntaxFiles": 53,
+    "pythonSyntax": true,
+    "diffWhitespace": true,
+    "identicalNamedFunctionBodies": 205,
+    "onlyChangedRetainedFunction": "makeOriginalCity: removed unused local allocation",
+    "existingBrowserSuite": true,
+    "endingRetryPauseActSwitch": true,
+    "pagesProjectPrefix": "/sonic-coast/",
+    "pagesPrefixBrowserSuite": true,
+    "deploymentWorkflowUnchanged": true,
+    "assetsByteIdentical": true,
+    "background": {
+      "seamJump": 0.15353535353535352,
+      "wrapChanged": 51,
+      "animationChanged": 180102,
+      "alphaMin": 119,
+      "alphaMax": 119,
+      "stableAnchors": 8
+    },
+    "boss": {
+      "status": "win",
+      "hits": 3,
+      "bites": 3,
+      "deaths": 0,
+      "damage": 0,
+      "frames": 2041,
+      "tailStrikes": 4,
+      "laserShots": 3
+    },
+    "independentReview": "No critical or important findings; static diff and provided evidence reviewed; automated checks run by primary agent."
+  },
+  "performance": {
+    "note": "Cloud Chromium batch-average draw times; variation is not evidence of a guaranteed FPS gain. Active drawing functions unchanged.",
+    "world": {
+      "before": {
+        "rail-0": {
+          "surface": "rail-0",
+          "medianMs": 3.9033333331346514,
+          "maxBatchMs": 4.3566666662693025
+        },
+        "rail-33": {
+          "surface": "rail-33",
+          "medianMs": 3.430000000198682,
+          "maxBatchMs": 5.428333333134651
+        },
+        "neon-0": {
+          "surface": "neon-0",
+          "medianMs": 4.383333333333334,
+          "maxBatchMs": 5.928333333134651
+        },
+        "secret-shared-rooftop": {
+          "surface": "secret-shared-rooftop",
+          "medianMs": 5.861666666467984,
+          "maxBatchMs": 6.541666666666667
+        },
+        "vent-entry": {
+          "surface": "vent-entry",
+          "medianMs": 4.369999999801318,
+          "maxBatchMs": 4.55
+        },
+        "summit-arena": {
+          "surface": "summit-arena",
+          "medianMs": 5.153333333134651,
+          "maxBatchMs": 5.920000000794729
+        }
+      },
+      "after": {
+        "rail-0": {
+          "surface": "rail-0",
+          "medianMs": 3.841666666666667,
+          "maxBatchMs": 4.111666666467984
+        },
+        "rail-33": {
+          "surface": "rail-33",
+          "medianMs": 3.5050000001986823,
+          "maxBatchMs": 5.761666666467985
+        },
+        "neon-0": {
+          "surface": "neon-0",
+          "medianMs": 4.464999999602636,
+          "maxBatchMs": 5.688333333532015
+        },
+        "secret-shared-rooftop": {
+          "surface": "secret-shared-rooftop",
+          "medianMs": 5.67666666607062,
+          "maxBatchMs": 6.393333332737287
+        },
+        "vent-entry": {
+          "surface": "vent-entry",
+          "medianMs": 4.626666667064031,
+          "maxBatchMs": 5.116666666666666
+        },
+        "summit-arena": {
+          "surface": "summit-arena",
+          "medianMs": 4.059999999403954,
+          "maxBatchMs": 4.263333333532016
+        }
+      }
+    },
+    "ending": {
+      "before": {
+        "desktop": {
+          "viewport": [
+            1440,
+            1000,
+            1
+          ],
+          "nativeCelBytes": 26645212,
+          "exposedCels": 86,
+          "supplementalCels": 47,
+          "poses": [
+            {
+              "beat": "kick",
+              "age": 18,
+              "medianMs": 5,
+              "maxBatchMs": 5.177,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "return",
+              "age": 26,
+              "medianMs": 4.927,
+              "maxBatchMs": 5.663,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "swing",
+              "age": 31,
+              "medianMs": 3.467,
+              "maxBatchMs": 5.04,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "realize",
+              "age": 25,
+              "medianMs": 4.86,
+              "maxBatchMs": 5.48,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "sigh",
+              "age": 40,
+              "medianMs": 3.12,
+              "maxBatchMs": 5.977,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            }
+          ]
+        },
+        "laptop": {
+          "viewport": [
+            1280,
+            800,
+            2
+          ],
+          "nativeCelBytes": 26645212,
+          "exposedCels": 86,
+          "supplementalCels": 47,
+          "poses": [
+            {
+              "beat": "kick",
+              "age": 18,
+              "medianMs": 5.817,
+              "maxBatchMs": 7.287,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "return",
+              "age": 26,
+              "medianMs": 5.463,
+              "maxBatchMs": 6.007,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "swing",
+              "age": 31,
+              "medianMs": 3.007,
+              "maxBatchMs": 5.527,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "realize",
+              "age": 25,
+              "medianMs": 5.16,
+              "maxBatchMs": 5.287,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "sigh",
+              "age": 40,
+              "medianMs": 3.1,
+              "maxBatchMs": 6.08,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            }
+          ]
+        }
+      },
+      "after": {
+        "desktop": {
+          "viewport": [
+            1440,
+            1000,
+            1
+          ],
+          "nativeCelBytes": 26645212,
+          "exposedCels": 86,
+          "supplementalCels": 47,
+          "poses": [
+            {
+              "beat": "kick",
+              "age": 18,
+              "medianMs": 5.18,
+              "maxBatchMs": 5.313,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "return",
+              "age": 26,
+              "medianMs": 5.137,
+              "maxBatchMs": 5.467,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "swing",
+              "age": 31,
+              "medianMs": 2.767,
+              "maxBatchMs": 5.237,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "realize",
+              "age": 25,
+              "medianMs": 4.983,
+              "maxBatchMs": 5.27,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "sigh",
+              "age": 40,
+              "medianMs": 2.86,
+              "maxBatchMs": 5.227,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            }
+          ]
+        },
+        "laptop": {
+          "viewport": [
+            1280,
+            800,
+            2
+          ],
+          "nativeCelBytes": 26645212,
+          "exposedCels": 86,
+          "supplementalCels": 47,
+          "poses": [
+            {
+              "beat": "kick",
+              "age": 18,
+              "medianMs": 4.97,
+              "maxBatchMs": 5.183,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "return",
+              "age": 26,
+              "medianMs": 5.177,
+              "maxBatchMs": 5.907,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "swing",
+              "age": 31,
+              "medianMs": 3.317,
+              "maxBatchMs": 5.593,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "realize",
+              "age": 25,
+              "medianMs": 5.017,
+              "maxBatchMs": 5.26,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            },
+            {
+              "beat": "sigh",
+              "age": 40,
+              "medianMs": 2.873,
+              "maxBatchMs": 5.23,
+              "extraWorldCanvases": 0,
+              "extraEndingCanvases": 0
+            }
+          ]
+        }
+      }
+    },
+    "supplementalRetry": true
+  },
+  "limits": [
+    "Actual automated Chromium execution; no exhaustive human playtest or human audio-listening pass.",
+    "No physical desktop/laptop/mobile devices, Safari or Firefox tests.",
+    "Static Pages compatibility checked locally; no GitHub Pages deployment triggered.",
+    "Rare combinations beyond sampled inputs/routes/error cases remain a residual regression risk."
+  ]
+}

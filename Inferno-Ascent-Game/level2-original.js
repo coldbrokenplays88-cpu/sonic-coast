@@ -124,6 +124,5 @@ function makeOriginalCity(){
  // The backdrop supplies distant buildings. Foreground structures attach to real roofs.
  for(const c of checkpoints){const s=surfaces.filter(s=>c.x>=s.x1&&c.x<=s.x2&&s.kind==='main').sort((a,b)=>Math.abs(a.y1+(c.x-a.x1)*(a.y2-a.y1)/(a.x2-a.x1)-c.y)-Math.abs(b.y1+(c.x-b.x1)*(b.y2-b.y1)/(b.x2-b.x1)-c.y))[0];if(s){c.y=s.y1+(c.x-s.x1)*(s.y2-s.y1)/(s.x2-s.x1);c.surfaceId=s.id;for(let i=1;i<=5;i++){const x=c.x+i*55;if(x<s.x2-20)rings.push({x,y:s.y1+(x-s.x1)*(s.y2-s.y1)/(s.x2-s.x1)-38,taken:false})}}}
  for(let i=0;i<surfaces.length;i++){const s=surfaces[i];if(!s.cityType)s.cityType=s.wallCap?'tower-cap':s.routeType==='boost'?'ruined-tunnel':s.kind==='moving'?'scaffold':s.kind==='crumble'?'broken-bridge':s.kind==='lower'?'ruined-walkway':s.roof?'rooftop':s.y1!==s.y2?'concrete-ramp':s.x2-s.x1>650?(i%3?'rooftop':'highway'):s.routeType==='skill'?'billboard':i%2?'fire-escape':'scaffold'}
- const routeCues=challenges.flatMap(c=>c.steps.slice(0,-1).map((id,i)=>({id,nextId:c.steps[i+1]})));
  return {surfaces,hazards,enemies,pads,rings,signs,checkpoints,sectors,loops,debris,events,buildings,challenges,springs};
 }
