@@ -73,7 +73,7 @@ function drawPolishedSpring(device){
 function drawBoostMonitor(monitor){
  if(!polishVisible(monitor.x,monitor.y,42,70))return;
  const broken=!!monitor.broken,phase=Math.floor(runFrames/8)%3;
- const runs=polishCached('monitor/'+(broken?'broken':phase),()=>polishCompile(polishRaster(27,31,({box,line})=>{
+ const runs=polishCached('monitor/'+(monitor.item||'boost')+'/'+(broken?'broken':phase),()=>polishCompile(polishRaster(27,31,({box,line,disk})=>{
   box(8,28,11,2,'#131c30');box(9,26,9,3,'#84909e');box(4,29,19,2,'#142036');box(5,28,17,1,'#b2bcc3');box(7,27,13,1,'#e1e4de');
   if(broken){
    box(3,20,21,5,'#424d63');box(2,21,3,4,'#9ca8b0');box(21,20,3,5,'#9ca8b0');box(6,22,15,3,'#172034');line(6,23,12,17,'#6b778b');line(13,24,17,18,'#8994a0');box(20,25,3,1,'#c6424a');return;
@@ -82,8 +82,9 @@ function drawBoostMonitor(monitor){
   box(5,5,17,17,'#202437');box(6,6,15,15,'#bc8438');box(7,7,13,13,'#141e35');box(7,6,13,1,'#ffda78');box(6,7,1,13,'#efbc56');box(20,7,1,13,'#987043');box(7,20,13,1,'#e5b150');
   // CRT glass: restrained cyan scanlines behind the unmistakable lightning.
   for(let y=9;y<19;y+=3)box(8,y,11,1,'#233248');box(8,8,9,1,'#39485d');box(8,9,1,5,'#56606b');
+  if(monitor.item==='bubble'){disk(14,14,5,5,'#6391de');disk(14,14,4,4,'#285383');line(10,12,12,10,'#eeffff',2);box(16,16,2,2,'#a4eaff');}else{
   const dx=phase===1?1:0;line(15+dx,9,10+dx,14,'#8bb8cf',2);line(14+dx,13,10+dx,18,'#8bb8cf',2);box(12+dx,12,5,2,'#8bb8cf');
-  line(15+dx,8,10+dx,13,'#edfaff',2);box(11+dx,12,6,2,'#edfaff');line(15+dx,13,10+dx,18,'#edfaff',2);box(14+dx,8,4,1,'#edfaff');
+  line(15+dx,8,10+dx,13,'#edfaff',2);box(11+dx,12,6,2,'#edfaff');line(15+dx,13,10+dx,18,'#edfaff',2);box(14+dx,8,4,1,'#edfaff');}
   box(3,24,2,1,'#e94e5b');box(22,24,2,1,'#e94e5b');box(9,24,3,1,'#dae3df');box(14,24,3,1,'#dae3df');
  }),0,13,30));
  polishDraw(runs,monitor.x,monitor.y);
@@ -265,5 +266,26 @@ function drawDamagedRoof(s){
   cityPixelRect(x+20,braceY+24,8,6,'#b39b96');cityPixelRect(x+26,braceY+36,6,6,'#8f94a1');
   cityPixelLine(x+64,y+10,x+72,y+30,'#0d172a',4);cityPixelLine(x+72,y+30,x+62,y+46,'#0d172a',4);
   cityPixelRect(x+6,y+126,60,8,'#172238');cityPixelRect(x+10,y+120,14,8,'#767084');cityPixelRect(x+34,y+116,20,12,'#544e68');cityPixelRect(x+38,y+116,12,2,'#9b7f8f');
+ }
+}
+
+// Small pixel outlines leave the detailed character artwork visible through the shield.
+function drawPlayerAbilities(){
+ if(p.shield==='bubble'){
+  const radius=p.bubbleSlam?29:31+Math.floor(runFrames/10)%2;
+  cityPixelOval(p.x,p.y-2,radius,radius,'#6eb9ed24');
+  for(let i=0;i<32;i++){
+   const a=i*Math.PI/16,b=(i+1)*Math.PI/16;
+   cityPixelLine(p.x+Math.cos(a)*radius,p.y-2+Math.sin(a)*radius,p.x+Math.cos(b)*radius,p.y-2+Math.sin(b)*radius,i>16&&i<25?'#e6ffff':'#659feab0',2);
+  }
+  cityPixelRect(p.x-20,p.y-23,8,2,'#ffffff');cityPixelRect(p.x-23,p.y-20,2,6,'#baffff');
+ }
+ if(p.underwater&&p.shield!=='bubble'&&p.airRemaining<=720&&mode==='playing'){
+  // Classic 5..0 bubble countdown, one number per two seconds during the last twelve.
+  const value=Math.min(5,Math.floor(Math.max(0,p.airRemaining-1)/120));
+  const glyph=['111101101101111','010110010010111','111001111100111','111001111001111','101101111001001','111100111001111'][value];
+  const x=p.x+24,y=p.y-52-(120-p.airRemaining%120)*.12;
+  cityPixelOval(x+6,y+10,13,16,'#102943cc');
+  for(let i=0;i<15;i++)if(glyph[i]==='1')cityPixelRect(x+i%3*4,y+Math.floor(i/3)*4,4,4,'#e6faff');
  }
 }

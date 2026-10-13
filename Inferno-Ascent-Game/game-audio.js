@@ -12,6 +12,9 @@
  // Short attacks give tactile cues; quieter noise underlies movement instead of
  // a competing melody. Frequencies and note sequences are authored for this game.
  const cues={
+  airWarning:{interval:.45,priority:4,voices:()=>[tone(880,880,.1,.16,'square'),tone(1100,1100,.1,.14,'triangle',.14)]},
+  bubbleBounce:{interval:.12,priority:3,voices:()=>[tone(480,150,.12,.16,'sine'),tone(190,440,.16,.12,'triangle',.06)]},
+  shieldBreak:{interval:.2,priority:4,voices:()=>[hiss(3200,700,.2,.18),tone(950,210,.18,.16,'sine')]},
   endingRocket:{interval:.3,priority:3,voices:()=>[hiss(500,3600,.65,.22),tone(180,600,.45,.13,'sawtooth')]},
   endingTeleport:{interval:.3,priority:4,voices:()=>[tone(420,1900,.24,.17,'sine'),tone(1470,320,.28,.14,'triangle'),hiss(2400,900,.18,.12)]},
   endingKick:{interval:.2,priority:4,voices:()=>[tone(190,45,.13,.26,'triangle'),hiss(4100,680,.18,.24),tone(980,1300,.08,.1,'sine')]},

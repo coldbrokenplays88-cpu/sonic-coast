@@ -6,9 +6,10 @@ function recoveredSonicPose(){
  const out=(state,frame,extra={})=>({state,frame,face,sheet,rotation:0,ball:false,...extra});
  const fastSheet=art.recoveredPeelout?'recoveredPeelout':sheet;
  if(p.hurt)return out('hurt',39);
+ if(p.airBoostActive)return out('boost',8+Math.floor(runFrames/2)%8,{sheet:art.supplemental?'supplemental':fastSheet});
  if(p.ground&&p.surface?.grindable){const entry=runFrames-p.grindEntryFrame;if(art.supplemental&&entry>=0&&entry<4)return out('grind-entry',24+Math.floor(entry/2),{sheet:'supplemental',face:Math.sign(p.vx)||face,rotation:Math.atan(pose(p.surface).slope)*(Math.sign(p.vx)||face)});const fast=p.boosting||speed>18||(p.grindFast&&speed>16);return out(fast?'grind-fast':'grind',art.supplemental?16+Math.floor(runFrames/(fast?2:4))%8:[35,36,37][Math.floor(runFrames/3)%3],{sheet:art.supplemental?'supplemental':fastSheet,face:Math.sign(p.vx)||face,rotation:Math.atan(pose(p.surface).slope)*(Math.sign(p.vx)||face)})}
  if(charge&&art.supplemental)return out('charge',30+Math.floor(runFrames/4)%2,{sheet:'supplemental'});
- if(p.rolling||charge)return out('roll',26+Math.floor(charge?runFrames/2:anim*.6)%3,{ball:true,diameter:p.ground?28:38,rotation:anim*.22});
+ if(p.rolling||charge||p.bubbleSlam)return out('roll',26+Math.floor(charge?runFrames/2:anim*.6)%3,{ball:true,diameter:p.ground?28:38,rotation:anim*.22});
  if(!p.ground){const exit=runFrames-p.grindExitFrame;if(art.supplemental&&exit>=0&&exit<4)return out('grind-exit',26+Math.floor(exit/2),{sheet:'supplemental'});const age=runFrames-p.poseJumpFrame;
   if(age>=0&&age<4&&p.vy<0)return out('takeoff',25);
   if(p.vy<-3)return out('rise',26+Math.floor(runFrames/3)%3,{ball:true,diameter:38,rotation:anim*.04});

@@ -7,7 +7,7 @@ function begin(a){a.run(`const roof=surfaceById('mid-pool-roof-exit');p.x=roof.x
 test('secret exploration collects its monitor and returns through the low route to the retained tower using ordinary input',()=>{
  const a=boot();begin(a);
  a.run("transferTo('mid-low-transfer-1')");a.run("transferTo('mid-secret-1')");for(let i=2;i<=3;i++)a.run(`transferTo('mid-secret-${i}')`);
- assert.equal(a.run('boost'),90);assert.equal(a.run('level.middleSection.secretRevealed'),true);
+ assert.equal(a.run('boost'),0);assert.equal(a.run('p.shield'),'bubble');assert.equal(a.run('level.middleSection.secretRevealed'),true);
  for(const id of ['mid-secret-2','mid-secret-1','mid-low-transfer-1','mid-right-guard-roof','mid-low-transfer-2','mid-low-transfer-3','mid-junction','mid-junction-building-1','mid-junction-building-2','secret-exit-uphill-link','neon-0']){if(id==='mid-low-transfer-2')a.run(clearGuardSource);a.run(`transferTo('${id}')`);}
  assert.equal(a.run('stats.deaths'),0);assert.equal(a.run('p.surface.id'),'neon-0');assert.ok(a.run("level.checkpoints[checkpoint].surfaceId==='mid-junction'"));
  a.run('boost=0;die()');assert.equal(a.run('p.surface.id'),'mid-junction');assert.equal(a.run('boost'),0);assert.equal(a.run('p.wrongRouteDrop'),false);

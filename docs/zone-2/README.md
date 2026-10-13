@@ -6,7 +6,7 @@ Read the [complete user-supplied master brief](high-security-laboratory-master-b
 
 The user has supplied this brief as reference only. They have not started the mockups and will provide and explain them when ready. Do not request those mockups prematurely. Do not generate laboratory artwork, graybox geometry, levels, gimmicks or code until the user explicitly orders development to begin.
 
-The immediate pending update concerns air boost, Bubble Shield and underwater behavior, not laboratory construction. That implementation is also on hold until the user gives the order. Research and test the real movement abilities before building shortcuts that depend on them. Merely recording these requirements does not authorize implementing them.
+The immediate pending update concerns air boost, Bubble Shield and underwater behavior, not laboratory construction. The user authorized this prerequisite implementation on October 13, 2026; see [the update report](../prerequisite-update.md). Laboratory construction remains on hold. Research and test the real movement abilities before building shortcuts that depend on them. Merely recording these requirements does not authorize implementing them.
 
 ## Confirmed clarifications after the master brief
 
