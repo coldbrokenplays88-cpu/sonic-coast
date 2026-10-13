@@ -90,3 +90,9 @@ test('warm world sprites draw one cached canvas with no geometry repaint',()=>{
 });
 
 test('fallen and damaged roofs show broken supports below their collision edge, with distant damage culled',()=>{const s=scene();s.run('level.surfaces=[{x1:100,x2:620,y1:200,y2:100,fallen:true}];');const rs=s.render('drawCityDetails()');assert.ok(rs.length>20,'destroyed building must have visible cracks, supports and rubble');for(const r of rs)assert.ok(r[1]>=200+(r[0]-100)*(-100/520)+20,'details below roof');s.run('level.surfaces[0].fallen=false');assert.equal(s.render('drawCityDetails()').length,0);s.run('level.surfaces[0].damaged=true');assert.ok(s.render('drawCityDetails()').length>20);assert.equal(s.render('cam=4000;drawCityDetails()').length,0)});
+
+test('bubble monitor shows its round blue icon and does not reuse the cached boost glyph',()=>{
+ const s=scene();const boost=s.render('drawBoostMonitor({x:120,y:260})');const bubble=s.render('drawBoostMonitor({x:120,y:260,item:"bubble"})');
+ assert.ok(bubble.some(r=>r[4]==='#6391de'),'bubble silhouette is present');assert.ok(bubble.some(r=>r[4]==='#285383'),'bubble interior is present');assert.notDeepEqual(bubble,boost);
+ const broken=s.render('drawBoostMonitor({x:120,y:260,item:"bubble",broken:true})');assert.ok(!broken.some(r=>r[4]==='#6391de'));
+});

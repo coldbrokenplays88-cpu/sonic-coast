@@ -1,9 +1,16 @@
 'use strict';
 function freeRailBoost(){return !!(p.ground&&p.surface?.grindable&&p.surface.infiniteBoost)}
 function updateBoostState(want){
- if(!want)p.boostLocked=false;
- const free=freeRailBoost();
- p.boosting=!!(want&&(free||boost>0&&!p.boostLocked)&&!charge&&!p.hurt&&!p.wrongRouteDrop);
+ if(!want){p.boostLocked=false;p.groundBoostHeld=false;p.airBoostFrames=0;}
+ if(p.ground){p.airBoostUsed=false;p.airBoostFrames=0;p.groundBoostHeld=want;}
+ const free=freeRailBoost(),eligible=!charge&&!p.hurt&&!p.wrongRouteDrop&&!p.bubbleSlam;
+ if(p.airBoostRequested&&want&&!p.ground&&!p.airBoostUsed&&boost>0&&!p.boostLocked&&eligible){
+  p.airBoostUsed=true;p.airBoostFrames=18;p.groundBoostHeld=false;p.scriptedLaunch=false;p.airSpeedLimit=null;p.airLaunchUntil=0;
+  p.vx=p.face*23;p.vy=0;p.jumpAttack=true;
+ }
+ p.airBoostRequested=false;
+ p.boosting=!!(want&&(p.ground||p.groundBoostHeld||p.airBoostFrames>0)&&(free||boost>0&&!p.boostLocked)&&eligible);
+ if(p.boosting&&p.airBoostFrames>0){p.vy=0;p.airBoostFrames--;p.airBoostActive=true;}else p.airBoostActive=false;
  if(p.boosting&&!free){boost=Math.max(0,boost-.5);if(!boost)p.boostLocked=true}
  return p.boosting;
 }
@@ -11,6 +18,7 @@ function measurementSpeed(){if(p.loop)return Math.abs(p.loop.speed);if(p.ground&
 function configureBoostMonitors(l){
  l.monitors??=[];l.surfaceIndex=new Map(l.surfaces.map(s=>[s.id,s]));
  if(l.act!==2){l.buildings??=[];for(const s of l.surfaces){s.cityType=s.y1!==s.y2?'concrete-ramp':s.kind==='main'?'rooftop':s.kind==='moving'?'freight-lift':s.kind==='crumble'?'broken-bridge':'fire-escape';if(s.kind==='main'){s.roof=true;l.buildings.push({x:s.x1,y:Math.min(s.y1,s.y2)+26,w:s.x2-s.x1,h:1000,seed:Math.floor(s.x1/1800),roofId:s.id})}}}
+ const shield=l.monitors.find(m=>m.id==='mid-secret-monitor'&&!m.required);if(shield)shield.item='bubble';
  const add=(id,s,x,required=false)=>{if(!s||l.monitors.some(m=>m.id===id))return;l.monitors.push({id,x,y:s.y1+(x-s.x1)*(s.y2-s.y1)/(s.x2-s.x1),surfaceId:s.id,broken:false,required})};
  // Required pickups are on safe approach decks, before a mandatory wall or boost launch.
  for(const h of l.hazards.filter(h=>h.type==='breakable'&&!h.secret)){
@@ -30,7 +38,7 @@ function monitorPose(m){const s=m.surfaceId&&surfaceById(m.surfaceId);if(!s)retu
 function collectBoostMonitors(){for(const m of level.monitors||[]){if(m.broken)continue;const q=monitorPose(m);if(Math.abs(p.x-q.x)>34||feet()<q.y-58||feet()-bodyHeight()>q.y)continue;
  const attacking=p.boosting||p.rolling&&Math.abs(p.vx)>2||!p.ground&&p.jumpAttack;
  if(!attacking)continue;
- m.broken=true;m.brokenAt=runFrames;boost=BOOST_MAX;p.boostLocked=false;score+=100;stats.monitors=(stats.monitors||0)+1;sparks(q.x,q.y-28,12,'#9deaff');
+ m.broken=true;m.brokenAt=runFrames;if(m.item==='bubble'){p.shield='bubble';p.airRemaining=1800;}else{boost=BOOST_MAX;p.boostLocked=false;}score+=100;stats.monitors=(stats.monitors||0)+1;sparks(q.x,q.y-28,12,'#9deaff');
  if(typeof gameSound==='function')gameSound('monitor');
 }}
 function resetBoostMonitors(){for(const m of level.monitors||[])m.broken=false}

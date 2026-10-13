@@ -1,0 +1,170 @@
+{
+  "baseline": "302098fe63885d032239801d35a8586600a627ab",
+  "tests": {
+    "passed": 254,
+    "failed": 0,
+    "syntaxFiles": 61
+  },
+  "browser": {
+    "acts": [
+      {
+        "act": 1,
+        "initialBurst": {
+          "used": true,
+          "vx": 23,
+          "vy": 0,
+          "boost": 89.5
+        }
+      },
+      {
+        "act": 2,
+        "initialBurst": {
+          "used": true,
+          "vx": 23,
+          "vy": 0,
+          "boost": 89.5
+        }
+      }
+    ],
+    "pool": {
+      "travelFrames": 251,
+      "authoredSpringRampExit": true,
+      "drowningAndPause": true,
+      "shieldBreathing": true
+    },
+    "screenshots": [
+      "act-1-air-boost.png",
+      "act-2-air-boost.png",
+      "bubble-monitor.png",
+      "bubble-shield.png",
+      "bubble-slam.png",
+      "pool-entry.png",
+      "drowning-warning.png",
+      "shield-1024.png",
+      "shield-1440.png"
+    ],
+    "errors": [],
+    "shield": {
+      "collected": true,
+      "gaugeUnchanged": true,
+      "slamRebounded": true
+    }
+  },
+  "routes": {
+    "note": "Representative button-driven replays; these are not an optimal-speed proof or human playtest.",
+    "results": [
+      {
+        "phase": 0,
+        "lowFrames": 533,
+        "highFrames": 437,
+        "lowSeconds": 8.883333333333333,
+        "highSeconds": 7.283333333333333,
+        "savedSeconds": 1.6
+      },
+      {
+        "phase": 40,
+        "lowFrames": 533,
+        "highFrames": 433,
+        "lowSeconds": 8.883333333333333,
+        "highSeconds": 7.216666666666667,
+        "savedSeconds": 1.6666666666666667
+      },
+      {
+        "phase": 80,
+        "lowFrames": 533,
+        "highFrames": 434,
+        "lowSeconds": 8.883333333333333,
+        "highSeconds": 7.233333333333333,
+        "savedSeconds": 1.65
+      },
+      {
+        "phase": 120,
+        "lowFrames": 533,
+        "highFrames": 433,
+        "lowSeconds": 8.883333333333333,
+        "highSeconds": 7.216666666666667,
+        "savedSeconds": 1.6666666666666667
+      },
+      {
+        "phase": 180,
+        "lowFrames": 533,
+        "highFrames": 433,
+        "lowSeconds": 8.883333333333333,
+        "highSeconds": 7.216666666666667,
+        "savedSeconds": 1.6666666666666667
+      },
+      {
+        "phase": 240,
+        "lowFrames": 533,
+        "highFrames": 436,
+        "lowSeconds": 8.883333333333333,
+        "highSeconds": 7.266666666666667,
+        "savedSeconds": 1.6166666666666667
+      },
+      {
+        "phase": 280,
+        "lowFrames": 533,
+        "highFrames": 437,
+        "lowSeconds": 8.883333333333333,
+        "highSeconds": 7.283333333333333,
+        "savedSeconds": 1.6
+      }
+    ]
+  },
+  "performance": {
+    "noShield": {
+      "medianDrawMs": 6.325,
+      "maxBatchMs": 8.973333332935969
+    },
+    "bubble": {
+      "medianDrawMs": 6.406666666269302,
+      "maxBatchMs": 6.856666667262713
+    },
+    "averageUpdateMs": 0.12508333335320154
+  },
+  "ending": {
+    "frames": 322,
+    "captureFps": 20,
+    "seconds": 16.1,
+    "beats": [
+      "escape",
+      "aim",
+      "rocket",
+      "kick",
+      "return",
+      "explode",
+      "jetpack",
+      "offer",
+      "approach",
+      "nod",
+      "annoy",
+      "swing",
+      "realize",
+      "vanish",
+      "sigh",
+      "end"
+    ],
+    "events": [
+      "rocketFire",
+      "shadowTeleport",
+      "kickImpact",
+      "podExplosion",
+      "jetpack",
+      "emeraldOffer",
+      "chaosCharge",
+      "chaosWarp",
+      "relievedSigh"
+    ],
+    "errors": [],
+    "assetRetry": true,
+    "pauseResume": true,
+    "actSwitch": true
+  },
+  "review": {
+    "findings": 2,
+    "fixed": [
+      "Same-tick ground boost+jump retains held boost without spending air burst",
+      "Shield slam rebounds from solid hazard tops as well as level surfaces"
+    ]
+  }
+}
