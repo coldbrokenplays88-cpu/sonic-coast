@@ -5,32 +5,51 @@ function addBlimpRoute(l){
  const ramp=l.surfaces.find(s=>s.id==='draw-loop-launch'),exit=l.surfaces.find(s=>s.id==='draw-hall-exit');
  const ox=ramp.x2-31300,oy=ramp.y2+3020;
  const add=(id,x1,x2,y1,y2=y1,extra={})=>{const s={id,x1:x1+ox,x2:x2+ox,y1:y1+oy,y2:y2+oy,kind:'main',cityType:'blimp',...extra};l.surfaces.push(s);return s;};
- const entry=add('blimp-entry',32715,32773,-3750,-3750,{cityType:'blimp-anchor',entrySpeed:18,entryDirection:1});
+ const entry=add('blimp-entry',32715,32773,-3750,-3750,{cityType:'blimp-anchor'});
  const points=[[31500,-3850],[31600,-3770],[31700,-3720],[31800,-3700],[31900,-3700],[32000,-3720],[32100,-3750],[32200,-3780],[32370,-3810]];
  const curve=[];for(let i=0;i<points.length-1;i++)curve.push(add('blimp-curve-'+i,points[i][0],points[i+1][0],points[i][1],points[i+1][1]));
- const moving=add('blimp-moving',30170,31120,-3810,-3810,{kind:'moving',motion:{type:'view-flight',axis:'x',distance:-160,speed:2,startedAt:null}});
- const reward=add('blimp-reward',29270,29920,-3690);
+ const moving=add('blimp-moving',30620,31120,-3810,-3810,{kind:'moving',motion:{type:'flight',axis:'x',distance:-710,speed:3,startedAt:null}});
+ const reward=add('blimp-reward',29170,29820,-3690);
  l.springs.push({id:'blimp-entry-spring',surfaceId:entry.id,x:32744+ox,y:entry.y1,power:11,launchX:-20},
-  {id:'blimp-return-spring',surfaceId:reward.id,x:29300+ox,y:reward.y1,power:32,launchX:28});
+  {id:'blimp-return-spring',surfaceId:reward.id,x:29200+ox,y:reward.y1,power:32,launchX:28});
  // Stay above the first jump and blimps, then meet the hallway exit exactly.
  // The endpoint meets the far end of the existing hallway-exit roof.
  add('blimp-return-rail',30800,34800,-4400,-4400,{kind:'express',grindable:true,cityType:'grind-rail',blimpRail:true});
  add('blimp-return-descent',34800,36500,-4400,exit.y2-oy,{kind:'express',grindable:true,cityType:'grind-rail',blimpRail:true});
- l.monitors??=[];for(const [id,item,x] of [['blimp-life','life',29445],['blimp-shield','bubble',29365]])l.monitors.push({id,item,x:x+ox,y:reward.y1,surfaceId:reward.id,broken:false});
+ l.monitors??=[];for(const [id,item,x] of [['blimp-life','life',29345],['blimp-shield','bubble',29265]])l.monitors.push({id,item,x:x+ox,y:reward.y1,surfaceId:reward.id,broken:false});
  // Keep rings clear of the monitor screens and the return spring.
  for(let x=reward.x1+370;x<reward.x2-40;x+=76)l.rings.push({x,y:reward.y1-38,taken:false});
- l.blimpRoute={entryId:entry.id,movingId:moving.id,rewardId:reward.id,exitId:exit.id,blimps:[
+ l.blimpRoute={entered:false,entryJumpFrame:-1,entryJumpSpeed:0,departureFrame:-100,departureSpeed:0,entryId:entry.id,movingId:moving.id,rewardId:reward.id,exitId:exit.id,blimps:[
   {id:'damaged',surfaces:curve.map(s=>s.id),damaged:true},
   {id:'moving',surfaces:[moving.id]}, {id:'reward',surfaces:[reward.id]}
  ]};
  return l;
 }
-function resetBlimpRoute(){const s=level.blimpRoute&&surfaceById(level.blimpRoute.movingId);if(s){s.motion.startedAt=null;for(const d of level.springs)if(d.id==='blimp-entry-spring'||d.id==='blimp-return-spring')delete d.firedAt;}}
-function updateBlimpRoute(){
- const s=level.blimpRoute&&surfaceById(level.blimpRoute.movingId);if(!s||s.motion.startedAt!==null)return;
- const q=pose(s);
- // Match the rendered hull, fins and gondola, including vertical visibility.
- if(q.x2+42>=cam&&q.x1-42<=cam+W/zoom&&q.y1+234>=camY&&q.y1<=camY+H/zoom)s.motion.startedAt=runFrames;
+function resetBlimpRoute(){const s=level.blimpRoute&&surfaceById(level.blimpRoute.movingId);if(s){s.motion.startedAt=null;Object.assign(level.blimpRoute,{entered:false,entryJumpFrame:-1,entryJumpSpeed:0,departureFrame:-100,departureSpeed:0});for(const d of level.springs)if(d.id==='blimp-entry-spring'||d.id==='blimp-return-spring')delete d.firedAt;}}
+function recordBlimpJump(surface,speed){
+ const r=level.blimpRoute;if(!r)return;
+ const fromRamp=surface?.id==='draw-loop-launch'||!surface&&coyote>0&&runFrames-r.departureFrame<=tuning.coyote;
+ r.entryJumpFrame=fromRamp?runFrames:-1;r.entryJumpSpeed=surface?Math.abs(speed):r.departureSpeed;
+}
+function recordBlimpDeparture(s){
+ const r=level.blimpRoute;if(r&&s.id==='draw-loop-launch'){r.departureFrame=runFrames;r.departureSpeed=Math.abs(p.vx)*Math.hypot(1,pose(s).slope);}
+}
+function onBlimpLanding(s){
+ const r=level.blimpRoute;if(!r)return;
+ if(s.id!==r.entryId)r.entryJumpFrame=-1;
+ if(s.id===r.movingId&&s.motion.startedAt===null)s.motion.startedAt=runFrames;
+}
+function qualifyingBlimpEntry(){const r=level.blimpRoute;return r&&r.entryJumpFrame===p.poseJumpFrame&&r.entryJumpSpeed>=24&&!p.airBoostUsed;}
+function blimpSpringContact(d){
+ // Sweep the player's collision rectangle against the rendered angled cap.
+ // The raster's cap is 40 units above its pivot with a 24-unit half width.
+ const a=polishDirection(d)*Math.PI/8,tx=Math.cos(a),ty=Math.sin(a),nx=ty,ny=-tx;
+ const cx=d.x+nx*40,cy=d.y+ny*40,normalRadius=Math.abs(nx)*13;
+ const before=(p.lastX-cx)*nx+(p.lastY+20-cy)*ny-normalRadius,after=(p.x-cx)*nx+(feet()-cy)*ny-normalRadius;
+ if(before< -8||after>0||after>=before)return false;
+ const t=Math.max(0,Math.min(1,before/(before-after))),x=p.lastX+(p.x-p.lastX)*t,y=p.lastY+20+(feet()-p.lastY-20)*t;
+ const halfHeight=bodyHeight()/2,tangent=(x-cx)*tx+(y-halfHeight-cy)*ty;
+ return Math.abs(tangent)<=24+Math.abs(tx)*13+Math.abs(ty)*halfHeight;
 }
 
 const blimpTextures=new Map();

@@ -1,8 +1,8 @@
 {
   "desktop": "dash and boost, fast and cautious, both rewards, zero hits/deaths",
   "laptop": "route and final render passed",
-  "renderedFrames": 345,
-  "meanDrawMs": 1.12,
-  "maxDrawMs": 20.8,
+  "renderedFrames": 344,
+  "meanDrawMs": 1.07,
+  "maxDrawMs": 25.4,
   "errors": []
 }

@@ -1,7 +1,7 @@
 'use strict';
 // Shared surface queries and contact resolution; no stage initialization here.
 
-function pose(s,t=runFrames){let dx=0,dy=0;if(s.motion){const m=s.motion,n=m.type==='view-flight'?(m.startedAt===null?0:Math.sign(m.distance)*Math.min(Math.abs(m.distance),Math.max(0,t-m.startedAt)*m.speed)):Math.sin(t/m.period*Math.PI*2+m.phase)*m.amp;if(s.motion.axis==='x')dx=n;else dy=n}return {x1:s.x1+dx,x2:s.x2+dx,y1:s.y1+dy,y2:s.y2+dy,slope:(s.y2-s.y1)/(s.x2-s.x1)}}
+function pose(s,t=runFrames){let dx=0,dy=0;if(s.motion){const m=s.motion,n=m.type==='flight'?(m.startedAt===null?0:Math.sign(m.distance)*Math.min(Math.abs(m.distance),Math.max(0,t-m.startedAt)*m.speed)):Math.sin(t/m.period*Math.PI*2+m.phase)*m.amp;if(s.motion.axis==='x')dx=n;else dy=n}return {x1:s.x1+dx,x2:s.x2+dx,y1:s.y1+dy,y2:s.y2+dy,slope:(s.y2-s.y1)/(s.x2-s.x1)}}
 
 function surfaceVelocity(s){const a=pose(s,runFrames-1),b=pose(s);return {x:b.x1-a.x1,y:b.y1-a.y1}}
 
@@ -48,7 +48,7 @@ function applySurfaceMotion(){
  }
 }
 
-function leaveSurface(s){const slope=pose(s).slope,carry=surfaceVelocity(s);p.vy=p.vx*slope+carry.y;p.coyoteLaunchVy=p.vy;p.vx+=carry.x;p.ground=false;p.surface=null;}
+function leaveSurface(s){recordBlimpDeparture(s);const slope=pose(s).slope,carry=surfaceVelocity(s);p.vy=p.vx*slope+carry.y;p.coyoteLaunchVy=p.vy;p.vx+=carry.x;p.ground=false;p.surface=null;}
 
 function moveAndResolveSurfaces(){
  const surfaceVy=p.ground&&p.surface?p.vx*pose(p.surface).slope:0;

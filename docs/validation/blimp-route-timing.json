@@ -4,23 +4,23 @@
     {
       "phase": 120,
       "normalFrames": 880,
-      "blimpFrames": 690,
-      "cautiousFrames": 797,
-      "savedSeconds": 3.17
+      "blimpFrames": 687,
+      "cautiousFrames": 872,
+      "savedSeconds": 3.22
     },
     {
       "phase": 180,
       "normalFrames": 820,
-      "blimpFrames": 690,
-      "cautiousFrames": 797,
-      "savedSeconds": 2.17
+      "blimpFrames": 687,
+      "cautiousFrames": 872,
+      "savedSeconds": 2.22
     },
     {
       "phase": 240,
       "normalFrames": 757,
-      "blimpFrames": 690,
-      "cautiousFrames": 797,
-      "savedSeconds": 1.12
+      "blimpFrames": 687,
+      "cautiousFrames": 872,
+      "savedSeconds": 1.17
     }
   ]
 }

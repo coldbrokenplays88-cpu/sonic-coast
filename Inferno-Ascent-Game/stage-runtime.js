@@ -23,9 +23,10 @@ const neonExpressAct2Runtime={
   if(p.wrongRouteDrop&&s.fallen){p.wrongRouteDrop=false;p.vx=0;}
  },
  afterLanding(s){
+  onBlimpLanding(s);
   if(s.poolCurve){p.poolApproach=false;p.rolling=true;p.roll=true;p.rollAge=0;p.lowRollFrames=0;}
  },
- updateWorld(){updateAct2();updateMiddleSection();updateBlimpRoute()},
+ updateWorld(){updateAct2();updateMiddleSection()},
  enemyDamage(e){
   if(e.id==='mid-wrong-way-guard'&&p.hurt&&mode==='playing')beginWrongRouteDrop();
  },

@@ -4,6 +4,7 @@
 function jump(){
  p.scriptedLaunch=false;p.jumpAttack=true;if(p.surface?.grindable)p.grindExitFrame=runFrames;p.poseJumpFrame=runFrames;
  const surface=p.ground?p.surface:null,slope=surface?pose(surface).slope:0,norm=Math.hypot(1,slope),speed=p.vx*norm;
+ recordBlimpJump(surface,speed);
  const lift=p.jumpCut?6.8:13.4+Math.min(2.4,Math.max(0,Math.abs(speed)-14)*.25),impulse=lift*(p.underwater?7/13:1);
  // Keep the full surface/platform velocity; an upright jump adds vertical lift.
  const carry=surface?surfaceVelocity(surface):{x:0,y:0};
