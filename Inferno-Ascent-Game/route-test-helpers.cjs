@@ -22,23 +22,4 @@ const transferSource=`function transferTo(id,vertical=false){const target=surfac
  update();
  }throw Error('Unreachable '+id+' from '+p.surface?.id);
 }`;
-// Keep Right held through the trial's two rooftop jumps; no aiming or braking bot.
-const rooftopFlowSource=`function stepRooftopFlow(holdFrames=8,jumpOffset=0){
- const q=window.rooftopReplay??(window.rooftopReplay={jumpFrame:-1,fromId:null,landings:[],minSpeed:Math.abs(p.vx)});
- if(p.ground&&['draw-loop-payoff-roof','draw-next-roof'].includes(p.surface?.id)&&q.fromId!==p.surface.id&&p.x>=p.surface.x2-100+jumpOffset){q.fromId=p.surface.id;press('Space',true);q.jumpFrame=runFrames;}
- if(q.jumpFrame>=0&&runFrames===q.jumpFrame+holdFrames)release('Space',true);
- update();q.minSpeed=Math.min(q.minSpeed,Math.abs(p.vx));
- if(p.ground&&q.landings.at(-1)?.id!==p.surface?.id)q.landings.push({id:p.surface?.id,x:p.x,speed:Math.abs(p.vx),room:p.surface?.x2-p.x,frame:runFrames});
- return p.surface?.id==='draw-burning-approach';
-}`;
-const rooftopRecoverySource=`function stepRooftopRecovery(){
- const q=window.rooftopRecovery??(window.rooftopRecovery={jumpFrame:-1});
- if(q.jumpFrame<0&&p.surface?.id==='draw-roof-recovery-terrace'){
-  keys.delete('ArrowRight');keys.delete('ArrowLeft');
-  if(p.vx>0)keys.add('ArrowLeft');else{press('Space',true);q.jumpFrame=runFrames;}
- }else{keys.delete('ArrowLeft');keys.add('ArrowRight');}
- if(q.jumpFrame>=0){keys.delete('ArrowLeft');keys.add('ArrowRight');}
- if(q.jumpFrame>=0&&runFrames===q.jumpFrame+12)release('Space',true);
- update();return p.surface?.id==='draw-burning-approach';
-}`;
-module.exports={aimHighSource,clearGuardSource,transferSource,rooftopFlowSource,rooftopRecoverySource};
+module.exports={aimHighSource,clearGuardSource,transferSource};

@@ -53,15 +53,8 @@ function makeLevel2(){
  const descent=deck('draw-loop-descent',13500,13680,-1500,-1030,{cityType:'concrete-ramp'}),loopFlat1=deck('draw-loop-flat-1',13680,14050,-1030),loopLink=deck('draw-loop-link',14050,14180,-1030,-1080,{cityType:'concrete-ramp'}),loopFlat2=deck('draw-loop-flat-2',14180,14500,-1080),launch=deck('draw-loop-launch',14500,14800,-1080,-1300,{cityType:'concrete-ramp'});
  coil('draw-loop-1',13830,-1030,130);coil('draw-loop-2',14360,-1080,95);
  const loopLanding=deck('draw-loop-payoff-roof',15500,16100,-1460);pit(14800,15500,-820);
- // Trial: rising roof transfers accept earned speed without braking at each landing.
- const next1=deck('draw-next-roof',16200,16980,-1540),burnApproach=deck('draw-burning-approach',17100,17800,-1620);
- const service=deck('draw-roof-recovery-walk',16020,16700,-1260,-1260,{kind:'recovery',cityType:'fire-escape'});
- const returnRamp=deck('draw-roof-recovery-ramp',16700,17100,-1260,-1510,{kind:'recovery',cityType:'concrete-ramp'});
- // Keep the lower ramp below both roofs; its terrace needs a normal return jump.
- const serviceTerrace=deck('draw-roof-recovery-terrace',17100,17640,-1510,-1510,{kind:'recovery',cityType:'fire-escape'});
- challenge('draw-light-roofs','BURNING QUARTER',[loopLanding.id,next1.id,burnApproach.id],{lowerBranch:{steps:[service.id,returnRamp.id,serviceTerrace.id,burnApproach.id]}});mark(loopLanding,15640,'04 / BURNING QUARTER');
- signs.push({x:16240,y:-1320,text:'SERVICE WALKWAY →',type:'recovery'});
- signs.push({x:17220,y:-1570,text:'ROOFTOP ↑',type:'jump'});
+ const next1=deck('draw-next-roof',16300,16720,-1540),burnApproach=deck('draw-burning-approach',16920,17400,-1620);
+ challenge('draw-light-roofs','BURNING QUARTER',[loopLanding.id,next1.id,burnApproach.id]);mark(loopLanding,15640,'04 / BURNING QUARTER');pit(16100,16920,-1110);
  const burnLeft=ledge('draw-burning-left',16570,16870,-1730),burnRight=ledge('draw-burning-right',17090,17410,-1840),burnTop=ledge('draw-burning-top',16650,17000,-1950);
  const carrier=ledge('draw-moving-carrier',17150,17600,-2070,{kind:'moving',cityType:'crane-hoist',motion:{axis:'x',amp:480,period:420,phase:-Math.PI/2}});
  const hallway=deck('draw-hazard-hall',17950,19650,-2070,-2070,{cityType:'interior'});
