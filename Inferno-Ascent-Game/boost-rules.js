@@ -6,7 +6,7 @@ function updateBoostState(want){
  const free=freeRailBoost(),eligible=!charge&&!p.hurt&&!p.wrongRouteDrop&&!p.bubbleSlam;
  if(p.airBoostRequested&&want&&!p.ground&&!p.airBoostUsed&&boost>0&&!p.boostLocked&&eligible){
   p.airBoostUsed=true;p.airBoostFrames=18;p.groundBoostHeld=false;p.scriptedLaunch=false;p.airSpeedLimit=null;p.airLaunchUntil=0;
-  p.vx=p.face*23;p.vy=0;p.jumpAttack=true;
+  p.vx=p.face*Math.max(23,p.vx*p.face);p.vy=0;p.jumpReleaseVy=null;p.jumpAttack=true;
  }
  p.airBoostRequested=false;
  p.boosting=!!(want&&(p.ground||p.groundBoostHeld||p.airBoostFrames>0)&&(free||boost>0&&!p.boostLocked)&&eligible);

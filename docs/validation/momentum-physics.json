@@ -1,0 +1,419 @@
+{
+  "baseMain": "0e8fddb9b6ab07c10bc22713bfa286bd07dd955b",
+  "comparisonBaseline": "8b984f966db7ef7a4083035160722b9c8f9ada6f",
+  "tests": {
+    "passed": 284,
+    "failed": 0,
+    "newMomentumTests": 30,
+    "syntaxFiles": 63
+  },
+  "comparison": {
+    "errors": [],
+    "versions": {
+      "before": {
+        "metrics": [
+          {
+            "act": 1,
+            "run": {
+              "atTwoSeconds": 14,
+              "top": 14
+            },
+            "dash": {
+              "initial": 22.850810293000002,
+              "afterOneSecond": 20.08271833909272
+            },
+            "rollingDescent": {
+              "atOneSecond": 28.624465060503752,
+              "atThreeSeconds": 27.766068076877133,
+              "worldVx": 23.28028252882654
+            },
+            "runningDescent": {
+              "atThreeSeconds": 28.624465060503752
+            },
+            "steepLow": {
+              "distance": 62.41658924766716,
+              "speed": 1.4161839058362218
+            },
+            "steepFast": {
+              "distance": 56.245386671426786,
+              "speed": 2.0719320768584737
+            },
+            "braking": {
+              "distance": 236.46811415952834,
+              "ticks": 21,
+              "vx": 0
+            },
+            "precision": {
+              "distance": 0.5550000000000637,
+              "vx": 0
+            },
+            "airCoasting": 21.659934031132853,
+            "airCountersteering": 9
+          },
+          {
+            "act": 2,
+            "run": {
+              "atTwoSeconds": 14,
+              "top": 14
+            },
+            "dash": {
+              "initial": 22.850810293000002,
+              "afterOneSecond": 20.08271833909272
+            },
+            "rollingDescent": {
+              "atOneSecond": 28.624465060503752,
+              "atThreeSeconds": 27.766068076877133,
+              "worldVx": 23.28028252882654
+            },
+            "runningDescent": {
+              "atThreeSeconds": 28.624465060503752
+            },
+            "steepLow": {
+              "distance": 62.41658924766716,
+              "speed": 1.4161839058362218
+            },
+            "steepFast": {
+              "distance": 56.245386671426786,
+              "speed": 2.0719320768584737
+            },
+            "braking": {
+              "distance": 236.46811415952834,
+              "ticks": 21,
+              "vx": 0
+            },
+            "precision": {
+              "distance": 0.5550000000000637,
+              "vx": 0
+            },
+            "airCoasting": 21.659934031132853,
+            "airCountersteering": 9
+          }
+        ],
+        "loops": [
+          {
+            "entry": 2,
+            "frames": 32,
+            "completed": false,
+            "exitSpeed": 6.085588715933889,
+            "boost": 90
+          },
+          {
+            "entry": 14,
+            "frames": 21,
+            "completed": false,
+            "exitSpeed": 5.14024294873414,
+            "boost": 90
+          },
+          {
+            "entry": 20,
+            "frames": 58,
+            "completed": true,
+            "exitSpeed": 19.50653404837036,
+            "boost": 90
+          },
+          {
+            "entry": 26,
+            "frames": 42,
+            "completed": true,
+            "exitSpeed": 23.594876974725373,
+            "boost": 90
+          }
+        ]
+      },
+      "after": {
+        "metrics": [
+          {
+            "act": 1,
+            "run": {
+              "atTwoSeconds": 14,
+              "top": 14
+            },
+            "dash": {
+              "initial": 25.961000000000002,
+              "afterOneSecond": 23.091867769180386
+            },
+            "rollingDescent": {
+              "atOneSecond": 30.32008181040249,
+              "atThreeSeconds": 38.79317108966257,
+              "worldVx": 32.52588665618601
+            },
+            "runningDescent": {
+              "atThreeSeconds": 31.6753605614429
+            },
+            "steepLow": {
+              "distance": -20.768999999997504,
+              "speed": 0.5187677707799512
+            },
+            "steepFast": {
+              "distance": 180.66268379011444,
+              "speed": 15.002186801675174
+            },
+            "braking": {
+              "distance": 236.46811415952834,
+              "ticks": 21,
+              "vx": 0
+            },
+            "precision": {
+              "distance": 0.5550000000000637,
+              "vx": 0
+            },
+            "airCoasting": 21.659934031132853,
+            "airCountersteering": 9
+          },
+          {
+            "act": 2,
+            "run": {
+              "atTwoSeconds": 14,
+              "top": 14
+            },
+            "dash": {
+              "initial": 25.961000000000002,
+              "afterOneSecond": 23.091867769180386
+            },
+            "rollingDescent": {
+              "atOneSecond": 30.32008181040249,
+              "atThreeSeconds": 38.79317108966257,
+              "worldVx": 32.52588665618601
+            },
+            "runningDescent": {
+              "atThreeSeconds": 31.6753605614429
+            },
+            "steepLow": {
+              "distance": -20.768999999997504,
+              "speed": 0.5187677707799512
+            },
+            "steepFast": {
+              "distance": 180.66268379011444,
+              "speed": 15.002186801675174
+            },
+            "braking": {
+              "distance": 236.46811415952834,
+              "ticks": 21,
+              "vx": 0
+            },
+            "precision": {
+              "distance": 0.5550000000000637,
+              "vx": 0
+            },
+            "airCoasting": 21.659934031132853,
+            "airCountersteering": 9
+          }
+        ],
+        "loops": [
+          {
+            "entry": 2,
+            "frames": 48,
+            "completed": false,
+            "exitSpeed": 1.9557884836356763,
+            "boost": 90
+          },
+          {
+            "entry": 14,
+            "frames": 24,
+            "completed": false,
+            "exitSpeed": 3.5384840609545885,
+            "boost": 90
+          },
+          {
+            "entry": 20,
+            "frames": 60,
+            "completed": true,
+            "exitSpeed": 19.12954734628189,
+            "boost": 90
+          },
+          {
+            "entry": 26,
+            "frames": 38,
+            "completed": true,
+            "exitSpeed": 24.93377466288049,
+            "boost": 90
+          }
+        ]
+      }
+    },
+    "authoredLoopRoutes": [
+      {
+        "speed": 14,
+        "tap": false,
+        "coyoteJump": false,
+        "ticks": 231,
+        "surface": "draw-loop-payoff-roof",
+        "deaths": 0,
+        "vx": 14,
+        "loops": 2,
+        "boost": 0
+      },
+      {
+        "speed": 26,
+        "tap": true,
+        "coyoteJump": false,
+        "ticks": 172,
+        "surface": "draw-loop-payoff-roof",
+        "deaths": 0,
+        "vx": 17.44012383080947,
+        "loops": 2,
+        "boost": 0
+      },
+      {
+        "speed": 14,
+        "tap": false,
+        "coyoteJump": true,
+        "ticks": 229,
+        "surface": "draw-loop-payoff-roof",
+        "deaths": 0,
+        "vx": 14,
+        "loops": 2,
+        "boost": 0
+      }
+    ],
+    "platforming": {
+      "climb": [
+        {
+          "id": "neon-1",
+          "ticks": 58
+        },
+        {
+          "id": "neon-2",
+          "ticks": 62
+        },
+        {
+          "id": "neon-3",
+          "ticks": 45
+        },
+        {
+          "id": "neon-4",
+          "ticks": 78
+        },
+        {
+          "id": "neon-5",
+          "ticks": 45
+        }
+      ],
+      "highRouteFrames": 259,
+      "railSurface": "mid-junction",
+      "railSpeed": 28.65173000928192,
+      "boost": 0,
+      "deaths": 0
+    }
+  },
+  "routes": {
+    "note": "Representative button-driven replays; these are not an optimal-speed proof or human playtest.",
+    "results": [
+      {
+        "phase": 0,
+        "lowFrames": 521,
+        "highFrames": 441,
+        "lowSeconds": 8.683333333333334,
+        "highSeconds": 7.35,
+        "savedSeconds": 1.3333333333333333
+      },
+      {
+        "phase": 40,
+        "lowFrames": 521,
+        "highFrames": 437,
+        "lowSeconds": 8.683333333333334,
+        "highSeconds": 7.283333333333333,
+        "savedSeconds": 1.4
+      },
+      {
+        "phase": 80,
+        "lowFrames": 521,
+        "highFrames": 438,
+        "lowSeconds": 8.683333333333334,
+        "highSeconds": 7.3,
+        "savedSeconds": 1.3833333333333333
+      },
+      {
+        "phase": 120,
+        "lowFrames": 521,
+        "highFrames": 437,
+        "lowSeconds": 8.683333333333334,
+        "highSeconds": 7.283333333333333,
+        "savedSeconds": 1.4
+      },
+      {
+        "phase": 180,
+        "lowFrames": 521,
+        "highFrames": 437,
+        "lowSeconds": 8.683333333333334,
+        "highSeconds": 7.283333333333333,
+        "savedSeconds": 1.4
+      },
+      {
+        "phase": 240,
+        "lowFrames": 521,
+        "highFrames": 440,
+        "lowSeconds": 8.683333333333334,
+        "highSeconds": 7.333333333333333,
+        "savedSeconds": 1.35
+      },
+      {
+        "phase": 280,
+        "lowFrames": 521,
+        "highFrames": 441,
+        "lowSeconds": 8.683333333333334,
+        "highSeconds": 7.35,
+        "savedSeconds": 1.3333333333333333
+      }
+    ]
+  },
+  "performance": {
+    "before": {
+      "medianUpdateMs": 0.10099999994039535,
+      "maxUpdateBatchMs": 0.11150000005960464,
+      "medianDrawMs": 4.3979999995231625
+    },
+    "after": {
+      "medianUpdateMs": 0.10450000017881393,
+      "maxUpdateBatchMs": 0.11449999988079071,
+      "medianDrawMs": 4.466000000238418
+    }
+  },
+  "ending": {
+    "frames": 322,
+    "captureFps": 20,
+    "seconds": 16.1,
+    "beats": [
+      "escape",
+      "aim",
+      "rocket",
+      "kick",
+      "return",
+      "explode",
+      "jetpack",
+      "offer",
+      "approach",
+      "nod",
+      "annoy",
+      "swing",
+      "realize",
+      "vanish",
+      "sigh",
+      "end"
+    ],
+    "events": [
+      "rocketFire",
+      "shadowTeleport",
+      "kickImpact",
+      "podExplosion",
+      "jetpack",
+      "emeraldOffer",
+      "chaosCharge",
+      "chaosWarp",
+      "relievedSigh"
+    ],
+    "errors": [],
+    "assetRetry": true,
+    "pauseResume": true,
+    "actSwitch": true
+  },
+  "review": {
+    "findings": 3,
+    "fixed": [
+      "Coyote jump preserves surface launch velocity",
+      "Inherited downward velocity above terminal speed decays smoothly",
+      "Inactive contact transfers surface velocity before detachment"
+    ]
+  },
+  "geometryChanges": []
+}
