@@ -1,7 +1,7 @@
 'use strict';
 // Shared surface queries and contact resolution; no stage initialization here.
 
-function pose(s,t=runFrames){let dx=0,dy=0;if(s.motion){const n=Math.sin(t/s.motion.period*Math.PI*2+s.motion.phase)*s.motion.amp;if(s.motion.axis==='x')dx=n;else dy=n}return {x1:s.x1+dx,x2:s.x2+dx,y1:s.y1+dy,y2:s.y2+dy,slope:(s.y2-s.y1)/(s.x2-s.x1)}}
+function pose(s,t=runFrames){let dx=0,dy=0;if(s.motion){const m=s.motion,n=m.type==='view-flight'?(m.startedAt===null?0:Math.sign(m.distance)*Math.min(Math.abs(m.distance),Math.max(0,t-m.startedAt)*m.speed)):Math.sin(t/m.period*Math.PI*2+m.phase)*m.amp;if(s.motion.axis==='x')dx=n;else dy=n}return {x1:s.x1+dx,x2:s.x2+dx,y1:s.y1+dy,y2:s.y2+dy,slope:(s.y2-s.y1)/(s.x2-s.x1)}}
 
 function surfaceVelocity(s){const a=pose(s,runFrames-1),b=pose(s);return {x:b.x1-a.x1,y:b.y1-a.y1}}
 
@@ -62,7 +62,7 @@ function integrateSurfaceStep(dt){
  // Follow connected slopes without launching or snapping across a void.
  if(wasGround&&oldSurface&&active(oldSurface)){const q=pose(oldSurface);if(p.x>=q.x1-FOOT_RADIUS&&p.x<=q.x2+FOOT_RADIUS){p.y=yOn(oldSurface,Math.max(q.x1,Math.min(q.x2,p.x)))-20;p.vy=0}else{let join=null;for(const s of level.surfaces){const z=pose(s),y=yOn(s,p.x);const seam=p.vx>=0?q.x2:q.x1,edgeY=p.vx>=0?q.y2:q.y1,connected=seam>=z.x1-2&&seam<=z.x2+2&&Math.abs(yOn(s,seam)-edgeY)<2;if(active(s)&&p.x>=z.x1&&p.x<=z.x2&&(Math.abs(y-oldFoot)<11||connected)){join={s,y};break}}if(join)land(join.s,join.y);else{leaveSurface(oldSurface)}}}else{if(wasGround&&oldSurface)leaveSurface(oldSurface);else{p.ground=false;p.surface=null}}
  if(!p.ground){p.vy=p.airBoostActive?0:p.vy>20?20+(p.vy-20)*Math.pow(.999,dt):Math.min(20,p.vy+.58*(p.underwater?2/7:1)*dt);p.y+=p.vy*dt;let hit=null;
-  for(const s of level.surfaces){if(p.wrongRouteDrop&&!s.fallen)continue;if(!active(s)||(s.entrySpeed&&!s.solidAtAnySpeed&&Math.abs(p.vx)<s.entrySpeed))continue;const q=pose(s),oldQ=pose(s,runFrames-1);
+  for(const s of level.surfaces){if(p.wrongRouteDrop&&!s.fallen)continue;if(!active(s)||(s.entrySpeed&&!s.solidAtAnySpeed&&(Math.abs(p.vx)<s.entrySpeed||s.entryDirection&&Math.sign(p.vx)!==s.entryDirection)))continue;const q=pose(s),oldQ=pose(s,runFrames-1);
    const oldFloor=oldQ.y1+(oldX-oldQ.x1)*oldQ.slope,newFloor=yOn(s,p.x),d0=oldFoot-oldFloor,d1=feet()-newFloor;
    if(d0>5||d1<0||d1-d0<=0)continue;const t=Math.max(0,-d0/(d1-d0)),crossX=oldX+(p.x-oldX)*t;
    const left=oldQ.x1+(q.x1-oldQ.x1)*t,right=oldQ.x2+(q.x2-oldQ.x2)*t;

@@ -38,7 +38,7 @@ function monitorPose(m){const s=m.surfaceId&&surfaceById(m.surfaceId);if(!s)retu
 function collectBoostMonitors(){for(const m of level.monitors||[]){if(m.broken)continue;const q=monitorPose(m);if(Math.abs(p.x-q.x)>34||feet()<q.y-58||feet()-bodyHeight()>q.y)continue;
  const attacking=p.boosting||p.rolling&&Math.abs(p.vx)>2||!p.ground&&p.jumpAttack;
  if(!attacking)continue;
- m.broken=true;m.brokenAt=runFrames;if(m.item==='bubble'){p.shield='bubble';p.airRemaining=1800;}else{boost=BOOST_MAX;p.boostLocked=false;}score+=100;stats.monitors=(stats.monitors||0)+1;sparks(q.x,q.y-28,12,'#9deaff');
+ m.broken=true;m.brokenAt=runFrames;if(m.item==='bubble'){p.shield='bubble';p.airRemaining=1800;}else if(m.item==='life'){lives++;}else{boost=BOOST_MAX;p.boostLocked=false;}score+=100;stats.monitors=(stats.monitors||0)+1;sparks(q.x,q.y-28,12,'#9deaff');
  if(typeof gameSound==='function')gameSound('monitor');
 }}
 function resetBoostMonitors(){for(const m of level.monitors||[])m.broken=false}
