@@ -82,12 +82,13 @@ function drawBoostMonitor(monitor){
   box(5,5,17,17,'#202437');box(6,6,15,15,'#bc8438');box(7,7,13,13,'#141e35');box(7,6,13,1,'#ffda78');box(6,7,1,13,'#efbc56');box(20,7,1,13,'#987043');box(7,20,13,1,'#e5b150');
   // CRT glass: restrained cyan scanlines behind the unmistakable lightning.
   for(let y=9;y<19;y+=3)box(8,y,11,1,'#233248');box(8,8,9,1,'#39485d');box(8,9,1,5,'#56606b');
-  if(monitor.item==='bubble'){disk(14,14,5,5,'#6391de');disk(14,14,4,4,'#285383');line(10,12,12,10,'#eeffff',2);box(16,16,2,2,'#a4eaff');}else{
+  if(monitor.item==='bubble'){disk(14,14,5,5,'#6391de');disk(14,14,4,4,'#285383');line(10,12,12,10,'#eeffff',2);box(16,16,2,2,'#a4eaff');}else if(monitor.item!=='life'){
   const dx=phase===1?1:0;line(15+dx,9,10+dx,14,'#8bb8cf',2);line(14+dx,13,10+dx,18,'#8bb8cf',2);box(12+dx,12,5,2,'#8bb8cf');
   line(15+dx,8,10+dx,13,'#edfaff',2);box(11+dx,12,6,2,'#edfaff');line(15+dx,13,10+dx,18,'#edfaff',2);box(14+dx,8,4,1,'#edfaff');}
   box(3,24,2,1,'#e94e5b');box(22,24,2,1,'#e94e5b');box(9,24,3,1,'#dae3df');box(14,24,3,1,'#dae3df');
  }),0,13,30));
  polishDraw(runs,monitor.x,monitor.y);
+ if(monitor.item==='life'&&!broken&&art.recoveredSpeedster){ctx.drawImage(art.recoveredSpeedster,20,362,131,87,Math.round(monitor.x-12),Math.round(monitor.y-46),24,16);}
 }
 function drawPoolBooster(device){
  if(!polishVisible(device.x,device.y,58,90))return;

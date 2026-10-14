@@ -46,7 +46,7 @@ function updateAct2(){if(level.act!==2)return;
 }
 // Predict an upcoming foot crossing for framing only; never alter movement or landing.
 function predictLanding(){if(level.act!==2||p.ground||p.loop||Math.abs(p.vx)<9)return null;let best=null;
- for(const s of level.surfaces){if(!active(s)||(s.entrySpeed&&!s.solidAtAnySpeed&&Math.abs(p.vx)<s.entrySpeed))continue;const q=pose(s),floor=q.y1+(p.x-q.x1)*q.slope,b=p.vy+.29-q.slope*p.vx,c=feet()-floor,d=b*b-1.16*c;if(d<0)continue;let t=(-b+Math.sqrt(d))/.58;
+ for(const s of level.surfaces){if(!active(s)||(s.entrySpeed&&!s.solidAtAnySpeed&&(Math.abs(p.vx)<s.entrySpeed||s.entryDirection&&Math.sign(p.vx)!==s.entryDirection)))continue;const q=pose(s),floor=q.y1+(p.x-q.x1)*q.slope,b=p.vy+.29-q.slope*p.vx,c=feet()-floor,d=b*b-1.16*c;if(d<0)continue;let t=(-b+Math.sqrt(d))/.58;
   const cap=Math.max(0,(20-p.vy)/.58);if(t>cap){const rise=p.vy*cap+.29*cap*(cap+1),den=20-q.slope*p.vx;if(den<=0)continue;t=(floor-feet()-rise+20*cap)/den}
   const x=p.x+p.vx*t;if(t<.5||t>60||x<q.x1-FOOT_RADIUS||x>q.x2+FOOT_RADIUS)continue;if(!best||t<best.t)best={id:s.id,x,y:yOn(s,x),t};
  }return best
@@ -112,13 +112,13 @@ function drawAct2Background(){const progress=Math.max(0,Math.min(1,p.x/END)),im=
  ctx.fillStyle=`rgba(32,9,38,${.05+progress*.07})`;ctx.fillRect(0,0,W,H);
  for(let i=0;i<16+progress*18;i++){const x=((i*137-cam*.18+Math.sin(step*.012+i)*8)%W+W)%W,y=((i*91-step*(.5+progress*.6))%H+H)%H;ctx.fillStyle=i%3?'#ffb54c70':'#ff6b3160';ctx.fillRect(x,y,2,3)}
 }
-function drawAct2Structures(){for(const b of level.buildings)drawCityCutaways(b);drawPixelCityStructures()}
+function drawAct2Structures(){for(const b of level.buildings)drawCityCutaways(b);drawPixelCityStructures();drawBlimpRoute()}
 function drawAct2Bulkhead(h){const bottom=Math.min(h.y+h.h,camY+H/zoom+50),top=Math.max(h.y,camY-40),x=h.x;if(bottom<=top)return;
  ctx.fillStyle='#18233d';ctx.fillRect(x,top,h.w,bottom-top);ctx.fillStyle='#53647e';ctx.fillRect(x,top,5,bottom-top);ctx.fillStyle='#8c5972';ctx.fillRect(x+h.w-5,top,5,bottom-top);ctx.fillStyle='#77c8dc';ctx.fillRect(x,h.y,h.w,3);
  for(let y=Math.ceil(top/64)*64;y<bottom;y+=64){cityPixelLine(x+8,y,x+h.w-8,y+54,'#7891a155',2);cityPixelLine(x+h.w-8,y,x+8,y+54,'#7891a155',2);cityPixelRect(x+5,y,4,4,'#8ba8b1');cityPixelRect(x+h.w-9,y,4,4,'#8ba8b1')}
 }
 // Surface skins reuse collision tops; every solid highlight follows yOn exactly.
-function drawAct2Supports(s,left,right){if(s.grindable)drawGrindRail(s,left,right);else drawPixelCityDeck(s,left,right)}
+function drawAct2Supports(s,left,right){if(s.grindable)drawGrindRail(s,left,right);else if(s.cityType==='blimp-anchor'){cityPixelRect(left,yOn(s,left),right-left,8,'#799eac');cityPixelRect(left,yOn(s,left)+8,right-left,8,'#28374e')}else if(s.cityType!=='blimp')drawPixelCityDeck(s,left,right)}
 function drawAct2World(){
  for(const l of level.loops){if(l.x+l.r<cam-50||l.x-l.r>cam+W/zoom+50)continue;drawPixelCityLoop(l)}
  for(const d of level.debris){if(!d.triggered||d.age>d.warn+d.fall+120||d.x<cam-100||d.x>cam+W/zoom+100)continue;

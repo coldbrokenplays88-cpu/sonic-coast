@@ -17,7 +17,7 @@ const neonExpressAct1Runtime={
 };
 
 const neonExpressAct2Runtime={
- reset(){resetAct2()},
+ reset(){resetAct2();resetBlimpRoute()},
  motion(){return updateMiddleMotion()},
  beforeLanding(s){
   if(p.wrongRouteDrop&&s.fallen){p.wrongRouteDrop=false;p.vx=0;}
@@ -25,7 +25,7 @@ const neonExpressAct2Runtime={
  afterLanding(s){
   if(s.poolCurve){p.poolApproach=false;p.rolling=true;p.roll=true;p.rollAge=0;p.lowRollFrames=0;}
  },
- updateWorld(){updateAct2();updateMiddleSection()},
+ updateWorld(){updateAct2();updateMiddleSection();updateBlimpRoute()},
  enemyDamage(e){
   if(e.id==='mid-wrong-way-guard'&&p.hurt&&mode==='playing')beginWrongRouteDrop();
  },

@@ -1,0 +1,26 @@
+{
+  "comparison": "Same loop-roof start, real full Spin Dash, same hallway-exit seam. Normal route uses its available boost through the guarded hallway; blimps use their return spring. Clean representative replays, not every possible human execution.",
+  "results": [
+    {
+      "phase": 120,
+      "normalFrames": 880,
+      "blimpFrames": 690,
+      "cautiousFrames": 797,
+      "savedSeconds": 3.17
+    },
+    {
+      "phase": 180,
+      "normalFrames": 820,
+      "blimpFrames": 690,
+      "cautiousFrames": 797,
+      "savedSeconds": 2.17
+    },
+    {
+      "phase": 240,
+      "normalFrames": 757,
+      "blimpFrames": 690,
+      "cautiousFrames": 797,
+      "savedSeconds": 1.12
+    }
+  ]
+}
