@@ -14,19 +14,12 @@ const{startLoopSource,blimpReplaySource}=require('../blimp-test-helpers.cjs');
   }
   // Render every second simulation tick. Capture native canvas pixels, avoiding
   // browser screenshot waits or any scaling of the improved sprite pipeline.
-  await page.evaluate(()=>{restart();startLoop();testControlled=true;cam=p.x-400;camY=p.y-300;zoom=.8;window.blimpCapture={jumped:false,turned:false,returned:false};});
+  await page.evaluate(()=>{restart();startLoop();testControlled=true;cam=p.x-400;camY=p.y-300;zoom=.8;window.blimpStepper=blimpSteps();});
   const dir=process.env.BLIMP_CAPTURE_DIR;if(dir)fs.mkdirSync(dir,{recursive:true});let done=false,drawTotal=0,maxDraw=0,rendered=0;
-  for(let f=0;f<850;f+=2){
+  for(let f=0;f<1200;f+=2){
    const result=await page.evaluate(()=>{
-    const state=window.blimpCapture;
-    for(let i=0;i<2;i++){
-     if(!state.jumped&&p.surface?.id==='draw-loop-launch'&&p.x>=p.surface.x2-45){press('Space',true);state.jumped=true;}
-     if(!state.turned&&level.springs.find(s=>s.id==='blimp-entry-spring').firedAt!==undefined){release('Space',true);release('ArrowRight',true);press('ArrowLeft',true);state.turned=true;}
-     if(state.turned&&!state.returned&&!p.ground&&p.x<surfaceById('blimp-curve-7').x2&&p.vy>0&&feet()>surfaceById('blimp-curve-4').y1-60)press('ArrowDown',true);
-     if(!state.returned&&level.springs.find(s=>s.id==='blimp-return-spring').firedAt!==undefined){release('Space',true);release('ArrowLeft',true);release('ArrowDown',true);press('ArrowRight',true);state.returned=true;}
-     update();
-    }
-    const begin=performance.now();draw();return {drawMs:performance.now()-begin,done:p.x>surfaceById('draw-hall-exit').x2+FOOT_RADIUS&&p.ground,deaths:stats.deaths};
+    let done=false;for(let i=0;i<2;i++){const next=window.blimpStepper.next();if(next.done){done=true;break;}}
+    const begin=performance.now();draw();return {drawMs:performance.now()-begin,done,deaths:stats.deaths};
    });
    assert.equal(result.deaths,0);drawTotal+=result.drawMs;maxDraw=Math.max(maxDraw,result.drawMs);rendered++;
    if(dir){const png=await page.evaluate(()=>canvas.toDataURL('image/png').split(',')[1]);fs.writeFileSync(path.join(dir,'frame-'+String(f/2).padStart(4,'0')+'.png'),Buffer.from(png,'base64'));}

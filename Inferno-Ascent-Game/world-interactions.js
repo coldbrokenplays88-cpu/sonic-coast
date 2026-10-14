@@ -11,7 +11,9 @@ function collectWorldRings(){
 
 function activateWorldDevices(){
  for(const pad of level.pads)if(p.ground&&Math.abs(p.x-pad.x)<25&&Math.abs(feet()-pad.y)<8&&(pad.cityVent||pad.poolBooster||p.vx>0)&&(!pad.sealedBy||level.hazards.find(h=>h.id===pad.sealedBy)?.broken)){if(pad.poolBooster){p.vx=Math.max(p.vx,pad.launchX);p.rolling=true;p.roll=true;p.rollAge=0;p.poolExit=true;pad.firedAt=runFrames;gameSound('pool',{launch:true})}else if(pad.cityVent)launchAirDevice(pad);else p.vx=Math.max(p.vx,18.5)}
- for(const spring of level.springs||[]){const device=airDevicePose(spring);if(p.ground&&p.surface?.id===spring.surfaceId&&Math.abs(p.x-device.x)<23)launchAirDevice(spring);}
+ for(const spring of level.springs||[]){const device=airDevicePose(spring);const grounded=p.ground&&p.surface?.id===spring.surfaceId&&Math.abs(p.x-device.x)<23;
+  if(spring.id==='blimp-entry-spring'){if(qualifyingBlimpEntry()&&(grounded||blimpSpringContact(device))){level.blimpRoute.entered=true;launchAirDevice(spring);}}
+  else if(grounded&&(spring.id!=='blimp-return-spring'||level.blimpRoute?.entered))launchAirDevice(spring);}
 }
 
 function updateWorldEnemies(){
