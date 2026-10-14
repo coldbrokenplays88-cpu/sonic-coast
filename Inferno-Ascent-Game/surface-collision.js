@@ -38,10 +38,11 @@ function applySurfaceMotion(){
   const slope=pose(p.surface).slope,norm=Math.hypot(1,slope),dir=Number(keys.has('ArrowRight')||keys.has('KeyD'))-Number(keys.has('ArrowLeft')||keys.has('KeyA'));
   // Releasing direction can hold a precise stance; active travel and rolling feel gravity.
   if(!p.surface.grindable&&!charge&&(p.rolling||p.boosting||dir||Math.abs(p.vx*norm)>=3)){
-   const wet=p.underwater?2/7:1,gravity=.58*slope/norm;
-   // Footsteps dissipate terrain energy; a rolling ball avoids that contact loss.
-   const footLoss=!p.rolling&&!p.boosting&&Math.abs(p.vx*norm)>=3?Math.sign(p.vx)*.25*Math.abs(slope)/norm:0;
-   p.vx+=(gravity-footLoss)*wet/norm;
+   // Sonic 1/2 slope-force ratios: walk .125, roll downhill .3125,
+   // roll uphill .078125. Scale together to retain our .58 downhill roll.
+   const wet=p.underwater?2/7:1,uphill=p.vx*slope<0;
+   const force=p.rolling?(uphill?.145:.58):.232;
+   p.vx+=force*slope*wet/(norm*norm);
   }
   const carry=surfaceVelocity(p.surface);p.x+=carry.x;p.y+=carry.y;
  }

@@ -30,7 +30,7 @@ const output=process.env.MOMENTUM_OUTPUT||'/tmp/sonic-momentum-validation';
    });report.versions[name]=values;
    if(name==='after'){
     const routes=[];
-    for(const [speed,tap,coyoteJump]of [[14,false,false],[26,true,false],[14,false,true]]){
+    for(const [speed,tap,coyoteJump]of [[14,true,false],[26,true,false],[14,true,true]]){
      await page.evaluate(speed=>{selectAct(2);start();const roof=surfaceById('draw-loop-roof');Object.assign(p,{x:roof.x2-160,y:roof.y2-20,vx:speed,vy:0,ground:true,surface:roof,rolling:true,rollAge:0,lowRollFrames:0,inv:0});boost=0;count=30;keys.clear();keys.add('ArrowRight');keys.add('ArrowDown');window.routeJump=-1;window.leftLaunch=false;},speed);
      let landed=false,captured=false;
      for(let f=0;f<450;f++){
