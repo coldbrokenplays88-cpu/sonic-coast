@@ -2,6 +2,36 @@ const {test}=require('node:test');const assert=require('node:assert/strict');con
 const near=(a,b,t=1e-7)=>assert.ok(Math.abs(a-b)<t,`${a} != ${b}`);
 function track(act=2,slope=0,speed=0,rolling=false){const a=boot(act);a.run(`level.surfaces=[{id:'track',x1:0,x2:100000,y1:-40000,y2:${-40000+slope*100000},kind:'main'}];level.hazards=[];level.deathZones=[];level.pads=[];level.springs=[];level.loops=[];level.floorAt=()=>1e6;Object.assign(p,{x:2000,y:yOn(level.surfaces[0],2000)-20,vx:${speed}/Math.hypot(1,${slope}),vy:0,ground:true,surface:level.surfaces[0],rolling:${rolling},rollAge:0,lowRollFrames:0});keys.clear();${rolling?"keys.add('ArrowDown');":''}`);return a}
 function advance(a,n=1,key=''){a.run(`keys.delete('ArrowRight');keys.delete('ArrowLeft');${key?`keys.add('${key}');`:''}for(let i=0;i<${n};i++){runFrames++;updateMovement()}`)}
+for(const act of [1,2])for(const direction of [-1,1])test(`act ${act}: classic uphill/downhill resistance ratios in direction ${direction}`,()=>{
+ const force=(slope,rolling)=>{const a=track(act,slope,20*direction,rolling),v=a.run('p.vx');a.run('applySurfaceMotion()');return (a.run('p.vx')-v)*Math.hypot(1,slope)};
+ near(force(-direction,true),-direction*.145/Math.SQRT2);
+ near(force(direction,true),direction*.58/Math.SQRT2);
+ near(force(-direction,false),-direction*.232/Math.SQRT2);
+ near(force(direction,false),direction*.232/Math.SQRT2);
+});
+for(const act of [1,2])test(`act ${act}: releasing Down preserves a fast spin dash roll, braking still returns precise control`,()=>{
+ const a=track(act);a.run("press('ArrowDown');press('Space');for(let i=0;i<80;i++){runFrames++;updateMovement()}release('ArrowDown');release('Space');");
+ advance(a,60,'ArrowRight');assert.equal(a.run('p.rolling'),true);assert.ok(a.run('p.vx')>23);
+ advance(a,70,'ArrowLeft');assert.equal(a.run('p.rolling'),false);assert.ok(Math.abs(a.run('p.vx'))<14);
+});
+for(const act of [1,2])test(`act ${act}: ordinary rolling release and scripted pool controls retain their previous behavior`,()=>{
+ const a=track(act,0,18,true);a.run("release('ArrowDown');");advance(a,10);assert.equal(a.run('p.rolling'),false);
+});
+for(const act of [1,2])test(`act ${act}: low-speed rolling inputs cannot manufacture steep uphill momentum`,()=>{
+ for(const direction of [-1,1]){const a=track(act,-direction,0);a.run("press('ArrowDown')");const x=a.run('p.x');advance(a,80,direction>0?'ArrowRight':'ArrowLeft');assert.ok((a.run('p.x')-x)*direction<=0);}
+ const b=track(act,0,.1,true);advance(b,1,'ArrowLeft');assert.equal(b.run('p.vx'),0);
+});
+test('the real spin dash release clears both loops and passively launches to the next roof without jump or boost',()=>{
+ const a=boot();a.run(`const roof=surfaceById('draw-loop-roof');Object.assign(p,{x:roof.x1+100,y:roof.y1-20,vx:0,vy:0,ground:true,surface:roof,inv:0});boost=0;count=4;keys.clear();press('ArrowDown');press('Space');for(let i=0;i<80;i++)update();release('ArrowDown');release('Space');press('ArrowRight');`);
+ let landed=false;for(let f=0;f<450;f++){a.run('update()');if(a.run("p.surface?.id==='draw-loop-payoff-roof'")){landed=true;break;}assert.equal(a.run('stats.deaths'),0);}
+ assert.ok(landed);assert.equal(a.run('stats.loops'),2);assert.equal(a.run('stats.jumps'),0);assert.equal(a.run('boost'),0);
+ a.run("release('ArrowRight');press('ArrowLeft');for(let i=0;i<90&&p.vx>0;i++)update()");
+ assert.equal(a.run('p.vx'),0);assert.equal(a.run('p.rolling'),false);assert.equal(a.run("p.surface?.id"),'draw-loop-payoff-roof');assert.equal(a.run('stats.deaths'),0);
+});
+test('retry and a spring end Spin Dash roll persistence without contaminating later rolls',()=>{
+ const a=boot();a.run('p.dashRolling=true;p.rolling=true;respawn()');assert.equal(a.run('p.dashRolling'),false);
+ a.run(`p.dashRolling=true;p.rolling=true;launchAirDevice(level.springs[0]);updateRoll(false)`);assert.equal(a.run('p.dashRolling'),false);
+});
 for(const act of [1,2]){
  test(`act ${act}: downhill terrain builds speed beyond running without a 24 clamp`,()=>{const a=track(act,.65,14,true);advance(a,180);assert.ok(a.run('measurementSpeed()')>32);assert.equal(a.run('p.rolling'),true)});
  test(`act ${act}: long and steep slopes reward rolling more than shallow descents`,()=>{const short=track(act,.15,14,true),steep=track(act,.8,14,true);advance(short,60);advance(steep,60);assert.ok(steep.run('measurementSpeed()')>short.run('measurementSpeed()')+6)});
@@ -17,7 +47,7 @@ test('rapid roll toggling never provides free acceleration on flat terrain',()=>
 test('walking off a moving surface inherits its velocity just like jumping',()=>{const a=track();a.run(`level.surfaces[0].x2=2100;level.surfaces[0].motion={axis:'x',amp:100,period:120,phase:0};runFrames=1;const q=pose(p.surface);p.x=q.x2+8;p.y=q.y2-20;p.vx=10;window.launchCarry=surfaceVelocity(p.surface).x;moveAndResolveSurfaces()`);assert.equal(a.run('p.ground'),false);near(a.run('p.vx'),10+a.run('window.launchCarry'))});
 test('a failed loop can be attempted again after returning to its entrance',()=>{const a=boot();a.run(`p.vx=14;keys.clear();beginLoop(level.loops[0]);for(let i=0;i<200&&p.loop;i++)updateLoop()`);assert.equal(a.run('level.loops[0].used'),false)});
 test('releasing jump trims jump lift without erasing upward ramp momentum',()=>{const a=track(2,-.6,26);const inherited=a.run('p.vx')*-.6;a.run(`jump();release('Space',true)`);assert.ok(a.run('p.vy')<inherited-4)});
-for(const [speed,tap]of [[14,false],[20,true],[26,true]])test(`authored descent, two loops and gap work without boost at approach ${speed}`,()=>{
+for(const [speed,tap]of [[14,true],[20,true],[26,true]])test(`authored descent, two loops and gap work without boost at approach ${speed}`,()=>{
  const a=boot();a.run(`const roof=surfaceById('draw-loop-roof');Object.assign(p,{x:roof.x2-160,y:roof.y2-20,vx:${speed},vy:0,ground:true,surface:roof,rolling:true,rollAge:0,lowRollFrames:0});boost=0;count=30;keys.clear();keys.add('ArrowRight');keys.add('ArrowDown');window.momentumJumpFrame=-1;`);
  let landed=false;for(let f=0;f<450;f++){a.run(`if(window.momentumJumpFrame<0&&p.ground&&p.surface?.id==='draw-loop-launch'&&p.x>=p.surface.x2-45){press('Space',true);window.momentumJumpFrame=runFrames;}if(${tap}&&window.momentumJumpFrame>=0&&runFrames===window.momentumJumpFrame+1)release('Space',true);update();`);if(a.run("p.surface?.id==='draw-loop-payoff-roof'")){landed=true;break;}assert.equal(a.run('stats.deaths'),0);}
  assert.ok(landed);assert.equal(a.run('stats.loops'),2);assert.equal(a.run('boost'),0);assert.ok(a.run('p.vx')>=14);
@@ -28,6 +58,6 @@ test('rolling downhill has a meaningful terrain-speed advantage over running the
 test('a coyote jump keeps the vertical launch velocity of the surface just left',()=>{const a=track(2,-.6,26);a.run(`const s=p.surface;s.x2=2100;s.y2=s.y1-1260;p.x=s.x2+8;p.y=s.y2-20;moveAndResolveSurfaces();window.inheritedVy=p.vy;jump()`);assert.ok(a.run('p.vy')<a.run('window.inheritedVy')-13)});
 test('a fast downhill launch is not abruptly clipped to the ordinary terminal fall speed',()=>{const a=track(2,2.6,40);a.run(`const s=p.surface;s.x2=2100;s.y2=s.y1+5460;p.x=s.x2+8;p.y=s.y2-20;moveAndResolveSurfaces()`);assert.equal(a.run('p.ground'),false);assert.ok(a.run('p.vy')>35)});
 test('a disappearing ramp transfers its surface velocity before losing contact',()=>{const a=track(2,-.6,26);a.run(`p.surface.restoreAt=runFrames+100;window.expectedExitVy=p.vx*-.6;moveAndResolveSurfaces()`);assert.equal(a.run('p.ground'),false);assert.ok(a.run('p.vy')< -12)});
-test('the authored loop launch gap also permits a held coyote jump without boost',()=>{const a=boot();a.run(`const roof=surfaceById('draw-loop-roof');Object.assign(p,{x:roof.x2-160,y:roof.y2-20,vx:14,vy:0,ground:true,surface:roof,rolling:true,rollAge:0,lowRollFrames:0});boost=0;count=30;keys.clear();keys.add('ArrowRight');keys.add('ArrowDown');window.hasJumped=false;window.leftLaunch=false;`);let landed=false;for(let f=0;f<450;f++){a.run(`if(!p.ground&&window.leftLaunch&&!window.hasJumped){press('Space',true);window.hasJumped=true;}if(p.surface?.id==='draw-loop-launch')window.leftLaunch=true;update();`);if(a.run("p.surface?.id==='draw-loop-payoff-roof'")){landed=true;break;}assert.equal(a.run('stats.deaths'),0);}assert.ok(landed)});
+test('the authored loop launch gap also permits a short coyote jump without boost',()=>{const a=boot();a.run(`const roof=surfaceById('draw-loop-roof');Object.assign(p,{x:roof.x2-160,y:roof.y2-20,vx:14,vy:0,ground:true,surface:roof,rolling:true,rollAge:0,lowRollFrames:0});boost=0;count=30;keys.clear();keys.add('ArrowRight');keys.add('ArrowDown');window.jumpFrame=-1;window.leftLaunch=false;`);let landed=false;for(let f=0;f<450;f++){a.run(`if(!p.ground&&window.leftLaunch&&window.jumpFrame<0){press('Space',true);window.jumpFrame=runFrames;}if(window.jumpFrame>=0&&runFrames===window.jumpFrame+1)release('Space',true);if(p.surface?.id==='draw-loop-launch')window.leftLaunch=true;update();`);if(a.run("p.surface?.id==='draw-loop-payoff-roof'")){landed=true;break;}assert.equal(a.run('stats.deaths'),0);}assert.ok(landed)});
 test('boost accelerates without cutting faster same-direction terrain momentum',()=>{const a=track(2,0,32);a.run(`press('ShiftLeft');updateMovement()`);assert.ok(a.run('p.vx')>31);const b=track();b.run(`p.ground=false;p.surface=null;p.y=-50000;p.vx=32;press('ShiftLeft');updateMovement()`);assert.ok(b.run('p.vx')>=32);assert.equal(b.run('p.airBoostUsed'),true);assert.equal(b.run('boost'),89.5)});
 test('fast rolling on steep terrain uses tangent speed for its low-speed timeout',()=>{const a=track(2,10,14,true);advance(a,180);assert.ok(a.run('measurementSpeed()')>30);assert.equal(a.run('p.rolling'),true)});

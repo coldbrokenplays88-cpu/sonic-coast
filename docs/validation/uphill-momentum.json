@@ -1,0 +1,205 @@
+{
+  "errors": [],
+  "versions": {
+    "before": {
+      "metrics": [
+        {
+          "act": 1,
+          "run": 14,
+          "braking": {
+            "frames": 21,
+            "distance": 236.46811415952834,
+            "vx": 0
+          },
+          "precision": {
+            "distance": 0.5550000000000637,
+            "vx": 0
+          },
+          "airCoasting": 21.659934031132853,
+          "airBraking": 9,
+          "rollingUphill": {
+            "distance": 355.25281089675354,
+            "speed": 18.46807732422431
+          },
+          "runningUphill": {
+            "distance": 328.5587754537287,
+            "speed": 15.34718772345769
+          },
+          "rollingDownhill": 38.79317108966257,
+          "steepLow": {
+            "distance": -20.768999999997504,
+            "speed": 0.5187677707799512
+          },
+          "releasedDash": {
+            "speed": 23.13814405729495,
+            "rolling": false
+          }
+        },
+        {
+          "act": 2,
+          "run": 14,
+          "braking": {
+            "frames": 21,
+            "distance": 236.46811415952834,
+            "vx": 0
+          },
+          "precision": {
+            "distance": 0.5550000000000637,
+            "vx": 0
+          },
+          "airCoasting": 21.659934031132853,
+          "airBraking": 9,
+          "rollingUphill": {
+            "distance": 355.25281089675354,
+            "speed": 18.46807732422431
+          },
+          "runningUphill": {
+            "distance": 328.5587754537287,
+            "speed": 15.34718772345769
+          },
+          "rollingDownhill": 38.79317108966257,
+          "steepLow": {
+            "distance": -20.768999999997504,
+            "speed": 0.5187677707799512
+          },
+          "releasedDash": {
+            "speed": 23.13814405729495,
+            "rolling": false
+          }
+        }
+      ],
+      "route": {
+        "chargeFrames": 80,
+        "releaseFrames": 218,
+        "landed": false,
+        "launch": {
+          "x": 31309.524098498274,
+          "y": -3040,
+          "vx": 11.65629229731226,
+          "vy": -8.547947684695657,
+          "ground": false,
+          "rolling": false,
+          "onLaunch": true,
+          "loops": 2,
+          "deaths": 0,
+          "jumps": 0,
+          "boost": 0
+        },
+        "finish": {
+          "x": 100,
+          "y": 400,
+          "vx": 0,
+          "vy": 0,
+          "ground": true,
+          "rolling": false,
+          "surface": "under-attack-act2-0",
+          "onLaunch": false,
+          "loops": 2,
+          "deaths": 1,
+          "jumps": 0,
+          "boost": 0
+        }
+      }
+    },
+    "after": {
+      "metrics": [
+        {
+          "act": 1,
+          "run": 14,
+          "braking": {
+            "frames": 21,
+            "distance": 236.46811415952834,
+            "vx": 0
+          },
+          "precision": {
+            "distance": 0.5550000000000637,
+            "vx": 0
+          },
+          "airCoasting": 21.659934031132853,
+          "airBraking": 9,
+          "rollingUphill": {
+            "distance": 398.40459836926493,
+            "speed": 23.540281030811265
+          },
+          "runningUphill": {
+            "distance": 387.6934031616988,
+            "speed": 22.287112568298486
+          },
+          "rollingDownhill": 38.79317108966257,
+          "steepLow": {
+            "distance": -8.351999999990767,
+            "speed": 0.2075071083119805
+          },
+          "releasedDash": {
+            "speed": 23.760605316306503,
+            "rolling": true
+          }
+        },
+        {
+          "act": 2,
+          "run": 14,
+          "braking": {
+            "frames": 21,
+            "distance": 236.46811415952834,
+            "vx": 0
+          },
+          "precision": {
+            "distance": 0.5550000000000637,
+            "vx": 0
+          },
+          "airCoasting": 21.659934031132853,
+          "airBraking": 9,
+          "rollingUphill": {
+            "distance": 398.40459836926493,
+            "speed": 23.540281030811265
+          },
+          "runningUphill": {
+            "distance": 387.6934031616988,
+            "speed": 22.287112568298486
+          },
+          "rollingDownhill": 38.79317108966257,
+          "steepLow": {
+            "distance": -8.351999999990767,
+            "speed": 0.2075071083119805
+          },
+          "releasedDash": {
+            "speed": 23.760605316306503,
+            "rolling": true
+          }
+        }
+      ],
+      "route": {
+        "chargeFrames": 80,
+        "releaseFrames": 164,
+        "landed": true,
+        "launch": {
+          "x": 31311.94478676431,
+          "y": -3040,
+          "vx": 20.91808029942905,
+          "vy": -15.339925552914636,
+          "ground": false,
+          "rolling": true,
+          "onLaunch": true,
+          "loops": 2,
+          "deaths": 0,
+          "jumps": 0,
+          "boost": 0
+        },
+        "finish": {
+          "x": 32071.38327869216,
+          "y": -3200,
+          "vx": 20.157881608810566,
+          "vy": 0,
+          "ground": true,
+          "rolling": true,
+          "surface": "draw-loop-payoff-roof",
+          "onLaunch": false,
+          "loops": 2,
+          "deaths": 0,
+          "jumps": 0,
+          "boost": 0
+        }
+      }
+    }
+  }
+}

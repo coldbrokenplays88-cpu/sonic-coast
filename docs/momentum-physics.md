@@ -1,5 +1,7 @@
 # Neon Express momentum physics
 
+Historical PR #12 report. The [uphill correction](uphill-momentum-refinement.md) supersedes the slope-force and Spin Dash release tuning below, and adds a real-input passive ramp-launch regression.
+
 Review branch: `codex/momentum-physics`, based on current main `0e8fddb` (merged prerequisite PR #11). The comparison baseline is its identical game tree at `8b984f9`. No level geometry, source artwork, sound assets, controls, camera settings or ending choreography changed. No laboratory/rocket subsystem was constructed.
 
 ## Diagnosis

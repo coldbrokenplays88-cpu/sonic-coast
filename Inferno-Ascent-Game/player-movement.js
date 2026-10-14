@@ -13,12 +13,15 @@ function jump(){
 }
 
 function updateRoll(down){
+ if(!p.rolling)p.dashRolling=false;
  if(down&&!p.downHeld){p.rollBuffer=6;p.rollSpent=false}if(!down)p.rollSpent=false;p.downHeld=down;
  if(p.ground&&!p.surface?.grindable&&p.rollBuffer>0&&!p.rollSpent&&!p.rolling){p.rolling=true;p.rollAge=0;p.lowRollFrames=0;p.rollBuffer=0;stats.rolls++}
  if(p.rollBuffer>0)p.rollBuffer--;
  if(p.rolling){p.rollAge++;const rollSpeed=p.ground&&p.surface?Math.abs(p.vx)*Math.hypot(1,pose(p.surface).slope):Math.abs(p.vx);if(p.ground&&rollSpeed<7)p.lowRollFrames++;else if(rollSpeed>=7)p.lowRollFrames=0;
   const expired=p.lowRollFrames>=90;
-  if(((!down&&p.rollAge>6)||expired)&&canStand()){p.rolling=false;if(expired)p.rollSpent=true}}
+  // Releasing Down launches Spin Dash; it must not discard that fast roll.
+  // Other rolls retain their release behavior, including the pool's forced roll.
+  if(((!down&&(!p.dashRolling||rollSpeed<7)&&p.rollAge>6)||expired)&&canStand()){p.rolling=false;p.dashRolling=false;if(expired)p.rollSpent=true}}
  p.roll=p.rolling||charge>0||!p.ground;
 }
 
@@ -26,17 +29,20 @@ function updateMovement(){updateWaterState();if(updateStageMotion())return true;
  if(p.ground)coyote=tuning.coyote;else if(coyote>0)coyote--;
  if(jumpBuffer>0&&coyote>0&&!charge)jump();else if(jumpBuffer>0)jumpBuffer--;
  if(charge&&down&&JUMP_KEYS.some(k=>keys.has(k))){charge=Math.min(20,charge+.2);if(runFrames%10===0){sparks(p.x-15*p.face,p.y+18,3,'#69efff');if(typeof gameSound==='function')gameSound('spindashCharge',{charge:charge/20})}}
- if(charge&&!down){gameSound('spindashRelease',{charge:charge/20});p.vx=p.face*(12+charge*.7)/Math.hypot(1,p.surface?pose(p.surface).slope:0);charge=0;p.rolling=true;p.rollAge=0;p.lowRollFrames=0;sparks(p.x,p.y+15,10,'#4bd9ff')}
+ if(charge&&!down){gameSound('spindashRelease',{charge:charge/20});p.vx=p.face*(12+charge*.7)/Math.hypot(1,p.surface?pose(p.surface).slope:0);charge=0;p.rolling=true;p.dashRolling=true;p.rollAge=0;p.lowRollFrames=0;sparks(p.x,p.y+15,10,'#4bd9ff')}
  const wantBoost=keys.has('ShiftLeft')||keys.has('ShiftRight')||keys.has('KeyX')||keys.has('MouseBoost');if(!wantBoost)p.boostLocked=false;
  updateBoostState(wantBoost);
  // Controls act on speed along the ground; vx stays world-horizontal outside this block.
- const controlSurface=p.ground&&!p.surface?.grindable?p.surface:null,controlNorm=controlSurface?Math.hypot(1,pose(controlSurface).slope):1;
+ const controlSurface=p.ground&&!p.surface?.grindable?p.surface:null,controlSlope=controlSurface?pose(controlSurface).slope:0,controlNorm=Math.hypot(1,controlSlope);
  if(controlSurface)p.vx*=controlNorm;
+ // Classic Sonic loses uphill traction above 45 degrees at low ground speed.
+ // Our one-way slope contacts slide back instead of imposing a forced input lock.
+ const uphillTractionLost=controlSurface&&!p.scriptedLaunch&&!p.wrongRouteDrop&&!p.surface?.boostExit&&dir*controlSlope<0&&Math.abs(controlSlope)>=1&&Math.abs(p.vx)<runSpeed*(2.5/6);
  if(p.boosting){if(dir&&Math.sign(p.vx)===dir)p.face=dir;if(p.vx*p.face<23)p.vx+=(p.face*23-p.vx)*.14;if(runFrames%3===0)particles.push({x:p.x-25*p.face,y:p.y,vx:-p.face*2,vy:0,life:14,color:'#43e5ff',trail:true})}
  else if(p.ground&&p.surface?.grindable){p.rolling=false;p.roll=false;charge=0;if(dir&&dir!==Math.sign(p.vx))p.vx+=dir*.45;else if(dir&&Math.abs(p.vx)<14)p.vx+=dir*.08;}
  else if(charge)p.vx*=.66;
  else{const precisionBrake=!p.rolling&&!p.scriptedLaunch&&!p.wrongRouteDrop&&!p.surface?.boostExit;
-  if(!p.hurt&&dir){if(p.ground&&p.rolling){if(dir!==Math.sign(p.vx)&&Math.abs(p.vx)>.1){p.vx+=dir*waterScale*(Math.abs(p.vx)<=8?(recoveryGrip?1.3:.85):(recoveryGrip?1.1:.5));p.face=dir}else if(Math.abs(p.vx)<3)p.vx=Math.max(-3,Math.min(3,p.vx+dir*.16*waterScale));}
+  if(!p.hurt&&dir){if(p.ground&&p.rolling){if(dir!==Math.sign(p.vx)&&Math.abs(p.vx)>0){p.vx+=dir*Math.min(Math.abs(p.vx),waterScale*(Math.abs(p.vx)<=8?(recoveryGrip?1.3:.85):(recoveryGrip?1.1:.5)));p.face=dir}else if(Math.abs(p.vx)<3&&!uphillTractionLost)p.vx=Math.max(-3,Math.min(3,p.vx+dir*.16*waterScale));}
    else if(Math.abs(p.vx)<runSpeed||dir!==Math.sign(p.vx)){
     const speed=Math.min(1,Math.abs(p.vx)/runSpeed),opposing=dir!==Math.sign(p.vx)&&Math.abs(p.vx)>(precisionBrake?0:.1);
     let a=p.ground?(opposing?(recoveryGrip?(Math.abs(p.vx)<=14?2.5:1.4):(Math.abs(p.vx)<8?1:.82)):.52*Math.pow(1-speed,1.5)+.035):(opposing?.2:.12);
@@ -44,6 +50,7 @@ function updateMovement(){updateWaterState();if(updateStageMotion())return true;
     // Intentional propulsion retains its previous steering and friction.
     // Uphill propulsion weakens with inclination; deliberate braking keeps its tuned strength.
     a*=waterScale/(opposing?1:controlNorm);
+    if(!opposing&&uphillTractionLost)a=0;
     if(opposing&&precisionBrake)a=Math.min(Math.abs(p.vx),a*movementTuning.counterBrake);
     p.vx+=dir*a;p.face=dir;if(Math.abs(p.vx)>runSpeed&&dir===Math.sign(p.vx))p.vx=dir*runSpeed
    }}
@@ -78,7 +85,7 @@ function waterAt(x,y){
  return y<floor?pool:null;
 }
 function resetPlayerAbilities(){
- Object.assign(p,{shield:null,bubbleSlam:false,underwater:false,airRemaining:1800,airBoostUsed:false,airBoostFrames:0,airBoostActive:false,airBoostRequested:false,groundBoostHeld:false,jumpReleaseVy:null,coyoteLaunchVy:null});
+ Object.assign(p,{shield:null,bubbleSlam:false,underwater:false,airRemaining:1800,airBoostUsed:false,airBoostFrames:0,airBoostActive:false,airBoostRequested:false,groundBoostHeld:false,jumpReleaseVy:null,coyoteLaunchVy:null,dashRolling:false});
 }
 function updateWaterState(){
  const wet=!!waterAt(p.x,p.y),wasWet=!!p.underwater;
