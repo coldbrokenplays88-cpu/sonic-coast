@@ -85,12 +85,12 @@ for(const act of [1,2]){
   const a=fixture(act);a.run('launchAirDevice({x:p.x,y:feet(),power:18,launchX:9});respawn();p.vx=9');
   close(advance(a,-1),7.975,'respawn restores ground countersteering');
  });
- test(`act ${act}: rolling, charged spin dash, boost exits and grind braking retain existing strength`,()=>{
+ test(`act ${act}: rolling, boost exits and grind braking retain strength while full spin dash gains speed`,()=>{
   const roll=fixture(act,{speed:10,rolling:true});roll.run("keys.add('ArrowDown')");
   close(advance(roll,-1),9.5*.9985,'rolling brake');
   const exit=fixture(act,{speed:10,boostExit:true});close(advance(exit,-1),9.18,'boost exit brake');
   const rail=fixture(act,{speed:10,grindable:true});close(advance(rail,-1),9.55,'grind brake');
-  const dash=fixture(act);dash.run('charge=20;');advance(dash);close(dash.run('p.vx'),23*.997*.998*.9985,'full spin dash release');
+  const dash=fixture(act);dash.run('charge=20;');advance(dash);close(dash.run('p.vx'),26*.9985,'full spin dash release');
  });
  test(`act ${act}: boosting keeps its velocity response, charge drain and release gauge`,()=>{
   const a=fixture(act,{speed:10});a.run("keys.add('ShiftLeft')");

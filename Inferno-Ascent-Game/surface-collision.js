@@ -3,6 +3,8 @@
 
 function pose(s,t=runFrames){let dx=0,dy=0;if(s.motion){const n=Math.sin(t/s.motion.period*Math.PI*2+s.motion.phase)*s.motion.amp;if(s.motion.axis==='x')dx=n;else dy=n}return {x1:s.x1+dx,x2:s.x2+dx,y1:s.y1+dy,y2:s.y2+dy,slope:(s.y2-s.y1)/(s.x2-s.x1)}}
 
+function surfaceVelocity(s){const a=pose(s,runFrames-1),b=pose(s);return {x:b.x1-a.x1,y:b.y1-a.y1}}
+
 function yOn(s,x,t=runFrames){const q=pose(s,t);return q.y1+(x-q.x1)*q.slope}
 
 function active(s){return (!s.sealedBy||level.hazards.find(h=>h.id===s.sealedBy)?.broken)&&(!s.restoreAt||runFrames>=s.restoreAt)}
@@ -15,7 +17,11 @@ function feet(){return p.y+20}
 
 function resetPlatforms(){for(const s of level.surfaces){s.crumbleTimer=-1;s.restoreAt=0}}
 
-function land(s,y){p.scriptedLaunch=false;p.airBoostUsed=false;p.airBoostFrames=0;p.airBoostActive=false;beforeStageLanding(s);if(s.grindable&&p.surface!==s){p.grindEntryFrame=runFrames;p.grindFromFast=p.boosting||Math.abs(p.vx)>17;p.grindFast=Math.abs(p.vx)>18||p.boosting;p.rolling=false;p.roll=false;p.brakeActive=false;p.stopFrame=-100;charge=0}else if(p.surface?.grindable&&!s.grindable){p.grindExitFrame=runFrames;}if(!p.ground){p.poseLandingFrame=runFrames;gameSound(s.grindable?'grind':'land',{speed:Math.abs(p.vx),volume:.7})}p.landFrame=runFrames;p.landKind=s.kind;const changed=p.surface!==s||!p.ground;p.y=y-20;p.vy=0;p.ground=true;p.jumpAttack=false;p.airSpeedLimit=null;p.surface=s;afterStageLanding(s);if(changed&&!visited.has(s.id)){visited.add(s.id);if(s.kind==='express'){stats.expressLandings++;score+=400;sparks(p.x,p.y+20,5,'#ffdf72')}if(s.kind==='recovery'||s.kind==='lower')stats.recoveries++}if(s.kind==='crumble'&&s.crumbleTimer<0)s.crumbleTimer=s.crumbleDelay;for(const group of level.collapseGroups||[])if(group.entryId===s.id&&!group.triggered){group.triggered=true;for(const id of group.tailIds){const tail=level.surfaces.find(v=>v.id===id);if(tail)tail.crumbleTimer=group.delay}}if(!reboundBubbleShield()&&changed&&jumpBuffer>0)jump()}
+function land(s,y){p.scriptedLaunch=false;p.jumpReleaseVy=null;p.coyoteLaunchVy=null;p.airBoostUsed=false;p.airBoostFrames=0;p.airBoostActive=false;beforeStageLanding(s);
+ if(!s.grindable){const slope=pose(s).slope,norm=Math.hypot(1,slope);
+  if(p.ground&&p.surface){p.vx*=Math.hypot(1,pose(p.surface).slope)/norm;}
+  else if(!p.wrongRouteDrop){const carry=surfaceVelocity(s);p.vx=((p.vx-carry.x)+(p.vy-carry.y)*slope)/(norm*norm);}}
+ if(s.grindable&&p.surface!==s){p.grindEntryFrame=runFrames;p.grindFromFast=p.boosting||Math.abs(p.vx)>17;p.grindFast=Math.abs(p.vx)>18||p.boosting;p.rolling=false;p.roll=false;p.brakeActive=false;p.stopFrame=-100;charge=0}else if(p.surface?.grindable&&!s.grindable){p.grindExitFrame=runFrames;}if(!p.ground){p.poseLandingFrame=runFrames;gameSound(s.grindable?'grind':'land',{speed:Math.abs(p.vx),volume:.7})}p.landFrame=runFrames;p.landKind=s.kind;const changed=p.surface!==s||!p.ground;p.y=y-20;p.vy=0;p.ground=true;p.jumpAttack=false;p.airSpeedLimit=null;p.surface=s;afterStageLanding(s);if(changed&&!visited.has(s.id)){visited.add(s.id);if(s.kind==='express'){stats.expressLandings++;score+=400;sparks(p.x,p.y+20,5,'#ffdf72')}if(s.kind==='recovery'||s.kind==='lower')stats.recoveries++}if(s.kind==='crumble'&&s.crumbleTimer<0)s.crumbleTimer=s.crumbleDelay;for(const group of level.collapseGroups||[])if(group.entryId===s.id&&!group.triggered){group.triggered=true;for(const id of group.tailIds){const tail=level.surfaces.find(v=>v.id===id);if(tail)tail.crumbleTimer=group.delay}}if(!reboundBubbleShield()&&changed&&jumpBuffer>0)jump()}
 
 function canStand(){const foot=feet();return !level.hazards.some(h=>h.type==='gate'&&p.x+13>h.x&&p.x-13<h.x+h.w&&foot>h.y&&foot-48<h.y+h.h)}
 
@@ -28,21 +34,40 @@ function resolveHazards(oldX,oldY){for(const h of level.hazards){if(h.broken)con
 
 // Surface carry and gravity/contact integration run at distinct movement phases.
 function applySurfaceMotion(){
- if(p.ground&&p.surface){const slope=pose(p.surface).slope;if(!p.surface.grindable&&Math.abs(p.vx)>1)p.vx+=slope*(p.rolling?.65:p.surface.boostExit?.08:.28);const prev=pose(p.surface,runFrames-1),now=pose(p.surface);p.x+=now.x1-prev.x1;p.y+=now.y1-prev.y1}
+ if(p.ground&&p.surface){
+  const slope=pose(p.surface).slope,norm=Math.hypot(1,slope),dir=Number(keys.has('ArrowRight')||keys.has('KeyD'))-Number(keys.has('ArrowLeft')||keys.has('KeyA'));
+  // Releasing direction can hold a precise stance; active travel and rolling feel gravity.
+  if(!p.surface.grindable&&!charge&&(p.rolling||p.boosting||dir||Math.abs(p.vx*norm)>=3)){
+   const wet=p.underwater?2/7:1,gravity=.58*slope/norm;
+   // Footsteps dissipate terrain energy; a rolling ball avoids that contact loss.
+   const footLoss=!p.rolling&&!p.boosting&&Math.abs(p.vx*norm)>=3?Math.sign(p.vx)*.25*Math.abs(slope)/norm:0;
+   p.vx+=(gravity-footLoss)*wet/norm;
+  }
+  const carry=surfaceVelocity(p.surface);p.x+=carry.x;p.y+=carry.y;
+ }
 }
 
+function leaveSurface(s){const slope=pose(s).slope,carry=surfaceVelocity(s);p.vy=p.vx*slope+carry.y;p.coyoteLaunchVy=p.vy;p.vx+=carry.x;p.ground=false;p.surface=null;}
+
 function moveAndResolveSurfaces(){
- const oldX=p.x,oldY=p.y,oldFoot=feet(),oldSurface=p.surface,wasGround=p.ground;p.lastX=oldX;p.lastY=oldY;p.x=Math.max(24,Math.min(END+250,p.x+p.vx));
+ const surfaceVy=p.ground&&p.surface?p.vx*pose(p.surface).slope:0;
+ const count=Math.max(1,Math.ceil(Math.max(Math.abs(p.vx),Math.abs(p.vy),Math.abs(surfaceVy))/24)),dt=1/count;
+ const lastX=p.x,lastY=p.y,deaths=stats.deaths;
+ for(let i=0;i<count;i++){integrateSurfaceStep(dt);if(count>1)resolveHazards(p.lastX,p.lastY);if(stats.deaths!==deaths)break;}
+ p.lastX=lastX;p.lastY=lastY;
+}
+function integrateSurfaceStep(dt){
+ const oldX=p.x,oldY=p.y,oldFoot=feet(),oldSurface=p.surface,wasGround=p.ground;p.lastX=oldX;p.lastY=oldY;p.x=Math.max(24,Math.min(END+250,p.x+p.vx*dt));
  // Follow connected slopes without launching or snapping across a void.
- if(wasGround&&oldSurface&&active(oldSurface)){const q=pose(oldSurface);if(p.x>=q.x1-FOOT_RADIUS&&p.x<=q.x2+FOOT_RADIUS){p.y=yOn(oldSurface,Math.max(q.x1,Math.min(q.x2,p.x)))-20;p.vy=0}else{let join=null;for(const s of level.surfaces){const z=pose(s),y=yOn(s,p.x);const seam=p.vx>=0?q.x2:q.x1,edgeY=p.vx>=0?q.y2:q.y1,connected=seam>=z.x1-2&&seam<=z.x2+2&&Math.abs(yOn(s,seam)-edgeY)<2;if(active(s)&&p.x>=z.x1&&p.x<=z.x2&&(Math.abs(y-oldFoot)<11||connected)){join={s,y};break}}if(join)land(join.s,join.y);else{p.ground=false;p.surface=null;p.vy=Math.min(0,q.slope*p.vx)}}}else{p.ground=false;p.surface=null}
- if(!p.ground){p.vy=p.airBoostActive?0:Math.min(20,p.vy+.58*(p.underwater?2/7:1));p.y+=p.vy;let hit=null;
+ if(wasGround&&oldSurface&&active(oldSurface)){const q=pose(oldSurface);if(p.x>=q.x1-FOOT_RADIUS&&p.x<=q.x2+FOOT_RADIUS){p.y=yOn(oldSurface,Math.max(q.x1,Math.min(q.x2,p.x)))-20;p.vy=0}else{let join=null;for(const s of level.surfaces){const z=pose(s),y=yOn(s,p.x);const seam=p.vx>=0?q.x2:q.x1,edgeY=p.vx>=0?q.y2:q.y1,connected=seam>=z.x1-2&&seam<=z.x2+2&&Math.abs(yOn(s,seam)-edgeY)<2;if(active(s)&&p.x>=z.x1&&p.x<=z.x2&&(Math.abs(y-oldFoot)<11||connected)){join={s,y};break}}if(join)land(join.s,join.y);else{leaveSurface(oldSurface)}}}else{if(wasGround&&oldSurface)leaveSurface(oldSurface);else{p.ground=false;p.surface=null}}
+ if(!p.ground){p.vy=p.airBoostActive?0:p.vy>20?20+(p.vy-20)*Math.pow(.999,dt):Math.min(20,p.vy+.58*(p.underwater?2/7:1)*dt);p.y+=p.vy*dt;let hit=null;
   for(const s of level.surfaces){if(p.wrongRouteDrop&&!s.fallen)continue;if(!active(s)||(s.entrySpeed&&!s.solidAtAnySpeed&&Math.abs(p.vx)<s.entrySpeed))continue;const q=pose(s),oldQ=pose(s,runFrames-1);
    const oldFloor=oldQ.y1+(oldX-oldQ.x1)*oldQ.slope,newFloor=yOn(s,p.x),d0=oldFoot-oldFloor,d1=feet()-newFloor;
    if(d0>5||d1<0||d1-d0<=0)continue;const t=Math.max(0,-d0/(d1-d0)),crossX=oldX+(p.x-oldX)*t;
    const left=oldQ.x1+(q.x1-oldQ.x1)*t,right=oldQ.x2+(q.x2-oldQ.x2)*t;
    if(t<=1&&crossX>=left-FOOT_RADIUS&&crossX<=right+FOOT_RADIUS&&(!hit||t<hit.t))hit={s,q,t};}
   if(hit){const x=Math.max(hit.q.x1,Math.min(hit.q.x2,p.x));land(hit.s,yOn(hit.s,x));
-   if(p.ground&&(p.x<hit.q.x1-FOOT_RADIUS||p.x>hit.q.x2+FOOT_RADIUS)){p.ground=false;p.surface=null;p.vy=Math.min(0,hit.q.slope*p.vx);coyote=tuning.coyote}
+   if(p.ground&&(p.x<hit.q.x1-FOOT_RADIUS||p.x>hit.q.x2+FOOT_RADIUS)){leaveSurface(hit.s);coyote=tuning.coyote}
    if(p.ground&&p.rollBuffer>0&&!p.rollSpent){p.rolling=true;p.rollAge=0;p.lowRollFrames=0;p.rollBuffer=0;stats.rolls++}}}
  p.roll=p.rolling||charge>0||!p.ground;
 }

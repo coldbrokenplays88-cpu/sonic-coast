@@ -1,14 +1,23 @@
 'use strict';
 // Shared player movement. State and the fixed-tick controller remain in game.js.
 
-function jump(){p.scriptedLaunch=false;p.jumpAttack=true;if(p.surface?.grindable)p.grindExitFrame=runFrames;p.poseJumpFrame=runFrames;const slope=p.surface?pose(p.surface).slope:0;const speedLift=Math.max(0,Math.abs(p.vx)-14)*.25;p.vy=-(13.4+Math.min(2.4,speedLift))+Math.max(-3.5,Math.min(0,slope*p.vx*.45));if(p.jumpCut)p.vy=-6.8;if(p.underwater)p.vy*=7/13;p.ground=false;p.surface=null;coyote=0;jumpBuffer=0;stats.jumps++;gameSound('jump')}
+function jump(){
+ p.scriptedLaunch=false;p.jumpAttack=true;if(p.surface?.grindable)p.grindExitFrame=runFrames;p.poseJumpFrame=runFrames;
+ const surface=p.ground?p.surface:null,slope=surface?pose(surface).slope:0,norm=Math.hypot(1,slope),speed=p.vx*norm;
+ const lift=p.jumpCut?6.8:13.4+Math.min(2.4,Math.max(0,Math.abs(speed)-14)*.25),impulse=lift*(p.underwater?7/13:1);
+ // Keep the full surface/platform velocity; an upright jump adds vertical lift.
+ const carry=surface?surfaceVelocity(surface):{x:0,y:0};
+ const inherited=(surface?p.vx*slope:coyote>0?(p.coyoteLaunchVy??0):0)+carry.y;
+ p.vy=inherited-impulse;p.vx+=carry.x;p.jumpReleaseVy=inherited-(p.underwater?2.5:5);
+ p.ground=false;p.surface=null;coyote=0;jumpBuffer=0;stats.jumps++;gameSound('jump');
+}
 
 function updateRoll(down){
  if(down&&!p.downHeld){p.rollBuffer=6;p.rollSpent=false}if(!down)p.rollSpent=false;p.downHeld=down;
  if(p.ground&&!p.surface?.grindable&&p.rollBuffer>0&&!p.rollSpent&&!p.rolling){p.rolling=true;p.rollAge=0;p.lowRollFrames=0;p.rollBuffer=0;stats.rolls++}
  if(p.rollBuffer>0)p.rollBuffer--;
- if(p.rolling){p.rollAge++;if(p.ground&&Math.abs(p.vx)<7)p.lowRollFrames++;else if(Math.abs(p.vx)>=7)p.lowRollFrames=0;
-  const expired=p.lowRollFrames>=90||p.rollAge>=240;
+ if(p.rolling){p.rollAge++;const rollSpeed=p.ground&&p.surface?Math.abs(p.vx)*Math.hypot(1,pose(p.surface).slope):Math.abs(p.vx);if(p.ground&&rollSpeed<7)p.lowRollFrames++;else if(rollSpeed>=7)p.lowRollFrames=0;
+  const expired=p.lowRollFrames>=90;
   if(((!down&&p.rollAge>6)||expired)&&canStand()){p.rolling=false;if(expired)p.rollSpent=true}}
  p.roll=p.rolling||charge>0||!p.ground;
 }
@@ -17,10 +26,13 @@ function updateMovement(){updateWaterState();if(updateStageMotion())return true;
  if(p.ground)coyote=tuning.coyote;else if(coyote>0)coyote--;
  if(jumpBuffer>0&&coyote>0&&!charge)jump();else if(jumpBuffer>0)jumpBuffer--;
  if(charge&&down&&JUMP_KEYS.some(k=>keys.has(k))){charge=Math.min(20,charge+.2);if(runFrames%10===0){sparks(p.x-15*p.face,p.y+18,3,'#69efff');if(typeof gameSound==='function')gameSound('spindashCharge',{charge:charge/20})}}
- if(charge&&!down){gameSound('spindashRelease',{charge:charge/20});p.vx=p.face*(12+charge*.55);charge=0;p.rolling=true;p.rollAge=0;p.lowRollFrames=0;sparks(p.x,p.y+15,10,'#4bd9ff')}
+ if(charge&&!down){gameSound('spindashRelease',{charge:charge/20});p.vx=p.face*(12+charge*.7)/Math.hypot(1,p.surface?pose(p.surface).slope:0);charge=0;p.rolling=true;p.rollAge=0;p.lowRollFrames=0;sparks(p.x,p.y+15,10,'#4bd9ff')}
  const wantBoost=keys.has('ShiftLeft')||keys.has('ShiftRight')||keys.has('KeyX')||keys.has('MouseBoost');if(!wantBoost)p.boostLocked=false;
  updateBoostState(wantBoost);
- if(p.boosting){if(dir&&Math.sign(p.vx)===dir)p.face=dir;p.vx+=(p.face*23-p.vx)*.14;if(runFrames%3===0)particles.push({x:p.x-25*p.face,y:p.y,vx:-p.face*2,vy:0,life:14,color:'#43e5ff',trail:true})}
+ // Controls act on speed along the ground; vx stays world-horizontal outside this block.
+ const controlSurface=p.ground&&!p.surface?.grindable?p.surface:null,controlNorm=controlSurface?Math.hypot(1,pose(controlSurface).slope):1;
+ if(controlSurface)p.vx*=controlNorm;
+ if(p.boosting){if(dir&&Math.sign(p.vx)===dir)p.face=dir;if(p.vx*p.face<23)p.vx+=(p.face*23-p.vx)*.14;if(runFrames%3===0)particles.push({x:p.x-25*p.face,y:p.y,vx:-p.face*2,vy:0,life:14,color:'#43e5ff',trail:true})}
  else if(p.ground&&p.surface?.grindable){p.rolling=false;p.roll=false;charge=0;if(dir&&dir!==Math.sign(p.vx))p.vx+=dir*.45;else if(dir&&Math.abs(p.vx)<14)p.vx+=dir*.08;}
  else if(charge)p.vx*=.66;
  else{const precisionBrake=!p.rolling&&!p.scriptedLaunch&&!p.wrongRouteDrop&&!p.surface?.boostExit;
@@ -30,15 +42,18 @@ function updateMovement(){updateWaterState();if(updateStageMotion())return true;
     let a=p.ground?(opposing?(recoveryGrip?(Math.abs(p.vx)<=14?2.5:1.4):(Math.abs(p.vx)<8?1:.82)):.52*Math.pow(1-speed,1.5)+.035):(opposing?.2:.12);
     // Countersteering stops at zero; normal acceleration begins on the next frame.
     // Intentional propulsion retains its previous steering and friction.
-    a*=waterScale;
+    // Uphill propulsion weakens with inclination; deliberate braking keeps its tuned strength.
+    a*=waterScale/(opposing?1:controlNorm);
     if(opposing&&precisionBrake)a=Math.min(Math.abs(p.vx),a*movementTuning.counterBrake);
     p.vx+=dir*a;p.face=dir;if(Math.abs(p.vx)>runSpeed&&dir===Math.sign(p.vx))p.vx=dir*runSpeed
    }}
-  else if(p.ground){if(p.rolling)p.vx*=.997;else{const drag=precisionBrake&&Math.abs(p.vx)<movementTuning.precisionSpeed?(recoveryGrip?movementTuning.recoveryGrip:movementTuning.groundGrip):Math.abs(p.vx)<=8?(recoveryGrip?.65:.5):(recoveryGrip?.4:.22+(Math.abs(p.vx)-8)*.002);p.vx=Math.sign(p.vx)*Math.max(0,Math.abs(p.vx)-drag*waterScale)}}
-  if(Math.abs(p.vx)>14&&!p.surface?.boostExit)p.vx*=p.ground?.998:.999;}
- if(p.ground&&p.rolling){const drag=.0015+Math.min(.022,Math.max(0,p.rollAge-90)*.00016);p.vx*=1-drag}
+  else if(p.ground){if(!p.rolling){const drag=precisionBrake&&Math.abs(p.vx)<movementTuning.precisionSpeed?(recoveryGrip?movementTuning.recoveryGrip:movementTuning.groundGrip):Math.abs(p.vx)<=8?(recoveryGrip?.65:.5):(recoveryGrip?.4:.22+(Math.abs(p.vx)-8)*.002);p.vx=Math.sign(p.vx)*Math.max(0,Math.abs(p.vx)-drag*waterScale)}}
+  if(Math.abs(p.vx)>14&&!p.surface?.boostExit&&(!p.ground||!p.rolling))p.vx*=p.ground?.998:.999;}
+ if(p.ground&&p.rolling){p.vx*=.9985}
+ // Smooth drag bounds terrain speeds without clipping all earned speed at 24.
+ if(controlSurface){const excess=Math.max(0,p.vx*p.vx-26*26);p.vx/=1+.0003*excess/Math.max(1,Math.abs(p.vx));p.vx/=controlNorm;}
  applySurfaceMotion();
- p.vx=Math.max(-24,Math.min(24,p.vx));if(Math.abs(p.vx)<.03)p.vx=0;stats.maxSpeed=Math.max(stats.maxSpeed,Math.abs(p.vx));anim+=Math.abs(p.vx)*.08;
+ if(Math.abs(p.vx)<.03)p.vx=0;stats.maxSpeed=Math.max(stats.maxSpeed,Math.abs(p.vx));anim+=Math.abs(p.vx)*.08;
  if(!p.ground&&p.airSpeedLimit)p.vx=Math.max(-p.airSpeedLimit,Math.min(p.airSpeedLimit,p.vx));
  moveAndResolveSurfaces();
  resolveHazards(p.lastX,p.lastY);updateBrakingPose(dir,beforeSpeed);if(p.ground&&p.surface?.grindable&&Math.abs(p.vx)>2&&runFrames%3===0){const fast=p.boosting||Math.abs(p.vx)>18;particles.push({x:p.x+7*Math.sign(p.vx),y:feet()-1,vx:-Math.sign(p.vx)*(fast?4:2),vy:fast?-1.5:-.7,life:fast?12:8,color:fast?'#ffdb72':'#ffe4a4',grind:true,trail:false});if(fast&&runFrames%6===0)particles.push({x:p.x-10*Math.sign(p.vx),y:feet()+1,vx:-Math.sign(p.vx)*5,vy:0,life:7,color:'#ffa65b',grind:true,trail:true})}
@@ -63,7 +78,7 @@ function waterAt(x,y){
  return y<floor?pool:null;
 }
 function resetPlayerAbilities(){
- Object.assign(p,{shield:null,bubbleSlam:false,underwater:false,airRemaining:1800,airBoostUsed:false,airBoostFrames:0,airBoostActive:false,airBoostRequested:false,groundBoostHeld:false});
+ Object.assign(p,{shield:null,bubbleSlam:false,underwater:false,airRemaining:1800,airBoostUsed:false,airBoostFrames:0,airBoostActive:false,airBoostRequested:false,groundBoostHeld:false,jumpReleaseVy:null,coyoteLaunchVy:null});
 }
 function updateWaterState(){
  const wet=!!waterAt(p.x,p.y),wasWet=!!p.underwater;
@@ -84,14 +99,14 @@ function updateBreathing(){
  return true;
 }
 function beginBubbleSlam(){
- p.bubbleSlam=true;p.airBoostFrames=0;p.airBoostActive=false;p.airBoostRequested=false;p.groundBoostHeld=false;p.boosting=false;
+ p.bubbleSlam=true;p.jumpReleaseVy=null;p.airBoostFrames=0;p.airBoostActive=false;p.airBoostRequested=false;p.groundBoostHeld=false;p.boosting=false;
  p.scriptedLaunch=false;p.airSpeedLimit=null;p.airLaunchUntil=0;p.vy=p.underwater?8:16;p.jumpAttack=true;p.rolling=false;p.roll=true;charge=0;coyote=0;jumpBuffer=0;
  gameSound('bubbleBounce');
 }
 
 function reboundBubbleShield(){
  if(!p.bubbleSlam||p.shield!=='bubble')return false;
- p.bubbleSlam=false;p.vy=-13.4*(p.underwater?7/13:1);p.ground=false;p.surface=null;p.jumpAttack=true;
+ p.bubbleSlam=false;p.jumpReleaseVy=null;p.vy=-13.4*(p.underwater?7/13:1);p.ground=false;p.surface=null;p.jumpAttack=true;
  p.airBoostUsed=false;p.airBoostFrames=0;p.airBoostActive=false;p.poseJumpFrame=runFrames;p.airLaunchUntil=runFrames+8;
  coyote=0;jumpBuffer=0;gameSound('bubbleBounce');return true;
 }

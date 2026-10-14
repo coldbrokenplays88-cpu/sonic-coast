@@ -3,23 +3,38 @@ function selectAct(act){selectedAct=act===2?2:1;setup();mode='ready';show(select
 function resetAct2(){if(level.act!==2)return;for(const group of level.collapseGroups||[])group.triggered=false;for(const d of level.debris){d.triggered=d.x<level.checkpoints[checkpoint].x;d.age=d.triggered?240:0}for(const e of level.events)e.age=e.trigger<level.checkpoints[checkpoint].x?150:-1;for(const l of level.loops){l.used=l.x<level.checkpoints[checkpoint].x;l.solved=false}for(const h of level.hazards)if(h.type==='breakable')h.broken=!!h.broken&&h.x<level.checkpoints[checkpoint].x}
 function launchAirDevice(device){
  // Keep the existing aiming strength for the whole spring/vent flight.
- p.scriptedLaunch=true;
+ p.scriptedLaunch=true;p.jumpReleaseVy=null;p.coyoteLaunchVy=null;
  if(device.launchX!==undefined)p.vx=device.launchX;if(device.id==='mid-low-spring')p.poolApproach=true;if(device.poolBooster)p.poolExit=true;
  p.airSpeedLimit=device.airSpeedLimit??null;if(p.airSpeedLimit)p.vx=Math.max(-p.airSpeedLimit,Math.min(p.airSpeedLimit,p.vx));p.jumpAttack=true;p.vy=-device.power;p.ground=false;p.surface=null;p.rolling=false;p.roll=true;p.poseJumpFrame=runFrames;p.brakeActive=false;p.stopFrame=-100;coyote=0;jumpBuffer=0;p.airLaunchUntil=runFrames+Math.ceil(device.power/.58);device.firedAt=runFrames;sparks(device.x,device.y-10,6,device.cityVent?'#9be3ef':'#ffe68b');gameSound(device.poolBooster?'pool':device.cityVent?'vent':'spring',{launch:!!device.poolBooster});
 }
-function beginLoop(l){p.brakeActive=false;p.brakeAge=0;p.stopFrame=-100;p.loop={id:l.id,theta:0,speed:Math.abs(p.vx)};p.x=l.x;p.y=l.y-20;p.vy=0;p.ground=true;p.surface=null;l.used=true}
-function updateLoop(){const l=level.loops.find(l=>l.id===p.loop.id),q=p.loop;p.lastX=p.x;p.lastY=p.y;
+function beginLoop(l){p.brakeActive=false;p.brakeAge=0;p.stopFrame=-100;p.loop={id:l.id,theta:0,speed:p.vx*Math.hypot(1,p.surface?pose(p.surface).slope:0)};p.x=l.x;p.y=l.y-20;p.vy=0;p.ground=true;p.surface=null;l.used=true}
+function updateLoop(){
+ const l=level.loops.find(l=>l.id===p.loop.id),q=p.loop;p.lastX=p.x;p.lastY=p.y;
  const want=keys.has('ShiftLeft')||keys.has('ShiftRight')||keys.has('KeyX')||keys.has('MouseBoost');updateBoostState(want);
- if(p.boosting){q.speed+=(23-q.speed)*.14;}else{q.speed+=-.58*Math.sin(q.theta)-.012+(keys.has('ArrowRight')||keys.has('KeyD')?.06:0);}
- q.speed=Math.min(24,q.speed);
- const detach=jumpBuffer>0||(q.speed<5.5&&q.theta>Math.PI*.3&&q.theta<Math.PI*1.3);
- if(detach){p.vx=Math.cos(q.theta)*Math.max(5,q.speed);p.vy=-Math.sin(q.theta)*q.speed-(jumpBuffer?8:0);if(jumpBuffer){p.jumpAttack=true;stats.jumps++;p.poseJumpFrame=runFrames}jumpBuffer=0;p.loop=null;p.ground=false;p.surface=null;return true}
- q.theta+=Math.max(4,q.speed)/l.r;anim+=q.speed*.08;stats.maxSpeed=Math.max(stats.maxSpeed,q.speed);
- if(q.theta>=Math.PI*2){p.loop=null;l.solved=true;stats.loops++;score+=500;p.x=l.x+24;p.y=l.y-20;p.vx=Math.min(24,Math.max(10,q.speed));p.vy=0;p.ground=true;p.surface=level.surfaces.find(s=>active(s)&&p.x>=s.x1&&p.x<=s.x2&&Math.abs(yOn(s,p.x)-l.y)<12)||null;return true}
- p.x=l.x+Math.sin(q.theta)*l.r;p.y=l.y-l.r+Math.cos(q.theta)*l.r-20;p.vx=Math.cos(q.theta)*q.speed;p.vy=-Math.sin(q.theta)*q.speed;p.face=1;p.ground=true;return true
+ const dir=Number(keys.has('ArrowRight')||keys.has('KeyD'))-Number(keys.has('ArrowLeft')||keys.has('KeyA')),gravity=.58;
+ // Small angular steps keep gravity/contact accurate even at terrain-earned speeds.
+ const steps=Math.max(4,Math.ceil(Math.abs(q.speed)/l.r/.04)),dt=1/steps;
+ for(let i=0;i<steps;i++){
+  const previous=q.speed,drag=q.speed*.0015,drive=p.boosting&&q.speed<23?(23-q.speed)*.14:dir*.06*Math.max(0,Math.cos(q.theta));
+  q.speed+=(-gravity*Math.sin(q.theta)-drag+drive)*dt;
+  q.theta+=(previous+q.speed)*.5/l.r*dt;
+  p.x=l.x+Math.sin(q.theta)*l.r;p.y=l.y-l.r+Math.cos(q.theta)*l.r-20;
+  // The ceiling can hold Sonic only while centripetal acceleration supplies contact.
+  if(jumpBuffer>0||q.speed*q.speed/l.r+gravity*Math.cos(q.theta)<0){
+   p.vx=Math.cos(q.theta)*q.speed;p.vy=-Math.sin(q.theta)*q.speed;
+   if(jumpBuffer){p.vx-=Math.sin(q.theta)*13.4;p.vy-=Math.cos(q.theta)*13.4;p.jumpReleaseVy=-Math.sin(q.theta)*q.speed-Math.cos(q.theta)*5;p.jumpAttack=true;stats.jumps++;p.poseJumpFrame=runFrames;gameSound('jump')}
+   jumpBuffer=0;p.loop=null;l.used=false;p.ground=false;p.surface=null;return true;
+  }
+  if(q.theta>=Math.PI*2||q.theta<=0){
+   const complete=q.theta>=Math.PI*2;if(complete){l.solved=true;stats.loops++;score+=500}else l.used=false;
+   p.loop=null;p.x=l.x;p.y=l.y-20;p.vx=q.speed;p.vy=0;p.surface=level.surfaces.find(s=>active(s)&&p.x>=s.x1&&p.x<=s.x2&&Math.abs(yOn(s,p.x)-l.y)<12)||null;p.ground=!!p.surface;return true;
+  }
+ }
+ anim+=Math.abs(q.speed)*.08;stats.maxSpeed=Math.max(stats.maxSpeed,Math.abs(q.speed));
+ p.vx=Math.cos(q.theta)*q.speed;p.vy=-Math.sin(q.theta)*q.speed;p.face=Math.sign(q.speed)||1;p.ground=true;return true;
 }
 function updateAct2(){if(level.act!==2)return;
- for(const l of level.loops)if(!p.loop&&!l.used&&p.ground&&p.vx>9&&p.lastX<=l.x&&p.x>=l.x&&Math.abs(feet()-l.y)<18)beginLoop(l);
+ for(const l of level.loops)if(!p.loop&&!l.used&&p.ground&&p.vx>0&&p.lastX<=l.x&&p.x>=l.x&&Math.abs(feet()-l.y)<18)beginLoop(l);
  for(const e of level.events)if(e.age<0&&p.x>e.trigger){e.age=0;sparks(e.x,e.y,12,'#ff894d');shake=Math.max(shake,4)}else if(e.age>=0&&e.age<180)e.age++;
  for(const d of level.debris){if(!d.triggered&&(!d.entryX||p.x>=d.entryX)&&d.x-p.x>0&&d.x-p.x<Math.max(900,Math.abs(p.vx)*70)&&Math.abs(p.y-d.y)<550){d.triggered=true;d.age=0;gameSound('warning',{pan:Math.max(-1,Math.min(1,(d.x-p.x)/600))})}
   if(!d.triggered||d.age>=d.warn+d.fall+120)continue;d.age++;
