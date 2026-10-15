@@ -57,7 +57,9 @@ function updateMiddleMotion(){
 function updateMiddleSection(){const m=level.middleSection;if(!m)return;
  if(!m.secretRevealed&&p.x<m.start+3300&&p.x>m.start&&p.surface?.secretDepth>=3)m.secretRevealed=true;
 }
-function drawMiddleSection(){const m=level.middleSection;if(!m)return;const pool=m.pool,glassRoof=surfaceById(pool.booster.targetId);if(glassRoof.x2<cam-100||pool.x1-400>cam+W/zoom+100||m.base-360>camY+H/zoom+100)return;
+function drawMiddleSection(){const m=level.middleSection;if(!m)return;const pool=m.pool,glassRoof=surfaceById(pool.booster.targetId),smokeTop=m.base-360-204;
+ // Include the burning tower's 54-unit smoke plumes, which rise above its roof.
+ if(glassRoof.x2<cam-100||pool.x1-400>cam+W/zoom+100||smokeTop>camY+H/zoom+100)return;
  // Broken left tower and leaning right tower frame an H-shaped sky pool.
  const left=pool.x1-170;
  for(const [x,w,top,burn]of [[left,170,m.base-360,true]]){

@@ -73,14 +73,25 @@ function cityPillar(x,y,bottom,steel=false){
 function drawPixelCityStructures(){
  cityPillarFrameSpans.clear();cityPillarPass=true;try{
  for(const b of level.buildings){if(b.scenery)continue;const roof=b.roofId&&surfaceById(b.roofId),top=roof?Math.min(roof.y1,roof.y2)+26:b.y;if(b.x+b.w<cam-40||b.x>cam+W/zoom+40)continue;ctx.save();ctx.globalAlpha=b.interiorOpacity??1;if(roof&&roof.y1!==roof.y2){const left=Math.max(b.x,cam-40),right=Math.min(b.x+b.w,cam+W/zoom+40),bottom=camY+H/zoom+80;ctx.beginPath();ctx.moveTo(left,bottom);for(let x=Math.floor(left/2)*2;x<=right;x+=2){const y=Math.floor((yOn(roof,x)+26)/2)*2;ctx.lineTo(x,y);ctx.lineTo(x+2,y)}ctx.lineTo(right,bottom);ctx.closePath();ctx.clip()}cityFacade(b.x,b.x+b.w,top,b.seed,!!b.exposed,b.landmark);ctx.restore()}
- for(const s of level.surfaces){if(s.cityType==='blimp'||s.cityType==='blimp-anchor'||s.blimpRail||!active(s)||s.wallCap||s.secretDepth>4&&!level.middleSection?.secretRevealed)continue;const q=pose(s),left=Math.max(q.x1,cam-40),right=Math.min(q.x2,cam+W/zoom+40),type=s.cityType,bottom=camY+H/zoom+80;if(right<=left||Math.min(q.y1,q.y2)>bottom||(type==='interior'||type==='glass-pool'))continue;
+ for(const s of level.surfaces){if(s.cityType==='blimp'||s.cityType==='blimp-anchor'||s.blimpRail||!active(s)||s.wallCap||s.secretDepth>4&&!level.middleSection?.secretRevealed)continue;const q=pose(s),left=Math.max(q.x1,cam-40),right=Math.min(q.x2,cam+W/zoom+40),type=s.cityType,bottom=camY+H/zoom+80;if(type==='interior'||type==='glass-pool')continue;
+  // Fixed guides span the entire travel range, even while the deck is off screen.
+  // Cull that structure independently; the deck itself is culled by drawRail.
+  if(s.kind==='moving'&&!s.roof&&!s.facade){
+   const horizontal=s.motion?.axis==='x',top=horizontal?s.y1-115:s.y1-(s.motion?.amp||0)-40,railBottom=s.y1+(s.motion?.amp||0)+60;
+   if(horizontal){
+    const spanLeft=Math.max(s.x1-s.motion.amp,cam-40),spanRight=Math.min(s.x2+s.motion.amp,cam+W/zoom+40);
+    if(spanRight<=spanLeft||top>bottom||q.y1+14<camY-40)continue;
+    cityPixelRect(spanLeft,top,spanRight-spanLeft,8,'#405066');cityPixelRect(spanLeft,top,spanRight-spanLeft,2,'#a2968a');
+    for(const x of [q.x1+8,q.x2-12]){if(x<cam-40||x>cam+W/zoom+40)continue;cityPixelRect(x-4,top+2,12,10,'#697b8e');cityPixelLine(x,q.y1+14,x,Math.max(top+10,camY-40),'#697b8e',2)}
+   }else{
+    const visibleTop=Math.max(top,camY-40),visibleBottom=Math.min(railBottom,bottom);
+    if(right<=left||visibleBottom<=visibleTop)continue;
+    for(const x of [s.x1+8,s.x2-12]){cityPixelRect(x,visibleTop,4,visibleBottom-visibleTop,'#405066');cityPixelRect(x+4,visibleTop,2,visibleBottom-visibleTop,'#a2968a');cityPixelLine(x,yOn(s,x)+14,x,visibleTop,'#697b8e',2)}
+   }continue;
+  }
+  if(right<=left||Math.min(q.y1,q.y2)>bottom)continue;
   if(type==='rooftop'&&!s.facade&&!s.roof){cityFacade(q.x1,q.x2,Math.min(q.y1,q.y2)+26,Math.floor(s.x1/810),false);continue}
   if(s.roof||s.facade){if(s.facade){for(const x of [q.x1+12,q.x2-24]){const y=yOn(s,x)+26;cityPixelLine(x,y,x+26,y+48,'#68778b',4);cityPixelRect(x+22,y+43,12,8,'#a28287')}}continue}
-  if(s.kind==='moving'){
-   const horizontal=s.motion?.axis==='x',top=horizontal?s.y1-115:s.y1-(s.motion?.amp||0)-40,railBottom=s.y1+(s.motion?.amp||0)+60;
-   if(horizontal){const spanLeft=Math.max(s.x1-s.motion.amp,cam-40),spanRight=Math.min(s.x2+s.motion.amp,cam+W/zoom+40);cityPixelRect(spanLeft,top,spanRight-spanLeft,8,'#405066');cityPixelRect(spanLeft,top,spanRight-spanLeft,2,'#a2968a');for(const x of [q.x1+8,q.x2-12]){cityPixelRect(x-4,top+2,12,10,'#697b8e');cityPixelLine(x,q.y1+14,x,Math.max(top+10,camY-40),'#697b8e',2)}}
-   else for(const x of [s.x1+8,s.x2-12]){const visibleTop=Math.max(top,camY-40),visibleBottom=Math.min(railBottom,bottom);cityPixelRect(x,visibleTop,4,visibleBottom-visibleTop,'#405066');cityPixelRect(x+4,visibleTop,2,visibleBottom-visibleTop,'#a2968a');cityPixelLine(x,yOn(s,x)+14,x,visibleTop,'#697b8e',2)}continue
-  }
   if(s.grindable){for(let x=Math.ceil(left/260)*260;x<right;x+=260)cityPillar(x,yOn(s,x)+10,bottom,true);continue}
   if(s.routeType==='skill'&&q.x2-q.x1<=64){const x=(q.x1+q.x2)/2,y=yOn(s,x)+26;cityPillar(x,Math.max(y,camY-40),bottom,true);cityPixelLine(q.x1+4,y,x,y+42,'#526277',4);continue}
   const spacing=type==='highway'||type==='concrete-ramp'?240:160;

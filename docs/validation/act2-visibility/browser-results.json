@@ -1,0 +1,583 @@
+{
+  "cases": 48,
+  "baseline": "9ca5e64",
+  "errors": [],
+  "results": [
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "variant": "before",
+      "zoom": 1,
+      "kind": "carrier",
+      "visiblePixels": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "variant": "before",
+      "zoom": 1,
+      "kind": "lift",
+      "visiblePixels": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "variant": "before",
+      "zoom": 1,
+      "kind": "wreck",
+      "visiblePixels": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "variant": "before",
+      "zoom": 1,
+      "kind": "tower",
+      "visiblePixels": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "variant": "before",
+      "zoom": 0.94,
+      "kind": "carrier",
+      "visiblePixels": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "variant": "before",
+      "zoom": 0.94,
+      "kind": "lift",
+      "visiblePixels": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "variant": "before",
+      "zoom": 0.94,
+      "kind": "wreck",
+      "visiblePixels": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "variant": "before",
+      "zoom": 0.94,
+      "kind": "tower",
+      "visiblePixels": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "variant": "before",
+      "zoom": 0.78,
+      "kind": "carrier",
+      "visiblePixels": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "variant": "before",
+      "zoom": 0.78,
+      "kind": "lift",
+      "visiblePixels": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "variant": "before",
+      "zoom": 0.78,
+      "kind": "wreck",
+      "visiblePixels": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "variant": "before",
+      "zoom": 0.78,
+      "kind": "tower",
+      "visiblePixels": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "variant": "after",
+      "zoom": 1,
+      "kind": "carrier",
+      "visiblePixels": 9600,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "variant": "after",
+      "zoom": 1,
+      "kind": "lift",
+      "visiblePixels": 9024,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "variant": "after",
+      "zoom": 1,
+      "kind": "wreck",
+      "visiblePixels": 9853,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "variant": "after",
+      "zoom": 1,
+      "kind": "tower",
+      "visiblePixels": 12924,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "variant": "after",
+      "zoom": 0.94,
+      "kind": "carrier",
+      "visiblePixels": 9024,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "variant": "after",
+      "zoom": 0.94,
+      "kind": "lift",
+      "visiblePixels": 8512,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "variant": "after",
+      "zoom": 0.94,
+      "kind": "wreck",
+      "visiblePixels": 8744,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "variant": "after",
+      "zoom": 0.94,
+      "kind": "tower",
+      "visiblePixels": 11384,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "variant": "after",
+      "zoom": 0.78,
+      "kind": "carrier",
+      "visiblePixels": 6084,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "variant": "after",
+      "zoom": 0.78,
+      "kind": "lift",
+      "visiblePixels": 5720,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "variant": "after",
+      "zoom": 0.78,
+      "kind": "wreck",
+      "visiblePixels": 7720,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "variant": "after",
+      "zoom": 0.78,
+      "kind": "tower",
+      "visiblePixels": 7877,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "variant": "before",
+      "zoom": 1,
+      "kind": "carrier",
+      "visiblePixels": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "variant": "before",
+      "zoom": 1,
+      "kind": "lift",
+      "visiblePixels": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "variant": "before",
+      "zoom": 1,
+      "kind": "wreck",
+      "visiblePixels": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "variant": "before",
+      "zoom": 1,
+      "kind": "tower",
+      "visiblePixels": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "variant": "before",
+      "zoom": 0.94,
+      "kind": "carrier",
+      "visiblePixels": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "variant": "before",
+      "zoom": 0.94,
+      "kind": "lift",
+      "visiblePixels": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "variant": "before",
+      "zoom": 0.94,
+      "kind": "wreck",
+      "visiblePixels": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "variant": "before",
+      "zoom": 0.94,
+      "kind": "tower",
+      "visiblePixels": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "variant": "before",
+      "zoom": 0.78,
+      "kind": "carrier",
+      "visiblePixels": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "variant": "before",
+      "zoom": 0.78,
+      "kind": "lift",
+      "visiblePixels": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "variant": "before",
+      "zoom": 0.78,
+      "kind": "wreck",
+      "visiblePixels": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "variant": "before",
+      "zoom": 0.78,
+      "kind": "tower",
+      "visiblePixels": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "variant": "after",
+      "zoom": 1,
+      "kind": "carrier",
+      "visiblePixels": 9600,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "variant": "after",
+      "zoom": 1,
+      "kind": "lift",
+      "visiblePixels": 9024,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "variant": "after",
+      "zoom": 1,
+      "kind": "wreck",
+      "visiblePixels": 9853,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "variant": "after",
+      "zoom": 1,
+      "kind": "tower",
+      "visiblePixels": 12924,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "variant": "after",
+      "zoom": 0.94,
+      "kind": "carrier",
+      "visiblePixels": 9024,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "variant": "after",
+      "zoom": 0.94,
+      "kind": "lift",
+      "visiblePixels": 8512,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "variant": "after",
+      "zoom": 0.94,
+      "kind": "wreck",
+      "visiblePixels": 8744,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "variant": "after",
+      "zoom": 0.94,
+      "kind": "tower",
+      "visiblePixels": 11384,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "variant": "after",
+      "zoom": 0.78,
+      "kind": "carrier",
+      "visiblePixels": 6084,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "variant": "after",
+      "zoom": 0.78,
+      "kind": "lift",
+      "visiblePixels": 5720,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "variant": "after",
+      "zoom": 0.78,
+      "kind": "wreck",
+      "visiblePixels": 7720,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "variant": "after",
+      "zoom": 0.78,
+      "kind": "tower",
+      "visiblePixels": 7877,
+      "width": 1920,
+      "height": 1080
+    }
+  ]
+}

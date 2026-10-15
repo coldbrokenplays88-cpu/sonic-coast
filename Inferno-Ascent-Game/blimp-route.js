@@ -56,7 +56,9 @@ const blimpTextures=new Map();
 function drawBlimpRoute(){
  for(const b of level.blimpRoute?.blimps||[]){
   const surfaces=b.surfaces.map(surfaceById),first=pose(surfaces[0]),last=pose(surfaces.at(-1)),x=first.x1,right=last.x2,top=Math.min(...surfaces.map(s=>Math.min(s.y1,s.y2))),bottom=Math.max(...surfaces.map(s=>Math.max(s.y1,s.y2)))+(b.damaged?154:234);
-  if(right+42<cam||x-42>cam+W/zoom||bottom<camY||top>camY+H/zoom)continue;
+  // Wreck smoke rises above the hull and drifts beyond its fins.
+  const side=b.damaged?80:42,effectTop=top-(b.damaged?224:0);
+  if(right+side<cam-40||x-side>cam+W/zoom+40||bottom<camY-40||effectTop>camY+H/zoom+40)continue;
   let texture=blimpTextures.get(b.id);
   if(!texture&&document.createElement){
    texture=document.createElement('canvas');texture.width=Math.ceil((right-x+84)/2);texture.height=Math.ceil((bottom-top+2)/2);
