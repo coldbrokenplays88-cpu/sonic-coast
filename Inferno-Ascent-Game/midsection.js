@@ -141,29 +141,29 @@ function addMiddleSection(l) {
     low2 = deck('low-transfer-2', 4200, 4490, -280),
     low3 = deck('low-transfer-3', 4750, 5150, -160, -160);
   [low1, low2, low3].forEach((s) => body(s, 2));
-  const upper1 = deck('spring-step-1', 1131, 1189, -470, -470, {
+  const upper1 = deck('spring-step-1', 921, 979, -470, -470, {
       kind: 'express',
       routeType: 'skill',
       cityType: 'fire-escape',
     }),
-    upper2 = deck('spring-step-2', 831, 889, -750, -750, {
+    upper2 = deck('spring-step-2', 761, 819, -750, -750, {
       kind: 'express',
       routeType: 'skill',
       cityType: 'fire-escape',
     }),
-    upper3 = deck('spring-aim-step', 1311, 1369, -1090, -1090, {
+    upper3 = deck('spring-aim-step', 981, 1039, -1090, -1090, {
       kind: 'express',
       routeType: 'skill',
       cityType: 'billboard',
     });
-  const left = deck('left-decision', 1581, 1639, -1430, -1430, {
+  const left = deck('left-decision', 1161, 1219, -1430, -1430, {
       kind: 'express',
       routeType: 'skill',
       cityType: 'fire-escape',
     }),
-    wrong = deck('wrong-decision', 1880, 2130, -1390, -1390, { cityType: 'fire-escape' });
-  bot('wrong-way-guard', wrong, 2000, { jumpImmune: true, rebound: false });
-  const moving = deck('moving-spring-hoist', 1581, 1639, -1720, -1720, {
+    wrong = deck('wrong-decision', 1551, 1609, -1390, -1390, { cityType: 'fire-escape' });
+  bot('wrong-way-guard', wrong, 1580, { jumpImmune: true, rebound: false });
+  const moving = deck('moving-spring-hoist', 1161, 1219, -1720, -1720, {
     kind: 'moving',
     routeType: 'skill',
     cityType: 'crane-hoist',
@@ -179,7 +179,7 @@ function addMiddleSection(l) {
     cityType: 'grind-rail',
   };
   const rails = [
-    deck('rail-entry', 2070, 2350, -1920, -1900, railExtras),
+    deck('rail-entry', 1430, 2350, -1920, -1900, railExtras),
     deck('rail-top', 2350, 3000, -1900, -1650, railExtras),
     deck('rail-descent', 3000, 4700, -1650, -300, railExtras),
     deck('rail-exit', 4700, 5400, -300, 220, railExtras),
@@ -193,12 +193,14 @@ function addMiddleSection(l) {
   bot('rail-guard-2', rails[2], 3650);
   bot('rail-guard-3', rails[2], 4500);
   spring('low-spring', fallen, 920, 18, 9, 'mid-pool-floor').airSpeedLimit = 9;
-  spring('upper-spring', upper, 790, 19, 9.25, upper1.id);
-  spring('spring-1', upper1, 1160, 19, -7.3, upper2.id);
-  spring('spring-2', upper2, 860, 20.5, 12.8, upper3.id);
-  spring('aim-spring', upper3, 1340, 20.5, 6.4, left.id);
-  spring('left-spring', left, 1610, 21, 0, moving.id);
-  spring('moving-spring', moving, 1610, 17, 16, rails[0].id);
+  // Upright impulses leave every transfer to air steering. The wide third
+  // crossing needs a longer arc; no spring supplies sideways propulsion.
+  spring('upper-spring', upper, 790, 22, 0, upper1.id);
+  spring('spring-1', upper1, 950, 22, 0, upper2.id);
+  spring('spring-2', upper2, 790, 23, 0, upper3.id);
+  spring('aim-spring', upper3, 1010, 22, 0, left.id);
+  spring('left-spring', left, 1190, 21, 0, moving.id);
+  spring('moving-spring', moving, 1190, 24, 0, rails[0].id);
   const pool = {
     id: 'mid-pool',
     x1: start + 1400,
@@ -248,9 +250,6 @@ function addMiddleSection(l) {
     [2, 2630, -510],
     [3, 2830, -620],
     [4, 2450, -730],
-    [5, 2160, -840],
-    [6, 1870, -950],
-    [7, 1580, -1060],
   ]) {
     const s = deck('secret-' + i, x, x + (i === 3 ? 430 : 210), y, y, {
       cityType: 'fire-escape',
@@ -267,14 +266,6 @@ function addMiddleSection(l) {
       surfaceId: secret[2].id,
       broken: false,
       secret: true,
-    },
-    {
-      id: 'mid-rail-monitor',
-      x: start + 1610,
-      y: base - 1430,
-      surfaceId: left.id,
-      broken: false,
-      required: true,
     }
   );
   l.checkpoints.push({

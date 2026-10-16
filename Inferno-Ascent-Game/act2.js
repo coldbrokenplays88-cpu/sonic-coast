@@ -58,7 +58,8 @@ function launchAirDevice(device) {
   jumpBuffer = 0;
   p.airLaunchUntil = runFrames + Math.ceil(device.power / 0.58);
   device.firedAt = runFrames;
-  sparks(device.x, device.y - 10, 6, device.cityVent ? '#9be3ef' : '#ffe68b');
+  const anchor = airDevicePose(device);
+  sparks(anchor.x, anchor.y - 10, 6, device.cityVent ? '#9be3ef' : '#ffe68b');
   gameSound(device.poolBooster ? 'pool' : device.cityVent ? 'vent' : 'spring', {
     launch: !!device.poolBooster,
   });

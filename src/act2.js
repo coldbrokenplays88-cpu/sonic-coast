@@ -1,7 +1,7 @@
 // Canonical runtime module. Classic VM compatibility is generated from this source.
 import { state as runtimeState } from './state.js';
 import { drawBlimpRoute } from './blimp-route.js';
-import { updateBoostState } from './boost-rules.js';
+import { airDevicePose, updateBoostState } from './boost-rules.js';
 import { frameBossCamera } from './boss-game.js';
 import { drawDebrisWarning, drawPixelDebris } from './city-polish.js';
 import {
@@ -104,7 +104,8 @@ export function launchAirDevice(device) {
   runtimeState.jumpBuffer = 0;
   p.airLaunchUntil = runtimeState.runFrames + Math.ceil(device.power / 0.58);
   device.firedAt = runtimeState.runFrames;
-  sparks(device.x, device.y - 10, 6, device.cityVent ? '#9be3ef' : '#ffe68b');
+  const anchor = airDevicePose(device);
+  sparks(anchor.x, anchor.y - 10, 6, device.cityVent ? '#9be3ef' : '#ffe68b');
   gameSound(device.poolBooster ? 'pool' : device.cityVent ? 'vent' : 'spring', {
     launch: !!device.poolBooster,
   });

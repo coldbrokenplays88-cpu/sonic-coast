@@ -1,9 +1,12 @@
 // Normal button steering; never change player position after the initial setup.
-const aimHighSource=`function aimHigh(){keys.clear();const launched=level.springs.filter(d=>d.id.startsWith('mid-')&&d.firedAt!==undefined).sort((a,b)=>b.firedAt-a.firedAt)[0];
+const aimHighSource=`function aimHigh(capAtEntry=false){keys.clear();const launched=level.springs.filter(d=>d.id.startsWith('mid-')&&d.firedAt!==undefined).sort((a,b)=>b.firedAt-a.firedAt)[0];
  const target=surfaceById(launched?.targetId??'mid-upper-choice');if(!target)return;
  if(p.ground){const d=level.springs.find(d=>d.surfaceId===p.surface.id);if(d){const x=airDevicePose(d).x;if(Math.abs(x-p.x)>8)keys.add(x>p.x?'ArrowRight':'ArrowLeft');else press('Space',true)}return}
- const spring=level.springs.find(d=>d.surfaceId===target.id),face=spring?springFace(spring):null,half=19,radius=face?Math.abs(face.nx)*13+Math.abs(face.ny)*half:0;const targetY=face?face.y+face.ny*radius+half:target.y1;const a=face?.ny*.29,b=face?p.vx*face.nx+(p.vy+.29)*face.ny:p.vy+.29,c=face?(p.x-face.x)*face.nx+(p.y+1-face.y)*face.ny-radius:feet()-targetY,dis=face?b*b-4*a*c:b*b-1.16*c;let t=dis>=0?(face?(-b-Math.sqrt(dis))/(2*a):(-b+Math.sqrt(dis))/.58):25;t=Math.max(1,t);
- const q=pose(target,runFrames+t),future=spring?springFace(spring,runFrames+t):null,x=future?future.x+future.nx*radius:(q.x1+q.x2)/2,error=x-(p.x+p.vx*t);
+ const spring=(launched||capAtEntry)?level.springs.find(d=>d.surfaceId===target.id):null,face=spring?springFace(spring):null,half=19,radius=face?Math.abs(face.nx)*13+Math.abs(face.ny)*half:0;const targetY=face?face.y+face.ny*radius+half:target.y1;const a=face?.ny*.29,b=face?p.vx*face.nx+(p.vy+.29)*face.ny:p.vy+.29,c=face?(p.x-face.x)*face.nx+(p.y+1-face.y)*face.ny-radius:feet()-targetY,dis=face?b*b-4*a*c:b*b-1.16*c;let t=dis>=0?(face?(-b-Math.sqrt(dis))/(2*a):(-b+Math.sqrt(dis))/.58):25;t=Math.max(1,t);
+ const q=pose(target,runFrames+t),future=spring?springFace(spring,runFrames+t):null;let x=future?future.x+future.nx*radius:(q.x1+q.x2)/2;
+ // Wait on the upright lower spring when the hoist is too far left for the rail transfer.
+ if(target.id==='mid-moving-spring-hoist'){const lower=level.springs.find(d=>d.id==='mid-left-spring');if(x<lower.x-60)x=lower.x;}
+ const error=x-(p.x+p.vx*t);
  if(Math.abs(error)>7)keys.add(error>0?'ArrowRight':'ArrowLeft');
 }`;
 const clearGuardSource=`function clearGuard(){const e=enemies.find(e=>e.id==='mid-low-guard');for(let i=0;i<240;i++){keys.clear();if(!e.alive&&p.ground){release('Space',true);return}if(p.ground){if(Math.abs(p.vx)>1)keys.add(p.vx>0?'ArrowLeft':'ArrowRight');else press('Space',true)}else{const error=e.x-p.x;if(Math.abs(error)>12)keys.add(error>0?'ArrowRight':'ArrowLeft');else if(Math.abs(p.vx)>.3)keys.add(p.vx>0?'ArrowLeft':'ArrowRight')}update()}throw Error('guard');}clearGuard();`;

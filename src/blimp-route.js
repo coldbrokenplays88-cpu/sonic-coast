@@ -8,12 +8,12 @@ import { pose, yOn } from './surface-collision.js';
 export let blimpTextures;
 
 // Optional flight above Burning Quarter. Coordinates derive from the existing
-// loop ramp and hallway seam; none of the original city geometry is moved.
+// loop approach and hallway seam. Both choices use the shared movement physics.
 export function addBlimpRoute(l) {
   const ramp = l.surfaces.find((s) => s.id === 'draw-loop-launch'),
     exit = l.surfaces.find((s) => s.id === 'draw-hall-exit');
-  const ox = ramp.x2 - 31300,
-    oy = ramp.y2 + 3020;
+  const ox = ramp.x1 - 31000,
+    oy = ramp.y1 + 2800;
   const add = (id, x1, x2, y1, y2 = y1, extra = {}) => {
     const s = {
       id,
@@ -28,41 +28,41 @@ export function addBlimpRoute(l) {
     l.surfaces.push(s);
     return s;
   };
-  const entry = add('blimp-entry', 32715, 32773, -3750, -3750, { cityType: 'blimp-anchor' });
+  const entry = add('blimp-entry', 31931, 31989, -3320, -3320, { cityType: 'blimp-anchor' });
   const points = [
-    [31500, -3850],
-    [31600, -3770],
-    [31700, -3720],
-    [31800, -3700],
-    [31900, -3700],
-    [32000, -3720],
-    [32100, -3750],
-    [32200, -3780],
-    [32370, -3810],
+    [30716, -3850],
+    [30816, -3770],
+    [30916, -3720],
+    [31016, -3700],
+    [31116, -3700],
+    [31216, -3720],
+    [31316, -3750],
+    [31416, -3780],
+    [31586, -3810],
   ];
   const curve = [];
   for (let i = 0; i < points.length - 1; i++)
     curve.push(
       add('blimp-curve-' + i, points[i][0], points[i + 1][0], points[i][1], points[i + 1][1])
     );
-  const moving = add('blimp-moving', 30620, 31120, -3810, -3810, {
+  const moving = add('blimp-moving', 29836, 30336, -3810, -3810, {
     kind: 'moving',
     motion: { type: 'flight', axis: 'x', distance: -710, speed: 3, startedAt: null },
   });
-  const reward = add('blimp-reward', 29170, 29820, -3690);
+  const reward = add('blimp-reward', 28386, 29036, -3690);
   l.springs.push(
     {
       id: 'blimp-entry-spring',
       surfaceId: entry.id,
-      x: 32744 + ox,
+      x: 31960 + ox,
       y: entry.y1,
-      power: 11,
+      power: 21,
       launchX: -20,
     },
     {
       id: 'blimp-return-spring',
       surfaceId: reward.id,
-      x: 29200 + ox,
+      x: 28416 + ox,
       y: reward.y1,
       power: 32,
       launchX: 28,
@@ -70,7 +70,7 @@ export function addBlimpRoute(l) {
   );
   // Stay above the first jump and blimps, then meet the hallway exit exactly.
   // The endpoint meets the far end of the existing hallway-exit roof.
-  add('blimp-return-rail', 30800, 34800, -4400, -4400, {
+  add('blimp-return-rail', 30016, 34800, -4400, -4400, {
     kind: 'express',
     grindable: true,
     cityType: 'grind-rail',
@@ -84,8 +84,8 @@ export function addBlimpRoute(l) {
   });
   l.monitors ??= [];
   for (const [id, item, x] of [
-    ['blimp-life', 'life', 29345],
-    ['blimp-shield', 'bubble', 29265],
+    ['blimp-life', 'life', 28561],
+    ['blimp-shield', 'bubble', 28481],
   ])
     l.monitors.push({ id, item, x: x + ox, y: reward.y1, surfaceId: reward.id, broken: false });
   // Keep rings clear of the monitor screens and the return spring.
@@ -93,8 +93,6 @@ export function addBlimpRoute(l) {
     l.rings.push({ x, y: reward.y1 - 38, taken: false });
   l.blimpRoute = {
     entered: false,
-    entryJumpFrame: -1,
-    entryJumpSpeed: 0,
     departureFrame: -100,
     departureSpeed: 0,
     entryId: entry.id,
@@ -116,8 +114,6 @@ export function resetBlimpRoute() {
     s.motion.startedAt = null;
     Object.assign(runtimeState.level.blimpRoute, {
       entered: false,
-      entryJumpFrame: -1,
-      entryJumpSpeed: 0,
       departureFrame: -100,
       departureSpeed: 0,
     });
@@ -134,8 +130,18 @@ export function recordBlimpJump(surface, speed) {
     (!surface &&
       runtimeState.coyote > 0 &&
       runtimeState.runFrames - r.departureFrame <= tuning.coyote);
-  r.entryJumpFrame = fromRamp ? runtimeState.runFrames : -1;
-  r.entryJumpSpeed = surface ? Math.abs(speed) : r.departureSpeed;
+  if (fromRamp && surface) {
+    r.departureFrame = runtimeState.runFrames;
+    r.departureSpeed = Math.abs(speed);
+  } else if (!fromRamp) invalidateBlimpEntry();
+}
+
+export function invalidateBlimpEntry() {
+  const r = runtimeState.level.blimpRoute;
+  if (r) {
+    r.departureFrame = -100;
+    r.departureSpeed = 0;
+  }
 }
 
 export function recordBlimpDeparture(s) {
@@ -149,14 +155,14 @@ export function recordBlimpDeparture(s) {
 export function onBlimpLanding(s) {
   const r = runtimeState.level.blimpRoute;
   if (!r) return;
-  if (s.id !== r.entryId) r.entryJumpFrame = -1;
+  if (s.id !== r.entryId) invalidateBlimpEntry();
   if (s.id === r.movingId && s.motion.startedAt === null)
     s.motion.startedAt = runtimeState.runFrames;
 }
 
 export function qualifyingBlimpEntry() {
   const r = runtimeState.level.blimpRoute;
-  return r && r.entryJumpFrame === p.poseJumpFrame && r.entryJumpSpeed >= 24 && !p.airBoostUsed;
+  return !!(r && r.departureFrame >= 0 && r.departureSpeed >= 24 && !p.airBoostUsed);
 }
 
 export function drawBlimpRoute() {

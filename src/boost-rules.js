@@ -1,5 +1,6 @@
 // Canonical runtime module. Classic VM compatibility is generated from this source.
 import { state as runtimeState } from './state.js';
+import { invalidateBlimpEntry } from './blimp-route.js';
 import { BOOST_MAX, gameSound, p, sparks } from './game.js';
 import { bodyHeight, pose, yOn, sweptBoxTime } from './surface-collision.js';
 
@@ -30,6 +31,7 @@ export function updateBoostState(want) {
     eligible
   ) {
     runtimeState.boost -= BOOST_MAX / 4;
+    invalidateBlimpEntry();
     p.airBoostUsed = true;
     p.airBoostFrames = 18;
     p.groundBoostHeld = false;
@@ -193,11 +195,11 @@ export function resetBoostMonitors() {
   for (const m of runtimeState.level.monitors || []) m.broken = false;
 }
 
-export function airDevicePose(d) {
+export function airDevicePose(d, t = runtimeState.runFrames) {
   const s = d.surfaceId && surfaceById(d.surfaceId);
   if (!s) return d;
-  const q = pose(s);
-  return { ...d, x: d.x + q.x1 - s.x1, y: yOn(s, d.x + q.x1 - s.x1) };
+  const q = pose(s, t);
+  return { ...d, x: d.x + q.x1 - s.x1, y: q.y1 + (d.x - s.x1) * q.slope };
 }
 export function initializeRuntimeModule() {}
 export function getRuntimeBindings() {

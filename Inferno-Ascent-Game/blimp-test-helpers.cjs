@@ -5,10 +5,10 @@ const startLoopSource=`function startLoop(phase=0,style='dash'){
  if(style==='roll')press('ArrowDown',true);press('ArrowRight',true);if(style==='boost'){press('ShiftLeft',true);press('ArrowDown',true);}
 }`;
 const blimpReplaySource=`function* blimpSteps(cautious=false,maxFrames=1200){
- let jumped=false,turned=false,returned=false,paused=false,crossed=false,entryBrake=0,returnJumpFrame=-1,crossJumpFrame=0,wait=0,landings=[],lastId='',secondInitiallyVisible=null,thirdVisibleAtJump=null,crossingSpeed=0;
+ let departed=false,boostedEntry=false,turned=false,returned=false,paused=false,crossed=false,entryBrake=0,returnJumpFrame=-1,crossJumpFrame=0,wait=0,landings=[],lastId='',secondInitiallyVisible=null,thirdVisibleAtJump=null,crossingSpeed=0;
  const begin=runFrames;
  for(let i=0;i<maxFrames;i++){
-  if(!jumped&&p.surface?.id==='draw-loop-launch'&&p.x>=p.surface.x2-45){const boosted=keys.has('ShiftLeft');press('Space',true);jumped=true;if(boosted){release('ShiftLeft',true);release('ArrowRight',true);press('ArrowLeft',true);entryBrake=34;}}
+  if(!departed&&!p.ground&&!p.loop&&level.blimpRoute.departureFrame>=0){departed=true;boostedEntry=keys.has('ShiftLeft');release('ShiftLeft',true);if(boostedEntry){release('ArrowRight',true);press('ArrowLeft',true);entryBrake=32;}}
   if(entryBrake>0&&--entryBrake===0){release('ArrowLeft',true);press('ArrowRight',true);}
   if(!turned&&level.springs.find(s=>s.id==='blimp-entry-spring').firedAt!==undefined){release('Space',true);release('ArrowRight',true);release('ShiftLeft',true);press('ArrowLeft',true);turned=true;}
   if(turned&&!returned){
@@ -22,7 +22,7 @@ const blimpReplaySource=`function* blimpSteps(cautious=false,maxFrames=1200){
      if(p.vx<-.2&&wait===0){}else{release('ArrowRight',true);wait++;if(visible){press('ArrowLeft',true);if(p.x<q.x1+80){press('Space',true);crossed=true;crossJumpFrame=runFrames;thirdVisibleAtJump=visible;crossingSpeed=Math.abs(p.vx);}}}
     }else if(!cautious&&!crossed&&p.x<q.x1+35){press('Space',true);crossed=true;crossJumpFrame=runFrames;thirdVisibleAtJump=visible;crossingSpeed=Math.abs(p.vx);}
    }
-   if(p.surface?.id==='blimp-reward'&&returnJumpFrame<0&&p.x<29490){release('Space',true);press('Space',true);returnJumpFrame=runFrames;}
+   if(p.surface?.id==='blimp-reward'&&returnJumpFrame<0&&p.x<surfaceById('blimp-reward').x1+320){release('Space',true);press('Space',true);returnJumpFrame=runFrames;}
    if(returnJumpFrame>=0&&runFrames===returnJumpFrame+1)release('Space',true);
    if(p.surface?.id==='blimp-reward'&&!p.rolling){release('ArrowDown',true);press('ArrowDown',true);}
 

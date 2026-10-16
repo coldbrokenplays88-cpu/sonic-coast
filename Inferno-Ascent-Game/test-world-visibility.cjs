@@ -44,7 +44,7 @@ test('moving support structures still cull when their entire travel range is off
 });
 
 test('undiscovered secret platforms remain hidden by both structure and deck renderers',()=>{
- const a=boot();a.run(`const s=level.surfaces.find(s=>s.secretDepth===5);level.surfaces=[s];level.buildings=[];
+ const a=boot();a.run(`const s={...surfaceById('mid-secret-3'),id:'hidden-fixture',secretDepth:5};level.surfaces=[s];level.buildings=[];
   cam=s.x1-200;camY=s.y1-200;zoom=1;drawPixelCityStructures();drawRail(s);`);
  assert.equal(a.rects.length,0);
  a.run('level.middleSection.secretRevealed=true;drawPixelCityStructures();drawRail(s)');

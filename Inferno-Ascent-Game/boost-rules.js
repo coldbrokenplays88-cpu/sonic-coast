@@ -27,6 +27,7 @@ function updateBoostState(want) {
     eligible
   ) {
     boost -= BOOST_MAX / 4;
+    invalidateBlimpEntry();
     p.airBoostUsed = true;
     p.airBoostFrames = 18;
     p.groundBoostHeld = false;
@@ -190,9 +191,9 @@ function resetBoostMonitors() {
   for (const m of level.monitors || []) m.broken = false;
 }
 
-function airDevicePose(d) {
+function airDevicePose(d, t = runFrames) {
   const s = d.surfaceId && surfaceById(d.surfaceId);
   if (!s) return d;
-  const q = pose(s);
-  return { ...d, x: d.x + q.x1 - s.x1, y: yOn(s, d.x + q.x1 - s.x1) };
+  const q = pose(s, t);
+  return { ...d, x: d.x + q.x1 - s.x1, y: q.y1 + (d.x - s.x1) * q.slope };
 }
