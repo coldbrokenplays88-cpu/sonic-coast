@@ -99,10 +99,7 @@ function activateWorldDevices() {
 }
 
 function springFace(d, t = runFrames) {
-  const s = level.surfaces.find((s) => s.id === d.surfaceId),
-    q = s ? pose(s, t) : null;
-  const x = d.x + (q ? q.x1 - s.x1 : 0),
-    y = q ? q.y1 + (d.x - s.x1) * q.slope : d.y;
+  const { x, y } = airDevicePose(d, t);
   const angle = (polishDirection(d) * Math.PI) / 8,
     nx = Math.sin(angle),
     ny = -Math.cos(angle);

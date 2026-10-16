@@ -168,7 +168,7 @@ export function addMiddleSection(l) {
       routeType: 'skill',
       cityType: 'fire-escape',
     }),
-    wrong = deck('wrong-decision', 1880, 2130, -1390, -1390, { cityType: 'fire-escape' });
+    wrong = deck('wrong-decision', 1971, 2029, -1390, -1390, { cityType: 'fire-escape' });
   bot('wrong-way-guard', wrong, 2000, { jumpImmune: true, rebound: false });
   const moving = deck('moving-spring-hoist', 1581, 1639, -1720, -1720, {
     kind: 'moving',
@@ -200,12 +200,14 @@ export function addMiddleSection(l) {
   bot('rail-guard-2', rails[2], 3650);
   bot('rail-guard-3', rails[2], 4500);
   spring('low-spring', fallen, 920, 18, 9, 'mid-pool-floor').airSpeedLimit = 9;
-  spring('upper-spring', upper, 790, 19, 9.25, upper1.id);
-  spring('spring-1', upper1, 1160, 19, -7.3, upper2.id);
-  spring('spring-2', upper2, 860, 20.5, 12.8, upper3.id);
-  spring('aim-spring', upper3, 1340, 20.5, 6.4, left.id);
+  // Upright impulses leave every transfer to air steering. The wide third
+  // crossing needs a longer arc; no spring supplies sideways propulsion.
+  spring('upper-spring', upper, 790, 27, 0, upper1.id);
+  spring('spring-1', upper1, 1160, 26, 0, upper2.id);
+  spring('spring-2', upper2, 860, 29, 0, upper3.id);
+  spring('aim-spring', upper3, 1340, 26, 0, left.id);
   spring('left-spring', left, 1610, 21, 0, moving.id);
-  spring('moving-spring', moving, 1610, 17, 16, rails[0].id);
+  spring('moving-spring', moving, 1610, 29, 0, rails[0].id);
   const pool = {
     id: 'mid-pool',
     x1: start + 1400,
@@ -255,9 +257,6 @@ export function addMiddleSection(l) {
     [2, 2630, -510],
     [3, 2830, -620],
     [4, 2450, -730],
-    [5, 2160, -840],
-    [6, 1870, -950],
-    [7, 1580, -1060],
   ]) {
     const s = deck('secret-' + i, x, x + (i === 3 ? 430 : 210), y, y, {
       cityType: 'fire-escape',
@@ -274,14 +273,6 @@ export function addMiddleSection(l) {
       surfaceId: secret[2].id,
       broken: false,
       secret: true,
-    },
-    {
-      id: 'mid-rail-monitor',
-      x: start + 1610,
-      y: base - 1430,
-      surfaceId: left.id,
-      broken: false,
-      required: true,
     }
   );
   l.checkpoints.push({

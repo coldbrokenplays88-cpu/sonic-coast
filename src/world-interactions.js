@@ -3,7 +3,7 @@ import { state as runtimeState } from './state.js';
 import { bossOwnsControls } from './boss-game.js';
 import { launchAirDevice } from './act2.js';
 import { qualifyingBlimpEntry } from './blimp-route.js';
-import { collectBoostMonitors } from './boost-rules.js';
+import { airDevicePose, collectBoostMonitors } from './boost-rules.js';
 import { gameSound, hurt, notify, p, sparks } from './game.js';
 import { polishDirection, polishedSpringFrame } from './city-polish.js';
 import { handleStageEnemyDamage } from './stage-runtime.js';
@@ -111,10 +111,7 @@ export function activateWorldDevices() {
 
 // A spring's active face follows the same quantized orientation and cap raster as drawing.
 export function springFace(d, t = runtimeState.runFrames) {
-  const s = runtimeState.level.surfaces.find((s) => s.id === d.surfaceId),
-    q = s ? pose(s, t) : null;
-  const x = d.x + (q ? q.x1 - s.x1 : 0),
-    y = q ? q.y1 + (d.x - s.x1) * q.slope : d.y;
+  const { x, y } = airDevicePose(d, t);
   const angle = (polishDirection(d) * Math.PI) / 8,
     nx = Math.sin(angle),
     ny = -Math.cos(angle);
