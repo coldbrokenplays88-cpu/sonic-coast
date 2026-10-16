@@ -12,7 +12,7 @@ Existing tests and image files must remain unchanged.
 - [x] 6. Cull distant surfaces and cache static poses; compare collisions and call counts.
 - [x] 7. Skip unchanged playing frames; retain controlled/non-playing drawing; run browser verifier.
 - [x] Part 3. Write plain-English proposals only, including recommended next work.
-- [ ] Final. Check all changes, record proof and limits, push branch, update draft PR, provide play instructions and merge recommendation.
+- [x] Final. Changes checked, evidence/limits and play instructions recorded, branch pushed and remote verified. Draft PR creation/update blocked by GitHub API Forbidden; no merge or main push performed.
 
 ## Baseline and validation
 
@@ -39,4 +39,4 @@ Part 3: docs/review-proposals.md covers formatting/config, 30 script tags and mo
 
 Independent review of runtime commits 710786e..ca40891: no critical, important or minor findings; reviewer separately ran all 11 added tests (11/0) and git diff --check. Browser and full-suite evidence reviewed but not independently rerun by reviewer.
 
-Final evidence/report: docs/review-report.md and docs/validation/review-verification.json. Existing browser verifier passes at root and `/sonic-coast/`; ending verifier passes through results, with pause/resume, art retry and act switching. Independent review found no issues. Direct file launch blocked by managed browser policy; launcher inspected only. Final branch push is the remaining delivery step. Draft PR still blocked by GitHub API Forbidden. Item 4 remains explicitly partial; item 3 remains your decision.
+Final evidence/report: docs/review-report.md and docs/validation/review-verification.json. Existing browser verifier passes at root and `/sonic-coast/`; ending verifier passes through results, with pause/resume, art retry and act switching. Independent review found no issues. Direct file launch blocked by managed browser policy; launcher inspected only. Final branch push succeeded; remote branch content was verified against the local commit, and remote main is still 710786e. Draft PR still blocked by GitHub API Forbidden. Item 4 remains explicitly partial; item 3 remains your decision.
