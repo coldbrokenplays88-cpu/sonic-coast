@@ -8,7 +8,9 @@ export let recoveredSpriteTextures, recoveredSpriteFrames;
 
 // Keep visual state separate from input, collision bodies and movement.
 export function recoveredSonicPose() {
-  const speed = p.loop ? p.loop.speed : Math.abs(p.vx),
+  const speed = p.loop
+      ? Math.abs(p.loop.speed)
+      : Math.abs(p.surface?.contactMode === 'oriented' ? p.contactSpeed : p.vx),
     face = p.face;
   const sheet = art.recoveredSpeedster ? 'recoveredSpeedster' : 'recoveredPeelout';
   const out = (state, frame, extra = {}) => ({
@@ -59,7 +61,7 @@ export function recoveredSonicPose() {
           3),
       {
         ball: true,
-        diameter: p.ground ? 28 : 38,
+        diameter: 38,
         rotation: runtimeState.anim * 0.22,
       }
     );
@@ -156,7 +158,7 @@ export function drawRecoveredSonicFrame(q) {
     worldScale = Math.hypot(transform.a, transform.b),
     integerScale = Math.max(1, Math.round(worldScale)),
     ratio = integerScale / worldScale;
-  const foot = q.pivotY ?? (q.ball ? (p.ground ? 6 : 1) : 20);
+  const foot = q.pivotY ?? (q.ball ? (p.ground ? 20 - Math.floor(sprite.height / 2) : 1) : 20);
   ctx.save();
   ctx.setTransform(
     transform.a * ratio,

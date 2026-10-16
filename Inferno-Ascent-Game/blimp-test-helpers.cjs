@@ -2,13 +2,14 @@
 const startLoopSource=`function startLoop(phase=0,style='dash'){
  runFrames=phase;const roof=surfaceById('draw-loop-roof');p.x=roof.x1+100;p.y=roof.y1-20;p.surface=roof;p.ground=true;p.vx=['run','roll'].includes(style)?14:0;p.vy=0;p.inv=0;count=20;keys.clear();
  if(style==='dash'){press('ArrowDown',true);press('Space',true);for(let i=0;i<80;i++)update();release('ArrowDown',true);release('Space',true);}
- if(style==='roll')press('ArrowDown',true);press('ArrowRight',true);if(style==='boost')press('ShiftLeft',true);
+ if(style==='roll')press('ArrowDown',true);press('ArrowRight',true);if(style==='boost'){press('ShiftLeft',true);press('ArrowDown',true);}
 }`;
 const blimpReplaySource=`function* blimpSteps(cautious=false,maxFrames=1200){
- let jumped=false,turned=false,returned=false,paused=false,crossed=false,crossJumpFrame=0,wait=0,landings=[],lastId='',secondInitiallyVisible=null,thirdVisibleAtJump=null,crossingSpeed=0;
+ let jumped=false,turned=false,returned=false,paused=false,crossed=false,entryBrake=0,crossJumpFrame=0,wait=0,landings=[],lastId='',secondInitiallyVisible=null,thirdVisibleAtJump=null,crossingSpeed=0;
  const begin=runFrames;
  for(let i=0;i<maxFrames;i++){
-  if(!jumped&&p.surface?.id==='draw-loop-launch'&&p.x>=p.surface.x2-45){press('Space',true);jumped=true;}
+  if(!jumped&&p.surface?.id==='draw-loop-launch'&&p.x>=p.surface.x2-45){const boosted=keys.has('ShiftLeft');press('Space',true);jumped=true;if(boosted){release('ShiftLeft',true);release('ArrowRight',true);press('ArrowLeft',true);entryBrake=30;}}
+  if(entryBrake>0&&--entryBrake===0){release('ArrowLeft',true);press('ArrowRight',true);}
   if(!turned&&level.springs.find(s=>s.id==='blimp-entry-spring').firedAt!==undefined){release('Space',true);release('ArrowRight',true);release('ShiftLeft',true);press('ArrowLeft',true);turned=true;}
   if(turned&&!returned){
    if(!p.ground&&p.x<surfaceById('blimp-curve-7').x2&&p.vy>0&&feet()>surfaceById('blimp-curve-4').y1-60)press('ArrowDown',true);

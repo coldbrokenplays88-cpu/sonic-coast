@@ -31,7 +31,17 @@ import {
   drawPixelCityLoop,
   drawPixelCityStructures,
 } from './pixel-world.js';
-import { active, bodyHeight, feet, pose, yOn } from './surface-collision.js';
+import {
+  active,
+  bodyHeight,
+  feet,
+  pose,
+  yOn,
+  loopPhysics,
+  surfaceTravelSpeed,
+  groundSlopeForce,
+  surfaceNormalReaction,
+} from './surface-collision.js';
 import { beginTraversalLaunch } from './traversal-animations.js';
 export let cameraTracking, skylineSmokeSprites;
 
@@ -61,7 +71,8 @@ export function resetAct2() {
   for (const e of runtimeState.level.events)
     e.age = e.trigger < runtimeState.level.checkpoints[runtimeState.checkpoint].x ? 150 : -1;
   for (const l of runtimeState.level.loops) {
-    l.used = l.x < runtimeState.level.checkpoints[runtimeState.checkpoint].x;
+    l.used = false;
+    l.entryLocked = false;
     l.solved = false;
   }
   for (const h of runtimeState.level.hazards)
@@ -100,13 +111,16 @@ export function launchAirDevice(device) {
 }
 
 export function beginLoop(l) {
+  if (!Number.isFinite(l.r) || l.r <= 0) return false;
   p.brakeActive = false;
   p.brakeAge = 0;
   p.stopFrame = -100;
   p.loop = {
     id: l.id,
     theta: 0,
-    speed: p.vx * Math.hypot(1, p.surface ? pose(p.surface).slope : 0),
+    speed: surfaceTravelSpeed(),
+    direction: Math.sign(surfaceTravelSpeed()) || 1,
+    ...loopPhysics(l),
   };
   p.x = l.x;
   p.y = l.y - 20;
@@ -127,25 +141,34 @@ export function updateLoop() {
   const dir =
       Number(keys.has('ArrowRight') || keys.has('KeyD')) -
       Number(keys.has('ArrowLeft') || keys.has('KeyA')),
-    gravity = 0.58;
+    gravity = q.gravity;
   // Small angular steps keep gravity/contact accurate even at terrain-earned speeds.
   const steps = Math.max(4, Math.ceil(Math.abs(q.speed) / l.r / 0.04)),
     dt = 1 / steps;
   for (let i = 0; i < steps; i++) {
     const previous = q.speed,
-      drag = q.speed * 0.0015,
+      drag = q.speed * q.drag,
       drive =
-        p.boosting && q.speed < 23
-          ? (23 - q.speed) * 0.14
-          : dir * 0.06 * Math.max(0, Math.cos(q.theta));
-    q.speed += (-gravity * Math.sin(q.theta) - drag + drive) * dt;
+        p.boosting && q.speed * p.face < 23
+          ? (p.face * 23 - q.speed) * 0.14
+          : dir && (Math.abs(q.speed) < 14 || dir !== Math.sign(q.speed))
+            ? dir * 0.06 * Math.max(0, Math.cos(q.theta))
+            : 0;
+    // Use the same running/rolling slope-force ratios as ordinary terrain.
+    const tangentY = -Math.sin(q.theta),
+      slopeForce =
+        l.profile === 'advanced'
+          ? gravity
+          : groundSlopeForce(p.rolling, q.speed, tangentY) *
+            (gravity / groundSlopeForce(false, 0, 0));
+    q.speed += (slopeForce * tangentY - drag + drive) * dt;
     q.theta += (((previous + q.speed) * 0.5) / l.r) * dt;
     p.x = l.x + Math.sin(q.theta) * l.r;
     p.y = l.y - l.r + Math.cos(q.theta) * l.r - 20;
     // The ceiling can hold Sonic only while centripetal acceleration supplies contact.
     if (
       runtimeState.jumpBuffer > 0 ||
-      (q.speed * q.speed) / l.r + gravity * Math.cos(q.theta) < 0
+      surfaceNormalReaction(q.speed, -1 / l.r, -Math.cos(q.theta), gravity) < 0
     ) {
       p.vx = Math.cos(q.theta) * q.speed;
       p.vy = -Math.sin(q.theta) * q.speed;
@@ -161,17 +184,20 @@ export function updateLoop() {
       runtimeState.jumpBuffer = 0;
       p.loop = null;
       l.used = false;
+      l.entryLocked = true;
       p.ground = false;
       p.surface = null;
       return true;
     }
-    if (q.theta >= Math.PI * 2 || q.theta <= 0) {
-      const complete = q.theta >= Math.PI * 2;
-      if (complete) {
+    if (q.theta * q.direction >= Math.PI * 2 || q.theta * q.direction < 0) {
+      const complete = q.theta * q.direction >= Math.PI * 2;
+      if (complete && !l.solved) {
         l.solved = true;
         runtimeState.stats.loops++;
         runtimeState.score += 500;
-      } else l.used = false;
+      }
+      l.used = false;
+      l.entryLocked = true;
       p.loop = null;
       p.x = l.x;
       p.y = l.y - 20;
@@ -196,17 +222,25 @@ export function updateLoop() {
 
 export function updateAct2() {
   if (runtimeState.level.act !== 2) return;
-  for (const l of runtimeState.level.loops)
+  for (const l of runtimeState.level.loops) {
+    if (p.loop?.id === l.id) continue;
+    if (l.entryLocked) {
+      if (Math.hypot(p.x - l.x, feet() - l.y) > FOOT_RADIUS + 18) l.entryLocked = false;
+      continue;
+    }
+    const direction = Math.sign(p.vx);
     if (
       !p.loop &&
+      !l.entryLocked &&
       !l.used &&
       p.ground &&
-      p.vx > 0 &&
-      p.lastX <= l.x &&
-      p.x >= l.x &&
+      direction &&
+      (p.lastX - l.x) * direction <= 0 &&
+      (p.x - l.x) * direction >= 0 &&
       Math.abs(feet() - l.y) < 18
     )
       beginLoop(l);
+  }
   for (const e of runtimeState.level.events)
     if (e.age < 0 && p.x > e.trigger) {
       e.age = 0;

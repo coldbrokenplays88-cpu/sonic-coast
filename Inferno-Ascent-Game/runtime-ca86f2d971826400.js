@@ -1971,17 +1971,24 @@
     canStand: () => canStand,
     feet: () => feet,
     getRuntimeBindings: () => getRuntimeBindings16,
+    groundSlopeForce: () => groundSlopeForce,
     initializeRuntimeModule: () => initializeRuntimeModule16,
     integrateSurfaceStep: () => integrateSurfaceStep,
     land: () => land,
     leaveSurface: () => leaveSurface,
+    loopPhysics: () => loopPhysics,
     moveAndResolveSurfaces: () => moveAndResolveSurfaces,
+    moveOrientedSurface: () => moveOrientedSurface,
     pose: () => pose,
     resetPlatforms: () => resetPlatforms,
     resolveHazards: () => resolveHazards,
     staticSurfacePoses: () => staticSurfacePoses,
+    surfaceBasis: () => surfaceBasis,
+    surfaceNormalReaction: () => surfaceNormalReaction,
     surfaceOverlaps: () => surfaceOverlaps,
+    surfaceTravelSpeed: () => surfaceTravelSpeed,
     surfaceVelocity: () => surfaceVelocity,
+    sweptOrientedContact: () => sweptOrientedContact,
     topAt: () => topAt,
     yOn: () => yOn
   });
@@ -1995,6 +2002,7 @@
     jump: () => jump,
     reboundBubbleShield: () => reboundBubbleShield,
     resetPlayerAbilities: () => resetPlayerAbilities,
+    stopRollAtRest: () => stopRollAtRest,
     updateBrakingPose: () => updateBrakingPose,
     updateBreathing: () => updateBreathing,
     updateMovement: () => updateMovement,
@@ -3690,7 +3698,7 @@
   var recoveredSpriteTextures;
   var recoveredSpriteFrames;
   function recoveredSonicPose() {
-    const speed = p.loop ? p.loop.speed : Math.abs(p.vx), face = p.face;
+    const speed = p.loop ? Math.abs(p.loop.speed) : Math.abs(p.surface?.contactMode === "oriented" ? p.contactSpeed : p.vx), face = p.face;
     const sheet = art.recoveredSpeedster ? "recoveredSpeedster" : "recoveredPeelout";
     const out = /* @__PURE__ */ __name((state2, frame2, extra = {}) => ({
       state: state2,
@@ -3736,7 +3744,7 @@
         26 + Math.floor(state.charge ? state.runFrames / 2 : state.anim * 0.6) % 3,
         {
           ball: true,
-          diameter: p.ground ? 28 : 38,
+          diameter: 38,
           rotation: state.anim * 0.22
         }
       );
@@ -3815,7 +3823,7 @@
       recoveredSpriteTextures.set(key, sprite);
     }
     const transform = ctx.getTransform(), worldScale = Math.hypot(transform.a, transform.b), integerScale = Math.max(1, Math.round(worldScale)), ratio = integerScale / worldScale;
-    const foot = q.pivotY ?? (q.ball ? p.ground ? 6 : 1 : 20);
+    const foot = q.pivotY ?? (q.ball ? p.ground ? 20 - Math.floor(sprite.height / 2) : 1 : 20);
     ctx.save();
     ctx.setTransform(
       transform.a * ratio,
@@ -4692,6 +4700,21 @@
     p.jumpAttack = true;
     if (p.surface?.grindable) p.grindExitFrame = state.runFrames;
     p.poseJumpFrame = state.runFrames;
+    if (p.ground && p.surface?.contactMode === "oriented") {
+      const b = surfaceBasis(p.surface), carry2 = surfaceVelocity(p.surface), speed2 = p.contactSpeed;
+      const impulse2 = (p.jumpCut ? 6.8 : 13.4 + Math.min(2.4, Math.max(0, Math.abs(speed2) - 14) * 0.25)) * (p.underwater ? 7 / 13 : 1);
+      p.vx = speed2 * b.tx + carry2.x + impulse2 * b.nx;
+      p.vy = speed2 * b.ty + carry2.y + impulse2 * b.ny;
+      p.jumpReleaseVy = speed2 * b.ty + carry2.y + (p.underwater ? 2.5 : 5) * b.ny;
+      p.ground = false;
+      p.surface = null;
+      p.contactSpeed = null;
+      state.coyote = 0;
+      state.jumpBuffer = 0;
+      state.stats.jumps++;
+      gameSound("jump");
+      return;
+    }
     const surface = p.ground ? p.surface : null, slope = surface ? pose(surface).slope : 0, norm = Math.hypot(1, slope), speed = p.vx * norm;
     recordBlimpJump(surface, speed);
     const lift = p.jumpCut ? 6.8 : 13.4 + Math.min(2.4, Math.max(0, Math.abs(speed) - 14) * 0.25), impulse = lift * (p.underwater ? 7 / 13 : 1);
@@ -4708,6 +4731,15 @@
     gameSound("jump");
   }
   __name(jump, "jump");
+  function stopRollAtRest() {
+    if (p.rolling && p.ground && !state.charge && Math.abs(surfaceTravelSpeed()) < 0.03 && p.rollAge > 1 && canStand()) {
+      p.rolling = false;
+      p.roll = false;
+      p.dashRolling = false;
+      p.rollSpent = true;
+    }
+  }
+  __name(stopRollAtRest, "stopRollAtRest");
   function updateRoll(down) {
     if (!p.rolling) p.dashRolling = false;
     if (down && !p.downHeld) {
@@ -4726,15 +4758,7 @@
     if (p.rollBuffer > 0) p.rollBuffer--;
     if (p.rolling) {
       p.rollAge++;
-      const rollSpeed = p.ground && p.surface ? Math.abs(p.vx) * Math.hypot(1, pose(p.surface).slope) : Math.abs(p.vx);
-      if (p.ground && rollSpeed < 7) p.lowRollFrames++;
-      else if (rollSpeed >= 7) p.lowRollFrames = 0;
-      const expired = p.lowRollFrames >= 90;
-      if ((!down && (!p.dashRolling || rollSpeed < 7) && p.rollAge > 6 || expired) && canStand()) {
-        p.rolling = false;
-        p.dashRolling = false;
-        if (expired) p.rollSpent = true;
-      }
+      stopRollAtRest();
     }
     p.roll = p.rolling || state.charge > 0 || !p.ground;
   }
@@ -4761,7 +4785,9 @@
     }
     if (state.charge && !down) {
       gameSound("spindashRelease", { charge: state.charge / 20 });
-      p.vx = p.face * (12 + state.charge * 0.7) / Math.hypot(1, p.surface ? pose(p.surface).slope : 0);
+      const releaseSpeed = p.face * (12 + state.charge * 0.35);
+      if (p.surface?.contactMode === "oriented") p.contactSpeed = releaseSpeed;
+      else p.vx = releaseSpeed / Math.hypot(1, p.surface ? pose(p.surface).slope : 0);
       state.charge = 0;
       p.rolling = true;
       p.dashRolling = true;
@@ -4772,8 +4798,9 @@
     const wantBoost = keys.has("ShiftLeft") || keys.has("ShiftRight") || keys.has("KeyX") || keys.has("MouseBoost");
     if (!wantBoost) p.boostLocked = false;
     updateBoostState(wantBoost);
-    const controlSurface = p.ground && !p.surface?.grindable ? p.surface : null, controlSlope = controlSurface ? pose(controlSurface).slope : 0, controlNorm = Math.hypot(1, controlSlope);
-    if (controlSurface) p.vx *= controlNorm;
+    const controlSurface = p.ground && !p.surface?.grindable ? p.surface : null, oriented = controlSurface?.contactMode === "oriented", basis = oriented ? surfaceBasis(controlSurface) : null, controlSlope = oriented ? basis.ty / Math.max(1e-6, Math.abs(basis.tx)) : controlSurface ? pose(controlSurface).slope : 0, controlNorm = oriented ? 1 : Math.hypot(1, controlSlope);
+    if (oriented) p.vx = p.contactSpeed;
+    else if (controlSurface) p.vx *= controlNorm;
     const uphillTractionLost = controlSurface && !p.scriptedLaunch && !p.wrongRouteDrop && !p.surface?.boostExit && dir * controlSlope < 0 && Math.abs(controlSlope) >= 1 && Math.abs(p.vx) < runSpeed * (2.5 / 6);
     if (p.boosting) {
       if (dir && Math.sign(p.vx) === dir) p.face = dir;
@@ -4796,7 +4823,7 @@
       else if (dir && Math.abs(p.vx) < 14) p.vx += dir * 0.08;
     } else if (state.charge) p.vx *= 0.66;
     else {
-      const precisionBrake = !p.rolling && !p.scriptedLaunch && !p.wrongRouteDrop && !p.surface?.boostExit;
+      const precisionBrake = !p.rolling && !p.scriptedLaunch && !p.wrongRouteDrop && (!p.surface?.boostExit || p.surface.kind === "main");
       if (!p.hurt && dir) {
         if (p.ground && p.rolling) {
           if (dir !== Math.sign(p.vx) && Math.abs(p.vx) > 0) {
@@ -4828,21 +4855,29 @@
         p.vx *= p.ground ? 0.998 : 0.999;
     }
     if (p.ground && p.rolling) {
+      p.vx = Math.sign(p.vx) * Math.max(0, Math.abs(p.vx) - 0.0234375 * 14 / 6 * waterScale);
       p.vx *= 0.9985;
     }
     if (controlSurface) {
-      const excess = Math.max(0, p.vx * p.vx - 26 * 26);
-      p.vx /= 1 + 3e-4 * excess / Math.max(1, Math.abs(p.vx));
       p.vx /= controlNorm;
+    }
+    if (oriented) {
+      p.contactSpeed = p.vx;
+      p.vx = p.contactSpeed * basis.tx;
+      p.vy = p.contactSpeed * basis.ty;
     }
     applySurfaceMotion();
     if (Math.abs(p.vx) < 0.03) p.vx = 0;
-    state.stats.maxSpeed = Math.max(state.stats.maxSpeed, Math.abs(p.vx));
-    state.anim += Math.abs(p.vx) * 0.08;
+    state.stats.maxSpeed = Math.max(
+      state.stats.maxSpeed,
+      Math.abs(p.surface?.contactMode === "oriented" ? p.contactSpeed : p.vx)
+    );
+    state.anim += Math.abs(p.surface?.contactMode === "oriented" ? p.contactSpeed : p.vx) * 0.08;
     if (!p.ground && p.airSpeedLimit)
       p.vx = Math.max(-p.airSpeedLimit, Math.min(p.airSpeedLimit, p.vx));
     moveAndResolveSurfaces();
     resolveHazards(p.lastX, p.lastY);
+    stopRollAtRest();
     updateBrakingPose(dir, beforeSpeed);
     if (p.ground && p.surface?.grindable && Math.abs(p.vx) > 2 && state.runFrames % 3 === 0) {
       const fast = p.boosting || Math.abs(p.vx) > 18;
@@ -5125,6 +5160,34 @@
     };
   }
   __name(pose, "pose");
+  function surfaceBasis(s, t = state.runFrames) {
+    const q = pose(s, t), dx = q.x2 - q.x1, dy = q.y2 - q.y1, length = Math.hypot(dx, dy);
+    if (length < 1e-8) return null;
+    return { ...q, length, tx: dx / length, ty: dy / length, nx: dy / length, ny: -dx / length };
+  }
+  __name(surfaceBasis, "surfaceBasis");
+  function surfaceTravelSpeed() {
+    if (p.loop) return p.loop.speed;
+    if (p.ground && p.surface?.contactMode === "oriented") return p.contactSpeed ?? 0;
+    return p.ground && p.surface ? p.vx * Math.hypot(1, pose(p.surface).slope) : p.vx;
+  }
+  __name(surfaceTravelSpeed, "surfaceTravelSpeed");
+  function groundSlopeForce(rolling, speed, tangentY) {
+    return rolling ? speed * tangentY < 0 ? 0.145 : 0.58 : 0.232;
+  }
+  __name(groundSlopeForce, "groundSlopeForce");
+  function surfaceNormalReaction(speed, curvature, normalY, gravity) {
+    return -speed * speed * curvature - gravity * normalY;
+  }
+  __name(surfaceNormalReaction, "surfaceNormalReaction");
+  function loopPhysics(l) {
+    if (l.profile === "advanced") return { gravity: l.gravity ?? 0.58, drag: 15e-4 };
+    return {
+      gravity: Math.min(groundSlopeForce(false, 0, 0), 14 * 14 / (6.5 * l.r)),
+      drag: 15e-4 * Math.min(1, 130 / l.r)
+    };
+  }
+  __name(loopPhysics, "loopPhysics");
   function surfaceVelocity(s) {
     const a = pose(s, state.runFrames - 1), b = pose(s);
     return { x: b.x1 - a.x1, y: b.y1 - a.y1 };
@@ -5140,7 +5203,7 @@
   }
   __name(active, "active");
   function surfaceOverlaps(s, left, right) {
-    let x1 = s.x1, x2 = s.x2;
+    let x1 = Math.min(s.x1, s.x2), x2 = Math.max(s.x1, s.x2);
     const m = s.motion;
     if (m?.axis === "x") {
       if (m.type === "flight") {
@@ -5158,7 +5221,7 @@
   function topAt(x, below = -Infinity) {
     let result = null;
     for (const s of state.level.surfaces) {
-      if (!surfaceOverlaps(s, x, x) || !active(s)) continue;
+      if (s.contactMode === "oriented" || !surfaceOverlaps(s, x, x) || !active(s)) continue;
       const q = pose(s);
       if (x >= q.x1 && x <= q.x2) {
         const y = yOn(s, x);
@@ -5183,7 +5246,9 @@
     }
   }
   __name(resetPlatforms, "resetPlatforms");
-  function land(s, y) {
+  function land(s, y, contact = null) {
+    const oriented = s.contactMode === "oriented", basis = oriented ? surfaceBasis(s) : null;
+    const contactSpeed = oriented ? contact?.speed ?? p.vx * basis.tx + p.vy * basis.ty : 0;
     p.scriptedLaunch = false;
     p.jumpReleaseVy = null;
     p.coyoteLaunchVy = null;
@@ -5191,9 +5256,10 @@
     p.airBoostFrames = 0;
     p.airBoostActive = false;
     beforeStageLanding(s);
-    if (!s.grindable) {
+    if (!s.grindable && !oriented) {
       const slope = pose(s).slope, norm = Math.hypot(1, slope);
-      if (p.ground && p.surface) {
+      if (p.ground && p.surface?.contactMode === "oriented") p.vx = p.contactSpeed / norm;
+      else if (p.ground && p.surface) {
         p.vx *= Math.hypot(1, pose(p.surface).slope) / norm;
       } else if (!p.wrongRouteDrop) {
         const carry = surfaceVelocity(s);
@@ -5225,6 +5291,13 @@
     p.jumpAttack = false;
     p.airSpeedLimit = null;
     p.surface = s;
+    if (oriented) {
+      p.contactSpeed = contactSpeed;
+      p.x = (contact?.x ?? p.x - basis.nx * 20) + basis.nx * 20;
+      p.y = (contact?.y ?? y) + basis.ny * 20;
+      p.vx = contactSpeed * basis.tx;
+      p.vy = contactSpeed * basis.ty;
+    } else p.contactSpeed = null;
     afterStageLanding(s);
     if (changed && !state.visited.has(s.id)) {
       state.visited.add(s.id);
@@ -5291,11 +5364,23 @@
   }
   __name(resolveHazards, "resolveHazards");
   function applySurfaceMotion() {
+    if (p.ground && p.surface?.contactMode === "oriented") {
+      const b = surfaceBasis(p.surface);
+      p.contactSpeed += groundSlopeForce(p.rolling, p.contactSpeed, b.ty) * b.ty * (p.underwater ? 2 / 7 : 1);
+      p.vx = p.contactSpeed * b.tx;
+      p.vy = p.contactSpeed * b.ty;
+      const carry = surfaceVelocity(p.surface);
+      p.x += carry.x;
+      p.y += carry.y;
+      if (b.ny >= -Math.SQRT1_2 && Math.abs(p.contactSpeed) < 14 * (2.5 / 6) * (p.underwater ? 0.5 : 1))
+        leaveSurface(p.surface);
+      return;
+    }
     if (p.ground && p.surface) {
       const slope = pose(p.surface).slope, norm = Math.hypot(1, slope), dir = Number(keys.has("ArrowRight") || keys.has("KeyD")) - Number(keys.has("ArrowLeft") || keys.has("KeyA"));
       if (!p.surface.grindable && !state.charge && (p.rolling || p.boosting || dir || Math.abs(p.vx * norm) >= 3)) {
-        const wet = p.underwater ? 2 / 7 : 1, uphill = p.vx * slope < 0;
-        const force = p.rolling ? uphill ? 0.145 : 0.58 : 0.232;
+        const wet = p.underwater ? 2 / 7 : 1;
+        const force = groundSlopeForce(p.rolling, p.vx, slope);
         p.vx += force * slope * wet / (norm * norm);
       }
       const carry = surfaceVelocity(p.surface);
@@ -5306,6 +5391,16 @@
   __name(applySurfaceMotion, "applySurfaceMotion");
   function leaveSurface(s) {
     recordBlimpDeparture(s);
+    if (s.contactMode === "oriented") {
+      const b = surfaceBasis(s), carry2 = surfaceVelocity(s);
+      p.vx = p.contactSpeed * b.tx + carry2.x;
+      p.vy = p.contactSpeed * b.ty + carry2.y;
+      p.coyoteLaunchVy = p.vy;
+      p.ground = false;
+      p.surface = null;
+      p.contactSpeed = null;
+      return;
+    }
     const slope = pose(s).slope, carry = surfaceVelocity(s);
     p.vy = p.vx * slope + carry.y;
     p.coyoteLaunchVy = p.vy;
@@ -5315,7 +5410,7 @@
   }
   __name(leaveSurface, "leaveSurface");
   function moveAndResolveSurfaces() {
-    const surfaceVy = p.ground && p.surface ? p.vx * pose(p.surface).slope : 0;
+    const surfaceVy = p.ground && p.surface && p.surface.contactMode !== "oriented" ? p.vx * pose(p.surface).slope : 0;
     const count = Math.max(
       1,
       Math.ceil(Math.max(Math.abs(p.vx), Math.abs(p.vy), Math.abs(surfaceVy)) / 24)
@@ -5330,7 +5425,109 @@
     p.lastY = lastY;
   }
   __name(moveAndResolveSurfaces, "moveAndResolveSurfaces");
+  function moveOrientedSurface(dt) {
+    let remaining = p.contactSpeed * dt, s = p.surface;
+    for (let joins = 0; joins <= state.level.surfaces.length; joins++) {
+      if (!active(s)) {
+        leaveSurface(s);
+        return;
+      }
+      const b = surfaceBasis(s), pointX = p.x - b.nx * 20, pointY = p.y - b.ny * 20;
+      const along = (pointX - b.x1) * b.tx + (pointY - b.y1) * b.ty;
+      const next = along + remaining;
+      if (next >= 0 && next <= b.length) {
+        p.x = b.x1 + b.tx * next + b.nx * 20;
+        p.y = b.y1 + b.ty * next + b.ny * 20;
+        return;
+      }
+      const forward = remaining > 0, endX = forward ? b.x2 : b.x1, endY = forward ? b.y2 : b.y1;
+      const beyond = forward ? next - b.length : next;
+      let join = null;
+      for (const candidate of state.level.surfaces) {
+        if (candidate === s || !active(candidate)) continue;
+        const c = surfaceBasis(candidate);
+        if (!c) continue;
+        if (Math.hypot((forward ? c.x1 : c.x2) - endX, (forward ? c.y1 : c.y2) - endY) < 2) {
+          join = { s: candidate, b: c };
+          break;
+        }
+      }
+      if (!join) {
+        const time = Math.min(dt, Math.abs(beyond) / Math.max(1e-3, Math.abs(p.contactSpeed)));
+        p.x = endX + b.nx * 20;
+        p.y = endY + b.ny * 20;
+        leaveSurface(s);
+        p.x += p.vx * time;
+        p.y += p.vy * time + 0.29 * (p.underwater ? 2 / 7 : 1) * time * time;
+        p.vy += 0.58 * (p.underwater ? 2 / 7 : 1) * time;
+        return;
+      }
+      const speed = p.contactSpeed;
+      const turn = Math.atan2(
+        b.tx * join.b.ty - b.ty * join.b.tx,
+        b.tx * join.b.tx + b.ty * join.b.ty
+      );
+      const curvature = turn / ((b.length + join.b.length) * 0.5);
+      if (Math.abs(turn) > 1e-5 && surfaceNormalReaction(speed, curvature, join.b.ny, groundSlopeForce(false, 0, 0)) < 0) {
+        const time = Math.min(dt, Math.abs(beyond) / Math.max(1e-3, Math.abs(speed)));
+        p.x = endX + b.nx * 20;
+        p.y = endY + b.ny * 20;
+        leaveSurface(s);
+        p.x += p.vx * time;
+        p.y += p.vy * time + 0.29 * (p.underwater ? 2 / 7 : 1) * time * time;
+        p.vy += 0.58 * (p.underwater ? 2 / 7 : 1) * time;
+        return;
+      }
+      if (join.s.contactMode !== "oriented") {
+        p.x = endX;
+        p.y = endY - 20;
+        land(join.s, endY);
+        p.vx = speed / Math.hypot(1, pose(join.s).slope);
+        p.x += beyond * join.b.tx;
+        p.y = yOn(join.s, p.x) - 20;
+        return;
+      }
+      p.x = endX + join.b.nx * 20;
+      p.y = endY + join.b.ny * 20;
+      land(join.s, endY, { x: endX, y: endY, speed });
+      s = join.s;
+      remaining = beyond;
+      if (join.b.ny >= -Math.SQRT1_2 && Math.abs(speed) < 14 * (2.5 / 6) * (p.underwater ? 0.5 : 1)) {
+        leaveSurface(s);
+        return;
+      }
+    }
+    leaveSurface(s);
+  }
+  __name(moveOrientedSurface, "moveOrientedSurface");
+  function sweptOrientedContact(oldX, oldY) {
+    let hit = null;
+    for (const s of state.level.surfaces) {
+      if (s.contactMode !== "oriented" || !active(s)) continue;
+      const b = surfaceBasis(s), old = surfaceBasis(s, state.runFrames - 1);
+      if (!b || !old) continue;
+      const before = (oldX - old.x1) * old.nx + (oldY - old.y1) * old.ny - 20;
+      const after = (p.x - b.x1) * b.nx + (p.y - b.y1) * b.ny - 20;
+      if (before < -0.01 || after > 0 || after >= before) continue;
+      const t = Math.max(0, before / (before - after)), x = oldX + (p.x - oldX) * t, y = oldY + (p.y - oldY) * t;
+      const along = (x - (old.x1 + (b.x1 - old.x1) * t)) * b.tx + (y - (old.y1 + (b.y1 - old.y1) * t)) * b.ty;
+      if (along < 0 || along > b.length || hit && hit.t <= t) continue;
+      const carry = surfaceVelocity(s), speed = (p.vx - carry.x) * b.tx + (p.vy - carry.y) * b.ty;
+      if (b.ny >= -Math.SQRT1_2 && Math.abs(speed) < 14 * (2.5 / 6) * (p.underwater ? 0.5 : 1))
+        continue;
+      hit = { s, t, x: b.x1 + along * b.tx, y: b.y1 + along * b.ty, speed };
+    }
+    return hit;
+  }
+  __name(sweptOrientedContact, "sweptOrientedContact");
   function integrateSurfaceStep(dt) {
+    if (p.ground && p.surface?.contactMode === "oriented") {
+      p.lastX = p.x;
+      p.lastY = p.y;
+      moveOrientedSurface(dt);
+      p.roll = p.rolling || state.charge > 0 || !p.ground;
+      return;
+    }
     const oldX = p.x, oldY = p.y, oldFoot = feet(), oldSurface = p.surface, wasGround = p.ground;
     p.lastX = oldX;
     p.lastY = oldY;
@@ -5345,7 +5542,7 @@
       } else {
         let join = null;
         for (const s of state.level.surfaces) {
-          if (!surfaceOverlaps(s, p.x, p.x) || !active(s)) continue;
+          if (s.contactMode === "oriented" || !surfaceOverlaps(s, p.x, p.x) || !active(s)) continue;
           const z = pose(s), y = yOn(s, p.x);
           const seam = p.vx >= 0 ? q.x2 : q.x1, edgeY = p.vx >= 0 ? q.y2 : q.y1, connected = seam >= z.x1 - 2 && seam <= z.x2 + 2 && Math.abs(yOn(s, seam) - edgeY) < 2;
           if (p.x >= z.x1 && p.x <= z.x2 && (Math.abs(y - oldFoot) < 11 || connected)) {
@@ -5355,7 +5552,23 @@
         }
         if (join) land(join.s, join.y);
         else {
-          leaveSurface(oldSurface);
+          const forward = p.vx >= 0, edgeX = forward ? q.x2 : q.x1, edgeY = forward ? q.y2 : q.y1;
+          const directed = state.level.surfaces.find(
+            (s) => s.contactMode === "oriented" && active(s) && Math.hypot((forward ? s.x1 : s.x2) - edgeX, (forward ? s.y1 : s.y2) - edgeY) < 2
+          );
+          if (directed) {
+            const speed = p.vx * Math.hypot(1, q.slope), b = surfaceBasis(directed), remainingTime = Math.min(
+              dt,
+              Math.abs((p.x - edgeX) * Math.hypot(1, q.slope) / speed)
+            );
+            land(directed, edgeY, { x: edgeX, y: edgeY, speed });
+            if (b.ny >= -Math.SQRT1_2 && Math.abs(speed) < 14 * (2.5 / 6) * (p.underwater ? 0.5 : 1))
+              leaveSurface(directed);
+            else {
+              moveOrientedSurface(remainingTime);
+              return;
+            }
+          } else leaveSurface(oldSurface);
         }
       }
     } else {
@@ -5369,7 +5582,9 @@
       p.vy = p.airBoostActive ? 0 : p.vy > 20 ? 20 + (p.vy - 20) * Math.pow(0.999, dt) : Math.min(20, p.vy + 0.58 * (p.underwater ? 2 / 7 : 1) * dt);
       p.y += p.vy * dt;
       let hit = null;
+      const directedHit = sweptOrientedContact(oldX, oldY);
       for (const s of state.level.surfaces) {
+        if (s.contactMode === "oriented") continue;
         if (!surfaceOverlaps(s, Math.min(oldX, p.x) - FOOT_RADIUS, Math.max(oldX, p.x) + FOOT_RADIUS))
           continue;
         if (p.wrongRouteDrop && !s.fallen) continue;
@@ -5383,7 +5598,9 @@
         if (t <= 1 && crossX >= left - FOOT_RADIUS && crossX <= right + FOOT_RADIUS && (!hit || t < hit.t))
           hit = { s, q, t };
       }
-      if (hit) {
+      if (directedHit && (!hit || directedHit.t < hit.t)) {
+        land(directedHit.s, directedHit.y, directedHit);
+      } else if (hit) {
         const x = Math.max(hit.q.x1, Math.min(hit.q.x2, p.x));
         land(hit.s, yOn(hit.s, x));
         if (p.ground && (p.x < hit.q.x1 - FOOT_RADIUS || p.x > hit.q.x2 + FOOT_RADIUS)) {
@@ -14576,6 +14793,8 @@
       jumpCut: false,
       boostLocked: false,
       rolling: false,
+      dashRolling: false,
+      contactSpeed: null,
       rollAge: 0,
       lowRollFrames: 0,
       rollSpent: false,
@@ -14924,7 +15143,7 @@
     const traversal = traversalSonicPose();
     if (traversal) return traversal;
     if (art.recoveredSpeedster || art.recoveredPeelout) return recoveredSonicPose();
-    const speed = p.loop ? p.loop.speed : Math.abs(p.vx), face = p.face, age = state.runFrames - p.poseLandingFrame;
+    const speed = p.loop ? Math.abs(p.loop.speed) : Math.abs(p.surface?.contactMode === "oriented" ? p.contactSpeed : p.vx), face = p.face, age = state.runFrames - p.poseLandingFrame;
     const out = /* @__PURE__ */ __name((state2, frame3, extra2 = {}) => ({
       state: state2,
       frame: frame3,
@@ -14968,13 +15187,13 @@
       if (phase2 >= 2)
         return extra("roll", "transitions", 8 + phase2 - 2, {
           ball: true,
-          diameter: p.ground ? 28 : 38,
+          diameter: 38,
           rotation: state.anim * 0.22,
           face: Math.sign(p.vx) || face
         });
       return out("roll", 22 + phase2, {
         ball: true,
-        diameter: p.ground ? 28 : 38,
+        diameter: 38,
         rotation: state.anim * 0.22,
         face: Math.sign(p.vx) || face
       });
@@ -15076,7 +15295,7 @@
     const [l, t, r, b] = frames[frame2], sw = r - l, sh = b - t;
     if (q.ball) {
       const scale2 = q.diameter / Math.max(sw, sh), dw2 = spritePixel(sw * scale2), dh2 = spritePixel(sh * scale2, "y");
-      ctx.translate(0, p.ground ? 6 : 1);
+      ctx.translate(0, p.ground ? 20 - dh2 / 2 : 1);
       ctx.rotate(q.rotation);
       ctx.drawImage(im, l, t, sw, sh, spritePixel(-dw2 / 2), spritePixel(-dh2 / 2, "y"), dw2, dh2);
       return;
@@ -15160,6 +15379,8 @@
       ctx.rotate(-p.loop.theta);
       ctx.translate(0, -20);
     }
+    if (p.ground && p.surface?.contactMode === "oriented")
+      ctx.rotate(Math.atan2(p.surface.y2 - p.surface.y1, p.surface.x2 - p.surface.x1));
     ctx.scale(q.face, 1);
     if (p.boosting && !p.surface?.grindable) {
       cityPixelOval(-14, 1, 42, 18, "#22caff44");
@@ -15512,6 +15733,8 @@
       jumpCut: false,
       boostLocked: false,
       rolling: false,
+      dashRolling: false,
+      contactSpeed: null,
       rollAge: 0,
       lowRollFrames: 0,
       rollSpent: false,
@@ -16210,6 +16433,7 @@
   __name(updateBoostState, "updateBoostState");
   function measurementSpeed() {
     if (p.loop) return Math.abs(p.loop.speed);
+    if (p.ground && p.surface?.contactMode === "oriented") return Math.abs(p.contactSpeed);
     if (p.ground && p.surface) return Math.abs(p.vx) * Math.hypot(1, pose(p.surface).slope);
     return Math.hypot(p.vx, p.vy);
   }
@@ -16712,7 +16936,8 @@
     for (const e of state.level.events)
       e.age = e.trigger < state.level.checkpoints[state.checkpoint].x ? 150 : -1;
     for (const l of state.level.loops) {
-      l.used = l.x < state.level.checkpoints[state.checkpoint].x;
+      l.used = false;
+      l.entryLocked = false;
       l.solved = false;
     }
     for (const h of state.level.hazards)
@@ -16750,13 +16975,16 @@
   }
   __name(launchAirDevice, "launchAirDevice");
   function beginLoop(l) {
+    if (!Number.isFinite(l.r) || l.r <= 0) return false;
     p.brakeActive = false;
     p.brakeAge = 0;
     p.stopFrame = -100;
     p.loop = {
       id: l.id,
       theta: 0,
-      speed: p.vx * Math.hypot(1, p.surface ? pose(p.surface).slope : 0)
+      speed: surfaceTravelSpeed(),
+      direction: Math.sign(surfaceTravelSpeed()) || 1,
+      ...loopPhysics(l)
     };
     p.x = l.x;
     p.y = l.y - 20;
@@ -16772,15 +17000,16 @@
     p.lastY = p.y;
     const want = keys.has("ShiftLeft") || keys.has("ShiftRight") || keys.has("KeyX") || keys.has("MouseBoost");
     updateBoostState(want);
-    const dir = Number(keys.has("ArrowRight") || keys.has("KeyD")) - Number(keys.has("ArrowLeft") || keys.has("KeyA")), gravity = 0.58;
+    const dir = Number(keys.has("ArrowRight") || keys.has("KeyD")) - Number(keys.has("ArrowLeft") || keys.has("KeyA")), gravity = q.gravity;
     const steps = Math.max(4, Math.ceil(Math.abs(q.speed) / l.r / 0.04)), dt = 1 / steps;
     for (let i = 0; i < steps; i++) {
-      const previous = q.speed, drag = q.speed * 15e-4, drive = p.boosting && q.speed < 23 ? (23 - q.speed) * 0.14 : dir * 0.06 * Math.max(0, Math.cos(q.theta));
-      q.speed += (-gravity * Math.sin(q.theta) - drag + drive) * dt;
+      const previous = q.speed, drag = q.speed * q.drag, drive = p.boosting && q.speed * p.face < 23 ? (p.face * 23 - q.speed) * 0.14 : dir && (Math.abs(q.speed) < 14 || dir !== Math.sign(q.speed)) ? dir * 0.06 * Math.max(0, Math.cos(q.theta)) : 0;
+      const tangentY = -Math.sin(q.theta), slopeForce = l.profile === "advanced" ? gravity : groundSlopeForce(p.rolling, q.speed, tangentY) * (gravity / groundSlopeForce(false, 0, 0));
+      q.speed += (slopeForce * tangentY - drag + drive) * dt;
       q.theta += (previous + q.speed) * 0.5 / l.r * dt;
       p.x = l.x + Math.sin(q.theta) * l.r;
       p.y = l.y - l.r + Math.cos(q.theta) * l.r - 20;
-      if (state.jumpBuffer > 0 || q.speed * q.speed / l.r + gravity * Math.cos(q.theta) < 0) {
+      if (state.jumpBuffer > 0 || surfaceNormalReaction(q.speed, -1 / l.r, -Math.cos(q.theta), gravity) < 0) {
         p.vx = Math.cos(q.theta) * q.speed;
         p.vy = -Math.sin(q.theta) * q.speed;
         if (state.jumpBuffer) {
@@ -16795,17 +17024,20 @@
         state.jumpBuffer = 0;
         p.loop = null;
         l.used = false;
+        l.entryLocked = true;
         p.ground = false;
         p.surface = null;
         return true;
       }
-      if (q.theta >= Math.PI * 2 || q.theta <= 0) {
-        const complete = q.theta >= Math.PI * 2;
-        if (complete) {
+      if (q.theta * q.direction >= Math.PI * 2 || q.theta * q.direction < 0) {
+        const complete = q.theta * q.direction >= Math.PI * 2;
+        if (complete && !l.solved) {
           l.solved = true;
           state.stats.loops++;
           state.score += 500;
-        } else l.used = false;
+        }
+        l.used = false;
+        l.entryLocked = true;
         p.loop = null;
         p.x = l.x;
         p.y = l.y - 20;
@@ -16829,9 +17061,16 @@
   __name(updateLoop, "updateLoop");
   function updateAct2() {
     if (state.level.act !== 2) return;
-    for (const l of state.level.loops)
-      if (!p.loop && !l.used && p.ground && p.vx > 0 && p.lastX <= l.x && p.x >= l.x && Math.abs(feet() - l.y) < 18)
+    for (const l of state.level.loops) {
+      if (p.loop?.id === l.id) continue;
+      if (l.entryLocked) {
+        if (Math.hypot(p.x - l.x, feet() - l.y) > FOOT_RADIUS + 18) l.entryLocked = false;
+        continue;
+      }
+      const direction = Math.sign(p.vx);
+      if (!p.loop && !l.entryLocked && !l.used && p.ground && direction && (p.lastX - l.x) * direction <= 0 && (p.x - l.x) * direction >= 0 && Math.abs(feet() - l.y) < 18)
         beginLoop(l);
+    }
     for (const e of state.level.events)
       if (e.age < 0 && p.x > e.trigger) {
         e.age = 0;

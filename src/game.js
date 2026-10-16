@@ -396,6 +396,8 @@ export function respawn() {
     jumpCut: false,
     boostLocked: false,
     rolling: false,
+    dashRolling: false,
+    contactSpeed: null,
     rollAge: 0,
     lowRollFrames: 0,
     rollSpent: false,
@@ -774,7 +776,9 @@ export function sonicPose() {
   const traversal = traversalSonicPose();
   if (traversal) return traversal;
   if (art.recoveredSpeedster || art.recoveredPeelout) return recoveredSonicPose();
-  const speed = p.loop ? p.loop.speed : Math.abs(p.vx),
+  const speed = p.loop
+      ? Math.abs(p.loop.speed)
+      : Math.abs(p.surface?.contactMode === 'oriented' ? p.contactSpeed : p.vx),
     face = p.face,
     age = runtimeState.runFrames - p.poseLandingFrame;
   const out = (state, frame, extra = {}) => ({
@@ -823,13 +827,13 @@ export function sonicPose() {
     if (phase >= 2)
       return extra('roll', 'transitions', 8 + phase - 2, {
         ball: true,
-        diameter: p.ground ? 28 : 38,
+        diameter: 38,
         rotation: runtimeState.anim * 0.22,
         face: Math.sign(p.vx) || face,
       });
     return out('roll', 22 + phase, {
       ball: true,
-      diameter: p.ground ? 28 : 38,
+      diameter: 38,
       rotation: runtimeState.anim * 0.22,
       face: Math.sign(p.vx) || face,
     });
@@ -989,7 +993,7 @@ export function drawSonicFrame(q) {
     const scale = q.diameter / Math.max(sw, sh),
       dw = spritePixel(sw * scale),
       dh = spritePixel(sh * scale, 'y');
-    ctx.translate(0, p.ground ? 6 : 1);
+    ctx.translate(0, p.ground ? 20 - dh / 2 : 1);
     ctx.rotate(q.rotation);
     ctx.drawImage(im, l, t, sw, sh, spritePixel(-dw / 2), spritePixel(-dh / 2, 'y'), dw, dh);
     return;
@@ -1045,6 +1049,8 @@ export function sonic() {
     ctx.rotate(-p.loop.theta);
     ctx.translate(0, -20);
   }
+  if (p.ground && p.surface?.contactMode === 'oriented')
+    ctx.rotate(Math.atan2(p.surface.y2 - p.surface.y1, p.surface.x2 - p.surface.x1));
   ctx.scale(q.face, 1);
   if (p.boosting && !p.surface?.grindable) {
     cityPixelOval(-14, 1, 42, 18, '#22caff44');
@@ -1479,6 +1485,8 @@ export function initializeRuntimeModule() {
     jumpCut: false,
     boostLocked: false,
     rolling: false,
+    dashRolling: false,
+    contactSpeed: null,
     rollAge: 0,
     lowRollFrames: 0,
     rollSpent: false,

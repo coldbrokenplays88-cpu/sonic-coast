@@ -5,6 +5,25 @@ function jump() {
   p.jumpAttack = true;
   if (p.surface?.grindable) p.grindExitFrame = runFrames;
   p.poseJumpFrame = runFrames;
+  if (p.ground && p.surface?.contactMode === 'oriented') {
+    const b = surfaceBasis(p.surface),
+      carry = surfaceVelocity(p.surface),
+      speed = p.contactSpeed;
+    const impulse =
+      (p.jumpCut ? 6.8 : 13.4 + Math.min(2.4, Math.max(0, Math.abs(speed) - 14) * 0.25)) *
+      (p.underwater ? 7 / 13 : 1);
+    p.vx = speed * b.tx + carry.x + impulse * b.nx;
+    p.vy = speed * b.ty + carry.y + impulse * b.ny;
+    p.jumpReleaseVy = speed * b.ty + carry.y + (p.underwater ? 2.5 : 5) * b.ny;
+    p.ground = false;
+    p.surface = null;
+    p.contactSpeed = null;
+    coyote = 0;
+    jumpBuffer = 0;
+    stats.jumps++;
+    gameSound('jump');
+    return;
+  }
   const surface = p.ground ? p.surface : null,
     slope = surface ? pose(surface).slope : 0,
     norm = Math.hypot(1, slope),
@@ -27,6 +46,23 @@ function jump() {
   gameSound('jump');
 }
 
+function stopRollAtRest() {
+  // Sonic 2 RollSpeed: Down release does not uncurl; grounded rest does.
+  if (
+    p.rolling &&
+    p.ground &&
+    !charge &&
+    Math.abs(surfaceTravelSpeed()) < 0.03 &&
+    p.rollAge > 1 &&
+    canStand()
+  ) {
+    p.rolling = false;
+    p.roll = false;
+    p.dashRolling = false;
+    p.rollSpent = true;
+  }
+}
+
 function updateRoll(down) {
   if (!p.rolling) p.dashRolling = false;
   if (down && !p.downHeld) {
@@ -45,20 +81,7 @@ function updateRoll(down) {
   if (p.rollBuffer > 0) p.rollBuffer--;
   if (p.rolling) {
     p.rollAge++;
-    const rollSpeed =
-      p.ground && p.surface
-        ? Math.abs(p.vx) * Math.hypot(1, pose(p.surface).slope)
-        : Math.abs(p.vx);
-    if (p.ground && rollSpeed < 7) p.lowRollFrames++;
-    else if (rollSpeed >= 7) p.lowRollFrames = 0;
-    const expired = p.lowRollFrames >= 90;
-    // Releasing Down launches Spin Dash; it must not discard that fast roll.
-    // Other rolls retain their release behavior, including the pool's forced roll.
-    if (((!down && (!p.dashRolling || rollSpeed < 7) && p.rollAge > 6) || expired) && canStand()) {
-      p.rolling = false;
-      p.dashRolling = false;
-      if (expired) p.rollSpent = true;
-    }
+    stopRollAtRest();
   }
   p.roll = p.rolling || charge > 0 || !p.ground;
 }
@@ -90,9 +113,9 @@ function updateMovement() {
   }
   if (charge && !down) {
     gameSound('spindashRelease', { charge: charge / 20 });
-    p.vx =
-      (p.face * (12 + charge * 0.7)) /
-      Math.hypot(1, p.surface ? pose(p.surface).slope : 0);
+    const releaseSpeed = p.face * (12 + charge * 0.35);
+    if (p.surface?.contactMode === 'oriented') p.contactSpeed = releaseSpeed;
+    else p.vx = releaseSpeed / Math.hypot(1, p.surface ? pose(p.surface).slope : 0);
     charge = 0;
     p.rolling = true;
     p.dashRolling = true;
@@ -106,9 +129,16 @@ function updateMovement() {
   updateBoostState(wantBoost);
   // Controls act on speed along the ground; vx stays world-horizontal outside this block.
   const controlSurface = p.ground && !p.surface?.grindable ? p.surface : null,
-    controlSlope = controlSurface ? pose(controlSurface).slope : 0,
-    controlNorm = Math.hypot(1, controlSlope);
-  if (controlSurface) p.vx *= controlNorm;
+    oriented = controlSurface?.contactMode === 'oriented',
+    basis = oriented ? surfaceBasis(controlSurface) : null,
+    controlSlope = oriented
+      ? basis.ty / Math.max(0.000001, Math.abs(basis.tx))
+      : controlSurface
+        ? pose(controlSurface).slope
+        : 0,
+    controlNorm = oriented ? 1 : Math.hypot(1, controlSlope);
+  if (oriented) p.vx = p.contactSpeed;
+  else if (controlSurface) p.vx *= controlNorm;
   // Classic Sonic loses uphill traction above 45 degrees at low ground speed.
   // Our one-way slope contacts slide back instead of imposing a forced input lock.
   const uphillTractionLost =
@@ -141,7 +171,10 @@ function updateMovement() {
   } else if (charge) p.vx *= 0.66;
   else {
     const precisionBrake =
-      !p.rolling && !p.scriptedLaunch && !p.wrongRouteDrop && !p.surface?.boostExit;
+      !p.rolling &&
+      !p.scriptedLaunch &&
+      !p.wrongRouteDrop &&
+      (!p.surface?.boostExit || p.surface.kind === 'main');
     if (!p.hurt && dir) {
       if (p.ground && p.rolling) {
         if (dir !== Math.sign(p.vx) && Math.abs(p.vx) > 0) {
@@ -203,22 +236,34 @@ function updateMovement() {
       p.vx *= p.ground ? 0.998 : 0.999;
   }
   if (p.ground && p.rolling) {
+    // Classic rolling friction is .0234375; scale by our 14/6 running baseline.
+    // Retain the existing speed-proportional loss as well; never reverse at rest.
+    p.vx = Math.sign(p.vx) * Math.max(0, Math.abs(p.vx) - ((0.0234375 * 14) / 6) * waterScale);
     p.vx *= 0.9985;
   }
-  // Smooth drag bounds terrain speeds without clipping all earned speed at 24.
+  // Normal controls cannot accelerate past run speed; existing rolling friction
+  // bounds long descents without an arbitrary terrain-speed threshold.
   if (controlSurface) {
-    const excess = Math.max(0, p.vx * p.vx - 26 * 26);
-    p.vx /= 1 + (0.0003 * excess) / Math.max(1, Math.abs(p.vx));
     p.vx /= controlNorm;
+  }
+  if (oriented) {
+    p.contactSpeed = p.vx;
+    p.vx = p.contactSpeed * basis.tx;
+    p.vy = p.contactSpeed * basis.ty;
   }
   applySurfaceMotion();
   if (Math.abs(p.vx) < 0.03) p.vx = 0;
-  stats.maxSpeed = Math.max(stats.maxSpeed, Math.abs(p.vx));
-  anim += Math.abs(p.vx) * 0.08;
+  stats.maxSpeed = Math.max(
+    stats.maxSpeed,
+    Math.abs(p.surface?.contactMode === 'oriented' ? p.contactSpeed : p.vx)
+  );
+  anim +=
+    Math.abs(p.surface?.contactMode === 'oriented' ? p.contactSpeed : p.vx) * 0.08;
   if (!p.ground && p.airSpeedLimit)
     p.vx = Math.max(-p.airSpeedLimit, Math.min(p.airSpeedLimit, p.vx));
   moveAndResolveSurfaces();
   resolveHazards(p.lastX, p.lastY);
+  stopRollAtRest();
   updateBrakingPose(dir, beforeSpeed);
   if (p.ground && p.surface?.grindable && Math.abs(p.vx) > 2 && runFrames % 3 === 0) {
     const fast = p.boosting || Math.abs(p.vx) > 18;

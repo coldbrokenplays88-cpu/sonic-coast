@@ -1,5 +1,7 @@
 # Uphill momentum correction
 
+Current tuning and loop/rolling behavior are documented in [Batch 1 momentum foundation](batch-1-momentum-foundation.md); the report below is historical.
+
 Based on merged PR #12 (`705c281`), on `codex/uphill-momentum`. No geometry, camera, jump impulse, gravity, art, run-speed limit, normal acceleration, boost charge rules or spring launch settings changed.
 
 ## Reference and cause

@@ -58,6 +58,7 @@ function updateBoostState(want) {
 
 function measurementSpeed() {
   if (p.loop) return Math.abs(p.loop.speed);
+  if (p.ground && p.surface?.contactMode === 'oriented') return Math.abs(p.contactSpeed);
   if (p.ground && p.surface) return Math.abs(p.vx) * Math.hypot(1, pose(p.surface).slope);
   return Math.hypot(p.vx, p.vy);
 }
