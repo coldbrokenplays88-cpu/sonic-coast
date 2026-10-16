@@ -1,7 +1,8 @@
 'use strict';
 // Shared surface queries and contact resolution; no stage initialization here.
 
-function pose(s,t=runFrames){let dx=0,dy=0;if(s.motion){const m=s.motion,n=m.type==='flight'?(m.startedAt===null?0:Math.sign(m.distance)*Math.min(Math.abs(m.distance),Math.max(0,t-m.startedAt)*m.speed)):Math.sin(t/m.period*Math.PI*2+m.phase)*m.amp;if(s.motion.axis==='x')dx=n;else dy=n}return {x1:s.x1+dx,x2:s.x2+dx,y1:s.y1+dy,y2:s.y2+dy,slope:(s.y2-s.y1)/(s.x2-s.x1)}}
+const staticSurfacePoses=new WeakMap();
+function pose(s,t=runFrames){if(!s.motion){const cached=staticSurfacePoses.get(s);if(cached&&cached.x1===s.x1&&cached.x2===s.x2&&cached.y1===s.y1&&cached.y2===s.y2)return cached;const q={x1:s.x1+0,x2:s.x2+0,y1:s.y1+0,y2:s.y2+0,slope:(s.y2-s.y1)/(s.x2-s.x1)};staticSurfacePoses.set(s,q);return q}let dx=0,dy=0;if(s.motion){const m=s.motion,n=m.type==='flight'?(m.startedAt===null?0:Math.sign(m.distance)*Math.min(Math.abs(m.distance),Math.max(0,t-m.startedAt)*m.speed)):Math.sin(t/m.period*Math.PI*2+m.phase)*m.amp;if(s.motion.axis==='x')dx=n;else dy=n}return {x1:s.x1+dx,x2:s.x2+dx,y1:s.y1+dy,y2:s.y2+dy,slope:(s.y2-s.y1)/(s.x2-s.x1)}}
 
 function surfaceVelocity(s){const a=pose(s,runFrames-1),b=pose(s);return {x:b.x1-a.x1,y:b.y1-a.y1}}
 
@@ -9,7 +10,15 @@ function yOn(s,x,t=runFrames){const q=pose(s,t);return q.y1+(x-q.x1)*q.slope}
 
 function active(s){return (!s.sealedBy||level.hazards.find(h=>h.id===s.sealedBy)?.broken)&&(!s.restoreAt||runFrames>=s.restoreAt)}
 
-function topAt(x,below=-Infinity){let result=null;for(const s of level.surfaces){const q=pose(s);if(active(s)&&x>=q.x1&&x<=q.x2){const y=yOn(s,x);if(y>=below&&(!result||y<result.y))result={s,y}}}return result}
+// Conservative horizontal travel bounds avoid posing distant surfaces. Air
+// collision passes the entire player sweep, expanded by the existing foot radius.
+function surfaceOverlaps(s,left,right){
+ let x1=s.x1,x2=s.x2;const m=s.motion;
+ if(m?.axis==='x'){if(m.type==='flight'){x1+=Math.min(0,m.distance);x2+=Math.max(0,m.distance)}else{const reach=Math.abs(m.amp);x1-=reach;x2+=reach}}
+ return right>=x1&&left<=x2;
+}
+
+function topAt(x,below=-Infinity){let result=null;for(const s of level.surfaces){if(!surfaceOverlaps(s,x,x)||!active(s))continue;const q=pose(s);if(x>=q.x1&&x<=q.x2){const y=yOn(s,x);if(y>=below&&(!result||y<result.y))result={s,y}}}return result}
 
 function bodyHeight(){return p.ground&&p.roll?26:!p.ground?38:48}
 
@@ -60,9 +69,9 @@ function moveAndResolveSurfaces(){
 function integrateSurfaceStep(dt){
  const oldX=p.x,oldY=p.y,oldFoot=feet(),oldSurface=p.surface,wasGround=p.ground;p.lastX=oldX;p.lastY=oldY;const nextX=p.x+p.vx*dt;p.x=Math.max(24,Math.min(END+250,nextX));if(p.x!==nextX)p.vx=0;
  // Follow connected slopes without launching or snapping across a void.
- if(wasGround&&oldSurface&&active(oldSurface)){const q=pose(oldSurface);if(p.x>=q.x1-FOOT_RADIUS&&p.x<=q.x2+FOOT_RADIUS){p.y=yOn(oldSurface,Math.max(q.x1,Math.min(q.x2,p.x)))-20;p.vy=0}else{let join=null;for(const s of level.surfaces){const z=pose(s),y=yOn(s,p.x);const seam=p.vx>=0?q.x2:q.x1,edgeY=p.vx>=0?q.y2:q.y1,connected=seam>=z.x1-2&&seam<=z.x2+2&&Math.abs(yOn(s,seam)-edgeY)<2;if(active(s)&&p.x>=z.x1&&p.x<=z.x2&&(Math.abs(y-oldFoot)<11||connected)){join={s,y};break}}if(join)land(join.s,join.y);else{leaveSurface(oldSurface)}}}else{if(wasGround&&oldSurface)leaveSurface(oldSurface);else{p.ground=false;p.surface=null}}
+ if(wasGround&&oldSurface&&active(oldSurface)){const q=pose(oldSurface);if(p.x>=q.x1-FOOT_RADIUS&&p.x<=q.x2+FOOT_RADIUS){p.y=yOn(oldSurface,Math.max(q.x1,Math.min(q.x2,p.x)))-20;p.vy=0}else{let join=null;for(const s of level.surfaces){if(!surfaceOverlaps(s,p.x,p.x)||!active(s))continue;const z=pose(s),y=yOn(s,p.x);const seam=p.vx>=0?q.x2:q.x1,edgeY=p.vx>=0?q.y2:q.y1,connected=seam>=z.x1-2&&seam<=z.x2+2&&Math.abs(yOn(s,seam)-edgeY)<2;if(p.x>=z.x1&&p.x<=z.x2&&(Math.abs(y-oldFoot)<11||connected)){join={s,y};break}}if(join)land(join.s,join.y);else{leaveSurface(oldSurface)}}}else{if(wasGround&&oldSurface)leaveSurface(oldSurface);else{p.ground=false;p.surface=null}}
  if(!p.ground){p.vy=p.airBoostActive?0:p.vy>20?20+(p.vy-20)*Math.pow(.999,dt):Math.min(20,p.vy+.58*(p.underwater?2/7:1)*dt);p.y+=p.vy*dt;let hit=null;
-  for(const s of level.surfaces){if(p.wrongRouteDrop&&!s.fallen)continue;if(!active(s)||(s.entrySpeed&&!s.solidAtAnySpeed&&(Math.abs(p.vx)<s.entrySpeed||s.entryDirection&&Math.sign(p.vx)!==s.entryDirection)))continue;const q=pose(s),oldQ=pose(s,runFrames-1);
+  for(const s of level.surfaces){if(!surfaceOverlaps(s,Math.min(oldX,p.x)-FOOT_RADIUS,Math.max(oldX,p.x)+FOOT_RADIUS))continue;if(p.wrongRouteDrop&&!s.fallen)continue;if(!active(s)||(s.entrySpeed&&!s.solidAtAnySpeed&&(Math.abs(p.vx)<s.entrySpeed||s.entryDirection&&Math.sign(p.vx)!==s.entryDirection)))continue;const q=pose(s),oldQ=pose(s,runFrames-1);
    const oldFloor=oldQ.y1+(oldX-oldQ.x1)*oldQ.slope,newFloor=yOn(s,p.x),d0=oldFoot-oldFloor,d1=feet()-newFloor;
    if(d0>5||d1<0||d1-d0<=0)continue;const t=Math.max(0,-d0/(d1-d0)),crossX=oldX+(p.x-oldX)*t;
    const left=oldQ.x1+(q.x1-oldQ.x1)*t,right=oldQ.x2+(q.x2-oldQ.x2)*t;
