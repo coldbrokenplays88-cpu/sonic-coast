@@ -1,4 +1,6 @@
-# Proposals for a later update
+# Phase three proposals
+
+**Status:** The owner approved all five proposals; they are implemented on `refactor/phase-three`. See [phase-three-report.md](phase-three-report.md) for the checks and current player instructions. The recommendations below preserve the original proposal context.
 
 These are proposals only. This branch does not reformat the game, introduce a build system, combine level builders, delete assets/CSS or change publishing.
 

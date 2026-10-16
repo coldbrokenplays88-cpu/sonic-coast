@@ -1,5 +1,7 @@
 # Review findings: completion report
 
+This records the earlier bug-fix task. The later approved cleanup and module changes are covered in [phase-three-report.md](phase-three-report.md).
+
 Work is on `fix/review-findings`, created from freshly fetched main `710786e`. The starting folder was clean. No existing tests/verifiers, images, CSS, level builders or deployment workflow were changed. No separate planned update was started. Main was not pushed or merged.
 
 Baseline `node --test`: **339 passed, 0 failed**. Final runtime: **350 passed, 0 failed**, including 11 new tests. All original tests still pass. Numbers below record the full-suite run after each change, not just the new tests.
@@ -60,8 +62,8 @@ Not verified: physical phones/tablets, a physical high-refresh display, Safari/F
 1. Open [the review branch](https://github.com/coldbrokenplays88-cpu/sonic-coast/tree/fix/review-findings). Confirm the branch selector says **fix/review-findings**.
 2. Click the green **Code** button, then **Download ZIP**.
 3. Extract/unzip the downloaded file completely. Open its **Inferno-Ascent-Game** folder. Keep its **assets** folder in place beside **index.html**.
-4. Double-click **index.html** and open it in Chrome or Edge. These instructions match the repository's `README.txt`; direct-file launch could not be tested in this managed browser.
-5. On Windows, if the game is blank, double-click **RUN-GAME-WINDOWS.bat** in that same folder and leave its window open. It serves the folder and opens `http://127.0.0.1:8000`. It requires Python already installed; if it reports Python missing, it cannot provide that fallback until Python is installed. You do not need to type any commands.
+4. For the current source download, double-click **PLAY.html** and open it in Chrome or Edge. In the smaller player ZIP, open **index.html** instead. These instructions match the updated `README.txt`; direct-file launch could not be tested in this managed browser.
+5. On Windows, if the game is blank, double-click **RUN-GAME-WINDOWS.bat** in that same folder and leave its window open. It serves the folder and opens the available player entry at `http://127.0.0.1:8000`. It requires Python already installed; if it reports Python missing, it cannot provide that fallback until Python is installed. You do not need to type any commands.
 
 ## GitHub and merge recommendation
 
