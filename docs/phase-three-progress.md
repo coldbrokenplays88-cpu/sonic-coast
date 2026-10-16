@@ -5,7 +5,7 @@ Base: main 548ac04. Branch: refactor/phase-three. Owner approved all five propos
 - [x] Publish only playable files and package a player ZIP. Staging checks: 2/0. Game suite: 350/0. ZIP generated with game, launcher and instructions; source tests/tools excluded.
 - [x] Format authored code, leaving tests/generated metadata alone. Full game suite 350/0; build checks 2/0; raw canvas comparison against merged main: 360 matching normal/missing-art frames.
 - [x] Remove verified unused artwork, HUD and touch code. Removed only objects.png/sonic.png, 30 unused selector instances and absent touch-button bindings. Game suite 350/0 and unchanged browser verifier pass; keyboard, Sound, fullscreen, both acts and layout checks intact.
-- [ ] Consolidate Act 2 with exact data/alias/route checks.
+- [x] Consolidate Act 2 with exact data/alias/route checks. One canonical geometry template and fresh-run builder replace three construction layers. All baseline values, 2 alias relationships, floor queries and run independence pass; build checks 4/0, game suite 350/0 and 360 normal/failure frames match main. Old filenames are inert test-helper shims, excluded from the playable page.
 - [ ] Move production to explicit modules and one esbuild script.
 - [ ] Final review, complete checks, push and attempt draft PR.
 
