@@ -58,7 +58,7 @@ function moveAndResolveSurfaces(){
  p.lastX=lastX;p.lastY=lastY;
 }
 function integrateSurfaceStep(dt){
- const oldX=p.x,oldY=p.y,oldFoot=feet(),oldSurface=p.surface,wasGround=p.ground;p.lastX=oldX;p.lastY=oldY;p.x=Math.max(24,Math.min(END+250,p.x+p.vx*dt));
+ const oldX=p.x,oldY=p.y,oldFoot=feet(),oldSurface=p.surface,wasGround=p.ground;p.lastX=oldX;p.lastY=oldY;const nextX=p.x+p.vx*dt;p.x=Math.max(24,Math.min(END+250,nextX));if(p.x!==nextX)p.vx=0;
  // Follow connected slopes without launching or snapping across a void.
  if(wasGround&&oldSurface&&active(oldSurface)){const q=pose(oldSurface);if(p.x>=q.x1-FOOT_RADIUS&&p.x<=q.x2+FOOT_RADIUS){p.y=yOn(oldSurface,Math.max(q.x1,Math.min(q.x2,p.x)))-20;p.vy=0}else{let join=null;for(const s of level.surfaces){const z=pose(s),y=yOn(s,p.x);const seam=p.vx>=0?q.x2:q.x1,edgeY=p.vx>=0?q.y2:q.y1,connected=seam>=z.x1-2&&seam<=z.x2+2&&Math.abs(yOn(s,seam)-edgeY)<2;if(active(s)&&p.x>=z.x1&&p.x<=z.x2&&(Math.abs(y-oldFoot)<11||connected)){join={s,y};break}}if(join)land(join.s,join.y);else{leaveSurface(oldSurface)}}}else{if(wasGround&&oldSurface)leaveSurface(oldSurface);else{p.ground=false;p.surface=null}}
  if(!p.ground){p.vy=p.airBoostActive?0:p.vy>20?20+(p.vy-20)*Math.pow(.999,dt):Math.min(20,p.vy+.58*(p.underwater?2/7:1)*dt);p.y+=p.vy*dt;let hit=null;

@@ -4,7 +4,7 @@ Branch: `fix/review-findings`, based on main `710786e`.
 The starting working folder was clean. No merges or pushes to main are authorized.
 Existing tests and image files must remain unchanged.
 
-- [ ] 1. Stop horizontal velocity at both world edges; add a 200-tick regression test.
+- [x] 1. Stop horizontal velocity at both world edges; add a 200-tick regression test.
 - [ ] 2. Restore keyboard controls after Sound and stage selection; reproduce in Chromium.
 - [ ] 3. Leave touch controls unchanged and report the required decision.
 - [ ] 4. Consolidate breakable drawing; investigate duplicate water checks without changing behavior or sounds.
@@ -16,5 +16,9 @@ Existing tests and image files must remain unchanged.
 
 ## Baseline and validation
 
-Baseline suite is running. Per-item results will be recorded here.
+Baseline: **339 passed / 0 failed**.
+
+Item 1: **341 passed / 0 failed**, including two new regressions. Both failed before the fix (200-tick Left ended at vx=-14); both pass afterwards. Turning right moves immediately.
+
+Draft PR creation was attempted immediately after the setup commit and failed: GitHub GraphQL returned Forbidden. The branch push succeeded; this checklist is the fallback progress record.
 GitHub API access currently returns `Forbidden`; draft PR creation will be attempted after this initial tracking commit.
