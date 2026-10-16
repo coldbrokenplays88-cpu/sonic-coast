@@ -26,3 +26,5 @@ GitHub API access currently returns `Forbidden`; draft PR creation will be attem
 Item 2: **341 passed / 0 failed**. Chromium reproduced focus staying on Sound, ignored Right input and Space toggling sound again. New browser regression fails before the change and passes afterwards: focus returns to the canvas after Sound and stage selection, Right reaches game controls and Space leaves sound unchanged.
 
 Item 3: no changes. Decision and yes/no consequences will be in the final report.
+
+Item 4: breakable drawing consolidated. **343 passed / 0 failed** (two added water regressions). Water-call removal is deliberately unfinished: deleting the post-movement call changed crossing-tick vx from 4 to 8, vy from 1.145 to 4.58, left underwater false and omitted the splash. The pre-movement check also handles placement/respawn before water physics. Both retained to preserve behavior.
