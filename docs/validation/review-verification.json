@@ -1,0 +1,99 @@
+{
+  "suites": {
+    "baseline": {
+      "tests": 339,
+      "pass": 339,
+      "fail": 0,
+      "skipped": 0
+    },
+    "item1": {
+      "tests": 341,
+      "pass": 341,
+      "fail": 0,
+      "skipped": 0
+    },
+    "item2": {
+      "tests": 341,
+      "pass": 341,
+      "fail": 0,
+      "skipped": 0
+    },
+    "item4": {
+      "tests": 343,
+      "pass": 343,
+      "fail": 0,
+      "skipped": 0
+    },
+    "item5": {
+      "tests": 343,
+      "pass": 343,
+      "fail": 0,
+      "skipped": 0
+    },
+    "item6": {
+      "tests": 348,
+      "pass": 348,
+      "fail": 0,
+      "skipped": 0
+    },
+    "item7": {
+      "tests": 350,
+      "pass": 350,
+      "fail": 0,
+      "skipped": 0
+    }
+  },
+  "browserRoot": "Browser checks passed: both acts, release gauge, pause HUD, six facade pixel comparisons, pool arc, new atlases, actual MP3 play/pause/mute/restart and real sound-effect wiring, fullscreen, native keyboard movement/pause/fullscreen, tablet/mobile layout; zero page errors.",
+  "browserPagesPrefix": "Browser checks passed: both acts, release gauge, pause HUD, six facade pixel comparisons, pool arc, new atlases, actual MP3 play/pause/mute/restart and real sound-effect wiring, fullscreen, native keyboard movement/pause/fullscreen, tablet/mobile layout; zero page errors.",
+  "focus": {
+    "soundFocus": "game",
+    "arrow": {
+      "held": true,
+      "controlled": false
+    },
+    "soundBeforeSpace": true,
+    "soundAfterSpace": true,
+    "actFocus": "game"
+  },
+  "ending": {
+    "frames": 322,
+    "captureFps": 20,
+    "seconds": 16.1,
+    "beats": [
+      "escape",
+      "aim",
+      "rocket",
+      "kick",
+      "return",
+      "explode",
+      "jetpack",
+      "offer",
+      "approach",
+      "nod",
+      "annoy",
+      "swing",
+      "realize",
+      "vanish",
+      "sigh",
+      "end"
+    ],
+    "events": [
+      "rocketFire",
+      "shadowTeleport",
+      "kickImpact",
+      "podExplosion",
+      "jetpack",
+      "emeraldOffer",
+      "chaosCharge",
+      "chaosWarp",
+      "relievedSigh"
+    ],
+    "errors": [],
+    "assetRetry": true,
+    "pauseResume": true,
+    "actSwitch": true
+  },
+  "directFileLaunch": "Not verified: managed Chromium returned ERR_BLOCKED_BY_ADMINISTRATOR for file:// navigation.",
+  "originalTestsAssetsCssWorkflowUnchanged": true,
+  "independentReview": "No critical, important or minor findings in 710786e..ca40891; reviewer independently ran 11 new tests and diff --check."
+}

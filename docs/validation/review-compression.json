@@ -1,0 +1,308 @@
+[
+  {
+    "file": "city-recovered-burning.png",
+    "png_bytes": 2269251,
+    "width": 1536,
+    "height": 1024,
+    "rgba_bytes": 6291456,
+    "lossless_webp_bytes": 2023824,
+    "webp_rgba_identical": true,
+    "palette_png_bytes": 443525,
+    "palette_rgba_identical": false,
+    "palette_mean_abs_rgba": [
+      6.593294143676758,
+      2.6705945332845054,
+      6.8134504954020185,
+      0.07179705301920573
+    ]
+  },
+  {
+    "file": "sonic-recovered-speedster.png",
+    "png_bytes": 2190563,
+    "width": 1448,
+    "height": 1086,
+    "rgba_bytes": 6290112,
+    "lossless_webp_bytes": 1769552,
+    "webp_rgba_identical": true,
+    "palette_png_bytes": 431703,
+    "palette_rgba_identical": false,
+    "palette_mean_abs_rgba": [
+      3.0229032487815797,
+      2.461912919833542,
+      3.3289168777916833,
+      2.1931628562416696
+    ]
+  },
+  {
+    "file": "sonic-recovered-peelout.png",
+    "png_bytes": 2190234,
+    "width": 1448,
+    "height": 1086,
+    "rgba_bytes": 6290112,
+    "lossless_webp_bytes": 1765860,
+    "webp_rgba_identical": true,
+    "palette_png_bytes": 425845,
+    "palette_rgba_identical": false,
+    "palette_mean_abs_rgba": [
+      2.819748201621847,
+      2.345160149771578,
+      3.365355020705514,
+      1.938530824252414
+    ]
+  },
+  {
+    "file": "city.png",
+    "png_bytes": 1939004,
+    "width": 1536,
+    "height": 1024,
+    "rgba_bytes": 6291456,
+    "lossless_webp_bytes": 1720394,
+    "webp_rgba_identical": true,
+    "palette_png_bytes": 388767,
+    "palette_rgba_identical": false,
+    "palette_mean_abs_rgba": [
+      5.460634867350261,
+      2.8257052103678384,
+      5.881308873494466,
+      0.1608587900797526
+    ]
+  },
+  {
+    "file": "city-collapse.png",
+    "png_bytes": 2159070,
+    "width": 1536,
+    "height": 1024,
+    "rgba_bytes": 6291456,
+    "lossless_webp_bytes": 1956442,
+    "webp_rgba_identical": true,
+    "palette_png_bytes": 464374,
+    "palette_rgba_identical": false,
+    "palette_mean_abs_rgba": [
+      6.52171262105306,
+      3.243117014567057,
+      6.646004358927409,
+      0.0
+    ]
+  },
+  {
+    "file": "sonic-expressive.png",
+    "png_bytes": 2352434,
+    "width": 1536,
+    "height": 1024,
+    "rgba_bytes": 6291456,
+    "lossless_webp_bytes": 1851402,
+    "webp_rgba_identical": true,
+    "palette_png_bytes": 351121,
+    "palette_rgba_identical": false,
+    "palette_mean_abs_rgba": [
+      20.01330057779948,
+      10.64730453491211,
+      10.57380739847819,
+      1.7032470703125
+    ]
+  },
+  {
+    "file": "sonic-motion.png",
+    "png_bytes": 2387031,
+    "width": 1536,
+    "height": 1024,
+    "rgba_bytes": 6291456,
+    "lossless_webp_bytes": 1853010,
+    "webp_rgba_identical": true,
+    "palette_png_bytes": 349867,
+    "palette_rgba_identical": false,
+    "palette_mean_abs_rgba": [
+      20.245899200439453,
+      15.323146184285482,
+      16.553551991780598,
+      1.4248568216959636
+    ]
+  },
+  {
+    "file": "sonic-boost.png",
+    "png_bytes": 1209546,
+    "width": 1774,
+    "height": 887,
+    "rgba_bytes": 6294152,
+    "lossless_webp_bytes": 1001450,
+    "webp_rgba_identical": true,
+    "palette_png_bytes": 212365,
+    "palette_rgba_identical": false,
+    "palette_mean_abs_rgba": [
+      1.7608942396052716,
+      1.2768627131979018,
+      1.9862125986153496,
+      1.2199800703891486
+    ]
+  },
+  {
+    "file": "sonic-brake.png",
+    "png_bytes": 757504,
+    "width": 2688,
+    "height": 384,
+    "rgba_bytes": 4128768,
+    "lossless_webp_bytes": 612460,
+    "webp_rgba_identical": true,
+    "palette_png_bytes": 135758,
+    "palette_rgba_identical": false,
+    "palette_mean_abs_rgba": [
+      1.1445157490079365,
+      1.221467517671131,
+      2.088653080047123,
+      0.7802966889880952
+    ]
+  },
+  {
+    "file": "sonic-grind.png",
+    "png_bytes": 1300438,
+    "width": 3840,
+    "height": 400,
+    "rgba_bytes": 6144000,
+    "lossless_webp_bytes": 1084900,
+    "webp_rgba_identical": true,
+    "palette_png_bytes": 235380,
+    "palette_rgba_identical": false,
+    "palette_mean_abs_rgba": [
+      1.5779114583333333,
+      1.5482571614583334,
+      2.55777734375,
+      1.161328125
+    ]
+  },
+  {
+    "file": "sonic-detail.png",
+    "png_bytes": 2202383,
+    "width": 1536,
+    "height": 1024,
+    "rgba_bytes": 6291456,
+    "lossless_webp_bytes": 1674402,
+    "webp_rgba_identical": true,
+    "palette_png_bytes": 285642,
+    "palette_rgba_identical": false,
+    "palette_mean_abs_rgba": [
+      23.9431209564209,
+      15.28482437133789,
+      17.214513778686523,
+      1.0923665364583333
+    ]
+  },
+  {
+    "file": "sonic-wind.png",
+    "png_bytes": 2430711,
+    "width": 1536,
+    "height": 1024,
+    "rgba_bytes": 6291456,
+    "lossless_webp_bytes": 1920328,
+    "webp_rgba_identical": true,
+    "palette_png_bytes": 331670,
+    "palette_rgba_identical": false,
+    "palette_mean_abs_rgba": [
+      24.65194320678711,
+      12.786513646443685,
+      15.251890818277994,
+      1.7486343383789062
+    ]
+  },
+  {
+    "file": "sonic-transitions.png",
+    "png_bytes": 1431865,
+    "width": 1448,
+    "height": 1086,
+    "rgba_bytes": 6290112,
+    "lossless_webp_bytes": 1161100,
+    "webp_rgba_identical": true,
+    "palette_png_bytes": 268402,
+    "palette_rgba_identical": false,
+    "palette_mean_abs_rgba": [
+      1.5049328215459439,
+      1.484960522165583,
+      2.5822529074204086,
+      1.0799089110019027
+    ]
+  },
+  {
+    "file": "sonic-supplemental.png",
+    "png_bytes": 1979567,
+    "width": 1774,
+    "height": 887,
+    "rgba_bytes": 6294152,
+    "lossless_webp_bytes": 1608566,
+    "webp_rgba_identical": true,
+    "palette_png_bytes": 353670,
+    "palette_rgba_identical": false,
+    "palette_mean_abs_rgba": [
+      2.4616177048155174,
+      2.1706568255739613,
+      3.0784683941538113,
+      1.802555769228325
+    ]
+  },
+  {
+    "file": "sonic-peelout-cycle.png",
+    "png_bytes": 1236334,
+    "width": 1774,
+    "height": 887,
+    "rgba_bytes": 6294152,
+    "lossless_webp_bytes": 1002852,
+    "webp_rgba_identical": true,
+    "palette_png_bytes": 206479,
+    "palette_rgba_identical": false,
+    "palette_mean_abs_rgba": [
+      1.49121152460252,
+      1.3320822248970154,
+      2.2317554453721486,
+      1.1795361789801073
+    ]
+  },
+  {
+    "file": "sonic-traversal-acting.png",
+    "png_bytes": 2401589,
+    "width": 2048,
+    "height": 768,
+    "rgba_bytes": 6291456,
+    "lossless_webp_bytes": 1941644,
+    "webp_rgba_identical": true,
+    "palette_png_bytes": 343703,
+    "palette_rgba_identical": false,
+    "palette_mean_abs_rgba": [
+      25.40032450358073,
+      14.35104242960612,
+      13.167253494262695,
+      1.9968217213948567
+    ]
+  },
+  {
+    "file": "sonic-traversal-launch.png",
+    "png_bytes": 2042625,
+    "width": 1774,
+    "height": 887,
+    "rgba_bytes": 6294152,
+    "lossless_webp_bytes": 1620042,
+    "webp_rgba_identical": true,
+    "palette_png_bytes": 410639,
+    "palette_rgba_identical": false,
+    "palette_mean_abs_rgba": [
+      2.4144812518032612,
+      2.2404676595036155,
+      3.183544344019655,
+      1.7205952446016557
+    ]
+  },
+  {
+    "file": "egg-scorpion-parts.png",
+    "png_bytes": 1835736,
+    "width": 1536,
+    "height": 1024,
+    "rgba_bytes": 6291456,
+    "lossless_webp_bytes": 1367314,
+    "webp_rgba_identical": true,
+    "palette_png_bytes": 212841,
+    "palette_rgba_identical": false,
+    "palette_mean_abs_rgba": [
+      29.033693313598633,
+      8.019170761108398,
+      10.362213134765625,
+      0.9770654042561849
+    ]
+  }
+]
