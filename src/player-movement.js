@@ -11,7 +11,6 @@ import {
   feet,
   moveAndResolveSurfaces,
   pose,
-  resolveHazards,
   surfaceVelocity,
   surfaceBasis,
   surfaceTravelSpeed,
@@ -282,7 +281,6 @@ export function updateMovement() {
   if (!p.ground && p.airSpeedLimit)
     p.vx = Math.max(-p.airSpeedLimit, Math.min(p.airSpeedLimit, p.vx));
   moveAndResolveSurfaces();
-  resolveHazards(p.lastX, p.lastY);
   stopRollAtRest();
   updateBrakingPose(dir, beforeSpeed);
   if (p.ground && p.surface?.grindable && Math.abs(p.vx) > 2 && runtimeState.runFrames % 3 === 0) {

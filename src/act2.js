@@ -42,6 +42,7 @@ import {
   groundSlopeForce,
   surfaceNormalReaction,
 } from './surface-collision.js';
+import { resolveMotionInteractions } from './world-interactions.js';
 import { beginTraversalLaunch } from './traversal-animations.js';
 export let cameraTracking, skylineSmokeSprites;
 
@@ -162,9 +163,22 @@ export function updateLoop() {
           : groundSlopeForce(p.rolling, q.speed, tangentY) *
             (gravity / groundSlopeForce(false, 0, 0));
     q.speed += (slopeForce * tangentY - drag + drive) * dt;
+    const oldX = p.x,
+      oldY = p.y,
+      deaths = runtimeState.stats.deaths;
     q.theta += (((previous + q.speed) * 0.5) / l.r) * dt;
     p.x = l.x + Math.sin(q.theta) * l.r;
     p.y = l.y - l.r + Math.cos(q.theta) * l.r - 20;
+    p.vx = Math.cos(q.theta) * q.speed;
+    p.vy = -Math.sin(q.theta) * q.speed;
+    resolveMotionInteractions(oldX, oldY);
+    if (runtimeState.stats.deaths !== deaths) return true;
+    if (!p.ground) {
+      p.loop = null;
+      l.used = false;
+      l.entryLocked = true;
+      return true;
+    }
     // The ceiling can hold Sonic only while centripetal acceleration supplies contact.
     if (
       runtimeState.jumpBuffer > 0 ||

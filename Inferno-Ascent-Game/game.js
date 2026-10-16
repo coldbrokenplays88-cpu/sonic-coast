@@ -204,6 +204,7 @@ function setup() {
   level = configureBoostMonitors(
     selectedAct === 2 ? addMiddleSection(makeLevel2()) : makeLevel()
   );
+  configureDirectionalSpikes(level);
   selectStageRuntime();
   END = level.end;
   setupBossEncounter();
@@ -280,6 +281,7 @@ function respawn() {
     rolling: false,
     dashRolling: false,
     contactSpeed: null,
+    interactionsFrame: -1,
     rollAge: 0,
     lowRollFrames: 0,
     rollSpent: false,
@@ -574,12 +576,17 @@ function update() {
     updateHud();
     return;
   }
-  collectWorldRings();
-  activateWorldDevices();
-  collectBoostMonitors();
+  const motionHandled = p.interactionsFrame === runFrames;
+  if (!motionHandled) {
+    collectWorldRings();
+    activateWorldDevices();
+    collectBoostMonitors();
+  }
   updateBossEncounter();
-  updateWorldEnemies();
-  updateWorldCheckpoints();
+  if (!motionHandled) {
+    updateWorldEnemies();
+    updateWorldCheckpoints();
+  }
   updateStageCompletion();
   updateTraversalAnimation();
   updateParticles();
@@ -1324,6 +1331,7 @@ const p = {
     rolling: false,
     dashRolling: false,
     contactSpeed: null,
+    interactionsFrame: -1,
     rollAge: 0,
     lowRollFrames: 0,
     rollSpent: false,

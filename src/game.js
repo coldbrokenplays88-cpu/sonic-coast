@@ -80,6 +80,7 @@ import {
   updateTraversalAnimation,
 } from './traversal-animations.js';
 import {
+  configureDirectionalSpikes,
   activateWorldDevices,
   collectWorldRings,
   updateWorldCheckpoints,
@@ -322,6 +323,7 @@ export function setup() {
   runtimeState.level = configureBoostMonitors(
     runtimeState.selectedAct === 2 ? addMiddleSection(makeLevel2()) : makeLevel()
   );
+  configureDirectionalSpikes(runtimeState.level);
   selectStageRuntime();
   runtimeState.END = runtimeState.level.end;
   setupBossEncounter();
@@ -398,6 +400,7 @@ export function respawn() {
     rolling: false,
     dashRolling: false,
     contactSpeed: null,
+    interactionsFrame: -1,
     rollAge: 0,
     lowRollFrames: 0,
     rollSpent: false,
@@ -692,12 +695,17 @@ export function update() {
     updateHud();
     return;
   }
-  collectWorldRings();
-  activateWorldDevices();
-  collectBoostMonitors();
+  const motionHandled = p.interactionsFrame === runtimeState.runFrames;
+  if (!motionHandled) {
+    collectWorldRings();
+    activateWorldDevices();
+    collectBoostMonitors();
+  }
   updateBossEncounter();
-  updateWorldEnemies();
-  updateWorldCheckpoints();
+  if (!motionHandled) {
+    updateWorldEnemies();
+    updateWorldCheckpoints();
+  }
   updateStageCompletion();
   updateTraversalAnimation();
   updateParticles();
@@ -1487,6 +1495,7 @@ export function initializeRuntimeModule() {
     rolling: false,
     dashRolling: false,
     contactSpeed: null,
+    interactionsFrame: -1,
     rollAge: 0,
     lowRollFrames: 0,
     rollSpent: false,
