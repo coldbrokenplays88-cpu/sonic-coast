@@ -1,0 +1,9 @@
+node_modules/
+dist/
+Inferno-Ascent-Game/test-*.cjs
+Inferno-Ascent-Game/*-test-helpers.cjs
+Inferno-Ascent-Game/scripts/
+Inferno-Ascent-Game/ending-frames.js
+Inferno-Ascent-Game/ending-polish-frames.js
+Inferno-Ascent-Game/supplemental-frames.js
+Inferno-Ascent-Game/traversal-frames.js

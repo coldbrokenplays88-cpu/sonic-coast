@@ -5,11 +5,11 @@ on:
     branches:
       - main
     paths:
-      - "Inferno-Ascent-Game/**"
-      - ".github/workflows/pages.yml"
-      - "tools/**"
-      - "package.json"
-      - "package-lock.json"
+      - 'Inferno-Ascent-Game/**'
+      - '.github/workflows/pages.yml'
+      - 'tools/**'
+      - 'package.json'
+      - 'package-lock.json'
   workflow_dispatch:
 
 permissions:
@@ -33,7 +33,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: '22'
           cache: npm
       - name: Install pinned build tools
         run: npm ci

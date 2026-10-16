@@ -3,7 +3,7 @@
 Base: main 548ac04. Branch: refactor/phase-three. Owner approved all five proposals and no mobile play. Existing working folder clean. Baseline game suite: 350 passed, 0 failed.
 
 - [x] Publish only playable files and package a player ZIP. Staging checks: 2/0. Game suite: 350/0. ZIP generated with game, launcher and instructions; source tests/tools excluded.
-- [ ] Format authored code, leaving tests/generated metadata alone.
+- [x] Format authored code, leaving tests/generated metadata alone. Full game suite 350/0; build checks 2/0; raw canvas comparison against merged main: 360 matching normal/missing-art frames.
 - [ ] Remove verified unused artwork, HUD and touch code.
 - [ ] Consolidate Act 2 with exact data/alias/route checks.
 - [ ] Move production to explicit modules and one esbuild script.

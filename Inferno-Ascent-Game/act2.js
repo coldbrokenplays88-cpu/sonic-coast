@@ -1,137 +1,554 @@
 'use strict';
-function selectAct(act){selectedAct=act===2?2:1;setup();mode='ready';show(selectedAct===2?'City on<br><em>the brink.</em>':'Ready.<br><em>Gotta go.</em>',selectedAct===2?'Through ruined streets and exposed towers.<br>Reach the rooftop helipad.':'Build momentum. Jump the rails and roll through tunnels.',selectedAct===2?'PLAY ACT 2':'PLAY ACT 1');$('#act-select').value=String(selectedAct)}
-function resetAct2(){if(level.act!==2)return;for(const group of level.collapseGroups||[])group.triggered=false;for(const d of level.debris){d.triggered=d.x<level.checkpoints[checkpoint].x;d.age=d.triggered?240:0}for(const e of level.events)e.age=e.trigger<level.checkpoints[checkpoint].x?150:-1;for(const l of level.loops){l.used=l.x<level.checkpoints[checkpoint].x;l.solved=false}for(const h of level.hazards)if(h.type==='breakable')h.broken=!!h.broken&&h.x<level.checkpoints[checkpoint].x}
-function launchAirDevice(device){
- // Keep the existing aiming strength for the whole spring/vent flight.
- p.scriptedLaunch=true;p.jumpReleaseVy=null;p.coyoteLaunchVy=null;
- if(device.launchX!==undefined)p.vx=device.launchX;if(device.id==='mid-low-spring')p.poolApproach=true;if(device.poolBooster)p.poolExit=true;
- p.airSpeedLimit=device.airSpeedLimit??null;if(p.airSpeedLimit)p.vx=Math.max(-p.airSpeedLimit,Math.min(p.airSpeedLimit,p.vx));p.jumpAttack=true;p.vy=-device.power;p.ground=false;p.surface=null;p.rolling=false;p.roll=true;p.poseJumpFrame=runFrames;p.brakeActive=false;p.stopFrame=-100;coyote=0;jumpBuffer=0;p.airLaunchUntil=runFrames+Math.ceil(device.power/.58);device.firedAt=runFrames;sparks(device.x,device.y-10,6,device.cityVent?'#9be3ef':'#ffe68b');gameSound(device.poolBooster?'pool':device.cityVent?'vent':'spring',{launch:!!device.poolBooster});beginTraversalLaunch(device);
+function selectAct(act) {
+  selectedAct = act === 2 ? 2 : 1;
+  setup();
+  mode = 'ready';
+  show(
+    selectedAct === 2 ? 'City on<br><em>the brink.</em>' : 'Ready.<br><em>Gotta go.</em>',
+    selectedAct === 2
+      ? 'Through ruined streets and exposed towers.<br>Reach the rooftop helipad.'
+      : 'Build momentum. Jump the rails and roll through tunnels.',
+    selectedAct === 2 ? 'PLAY ACT 2' : 'PLAY ACT 1'
+  );
+  $('#act-select').value = String(selectedAct);
 }
-function beginLoop(l){p.brakeActive=false;p.brakeAge=0;p.stopFrame=-100;p.loop={id:l.id,theta:0,speed:p.vx*Math.hypot(1,p.surface?pose(p.surface).slope:0)};p.x=l.x;p.y=l.y-20;p.vy=0;p.ground=true;p.surface=null;l.used=true}
-function updateLoop(){
- const l=level.loops.find(l=>l.id===p.loop.id),q=p.loop;p.lastX=p.x;p.lastY=p.y;
- const want=keys.has('ShiftLeft')||keys.has('ShiftRight')||keys.has('KeyX')||keys.has('MouseBoost');updateBoostState(want);
- const dir=Number(keys.has('ArrowRight')||keys.has('KeyD'))-Number(keys.has('ArrowLeft')||keys.has('KeyA')),gravity=.58;
- // Small angular steps keep gravity/contact accurate even at terrain-earned speeds.
- const steps=Math.max(4,Math.ceil(Math.abs(q.speed)/l.r/.04)),dt=1/steps;
- for(let i=0;i<steps;i++){
-  const previous=q.speed,drag=q.speed*.0015,drive=p.boosting&&q.speed<23?(23-q.speed)*.14:dir*.06*Math.max(0,Math.cos(q.theta));
-  q.speed+=(-gravity*Math.sin(q.theta)-drag+drive)*dt;
-  q.theta+=(previous+q.speed)*.5/l.r*dt;
-  p.x=l.x+Math.sin(q.theta)*l.r;p.y=l.y-l.r+Math.cos(q.theta)*l.r-20;
-  // The ceiling can hold Sonic only while centripetal acceleration supplies contact.
-  if(jumpBuffer>0||q.speed*q.speed/l.r+gravity*Math.cos(q.theta)<0){
-   p.vx=Math.cos(q.theta)*q.speed;p.vy=-Math.sin(q.theta)*q.speed;
-   if(jumpBuffer){p.vx-=Math.sin(q.theta)*13.4;p.vy-=Math.cos(q.theta)*13.4;p.jumpReleaseVy=-Math.sin(q.theta)*q.speed-Math.cos(q.theta)*5;p.jumpAttack=true;stats.jumps++;p.poseJumpFrame=runFrames;gameSound('jump')}
-   jumpBuffer=0;p.loop=null;l.used=false;p.ground=false;p.surface=null;return true;
+function resetAct2() {
+  if (level.act !== 2) return;
+  for (const group of level.collapseGroups || []) group.triggered = false;
+  for (const d of level.debris) {
+    d.triggered = d.x < level.checkpoints[checkpoint].x;
+    d.age = d.triggered ? 240 : 0;
   }
-  if(q.theta>=Math.PI*2||q.theta<=0){
-   const complete=q.theta>=Math.PI*2;if(complete){l.solved=true;stats.loops++;score+=500}else l.used=false;
-   p.loop=null;p.x=l.x;p.y=l.y-20;p.vx=q.speed;p.vy=0;p.surface=level.surfaces.find(s=>active(s)&&p.x>=s.x1&&p.x<=s.x2&&Math.abs(yOn(s,p.x)-l.y)<12)||null;p.ground=!!p.surface;return true;
+  for (const e of level.events) e.age = e.trigger < level.checkpoints[checkpoint].x ? 150 : -1;
+  for (const l of level.loops) {
+    l.used = l.x < level.checkpoints[checkpoint].x;
+    l.solved = false;
   }
- }
- anim+=Math.abs(q.speed)*.08;stats.maxSpeed=Math.max(stats.maxSpeed,Math.abs(q.speed));
- p.vx=Math.cos(q.theta)*q.speed;p.vy=-Math.sin(q.theta)*q.speed;p.face=Math.sign(q.speed)||1;p.ground=true;return true;
+  for (const h of level.hazards)
+    if (h.type === 'breakable') h.broken = !!h.broken && h.x < level.checkpoints[checkpoint].x;
 }
-function updateAct2(){if(level.act!==2)return;
- for(const l of level.loops)if(!p.loop&&!l.used&&p.ground&&p.vx>0&&p.lastX<=l.x&&p.x>=l.x&&Math.abs(feet()-l.y)<18)beginLoop(l);
- for(const e of level.events)if(e.age<0&&p.x>e.trigger){e.age=0;sparks(e.x,e.y,12,'#ff894d');shake=Math.max(shake,4)}else if(e.age>=0&&e.age<180)e.age++;
- for(const d of level.debris){if(!d.triggered&&(!d.entryX||p.x>=d.entryX)&&d.x-p.x>0&&d.x-p.x<Math.max(900,Math.abs(p.vx)*70)&&Math.abs(p.y-d.y)<550){d.triggered=true;d.age=0;gameSound('warning',{pan:Math.max(-1,Math.min(1,(d.x-p.x)/600))})}
-  if(!d.triggered||d.age>=d.warn+d.fall+120)continue;d.age++;
-  if(d.age>=d.warn){const t=Math.min(1,(d.age-d.warn)/d.fall),y=d.y-460+(460)*t*t;
-   if(p.x+13>d.x-d.w/2&&p.x-13<d.x+d.w/2&&feet()>y-44&&feet()-bodyHeight()<y)hurt(d.x);
-   if(d.age===d.warn+d.fall){if(Math.abs(d.x-p.x)<800)gameSound('hazard');sparks(d.x,d.y,10,'#ffb356');shake=Math.max(shake,3)}
+function launchAirDevice(device) {
+  // Keep the existing aiming strength for the whole spring/vent flight.
+  p.scriptedLaunch = true;
+  p.jumpReleaseVy = null;
+  p.coyoteLaunchVy = null;
+  if (device.launchX !== undefined) p.vx = device.launchX;
+  if (device.id === 'mid-low-spring') p.poolApproach = true;
+  if (device.poolBooster) p.poolExit = true;
+  p.airSpeedLimit = device.airSpeedLimit ?? null;
+  if (p.airSpeedLimit) p.vx = Math.max(-p.airSpeedLimit, Math.min(p.airSpeedLimit, p.vx));
+  p.jumpAttack = true;
+  p.vy = -device.power;
+  p.ground = false;
+  p.surface = null;
+  p.rolling = false;
+  p.roll = true;
+  p.poseJumpFrame = runFrames;
+  p.brakeActive = false;
+  p.stopFrame = -100;
+  coyote = 0;
+  jumpBuffer = 0;
+  p.airLaunchUntil = runFrames + Math.ceil(device.power / 0.58);
+  device.firedAt = runFrames;
+  sparks(device.x, device.y - 10, 6, device.cityVent ? '#9be3ef' : '#ffe68b');
+  gameSound(device.poolBooster ? 'pool' : device.cityVent ? 'vent' : 'spring', {
+    launch: !!device.poolBooster,
+  });
+  beginTraversalLaunch(device);
+}
+function beginLoop(l) {
+  p.brakeActive = false;
+  p.brakeAge = 0;
+  p.stopFrame = -100;
+  p.loop = {
+    id: l.id,
+    theta: 0,
+    speed: p.vx * Math.hypot(1, p.surface ? pose(p.surface).slope : 0),
+  };
+  p.x = l.x;
+  p.y = l.y - 20;
+  p.vy = 0;
+  p.ground = true;
+  p.surface = null;
+  l.used = true;
+}
+function updateLoop() {
+  const l = level.loops.find((l) => l.id === p.loop.id),
+    q = p.loop;
+  p.lastX = p.x;
+  p.lastY = p.y;
+  const want =
+    keys.has('ShiftLeft') || keys.has('ShiftRight') || keys.has('KeyX') || keys.has('MouseBoost');
+  updateBoostState(want);
+  const dir =
+      Number(keys.has('ArrowRight') || keys.has('KeyD')) -
+      Number(keys.has('ArrowLeft') || keys.has('KeyA')),
+    gravity = 0.58;
+  // Small angular steps keep gravity/contact accurate even at terrain-earned speeds.
+  const steps = Math.max(4, Math.ceil(Math.abs(q.speed) / l.r / 0.04)),
+    dt = 1 / steps;
+  for (let i = 0; i < steps; i++) {
+    const previous = q.speed,
+      drag = q.speed * 0.0015,
+      drive =
+        p.boosting && q.speed < 23
+          ? (23 - q.speed) * 0.14
+          : dir * 0.06 * Math.max(0, Math.cos(q.theta));
+    q.speed += (-gravity * Math.sin(q.theta) - drag + drive) * dt;
+    q.theta += (((previous + q.speed) * 0.5) / l.r) * dt;
+    p.x = l.x + Math.sin(q.theta) * l.r;
+    p.y = l.y - l.r + Math.cos(q.theta) * l.r - 20;
+    // The ceiling can hold Sonic only while centripetal acceleration supplies contact.
+    if (jumpBuffer > 0 || (q.speed * q.speed) / l.r + gravity * Math.cos(q.theta) < 0) {
+      p.vx = Math.cos(q.theta) * q.speed;
+      p.vy = -Math.sin(q.theta) * q.speed;
+      if (jumpBuffer) {
+        p.vx -= Math.sin(q.theta) * 13.4;
+        p.vy -= Math.cos(q.theta) * 13.4;
+        p.jumpReleaseVy = -Math.sin(q.theta) * q.speed - Math.cos(q.theta) * 5;
+        p.jumpAttack = true;
+        stats.jumps++;
+        p.poseJumpFrame = runFrames;
+        gameSound('jump');
+      }
+      jumpBuffer = 0;
+      p.loop = null;
+      l.used = false;
+      p.ground = false;
+      p.surface = null;
+      return true;
+    }
+    if (q.theta >= Math.PI * 2 || q.theta <= 0) {
+      const complete = q.theta >= Math.PI * 2;
+      if (complete) {
+        l.solved = true;
+        stats.loops++;
+        score += 500;
+      } else l.used = false;
+      p.loop = null;
+      p.x = l.x;
+      p.y = l.y - 20;
+      p.vx = q.speed;
+      p.vy = 0;
+      p.surface =
+        level.surfaces.find(
+          (s) => active(s) && p.x >= s.x1 && p.x <= s.x2 && Math.abs(yOn(s, p.x) - l.y) < 12
+        ) || null;
+      p.ground = !!p.surface;
+      return true;
+    }
   }
- }
+  anim += Math.abs(q.speed) * 0.08;
+  stats.maxSpeed = Math.max(stats.maxSpeed, Math.abs(q.speed));
+  p.vx = Math.cos(q.theta) * q.speed;
+  p.vy = -Math.sin(q.theta) * q.speed;
+  p.face = Math.sign(q.speed) || 1;
+  p.ground = true;
+  return true;
+}
+function updateAct2() {
+  if (level.act !== 2) return;
+  for (const l of level.loops)
+    if (
+      !p.loop &&
+      !l.used &&
+      p.ground &&
+      p.vx > 0 &&
+      p.lastX <= l.x &&
+      p.x >= l.x &&
+      Math.abs(feet() - l.y) < 18
+    )
+      beginLoop(l);
+  for (const e of level.events)
+    if (e.age < 0 && p.x > e.trigger) {
+      e.age = 0;
+      sparks(e.x, e.y, 12, '#ff894d');
+      shake = Math.max(shake, 4);
+    } else if (e.age >= 0 && e.age < 180) e.age++;
+  for (const d of level.debris) {
+    if (
+      !d.triggered &&
+      (!d.entryX || p.x >= d.entryX) &&
+      d.x - p.x > 0 &&
+      d.x - p.x < Math.max(900, Math.abs(p.vx) * 70) &&
+      Math.abs(p.y - d.y) < 550
+    ) {
+      d.triggered = true;
+      d.age = 0;
+      gameSound('warning', { pan: Math.max(-1, Math.min(1, (d.x - p.x) / 600)) });
+    }
+    if (!d.triggered || d.age >= d.warn + d.fall + 120) continue;
+    d.age++;
+    if (d.age >= d.warn) {
+      const t = Math.min(1, (d.age - d.warn) / d.fall),
+        y = d.y - 460 + 460 * t * t;
+      if (
+        p.x + 13 > d.x - d.w / 2 &&
+        p.x - 13 < d.x + d.w / 2 &&
+        feet() > y - 44 &&
+        feet() - bodyHeight() < y
+      )
+        hurt(d.x);
+      if (d.age === d.warn + d.fall) {
+        if (Math.abs(d.x - p.x) < 800) gameSound('hazard');
+        sparks(d.x, d.y, 10, '#ffb356');
+        shake = Math.max(shake, 3);
+      }
+    }
+  }
 }
 // Predict an upcoming foot crossing for framing only; never alter movement or landing.
-function predictLanding(){if(level.act!==2||p.ground||p.loop||Math.abs(p.vx)<9)return null;let best=null;
- for(const s of level.surfaces){if(!active(s)||(s.entrySpeed&&!s.solidAtAnySpeed&&(Math.abs(p.vx)<s.entrySpeed||s.entryDirection&&Math.sign(p.vx)!==s.entryDirection)))continue;const q=pose(s),floor=q.y1+(p.x-q.x1)*q.slope,b=p.vy+.29-q.slope*p.vx,c=feet()-floor,d=b*b-1.16*c;if(d<0)continue;let t=(-b+Math.sqrt(d))/.58;
-  const cap=Math.max(0,(20-p.vy)/.58);if(t>cap){const rise=p.vy*cap+.29*cap*(cap+1),den=20-q.slope*p.vx;if(den<=0)continue;t=(floor-feet()-rise+20*cap)/den}
-  const x=p.x+p.vx*t;if(t<.5||t>60||x<q.x1-FOOT_RADIUS||x>q.x2+FOOT_RADIUS)continue;if(!best||t<best.t)best={id:s.id,x,y:yOn(s,x),t};
- }return best
+function predictLanding() {
+  if (level.act !== 2 || p.ground || p.loop || Math.abs(p.vx) < 9) return null;
+  let best = null;
+  for (const s of level.surfaces) {
+    if (
+      !active(s) ||
+      (s.entrySpeed &&
+        !s.solidAtAnySpeed &&
+        (Math.abs(p.vx) < s.entrySpeed ||
+          (s.entryDirection && Math.sign(p.vx) !== s.entryDirection)))
+    )
+      continue;
+    const q = pose(s),
+      floor = q.y1 + (p.x - q.x1) * q.slope,
+      b = p.vy + 0.29 - q.slope * p.vx,
+      c = feet() - floor,
+      d = b * b - 1.16 * c;
+    if (d < 0) continue;
+    let t = (-b + Math.sqrt(d)) / 0.58;
+    const cap = Math.max(0, (20 - p.vy) / 0.58);
+    if (t > cap) {
+      const rise = p.vy * cap + 0.29 * cap * (cap + 1),
+        den = 20 - q.slope * p.vx;
+      if (den <= 0) continue;
+      t = (floor - feet() - rise + 20 * cap) / den;
+    }
+    const x = p.x + p.vx * t;
+    if (t < 0.5 || t > 60 || x < q.x1 - FOOT_RADIUS || x > q.x2 + FOOT_RADIUS) continue;
+    if (!best || t < best.t) best = { id: s.id, x, y: yOn(s, x), t };
+  }
+  return best;
 }
-const cameraTracking={anchor:.64,lift:0,prediction:0,velocity:0,lastY:null};
-function resetCameraTracking(){cameraTracking.anchor=.64;cameraTracking.lift=0;cameraTracking.prediction=0;cameraTracking.velocity=0;cameraTracking.lastY=p.y;}
-function updateCamera(){if(frameBossCamera())return;const speed=p.loop?p.loop.speed:Math.abs(p.vx),act2=level.act===2;
- // Ease across the speed range, including the old threshold, without a target jump.
- const speedBlend=Math.max(0,Math.min(1,(speed-8)/16)),targetZoom=.94-.18*speedBlend*speedBlend*(3-2*speedBlend);zoom+=(targetZoom-zoom)*.025;
- const vw=W/zoom,lead=Math.min(act2?340:230,Math.max(-180,p.vx*(act2?12:9))),anchor=act2?W/zoom*.38:280;
- cam+=(Math.max(0,Math.min(END-vw+260,p.x-anchor+lead))-cam)*.15;
- // Ground framing must ease too: the former speed<9 switch jerked the
- // entire scene during ordinary acceleration and braking, despite smooth zoom.
- const groundBlend=Math.max(0,Math.min(1,(speed-6)/6)),groundAnchor=.68-.08*groundBlend*groundBlend*(3-2*groundBlend);
- if(!act2){camY+=(Math.max(-110,Math.min(190,p.y-350))-camY)*.08;return;}
- // Both takeoff lookahead and landing framing are continuous state, so changes
- // in contact or predicted deck cannot immediately reframe the whole scene.
- cameraTracking.anchor+=((p.ground?groundAnchor:.60)-cameraTracking.anchor)*.05;
- cameraTracking.lift+=(Math.max(-100,Math.min(0,p.vy*6))-cameraTracking.lift)*.08;
- const baseY=p.y-H/zoom*cameraTracking.anchor+cameraTracking.lift,landing=predictLanding();
- let prediction=0;
- if(landing){const confidence=Math.max(0,Math.min(1,(speed-9)/5));const framed=Math.min(p.y-H/zoom*.30,Math.max(baseY,landing.y-H/zoom*.82));prediction=(framed-baseY)*confidence*confidence*(3-2*confidence);}
- cameraTracking.prediction+=(prediction-cameraTracking.prediction)*.045;
- let targetY=baseY+cameraTracking.prediction;
- if(level.verticalCity)targetY=Math.max(p.y-H/zoom*.78,Math.min(p.y-H/zoom*.25,targetY));
- const movement=cameraTracking.lastY===null?0:p.y-cameraTracking.lastY;cameraTracking.lastY=p.y;
- const limit=Math.min(25,Math.max(3,Math.max(Math.abs(p.vy),Math.abs(movement))*1.05+2));
- cameraTracking.velocity+=(Math.max(-limit,Math.min(limit,(targetY-camY)*.14))-cameraTracking.velocity)*.3;
- camY+=Math.max(-limit,Math.min(limit,cameraTracking.velocity));
-
+const cameraTracking = { anchor: 0.64, lift: 0, prediction: 0, velocity: 0, lastY: null };
+function resetCameraTracking() {
+  cameraTracking.anchor = 0.64;
+  cameraTracking.lift = 0;
+  cameraTracking.prediction = 0;
+  cameraTracking.velocity = 0;
+  cameraTracking.lastY = p.y;
+}
+function updateCamera() {
+  if (frameBossCamera()) return;
+  const speed = p.loop ? p.loop.speed : Math.abs(p.vx),
+    act2 = level.act === 2;
+  // Ease across the speed range, including the old threshold, without a target jump.
+  const speedBlend = Math.max(0, Math.min(1, (speed - 8) / 16)),
+    targetZoom = 0.94 - 0.18 * speedBlend * speedBlend * (3 - 2 * speedBlend);
+  zoom += (targetZoom - zoom) * 0.025;
+  const vw = W / zoom,
+    lead = Math.min(act2 ? 340 : 230, Math.max(-180, p.vx * (act2 ? 12 : 9))),
+    anchor = act2 ? (W / zoom) * 0.38 : 280;
+  cam += (Math.max(0, Math.min(END - vw + 260, p.x - anchor + lead)) - cam) * 0.15;
+  // Ground framing must ease too: the former speed<9 switch jerked the
+  // entire scene during ordinary acceleration and braking, despite smooth zoom.
+  const groundBlend = Math.max(0, Math.min(1, (speed - 6) / 6)),
+    groundAnchor = 0.68 - 0.08 * groundBlend * groundBlend * (3 - 2 * groundBlend);
+  if (!act2) {
+    camY += (Math.max(-110, Math.min(190, p.y - 350)) - camY) * 0.08;
+    return;
+  }
+  // Both takeoff lookahead and landing framing are continuous state, so changes
+  // in contact or predicted deck cannot immediately reframe the whole scene.
+  cameraTracking.anchor += ((p.ground ? groundAnchor : 0.6) - cameraTracking.anchor) * 0.05;
+  cameraTracking.lift += (Math.max(-100, Math.min(0, p.vy * 6)) - cameraTracking.lift) * 0.08;
+  const baseY = p.y - (H / zoom) * cameraTracking.anchor + cameraTracking.lift,
+    landing = predictLanding();
+  let prediction = 0;
+  if (landing) {
+    const confidence = Math.max(0, Math.min(1, (speed - 9) / 5));
+    const framed = Math.min(p.y - (H / zoom) * 0.3, Math.max(baseY, landing.y - (H / zoom) * 0.82));
+    prediction = (framed - baseY) * confidence * confidence * (3 - 2 * confidence);
+  }
+  cameraTracking.prediction += (prediction - cameraTracking.prediction) * 0.045;
+  let targetY = baseY + cameraTracking.prediction;
+  if (level.verticalCity)
+    targetY = Math.max(p.y - (H / zoom) * 0.78, Math.min(p.y - (H / zoom) * 0.25, targetY));
+  const movement = cameraTracking.lastY === null ? 0 : p.y - cameraTracking.lastY;
+  cameraTracking.lastY = p.y;
+  const limit = Math.min(25, Math.max(3, Math.max(Math.abs(p.vy), Math.abs(movement)) * 1.05 + 2));
+  cameraTracking.velocity +=
+    (Math.max(-limit, Math.min(limit, (targetY - camY) * 0.14)) - cameraTracking.velocity) * 0.3;
+  camY += Math.max(-limit, Math.min(limit, cameraTracking.velocity));
 }
 // Small deterministic pixel effects keep fire and smoke anchored to the artwork.
-function cityFlame(x,y,w,h,seed=0,alpha=1){const beat=Math.floor(step/2),unit=1;ctx.save();ctx.globalAlpha=alpha;
- for(let i=0;i<8;i++){const pulse=.57+.43*(Math.sin(beat*.71+i*2.31+seed)+1)/2,fh=Math.round(h*pulse/unit)*unit,xx=Math.round((x-w/2+i*w/8)/unit)*unit,ww=Math.max(1,Math.round(w/8/unit)*unit);
-  ctx.fillStyle='#ff5d2f';ctx.fillRect(xx,y-fh,ww,fh);ctx.fillStyle='#ffad3d';ctx.fillRect(xx+unit,y-fh*.72,Math.max(unit,ww-unit),fh*.72);ctx.fillStyle='#ffe483';ctx.fillRect(xx+unit,y-fh*.36,Math.max(unit,ww-unit*2),fh*.36);
-  ctx.fillStyle='#ffaf5060';const age=(step*.015+i*.21+seed*.13)%1;ctx.fillRect(xx+Math.sin(age*6+seed)*9,y-h-age*h*.8,3,3);
- }ctx.restore()}
-function citySmoke(x,y,size,seed=0,alpha=.2){ctx.save();for(let j=0;j<8;j++){const t=(step*.0022+j/8+seed*.071)%1,drift=t*size*.75+Math.sin(t*5+seed)*size*.16,cx=Math.round((x+drift)/2)*2,cy=Math.round((y-t*size*3)/2)*2,r=Math.round((size*(.25+t*.6))/2)*2;
- ctx.globalAlpha=alpha*(1-t)*.8;ctx.fillStyle=j%2?'#392441':'#221733';ctx.fillRect(cx-r,cy-r*.4,r*2,r);ctx.fillRect(cx-r*.7,cy-r*.8,r*1.5,r*1.7);ctx.fillStyle='#74526a';ctx.globalAlpha=alpha*(1-t)*.22;ctx.fillRect(cx-r*.65,cy-r*.75,r,r*.4);
- }ctx.restore()}
-const skylineSmokeSprites=new Map();
-function drawSkylineSmoke(x,y,size,seed,alpha){
- if(!document.createElement)return citySmoke(x,y,size,seed,alpha);
- const variant=seed%8;let texture=skylineSmokeSprites.get(variant);
- if(!texture){texture=document.createElement('canvas');texture.width=texture.height=64;const dc=texture.getContext('2d'),lobes=[[22,30,19],[40,25,17],[32,15,13],[42,40,16],[22,43,14]],colors=['#211032','#30143f','#421a4b','#582154'];
-  for(let yy=0;yy<64;yy+=2)for(let xx=0;xx<64;xx+=2){if(!lobes.some(([cx,cy,r])=>(xx-cx)**2+(yy-cy)**2<r*r))continue;const grain=Math.sin(xx*.53+yy*.31+variant*2.1);dc.fillStyle=colors[Math.max(0,Math.min(3,Math.floor(1.5+grain+(32-yy)*.025)))];dc.fillRect(xx,yy,2,2)}skylineSmokeSprites.set(variant,texture);
- }
- ctx.save();for(let j=0;j<6;j++){const t=(step*.0026+j/6+seed*.073)%1,span=Math.round(size*(.65+t*1.1)/2)*2,cx=Math.round((x+t*size*.8+Math.sin(t*5+seed)*size*.2)/2)*2,cy=Math.round((y-t*size*3.2)/2)*2;ctx.globalAlpha=alpha*Math.min(1,t*8)*(1-t);ctx.drawImage(texture,cx-span/2,cy-span/2,span,span)}ctx.restore();
-}
-function drawAct2Background(){const progress=Math.max(0,Math.min(1,p.x/END)),im=art.recoveredCity||art.collapse||art.city;
- ctx.fillStyle='#100e30';ctx.fillRect(0,0,W,H);
- if(im){const w=W*1.4,h=w*im.height/im.width,scroll=Math.round(cam*.095),first=Math.floor(scroll/w),rise=Math.max(0,Math.min(1,-camY/6950))*220,top=Math.round(-145+rise);
-  const fires=art.recoveredCity?[[345,321,22,70],[142,488,28,60],[633,468,24,64],[1380,616,32,82],[1480,890,27,52],[40,690,20,55],[840,780,25,45],[285,847,24,42],[962,940,34,48],[1120,760,28,48]]:[[353,363,23,65],[151,469,25,51],[1058,550,28,58],[1300,370,25,71],[1293,577,29,48],[632,644,35,39],[646,839,39,32],[183,702,32,45],[808,815,33,42],[960,932,44,58],[1115,741,27,54],[1455,796,32,42],[550,432,18,38]];
-  // Alternate reflected panoramas so adjacent edge columns match exactly.
-  // Global tile indices keep animation phases stable when the camera wraps.
-  for(let tile=first-1;tile<=first+1;tile++){const left=tile*w-scroll;if(left+w<0||left>W)continue;drawCityBackdrop(im,left,top,w,h,tile%2!==0,true)}
-  drawCityClouds(im,w,h,top);
-  for(let tile=first-1;tile<=first+1;tile++){const left=tile*w-scroll;if(left+w<-140||left>W+140)continue;const scale=w/1536,mirrored=tile%2!==0;
-   // Overlay only the real fire sites in the city image, with independent phases.
-   for(let i=0;i<fires.length;i++){const [fx,fy,fw,fh]=fires[i],x=Math.round(left+(mirrored?1536-fx:fx)*scale),y=Math.round(top+fy*scale),seed=i+((tile%32+32)%32)*17;if(x<-90||x>W+90||y<0||y>H+140)continue;drawSkylineSmoke(x,y-fh*scale,42*scale,seed,.55+progress*.10);cityFlame(x,y,fw*scale*1.15,fh*scale,seed,.94)}
+function cityFlame(x, y, w, h, seed = 0, alpha = 1) {
+  const beat = Math.floor(step / 2),
+    unit = 1;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  for (let i = 0; i < 8; i++) {
+    const pulse = 0.57 + (0.43 * (Math.sin(beat * 0.71 + i * 2.31 + seed) + 1)) / 2,
+      fh = Math.round((h * pulse) / unit) * unit,
+      xx = Math.round((x - w / 2 + (i * w) / 8) / unit) * unit,
+      ww = Math.max(1, Math.round(w / 8 / unit) * unit);
+    ctx.fillStyle = '#ff5d2f';
+    ctx.fillRect(xx, y - fh, ww, fh);
+    ctx.fillStyle = '#ffad3d';
+    ctx.fillRect(xx + unit, y - fh * 0.72, Math.max(unit, ww - unit), fh * 0.72);
+    ctx.fillStyle = '#ffe483';
+    ctx.fillRect(xx + unit, y - fh * 0.36, Math.max(unit, ww - unit * 2), fh * 0.36);
+    ctx.fillStyle = '#ffaf5060';
+    const age = (step * 0.015 + i * 0.21 + seed * 0.13) % 1;
+    ctx.fillRect(xx + Math.sin(age * 6 + seed) * 9, y - h - age * h * 0.8, 3, 3);
   }
- }
- ctx.fillStyle=`rgba(32,9,38,${.05+progress*.07})`;ctx.fillRect(0,0,W,H);
- for(let i=0;i<16+progress*18;i++){const x=((i*137-cam*.18+Math.sin(step*.012+i)*8)%W+W)%W,y=((i*91-step*(.5+progress*.6))%H+H)%H;ctx.fillStyle=i%3?'#ffb54c70':'#ff6b3160';ctx.fillRect(x,y,2,3)}
+  ctx.restore();
 }
-function drawAct2Structures(){for(const b of level.buildings)drawCityCutaways(b);drawPixelCityStructures();drawBlimpRoute()}
-function drawAct2Bulkhead(h){const bottom=Math.min(h.y+h.h,camY+H/zoom+50),top=Math.max(h.y,camY-40),x=h.x;if(bottom<=top)return;
- ctx.fillStyle='#18233d';ctx.fillRect(x,top,h.w,bottom-top);ctx.fillStyle='#53647e';ctx.fillRect(x,top,5,bottom-top);ctx.fillStyle='#8c5972';ctx.fillRect(x+h.w-5,top,5,bottom-top);ctx.fillStyle='#77c8dc';ctx.fillRect(x,h.y,h.w,3);
- for(let y=Math.ceil(top/64)*64;y<bottom;y+=64){cityPixelLine(x+8,y,x+h.w-8,y+54,'#7891a155',2);cityPixelLine(x+h.w-8,y,x+8,y+54,'#7891a155',2);cityPixelRect(x+5,y,4,4,'#8ba8b1');cityPixelRect(x+h.w-9,y,4,4,'#8ba8b1')}
+function citySmoke(x, y, size, seed = 0, alpha = 0.2) {
+  ctx.save();
+  for (let j = 0; j < 8; j++) {
+    const t = (step * 0.0022 + j / 8 + seed * 0.071) % 1,
+      drift = t * size * 0.75 + Math.sin(t * 5 + seed) * size * 0.16,
+      cx = Math.round((x + drift) / 2) * 2,
+      cy = Math.round((y - t * size * 3) / 2) * 2,
+      r = Math.round((size * (0.25 + t * 0.6)) / 2) * 2;
+    ctx.globalAlpha = alpha * (1 - t) * 0.8;
+    ctx.fillStyle = j % 2 ? '#392441' : '#221733';
+    ctx.fillRect(cx - r, cy - r * 0.4, r * 2, r);
+    ctx.fillRect(cx - r * 0.7, cy - r * 0.8, r * 1.5, r * 1.7);
+    ctx.fillStyle = '#74526a';
+    ctx.globalAlpha = alpha * (1 - t) * 0.22;
+    ctx.fillRect(cx - r * 0.65, cy - r * 0.75, r, r * 0.4);
+  }
+  ctx.restore();
+}
+const skylineSmokeSprites = new Map();
+function drawSkylineSmoke(x, y, size, seed, alpha) {
+  if (!document.createElement) return citySmoke(x, y, size, seed, alpha);
+  const variant = seed % 8;
+  let texture = skylineSmokeSprites.get(variant);
+  if (!texture) {
+    texture = document.createElement('canvas');
+    texture.width = texture.height = 64;
+    const dc = texture.getContext('2d'),
+      lobes = [
+        [22, 30, 19],
+        [40, 25, 17],
+        [32, 15, 13],
+        [42, 40, 16],
+        [22, 43, 14],
+      ],
+      colors = ['#211032', '#30143f', '#421a4b', '#582154'];
+    for (let yy = 0; yy < 64; yy += 2)
+      for (let xx = 0; xx < 64; xx += 2) {
+        if (!lobes.some(([cx, cy, r]) => (xx - cx) ** 2 + (yy - cy) ** 2 < r * r)) continue;
+        const grain = Math.sin(xx * 0.53 + yy * 0.31 + variant * 2.1);
+        dc.fillStyle =
+          colors[Math.max(0, Math.min(3, Math.floor(1.5 + grain + (32 - yy) * 0.025)))];
+        dc.fillRect(xx, yy, 2, 2);
+      }
+    skylineSmokeSprites.set(variant, texture);
+  }
+  ctx.save();
+  for (let j = 0; j < 6; j++) {
+    const t = (step * 0.0026 + j / 6 + seed * 0.073) % 1,
+      span = Math.round((size * (0.65 + t * 1.1)) / 2) * 2,
+      cx = Math.round((x + t * size * 0.8 + Math.sin(t * 5 + seed) * size * 0.2) / 2) * 2,
+      cy = Math.round((y - t * size * 3.2) / 2) * 2;
+    ctx.globalAlpha = alpha * Math.min(1, t * 8) * (1 - t);
+    ctx.drawImage(texture, cx - span / 2, cy - span / 2, span, span);
+  }
+  ctx.restore();
+}
+function drawAct2Background() {
+  const progress = Math.max(0, Math.min(1, p.x / END)),
+    im = art.recoveredCity || art.collapse || art.city;
+  ctx.fillStyle = '#100e30';
+  ctx.fillRect(0, 0, W, H);
+  if (im) {
+    const w = W * 1.4,
+      h = (w * im.height) / im.width,
+      scroll = Math.round(cam * 0.095),
+      first = Math.floor(scroll / w),
+      rise = Math.max(0, Math.min(1, -camY / 6950)) * 220,
+      top = Math.round(-145 + rise);
+    const fires = art.recoveredCity
+      ? [
+          [345, 321, 22, 70],
+          [142, 488, 28, 60],
+          [633, 468, 24, 64],
+          [1380, 616, 32, 82],
+          [1480, 890, 27, 52],
+          [40, 690, 20, 55],
+          [840, 780, 25, 45],
+          [285, 847, 24, 42],
+          [962, 940, 34, 48],
+          [1120, 760, 28, 48],
+        ]
+      : [
+          [353, 363, 23, 65],
+          [151, 469, 25, 51],
+          [1058, 550, 28, 58],
+          [1300, 370, 25, 71],
+          [1293, 577, 29, 48],
+          [632, 644, 35, 39],
+          [646, 839, 39, 32],
+          [183, 702, 32, 45],
+          [808, 815, 33, 42],
+          [960, 932, 44, 58],
+          [1115, 741, 27, 54],
+          [1455, 796, 32, 42],
+          [550, 432, 18, 38],
+        ];
+    // Alternate reflected panoramas so adjacent edge columns match exactly.
+    // Global tile indices keep animation phases stable when the camera wraps.
+    for (let tile = first - 1; tile <= first + 1; tile++) {
+      const left = tile * w - scroll;
+      if (left + w < 0 || left > W) continue;
+      drawCityBackdrop(im, left, top, w, h, tile % 2 !== 0, true);
+    }
+    drawCityClouds(im, w, h, top);
+    for (let tile = first - 1; tile <= first + 1; tile++) {
+      const left = tile * w - scroll;
+      if (left + w < -140 || left > W + 140) continue;
+      const scale = w / 1536,
+        mirrored = tile % 2 !== 0;
+      // Overlay only the real fire sites in the city image, with independent phases.
+      for (let i = 0; i < fires.length; i++) {
+        const [fx, fy, fw, fh] = fires[i],
+          x = Math.round(left + (mirrored ? 1536 - fx : fx) * scale),
+          y = Math.round(top + fy * scale),
+          seed = i + (((tile % 32) + 32) % 32) * 17;
+        if (x < -90 || x > W + 90 || y < 0 || y > H + 140) continue;
+        drawSkylineSmoke(x, y - fh * scale, 42 * scale, seed, 0.55 + progress * 0.1);
+        cityFlame(x, y, fw * scale * 1.15, fh * scale, seed, 0.94);
+      }
+    }
+  }
+  ctx.fillStyle = `rgba(32,9,38,${0.05 + progress * 0.07})`;
+  ctx.fillRect(0, 0, W, H);
+  for (let i = 0; i < 16 + progress * 18; i++) {
+    const x = (((i * 137 - cam * 0.18 + Math.sin(step * 0.012 + i) * 8) % W) + W) % W,
+      y = (((i * 91 - step * (0.5 + progress * 0.6)) % H) + H) % H;
+    ctx.fillStyle = i % 3 ? '#ffb54c70' : '#ff6b3160';
+    ctx.fillRect(x, y, 2, 3);
+  }
+}
+function drawAct2Structures() {
+  for (const b of level.buildings) drawCityCutaways(b);
+  drawPixelCityStructures();
+  drawBlimpRoute();
+}
+function drawAct2Bulkhead(h) {
+  const bottom = Math.min(h.y + h.h, camY + H / zoom + 50),
+    top = Math.max(h.y, camY - 40),
+    x = h.x;
+  if (bottom <= top) return;
+  ctx.fillStyle = '#18233d';
+  ctx.fillRect(x, top, h.w, bottom - top);
+  ctx.fillStyle = '#53647e';
+  ctx.fillRect(x, top, 5, bottom - top);
+  ctx.fillStyle = '#8c5972';
+  ctx.fillRect(x + h.w - 5, top, 5, bottom - top);
+  ctx.fillStyle = '#77c8dc';
+  ctx.fillRect(x, h.y, h.w, 3);
+  for (let y = Math.ceil(top / 64) * 64; y < bottom; y += 64) {
+    cityPixelLine(x + 8, y, x + h.w - 8, y + 54, '#7891a155', 2);
+    cityPixelLine(x + h.w - 8, y, x + 8, y + 54, '#7891a155', 2);
+    cityPixelRect(x + 5, y, 4, 4, '#8ba8b1');
+    cityPixelRect(x + h.w - 9, y, 4, 4, '#8ba8b1');
+  }
 }
 // Surface skins reuse collision tops; every solid highlight follows yOn exactly.
-function drawAct2Supports(s,left,right){if(s.grindable)drawGrindRail(s,left,right);else if(s.cityType==='blimp-anchor'){cityPixelRect(left,yOn(s,left),right-left,8,'#799eac');cityPixelRect(left,yOn(s,left)+8,right-left,8,'#28374e')}else if(s.cityType!=='blimp')drawPixelCityDeck(s,left,right)}
-function drawAct2World(){
- for(const l of level.loops){if(l.x+l.r<cam-50||l.x-l.r>cam+W/zoom+50)continue;drawPixelCityLoop(l)}
- for(const d of level.debris){if(!d.triggered||d.age>d.warn+d.fall+120||d.x<cam-100||d.x>cam+W/zoom+100)continue;
-  if(d.age<d.warn)drawDebrisWarning(d);else drawPixelDebris(d);
- }
- for(const e of level.events){if(e.age<0||e.age>150||e.x+e.width<cam||e.x>cam+W/zoom)continue;for(let i=0;i<8;i++){const x=e.x+i*e.width/8,y=e.y+e.age*e.age*.035+(i%3)*15;cityPixelRect(x-26,y-8,70,18,i%2?'#644060':'#203551');cityPixelRect(x-26,y-8,70,3,'#fb956e');cityPixelLine(x-12,y-4,x+8,y+8,'#121d30',4)}}
- const a=level.arena;if(a.x<cam+W/zoom+100&&a.x+a.w>cam){for(let i=0;i<64;i++){const t=i*Math.PI/32,u=(i+1)*Math.PI/32;cityPixelLine(a.x+850+Math.cos(t)*240,a.y+6+Math.sin(t)*19,a.x+850+Math.cos(u)*240,a.y+6+Math.sin(u)*19,'#ffe694',2)}cityPixelRect(a.x+838,a.y-16,6,28,'#ffe694');cityPixelRect(a.x+858,a.y-16,6,28,'#ffe694');cityPixelRect(a.x+838,a.y-5,26,6,'#ffe694');for(const x of [a.x+80,a.x+a.w-180]){ctx.fillStyle='#565272';ctx.fillRect(x,a.y-150,8,150);cityPixelOval(x+4,a.y-153,7,7,step%60<30?'#ff6851':'#ffbd64')}sign(a.x+1200,a.y-140,'ROOFTOP HELIPAD','sector')}
+function drawAct2Supports(s, left, right) {
+  if (s.grindable) drawGrindRail(s, left, right);
+  else if (s.cityType === 'blimp-anchor') {
+    cityPixelRect(left, yOn(s, left), right - left, 8, '#799eac');
+    cityPixelRect(left, yOn(s, left) + 8, right - left, 8, '#28374e');
+  } else if (s.cityType !== 'blimp') drawPixelCityDeck(s, left, right);
+}
+function drawAct2World() {
+  for (const l of level.loops) {
+    if (l.x + l.r < cam - 50 || l.x - l.r > cam + W / zoom + 50) continue;
+    drawPixelCityLoop(l);
+  }
+  for (const d of level.debris) {
+    if (
+      !d.triggered ||
+      d.age > d.warn + d.fall + 120 ||
+      d.x < cam - 100 ||
+      d.x > cam + W / zoom + 100
+    )
+      continue;
+    if (d.age < d.warn) drawDebrisWarning(d);
+    else drawPixelDebris(d);
+  }
+  for (const e of level.events) {
+    if (e.age < 0 || e.age > 150 || e.x + e.width < cam || e.x > cam + W / zoom) continue;
+    for (let i = 0; i < 8; i++) {
+      const x = e.x + (i * e.width) / 8,
+        y = e.y + e.age * e.age * 0.035 + (i % 3) * 15;
+      cityPixelRect(x - 26, y - 8, 70, 18, i % 2 ? '#644060' : '#203551');
+      cityPixelRect(x - 26, y - 8, 70, 3, '#fb956e');
+      cityPixelLine(x - 12, y - 4, x + 8, y + 8, '#121d30', 4);
+    }
+  }
+  const a = level.arena;
+  if (a.x < cam + W / zoom + 100 && a.x + a.w > cam) {
+    for (let i = 0; i < 64; i++) {
+      const t = (i * Math.PI) / 32,
+        u = ((i + 1) * Math.PI) / 32;
+      cityPixelLine(
+        a.x + 850 + Math.cos(t) * 240,
+        a.y + 6 + Math.sin(t) * 19,
+        a.x + 850 + Math.cos(u) * 240,
+        a.y + 6 + Math.sin(u) * 19,
+        '#ffe694',
+        2
+      );
+    }
+    cityPixelRect(a.x + 838, a.y - 16, 6, 28, '#ffe694');
+    cityPixelRect(a.x + 858, a.y - 16, 6, 28, '#ffe694');
+    cityPixelRect(a.x + 838, a.y - 5, 26, 6, '#ffe694');
+    for (const x of [a.x + 80, a.x + a.w - 180]) {
+      ctx.fillStyle = '#565272';
+      ctx.fillRect(x, a.y - 150, 8, 150);
+      cityPixelOval(x + 4, a.y - 153, 7, 7, step % 60 < 30 ? '#ff6851' : '#ffbd64');
+    }
+    sign(a.x + 1200, a.y - 140, 'ROOFTOP HELIPAD', 'sector');
+  }
 }
 
 // The gold rounded tube is a real collision surface, reserved for the skyline shortcut.
-function drawGrindRail(s,left,right){for(let x=Math.floor(left/2)*2;x<right;x+=2){const y=yOn(s,x);cityPixelRect(x,y,2,12,'#29364b');cityPixelRect(x,y+2,2,3,'#ffe1a0');cityPixelRect(x,y+5,2,4,'#bd855b');cityPixelRect(x,y+9,2,3,'#74505a')}}
+function drawGrindRail(s, left, right) {
+  for (let x = Math.floor(left / 2) * 2; x < right; x += 2) {
+    const y = yOn(s, x);
+    cityPixelRect(x, y, 2, 12, '#29364b');
+    cityPixelRect(x, y + 2, 2, 3, '#ffe1a0');
+    cityPixelRect(x, y + 5, 2, 4, '#bd855b');
+    cityPixelRect(x, y + 9, 2, 3, '#74505a');
+  }
+}
 
 // Paint and structural detail always sit below the real collision edge.
-function drawClimbCue(s,left,right){const cue=level.routeCues?.find(c=>c.id===s.id);if(!cue||right-left<70)return;const next=level.surfaces.find(v=>v.id===cue.nextId),q=pose(s),dir=next.x1+next.x2<q.x1+q.x2?-1:1,x=Math.max(left+30,Math.min(right-30,(q.x1+q.x2)/2)),y=yOn(s,x)+14;
- ctx.fillStyle='#152033';ctx.fillRect(x-23,y-6,46,13);ctx.strokeStyle=s.kind==='moving'?'#91fcbb':s.kind==='crumble'?'#ffae55':'#91ccdb';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-6*dir,y-3);ctx.lineTo(x+2*dir,y);ctx.lineTo(x-6*dir,y+3);ctx.moveTo(x+3*dir,y-3);ctx.lineTo(x+11*dir,y);ctx.lineTo(x+3*dir,y+3);ctx.stroke()
+function drawClimbCue(s, left, right) {
+  const cue = level.routeCues?.find((c) => c.id === s.id);
+  if (!cue || right - left < 70) return;
+  const next = level.surfaces.find((v) => v.id === cue.nextId),
+    q = pose(s),
+    dir = next.x1 + next.x2 < q.x1 + q.x2 ? -1 : 1,
+    x = Math.max(left + 30, Math.min(right - 30, (q.x1 + q.x2) / 2)),
+    y = yOn(s, x) + 14;
+  ctx.fillStyle = '#152033';
+  ctx.fillRect(x - 23, y - 6, 46, 13);
+  ctx.strokeStyle = s.kind === 'moving' ? '#91fcbb' : s.kind === 'crumble' ? '#ffae55' : '#91ccdb';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x - 6 * dir, y - 3);
+  ctx.lineTo(x + 2 * dir, y);
+  ctx.lineTo(x - 6 * dir, y + 3);
+  ctx.moveTo(x + 3 * dir, y - 3);
+  ctx.lineTo(x + 11 * dir, y);
+  ctx.lineTo(x + 3 * dir, y + 3);
+  ctx.stroke();
 }
