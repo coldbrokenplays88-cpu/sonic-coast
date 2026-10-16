@@ -4,7 +4,7 @@ function renderer(){
  const context={imageSmoothingEnabled:true,getTransform:()=>({a:1.6,b:0,c:0,d:1.6,e:320.4,f:200.7}),save(){},restore(){},setTransform(...v){this.transform=v},translate(){},scale(){},rotate(){},drawImage(...v){draws.push(v)},getImageData(x,y,w,h){return {data:new Uint8ClampedArray(w*h*4).fill(255)}},putImageData(){}};
  const document={createElement(){const c={width:0,height:0,getContext:()=>context};canvases.push(c);return c;}};
  const c=vm.createContext({document,ctx:context,art:{recoveredSpeedster:{}},p:{ground:true},supplementalSpriteFrames:{},Image:class{}});
- for(const f of ['recovered-art.js','ending-frames.js','ending-polish-frames.js','ending-art.js','boss-art.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c,{filename:f});
+ for(const f of ['traversal-frames.js','recovered-art.js','ending-frames.js','ending-polish-frames.js','ending-art.js','boss-art.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c,{filename:f});
  return {run:s=>vm.runInContext(s,c),draws,canvases,context};
 }
 test('gameplay crops retain source pixels instead of shrinking before display',()=>{
