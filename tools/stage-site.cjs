@@ -59,7 +59,8 @@ function stageSite({
   const entry = html
     .replace(/<script\s+src="[^"]+"[^>]*><\/script>/g, '')
     .replace('href="style.css"', 'href="' + style + '"')
-    .replace('</body>', '<script src="' + script + '"></script>\n</body>');
+    .replace('</body>', '<script src="' + script + '"></script>\n</body>')
+    .replace(/[ \t]+$/gm, '');
   fs.writeFileSync(path.join(outputDir, 'index.html'), entry);
   fs.cpSync(path.join(gameDir, 'assets'), path.join(outputDir, 'assets'), { recursive: true });
   return { outputDir, resources: [script, style] };
