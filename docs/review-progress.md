@@ -10,7 +10,7 @@ Existing tests and image files must remain unchanged.
 - [ ] 4. Consolidate breakable drawing; investigate duplicate water checks without changing behavior or sounds.
 - [x] 5. Load artwork by act with error fallbacks; measure compression only; inspect city cache.
 - [x] 6. Cull distant surfaces and cache static poses; compare collisions and call counts.
-- [ ] 7. Skip unchanged playing frames; retain controlled/non-playing drawing; run browser verifier.
+- [x] 7. Skip unchanged playing frames; retain controlled/non-playing drawing; run browser verifier.
 - [ ] Part 3. Write plain-English proposals only, including recommended next work.
 - [ ] Final. Check all changes, record proof and limits, push branch, update draft PR, provide play instructions and merge recommendation.
 
@@ -32,3 +32,5 @@ Item 4: breakable drawing consolidated. **343 passed / 0 failed** (two added wat
 Item 5: **343 passed / 0 failed**. Chromium verifies 7/8 gameplay-sheet startup requests for Act 1/2, no unnecessary fallback requests and no repeat downloads on restart. Existing verify-browser passes, zero page errors. Raw canvas comparisons: **360 identical frames**, both acts × 9 normal/missing-art cases × 20 scenes, zero page errors. Gameplay-loader PNG bytes: 34,315,885 → 13,979,916 (Act 1) / 16,145,899 (Act 2). Compression measured only; details in review-assets.md. City cache unchanged after inspection.
 
 Item 6: **348 passed / 0 failed**. Three optimization regressions fail before and pass after. **13,566 identical contact states and 9,044 identical topAt queries** vs preceding collision source; seven phases, every surface in both acts. All existing route/physics tests pass unchanged. Mean pose calls per tick: Act 1 run 233.42→16.42 / jump 246.23→15.04; Act 2 run 1462.46→55.19 / jump 1401.18→52.91. Full method and counts in review-performance.md.
+
+Item 7: **350 passed / 0 failed**, compared with baseline 339/0 (11 added tests). The frame regression fails before and passes after: no draw without an update during normal play, one draw after catch-up updates; controlled/ready/paused/win/over states still draw. Existing `node scripts/verify-browser.cjs http://127.0.0.1:8000` passes on the final runtime changes with zero page errors. No physical high-refresh monitor tested.
