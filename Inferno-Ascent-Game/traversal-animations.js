@@ -52,7 +52,8 @@ function traversalSonicPose(){
  }
  if(art.traversalLaunch&&traversalLaunchValid()){
   const launch=traversalAnimation.launch,frame=Math.floor((runFrames-launch.since)/3)%8;
-  if(launch.kind==='vent-launch')return out(launch.kind,'traversalLaunch',8+frame,{face:1,pivotY:0,rotation:Math.atan2(p.vy,p.vx)-Math.PI});
+  // Vent cels are authored head-left and horizontal; vertical lift must not rotate them upright.
+  if(launch.kind==='vent-launch')return out(launch.kind,'traversalLaunch',8+frame,{face:-launch.face,pivotY:0});
   return out(launch.kind,'traversalLaunch',frame,{face:launch.face});
  }
  if(!art.traversalActing)return null;
