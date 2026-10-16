@@ -17,19 +17,19 @@ test('the blimp rewards give a life and Bubble Shield without refilling boost',(
 });
 
 const {startLoopSource,blimpReplaySource}=require('./blimp-test-helpers.cjs');
-for(const style of ['dash','boost'])test(`${style}: the actual loop jump clears all three blimps, earns both rewards and rejoins the original hallway exit`,()=>{
+for(const style of ['dash','boost'])test(`${style}: the actual momentum-only loop exit clears all three blimps, earns both rewards and rejoins the original hallway exit`,()=>{
  const a=boot();a.run(startLoopSource+blimpReplaySource);a.run(`startLoop(0,'${style}')`);const r=a.run('replayBlimps()');
- assert.equal(r.secondInitiallyVisible,false);assert.equal(r.thirdVisibleAtJump,false,'fast jump starts before the third blimp is visible');assert.equal(r.life,true);assert.equal(r.shield,'bubble');assert.equal(a.run('stats.jumps'),3);assert.equal(a.run('stats.loops'),2);assert.equal(a.run('stats.hits'),0);
+ assert.equal(r.secondInitiallyVisible,false);assert.equal(r.thirdVisibleAtJump,false,'fast jump starts before the third blimp is visible');assert.equal(r.life,true);assert.equal(r.shield,'bubble');assert.equal(a.run('stats.jumps'),2);assert.equal(a.run('stats.loops'),2);assert.equal(a.run('stats.hits'),0);
  for(const id of ['blimp-curve-0','blimp-moving','blimp-reward','blimp-return-rail','blimp-return-descent'])assert.ok(r.landings.some(l=>l.id===id),id);
  assert.ok(a.run('p.vx')>23,'return retains momentum');
 });
 test('stopping on the first blimp still permits a slower jump and both rewards',()=>{
  const a=boot();a.run(startLoopSource+blimpReplaySource);a.run('startLoop()');const r=a.run('replayBlimps(true)');
- assert.equal(a.run('stats.jumps'),3);assert.ok(r.wait>100);assert.equal(r.thirdVisibleAtJump,true,'cautious jump follows the reveal');assert.equal(r.life,true);assert.equal(r.shield,'bubble');assert.equal(a.run('stats.hits'),0);
+ assert.equal(a.run('stats.jumps'),2);assert.ok(r.wait>100);assert.equal(r.thirdVisibleAtJump,true,'cautious jump follows the reveal');assert.equal(r.life,true);assert.equal(r.shield,'bubble');assert.equal(a.run('stats.hits'),0);
 });
-test('ordinary loop momentum and a prematurely released high jump fall short of the entry spring',()=>{
- for(const style of ['roll','dash']){const a=boot();a.run(startLoopSource);a.run(`startLoop(0,'${style}');let launchFrame=null;for(let i=0;i<310;i++){if(launchFrame===null&&p.surface?.id==='draw-loop-launch'&&p.x>=p.surface.x2-45){press('Space',true);launchFrame=runFrames;}if('${style}'==='dash'&&launchFrame!==null&&runFrames-launchFrame===10)release('Space',true);update();}`);
- assert.equal(a.run("level.springs.find(d=>d.id==='blimp-entry-spring').firedAt"),undefined);
+test('ordinary running and rolling do not qualify for the exceptional-speed entry',()=>{
+ for(const style of ['run','roll']){const a=boot();a.run(startLoopSource+`startLoop(0,'${style}');for(let i=0;i<400&&!visited.has('draw-loop-payoff-roof')&&!stats.deaths;i++)update()`);
+ assert.equal(a.run('stats.deaths'),0);assert.ok(a.run("visited.has('draw-loop-payoff-roof')"));assert.equal(a.run('level.blimpRoute.entered'),false);
  }
 });
 test('the moving blimp closes the gap enough for a standing jump after docking',()=>{
@@ -67,18 +67,16 @@ test('the entry deck stays solid when aiming slows or reverses horizontal speed'
  assert.equal(a.run('p.surface?.id'),'blimp-entry','speed '+vx);assert.equal(a.run('feet()'),a.run('s.y1'));}
 });
 test('a qualifying flight contacts the angled visible spring cap before reaching its base',()=>{
- const a=boot();a.run(`const d=level.springs.find(d=>d.id==='blimp-entry-spring');Object.assign(level.blimpRoute,{entryJumpFrame:runFrames,entryJumpSpeed:26});p.poseJumpFrame=runFrames;p.airBoostUsed=false;p.x=d.x-65;p.y=d.y-43;p.vx=30;p.vy=8;p.ground=false;p.surface=null;keys.clear();update()`);
+ const a=boot();a.run(`const d=level.springs.find(d=>d.id==='blimp-entry-spring');Object.assign(level.blimpRoute,{departureFrame:runFrames,departureSpeed:26});p.poseJumpFrame=runFrames;p.airBoostUsed=false;p.x=d.x-65;p.y=d.y-43;p.vx=30;p.vy=8;p.ground=false;p.surface=null;keys.clear();update()`);
  assert.ok(a.run("level.springs.find(d=>d.id==='blimp-entry-spring').firedAt")>0);
 });
 test('contact at the entry spring remains reliable across varied aiming speeds',()=>{
- for(const vx of [0,4,8,12,17,-4,-8]){const a=boot();a.run(`const d=level.springs.find(d=>d.id==='blimp-entry-spring');Object.assign(level.blimpRoute,{entryJumpFrame:runFrames,entryJumpSpeed:26});p.poseJumpFrame=runFrames;p.airBoostUsed=false;const f=springFace(d),r=Math.abs(f.nx)*13+Math.abs(f.ny)*19;p.x=f.x+f.nx*(r+.5);p.y=f.y+f.ny*(r+.5)-1;p.vx=${vx};p.vy=32;p.ground=false;p.surface=null;keys.clear();update()`);
+ for(const vx of [0,4,8,12,17,-4,-8]){const a=boot();a.run(`const d=level.springs.find(d=>d.id==='blimp-entry-spring');Object.assign(level.blimpRoute,{departureFrame:runFrames,departureSpeed:26});p.poseJumpFrame=runFrames;p.airBoostUsed=false;const f=springFace(d),r=Math.abs(f.nx)*13+Math.abs(f.ny)*19;p.x=f.x+f.nx*(r+.5);p.y=f.y+f.ny*(r+.5)-1;p.vx=${vx};p.vy=32;p.ground=false;p.surface=null;keys.clear();update()`);
  assert.ok(a.run("level.springs.find(d=>d.id==='blimp-entry-spring').firedAt")>0,'aiming speed '+vx);}
 });
-test('jumping into the blimps from a later roof cannot use their return spring',()=>{
- const a=boot();a.run(`const s=surfaceById('draw-burning-top');p.x=s.x1+1;p.y=s.y1-20;p.surface=s;p.ground=true;p.vx=-14;p.face=-1;keys.clear();press('ArrowLeft',true);press('Space',true);for(let i=0;i<80;i++){if(i===24)press('ShiftLeft',true);if(i===42){release('ShiftLeft',true);release('Space',true);press('ArrowDown',true);}update()}`);
- assert.ok(a.run("visited.has('blimp-curve-4')"),'reproduce the former direct air-boost entry');
- a.run(`const reward=surfaceById('blimp-reward');p.x=29200;p.y=reward.y1-20;p.surface=reward;p.ground=true;p.vx=-8;activateWorldDevices()`);
- assert.equal(a.run("level.springs.find(d=>d.id==='blimp-return-spring').firedAt"),undefined);
+test('an unqualified landing on the blimps cannot unlock their return spring',()=>{
+ const a=boot();a.run(`const curve=surfaceById('blimp-curve-4');p.x=curve.x1+30;p.vx=-14;p.vy=8;p.ground=false;land(curve,yOn(curve,p.x));const d=level.springs.find(d=>d.id==='blimp-return-spring'),f=springFace(d),r=Math.abs(f.nx)*13+Math.abs(f.ny)*19;p.x=f.x+f.nx*(r+.5);p.y=f.y+f.ny*(r+.5)-1;p.vx=0;p.vy=32;p.ground=false;p.surface=null;keys.clear();update()`);
+ assert.equal(a.run('level.blimpRoute.entered'),false);assert.equal(a.run("level.springs.find(d=>d.id==='blimp-return-spring').firedAt"),undefined);
 });
 for(const [name,speed,jump,success] of [['momentum jump',14,true,true],['standing jump',0,true,false],['running without jumping',14,false,false]])test('before the third blimp is visible: '+name,()=>{
  const a=boot();a.run(`const s=surfaceById('blimp-moving');s.motion.startedAt=0;runFrames=20;const q=pose(s);p.x=q.x1+20;p.y=q.y1-20;p.surface=s;p.ground=true;p.vx=-${speed};p.vy=0;keys.clear();press('ArrowLeft',true);${jump?"press('Space',true);":''}`);

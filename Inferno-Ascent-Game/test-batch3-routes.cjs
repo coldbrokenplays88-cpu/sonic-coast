@@ -28,3 +28,8 @@ test('Split Skyline express approach is physical at low speed and its rail remai
  const a=boot();a.run("var s=level.surfaces.find(s=>s.routeType==='boost'&&s.entrySpeed===19&&s.solidAtAnySpeed&&s.id.includes('194'));p.x=s.x1+60;p.y=yOn(s,p.x)-24;p.vx=2;p.vy=8;p.ground=false;p.surface=null;moveAndResolveSurfaces()");assert.equal(a.run('p.surface?.id'),a.run('s.id'));assert.ok(a.run('level.monitors.some(m=>m.required&&m.x<s.x1&&s.x1-m.x<1000)'));
  a.run("s=level.surfaces.find(s=>s.id.includes('196')&&s.grindable);p.surface=s;p.ground=true;boost=0;updateBoostState(true)");assert.ok(a.run('p.boosting'));assert.equal(a.run('boost'),0);
 });
+
+test('the upper route is reachable from the real choice entrance, including an unfavorable hoist phase',()=>{
+ for(const phase of [0,120]){const a=boot();a.run(require('./route-test-helpers.cjs').aimHighSource+`runFrames=${phase};const entry=surfaceById('mid-fallen-building');p.x=level.middleSection.start+600;p.y=yOn(entry,p.x)-20;p.surface=entry;p.ground=true;p.vx=8;p.vy=0;p.inv=0;boost=0;count=20;keys.clear();press('Space',true);for(let i=0;i<850;i++){aimHigh();if(p.surface?.grindable){keys.clear();keys.add('ShiftLeft');keys.add('ArrowRight')}update();if(p.surface?.id==='mid-junction')break;}`);
+ assert.equal(a.run('p.surface?.id'),'mid-junction');assert.equal(a.run('stats.hits+stats.deaths'),0);assert.equal(a.run("level.springs.filter(d=>d.id.startsWith('mid-')&&d.id!=='mid-low-spring'&&d.firedAt!==undefined).length"),6);}
+});

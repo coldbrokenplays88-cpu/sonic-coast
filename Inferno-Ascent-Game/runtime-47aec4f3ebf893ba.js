@@ -373,6 +373,7 @@
     drawBlimpRoute: () => drawBlimpRoute,
     getRuntimeBindings: () => getRuntimeBindings24,
     initializeRuntimeModule: () => initializeRuntimeModule24,
+    invalidateBlimpEntry: () => invalidateBlimpEntry,
     onBlimpLanding: () => onBlimpLanding,
     qualifyingBlimpEntry: () => qualifyingBlimpEntry,
     recordBlimpDeparture: () => recordBlimpDeparture,
@@ -5245,8 +5246,7 @@
   }
   __name(activateWorldDevices, "activateWorldDevices");
   function springFace(d, t = state.runFrames) {
-    const s = state.level.surfaces.find((s2) => s2.id === d.surfaceId), q = s ? pose(s, t) : null;
-    const x = d.x + (q ? q.x1 - s.x1 : 0), y = q ? q.y1 + (d.x - s.x1) * q.slope : d.y;
+    const { x, y } = airDevicePose(d, t);
     const angle = polishDirection(d) * Math.PI / 8, nx = Math.sin(angle), ny = -Math.cos(angle);
     const offset = 40 - [0, 4, -9, -6, -3, 1][polishedSpringFrame(d)] * 2;
     return { x: x + nx * offset, y: y + ny * offset, nx, ny, tx: -ny, ty: nx };
@@ -7089,8 +7089,6 @@
     act2LevelTemplate = {
       blimpRoute: {
         entered: false,
-        entryJumpFrame: -1,
-        entryJumpSpeed: 0,
         departureFrame: -100,
         departureSpeed: 0,
         entryId: "blimp-entry",
@@ -7126,7 +7124,7 @@
         {
           id: "blimp-life",
           item: "life",
-          x: 29345,
+          x: 28561,
           y: -3690,
           surfaceId: "blimp-reward",
           broken: false
@@ -7134,7 +7132,7 @@
         {
           id: "blimp-shield",
           item: "bubble",
-          x: 29265,
+          x: 28481,
           y: -3690,
           surfaceId: "blimp-reward",
           broken: false
@@ -7477,9 +7475,27 @@
         {
           id: "draw-loop-launch",
           x1: 31e3,
-          x2: 31300,
+          x2: 31127,
           y1: -2800,
           y2: -3020,
+          kind: "main",
+          cityType: "concrete-ramp"
+        },
+        {
+          id: "draw-loop-catch",
+          x1: 31400,
+          x2: 31700,
+          y1: -2940,
+          y2: -2940,
+          kind: "main",
+          cityType: "rooftop"
+        },
+        {
+          id: "draw-loop-return",
+          x1: 31700,
+          x2: 32e3,
+          y1: -2940,
+          y2: -3180,
           kind: "main",
           cityType: "concrete-ramp"
         },
@@ -9223,17 +9239,17 @@
         },
         {
           id: "blimp-entry",
-          x1: 32715,
-          x2: 32773,
-          y1: -3750,
-          y2: -3750,
+          x1: 31931,
+          x2: 31989,
+          y1: -3320,
+          y2: -3320,
           kind: "main",
           cityType: "blimp-anchor"
         },
         {
           id: "blimp-curve-0",
-          x1: 31500,
-          x2: 31600,
+          x1: 30716,
+          x2: 30816,
           y1: -3850,
           y2: -3770,
           kind: "main",
@@ -9241,8 +9257,8 @@
         },
         {
           id: "blimp-curve-1",
-          x1: 31600,
-          x2: 31700,
+          x1: 30816,
+          x2: 30916,
           y1: -3770,
           y2: -3720,
           kind: "main",
@@ -9250,8 +9266,8 @@
         },
         {
           id: "blimp-curve-2",
-          x1: 31700,
-          x2: 31800,
+          x1: 30916,
+          x2: 31016,
           y1: -3720,
           y2: -3700,
           kind: "main",
@@ -9259,8 +9275,8 @@
         },
         {
           id: "blimp-curve-3",
-          x1: 31800,
-          x2: 31900,
+          x1: 31016,
+          x2: 31116,
           y1: -3700,
           y2: -3700,
           kind: "main",
@@ -9268,8 +9284,8 @@
         },
         {
           id: "blimp-curve-4",
-          x1: 31900,
-          x2: 32e3,
+          x1: 31116,
+          x2: 31216,
           y1: -3700,
           y2: -3720,
           kind: "main",
@@ -9277,8 +9293,8 @@
         },
         {
           id: "blimp-curve-5",
-          x1: 32e3,
-          x2: 32100,
+          x1: 31216,
+          x2: 31316,
           y1: -3720,
           y2: -3750,
           kind: "main",
@@ -9286,8 +9302,8 @@
         },
         {
           id: "blimp-curve-6",
-          x1: 32100,
-          x2: 32200,
+          x1: 31316,
+          x2: 31416,
           y1: -3750,
           y2: -3780,
           kind: "main",
@@ -9295,8 +9311,8 @@
         },
         {
           id: "blimp-curve-7",
-          x1: 32200,
-          x2: 32370,
+          x1: 31416,
+          x2: 31586,
           y1: -3780,
           y2: -3810,
           kind: "main",
@@ -9304,8 +9320,8 @@
         },
         {
           id: "blimp-moving",
-          x1: 30620,
-          x2: 31120,
+          x1: 29836,
+          x2: 30336,
           y1: -3810,
           y2: -3810,
           kind: "moving",
@@ -9320,8 +9336,8 @@
         },
         {
           id: "blimp-reward",
-          x1: 29170,
-          x2: 29820,
+          x1: 28386,
+          x2: 29036,
           y1: -3690,
           y2: -3690,
           kind: "main",
@@ -9329,7 +9345,7 @@
         },
         {
           id: "blimp-return-rail",
-          x1: 30800,
+          x1: 30016,
           x2: 34800,
           y1: -4400,
           y2: -4400,
@@ -9846,15 +9862,15 @@
         {
           id: "blimp-entry-spring",
           surfaceId: "blimp-entry",
-          x: 32744,
-          y: -3750,
-          power: 11,
+          x: 31960,
+          y: -3320,
+          power: 21,
           launchX: -20
         },
         {
           id: "blimp-return-spring",
           surfaceId: "blimp-reward",
-          x: 29200,
+          x: 28416,
           y: -3690,
           power: 32,
           launchX: 28
@@ -10942,22 +10958,22 @@
           taken: false
         },
         {
-          x: 29540,
+          x: 28756,
           y: -3728,
           taken: false
         },
         {
-          x: 29616,
+          x: 28832,
           y: -3728,
           taken: false
         },
         {
-          x: 29692,
+          x: 28908,
           y: -3728,
           taken: false
         },
         {
-          x: 29768,
+          x: 28984,
           y: -3728,
           taken: false
         },
@@ -16564,6 +16580,7 @@
     const free = freeRailBoost(), eligible = !state.charge && !p.hurt && !p.wrongRouteDrop && !p.bubbleSlam;
     if (p.airBoostRequested && want && !p.ground && !p.airBoostUsed && state.boost >= BOOST_MAX / 4 && !p.boostLocked && eligible) {
       state.boost -= BOOST_MAX / 4;
+      invalidateBlimpEntry();
       p.airBoostUsed = true;
       p.airBoostFrames = 18;
       p.groundBoostHeld = false;
@@ -16694,11 +16711,11 @@
     for (const m of state.level.monitors || []) m.broken = false;
   }
   __name(resetBoostMonitors, "resetBoostMonitors");
-  function airDevicePose(d) {
+  function airDevicePose(d, t = state.runFrames) {
     const s = d.surfaceId && surfaceById(d.surfaceId);
     if (!s) return d;
-    const q = pose(s);
-    return { ...d, x: d.x + q.x1 - s.x1, y: yOn(s, d.x + q.x1 - s.x1) };
+    const q = pose(s, t);
+    return { ...d, x: d.x + q.x1 - s.x1, y: q.y1 + (d.x - s.x1) * q.slope };
   }
   __name(airDevicePose, "airDevicePose");
   function initializeRuntimeModule23() {
@@ -16768,7 +16785,7 @@
   var blimpTextures;
   function addBlimpRoute(l) {
     const ramp = l.surfaces.find((s) => s.id === "draw-loop-launch"), exit = l.surfaces.find((s) => s.id === "draw-hall-exit");
-    const ox = ramp.x2 - 31300, oy = ramp.y2 + 3020;
+    const ox = ramp.x1 - 31e3, oy = ramp.y1 + 2800;
     const add = /* @__PURE__ */ __name((id, x1, x2, y1, y2 = y1, extra = {}) => {
       const s = {
         id,
@@ -16783,47 +16800,47 @@
       l.surfaces.push(s);
       return s;
     }, "add");
-    const entry = add("blimp-entry", 32715, 32773, -3750, -3750, { cityType: "blimp-anchor" });
+    const entry = add("blimp-entry", 31931, 31989, -3320, -3320, { cityType: "blimp-anchor" });
     const points = [
-      [31500, -3850],
-      [31600, -3770],
-      [31700, -3720],
-      [31800, -3700],
-      [31900, -3700],
-      [32e3, -3720],
-      [32100, -3750],
-      [32200, -3780],
-      [32370, -3810]
+      [30716, -3850],
+      [30816, -3770],
+      [30916, -3720],
+      [31016, -3700],
+      [31116, -3700],
+      [31216, -3720],
+      [31316, -3750],
+      [31416, -3780],
+      [31586, -3810]
     ];
     const curve = [];
     for (let i = 0; i < points.length - 1; i++)
       curve.push(
         add("blimp-curve-" + i, points[i][0], points[i + 1][0], points[i][1], points[i + 1][1])
       );
-    const moving = add("blimp-moving", 30620, 31120, -3810, -3810, {
+    const moving = add("blimp-moving", 29836, 30336, -3810, -3810, {
       kind: "moving",
       motion: { type: "flight", axis: "x", distance: -710, speed: 3, startedAt: null }
     });
-    const reward = add("blimp-reward", 29170, 29820, -3690);
+    const reward = add("blimp-reward", 28386, 29036, -3690);
     l.springs.push(
       {
         id: "blimp-entry-spring",
         surfaceId: entry.id,
-        x: 32744 + ox,
+        x: 31960 + ox,
         y: entry.y1,
-        power: 11,
+        power: 21,
         launchX: -20
       },
       {
         id: "blimp-return-spring",
         surfaceId: reward.id,
-        x: 29200 + ox,
+        x: 28416 + ox,
         y: reward.y1,
         power: 32,
         launchX: 28
       }
     );
-    add("blimp-return-rail", 30800, 34800, -4400, -4400, {
+    add("blimp-return-rail", 30016, 34800, -4400, -4400, {
       kind: "express",
       grindable: true,
       cityType: "grind-rail",
@@ -16837,16 +16854,14 @@
     });
     l.monitors ??= [];
     for (const [id, item, x] of [
-      ["blimp-life", "life", 29345],
-      ["blimp-shield", "bubble", 29265]
+      ["blimp-life", "life", 28561],
+      ["blimp-shield", "bubble", 28481]
     ])
       l.monitors.push({ id, item, x: x + ox, y: reward.y1, surfaceId: reward.id, broken: false });
     for (let x = reward.x1 + 370; x < reward.x2 - 40; x += 76)
       l.rings.push({ x, y: reward.y1 - 38, taken: false });
     l.blimpRoute = {
       entered: false,
-      entryJumpFrame: -1,
-      entryJumpSpeed: 0,
       departureFrame: -100,
       departureSpeed: 0,
       entryId: entry.id,
@@ -16868,8 +16883,6 @@
       s.motion.startedAt = null;
       Object.assign(state.level.blimpRoute, {
         entered: false,
-        entryJumpFrame: -1,
-        entryJumpSpeed: 0,
         departureFrame: -100,
         departureSpeed: 0
       });
@@ -16882,10 +16895,20 @@
     const r = state.level.blimpRoute;
     if (!r) return;
     const fromRamp = surface?.id === "draw-loop-launch" || !surface && state.coyote > 0 && state.runFrames - r.departureFrame <= tuning.coyote;
-    r.entryJumpFrame = fromRamp ? state.runFrames : -1;
-    r.entryJumpSpeed = surface ? Math.abs(speed) : r.departureSpeed;
+    if (fromRamp && surface) {
+      r.departureFrame = state.runFrames;
+      r.departureSpeed = Math.abs(speed);
+    } else if (!fromRamp) invalidateBlimpEntry();
   }
   __name(recordBlimpJump, "recordBlimpJump");
+  function invalidateBlimpEntry() {
+    const r = state.level.blimpRoute;
+    if (r) {
+      r.departureFrame = -100;
+      r.departureSpeed = 0;
+    }
+  }
+  __name(invalidateBlimpEntry, "invalidateBlimpEntry");
   function recordBlimpDeparture(s) {
     const r = state.level.blimpRoute;
     if (r && s.id === "draw-loop-launch") {
@@ -16897,14 +16920,14 @@
   function onBlimpLanding(s) {
     const r = state.level.blimpRoute;
     if (!r) return;
-    if (s.id !== r.entryId) r.entryJumpFrame = -1;
+    if (s.id !== r.entryId) invalidateBlimpEntry();
     if (s.id === r.movingId && s.motion.startedAt === null)
       s.motion.startedAt = state.runFrames;
   }
   __name(onBlimpLanding, "onBlimpLanding");
   function qualifyingBlimpEntry() {
     const r = state.level.blimpRoute;
-    return r && r.entryJumpFrame === p.poseJumpFrame && r.entryJumpSpeed >= 24 && !p.airBoostUsed;
+    return !!(r && r.departureFrame >= 0 && r.departureSpeed >= 24 && !p.airBoostUsed);
   }
   __name(qualifyingBlimpEntry, "qualifyingBlimpEntry");
   function drawBlimpRoute() {
@@ -17105,7 +17128,8 @@
     state.jumpBuffer = 0;
     p.airLaunchUntil = state.runFrames + Math.ceil(device.power / 0.58);
     device.firedAt = state.runFrames;
-    sparks(device.x, device.y - 10, 6, device.cityVent ? "#9be3ef" : "#ffe68b");
+    const anchor = airDevicePose(device);
+    sparks(anchor.x, anchor.y - 10, 6, device.cityVent ? "#9be3ef" : "#ffe68b");
     gameSound(device.poolBooster ? "pool" : device.cityVent ? "vent" : "spring", {
       launch: !!device.poolBooster
     });
@@ -17811,26 +17835,26 @@
     bot("low-guard", right, 3780);
     const low1 = deck("low-transfer-1", 3170, 3410, -290), low2 = deck("low-transfer-2", 4200, 4490, -280), low3 = deck("low-transfer-3", 4750, 5150, -160, -160);
     [low1, low2, low3].forEach((s) => body(s, 2));
-    const upper1 = deck("spring-step-1", 1131, 1189, -470, -470, {
+    const upper1 = deck("spring-step-1", 921, 979, -470, -470, {
       kind: "express",
       routeType: "skill",
       cityType: "fire-escape"
-    }), upper2 = deck("spring-step-2", 831, 889, -750, -750, {
+    }), upper2 = deck("spring-step-2", 761, 819, -750, -750, {
       kind: "express",
       routeType: "skill",
       cityType: "fire-escape"
-    }), upper3 = deck("spring-aim-step", 1311, 1369, -1090, -1090, {
+    }), upper3 = deck("spring-aim-step", 981, 1039, -1090, -1090, {
       kind: "express",
       routeType: "skill",
       cityType: "billboard"
     });
-    const left = deck("left-decision", 1581, 1639, -1430, -1430, {
+    const left = deck("left-decision", 1161, 1219, -1430, -1430, {
       kind: "express",
       routeType: "skill",
       cityType: "fire-escape"
-    }), wrong = deck("wrong-decision", 1880, 2130, -1390, -1390, { cityType: "fire-escape" });
-    bot("wrong-way-guard", wrong, 2e3, { jumpImmune: true, rebound: false });
-    const moving = deck("moving-spring-hoist", 1581, 1639, -1720, -1720, {
+    }), wrong = deck("wrong-decision", 1551, 1609, -1390, -1390, { cityType: "fire-escape" });
+    bot("wrong-way-guard", wrong, 1580, { jumpImmune: true, rebound: false });
+    const moving = deck("moving-spring-hoist", 1161, 1219, -1720, -1720, {
       kind: "moving",
       routeType: "skill",
       cityType: "crane-hoist",
@@ -17846,7 +17870,7 @@
       cityType: "grind-rail"
     };
     const rails = [
-      deck("rail-entry", 2070, 2350, -1920, -1900, railExtras),
+      deck("rail-entry", 1430, 2350, -1920, -1900, railExtras),
       deck("rail-top", 2350, 3e3, -1900, -1650, railExtras),
       deck("rail-descent", 3e3, 4700, -1650, -300, railExtras),
       deck("rail-exit", 4700, 5400, -300, 220, railExtras)
@@ -17859,12 +17883,12 @@
     bot("rail-guard-2", rails[2], 3650);
     bot("rail-guard-3", rails[2], 4500);
     spring("low-spring", fallen, 920, 18, 9, "mid-pool-floor").airSpeedLimit = 9;
-    spring("upper-spring", upper, 790, 19, 9.25, upper1.id);
-    spring("spring-1", upper1, 1160, 19, -7.3, upper2.id);
-    spring("spring-2", upper2, 860, 20.5, 12.8, upper3.id);
-    spring("aim-spring", upper3, 1340, 20.5, 6.4, left.id);
-    spring("left-spring", left, 1610, 21, 0, moving.id);
-    spring("moving-spring", moving, 1610, 17, 16, rails[0].id);
+    spring("upper-spring", upper, 790, 22, 0, upper1.id);
+    spring("spring-1", upper1, 950, 22, 0, upper2.id);
+    spring("spring-2", upper2, 790, 23, 0, upper3.id);
+    spring("aim-spring", upper3, 1010, 22, 0, left.id);
+    spring("left-spring", left, 1190, 21, 0, moving.id);
+    spring("moving-spring", moving, 1190, 24, 0, rails[0].id);
     const pool = {
       id: "mid-pool",
       x1: start2 + 1400,
@@ -17913,10 +17937,7 @@
       [1, 2910, -400],
       [2, 2630, -510],
       [3, 2830, -620],
-      [4, 2450, -730],
-      [5, 2160, -840],
-      [6, 1870, -950],
-      [7, 1580, -1060]
+      [4, 2450, -730]
     ]) {
       const s = deck("secret-" + i, x, x + (i === 3 ? 430 : 210), y, y, {
         cityType: "fire-escape",
@@ -17933,14 +17954,6 @@
         surfaceId: secret[2].id,
         broken: false,
         secret: true
-      },
-      {
-        id: "mid-rail-monitor",
-        x: start2 + 1610,
-        y: base - 1430,
-        surfaceId: left.id,
-        broken: false,
-        required: true
       }
     );
     l.checkpoints.push({
