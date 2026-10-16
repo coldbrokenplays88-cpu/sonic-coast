@@ -1,14 +1,5 @@
-/* Cached native-pixel cels. No filtering, per-frame image reads, or camera cuts. */
-const endingSprites = new Map(),
-  endingLoadErrors = new Set();
-const endingSheets = [
-  'sonic',
-  'shadow',
-  'eggman',
-  'sonic-polish',
-  'shadow-polish',
-  'eggman-polish',
-];
+// Generated from src/ending-art.js; run npm run build:compat after source edits.
+'use strict';
 function prepareEndingArt(name, image) {
   const source = document.createElement('canvas');
   source.width = image.width;
@@ -70,6 +61,7 @@ function prepareEndingArt(name, image) {
   endingLoadErrors.delete(name);
   if (name === 'shadow') prepareEndingEmerald(source);
 }
+
 function prepareEndingEmerald(source) {
   // Extract the existing yellow Emerald at native resolution; the source PNG
   // stays unchanged. This silhouette excludes the supporting glove and ring.
@@ -109,22 +101,25 @@ function prepareEndingEmerald(source) {
   c.putImageData(data, 0, 0);
   endingSprites.set('emerald', [{ image: crop, width: 14, height: 12, x: 7, y: 6 }]);
 }
+
 function endingArtReady() {
   return endingSheets.every((name) => endingSprites.has(name));
 }
+
 function retryEndingArt() {
   for (const name of endingLoadErrors) {
     endingLoadErrors.delete(name);
     loadEndingArt(name, true);
   }
 }
+
 function loadEndingArt(name, retry = false) {
   const im = new Image();
   im.onload = () => prepareEndingArt(name, im);
   im.onerror = () => endingLoadErrors.add(name);
   im.src = 'assets/ending-' + name + '.png' + (retry ? '?retry=' + Date.now() : '');
 }
-for (const name of endingSheets) loadEndingArt(name);
+
 function endingGemAnchor(actor, frame = actor.frame, sheet = actor.sheet) {
   const cel = endingSprites.get(sheet)?.[frame];
   if (!cel?.gem) return null;
@@ -133,6 +128,7 @@ function endingGemAnchor(actor, frame = actor.frame, sheet = actor.sheet) {
     ratio = Math.max(1, Math.round(worldScale)) / worldScale;
   return { x: actor.x + cel.gem.x * ratio * (actor.flip ? -1 : 1), y: actor.y + cel.gem.y * ratio };
 }
+
 function endingActor(actor) {
   if (!actor.visible || actor.alpha === 0) return null;
   if (actor.sheet === 'recovered' && !art.recoveredSpeedster)
@@ -173,11 +169,13 @@ function endingActor(actor) {
   ctx.restore();
   return endingGemAnchor(actor);
 }
+
 function endingStar(x, y, size, color) {
   cityPixelRect(x - size, y - 1, size * 2 + 2, 2, color);
   cityPixelRect(x - 1, y - size, 2, size * 2 + 2, color);
   cityPixelRect(x - 3, y - 3, 6, 6, color);
 }
+
 function endingBurst(x, y, age, life = 54) {
   const t = Math.max(0, Math.min(1, age / life));
   for (let i = 0; i < 10; i++) {
@@ -202,6 +200,7 @@ function endingBurst(x, y, age, life = 54) {
     );
   }
 }
+
 function endingAura(x, y, frame, power = 1) {
   const radius = 32 + Math.sin(frame * 0.22) * 4;
   for (let i = 0; i < 22; i++) {
@@ -212,6 +211,7 @@ function endingAura(x, y, frame, power = 1) {
     if (i % 4 === 0) cityPixelLine(xx, yy, xx + Math.sin(a) * 7, yy - 12, '#fff9df', 2);
   }
 }
+
 function drawEndingScene(s) {
   const q = window.endingPose(s),
     f = q.frame,
@@ -313,3 +313,8 @@ function drawEndingScene(s) {
       );
   }
 }
+
+const endingSprites = new Map();
+const endingLoadErrors = new Set();
+const endingSheets = ['sonic', 'shadow', 'eggman', 'sonic-polish', 'shadow-polish', 'eggman-polish'];
+for (const name of endingSheets) loadEndingArt(name);

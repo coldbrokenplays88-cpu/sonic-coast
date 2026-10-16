@@ -1,6 +1,5 @@
+// Generated from src/blimp-route.js; run npm run build:compat after source edits.
 'use strict';
-// Optional flight above Burning Quarter. Coordinates derive from the existing
-// loop ramp and hallway seam; none of the original city geometry is moved.
 function addBlimpRoute(l) {
   const ramp = l.surfaces.find((s) => s.id === 'draw-loop-launch'),
     exit = l.surfaces.find((s) => s.id === 'draw-hall-exit');
@@ -101,6 +100,7 @@ function addBlimpRoute(l) {
   };
   return l;
 }
+
 function resetBlimpRoute() {
   const s = level.blimpRoute && surfaceById(level.blimpRoute.movingId);
   if (s) {
@@ -116,15 +116,19 @@ function resetBlimpRoute() {
       if (d.id === 'blimp-entry-spring' || d.id === 'blimp-return-spring') delete d.firedAt;
   }
 }
+
 function recordBlimpJump(surface, speed) {
   const r = level.blimpRoute;
   if (!r) return;
   const fromRamp =
     surface?.id === 'draw-loop-launch' ||
-    (!surface && coyote > 0 && runFrames - r.departureFrame <= tuning.coyote);
+    (!surface &&
+      coyote > 0 &&
+      runFrames - r.departureFrame <= tuning.coyote);
   r.entryJumpFrame = fromRamp ? runFrames : -1;
   r.entryJumpSpeed = surface ? Math.abs(speed) : r.departureSpeed;
 }
+
 function recordBlimpDeparture(s) {
   const r = level.blimpRoute;
   if (r && s.id === 'draw-loop-launch') {
@@ -132,16 +136,20 @@ function recordBlimpDeparture(s) {
     r.departureSpeed = Math.abs(p.vx) * Math.hypot(1, pose(s).slope);
   }
 }
+
 function onBlimpLanding(s) {
   const r = level.blimpRoute;
   if (!r) return;
   if (s.id !== r.entryId) r.entryJumpFrame = -1;
-  if (s.id === r.movingId && s.motion.startedAt === null) s.motion.startedAt = runFrames;
+  if (s.id === r.movingId && s.motion.startedAt === null)
+    s.motion.startedAt = runFrames;
 }
+
 function qualifyingBlimpEntry() {
   const r = level.blimpRoute;
   return r && r.entryJumpFrame === p.poseJumpFrame && r.entryJumpSpeed >= 24 && !p.airBoostUsed;
 }
+
 function blimpSpringContact(d) {
   // Sweep the player's collision rectangle against the rendered angled cap.
   // The raster's cap is 40 units above its pivot with a 24-unit half width.
@@ -164,7 +172,6 @@ function blimpSpringContact(d) {
   return Math.abs(tangent) <= 24 + Math.abs(tx) * 13 + Math.abs(ty) * halfHeight;
 }
 
-const blimpTextures = new Map();
 function drawBlimpRoute() {
   for (const b of level.blimpRoute?.blimps || []) {
     const surfaces = b.surfaces.map(surfaceById),
@@ -277,7 +284,15 @@ function drawBlimpRoute() {
       for (const xx of [(first.x1 + first.x2) / 2]) {
         const yy = first.y1 + 210;
         cityPixelRect(xx - 16, yy, 32, 4, '#32465e');
-        cityPixelRect(xx - 2, yy - 6 + (Math.floor(runFrames / 3) % 3) * 4, 4, 12, '#c4d9dd');
+        cityPixelRect(
+          xx - 2,
+          yy - 6 + (Math.floor(runFrames / 3) % 3) * 4,
+          4,
+          12,
+          '#c4d9dd'
+        );
       }
   }
 }
+
+const blimpTextures = new Map();

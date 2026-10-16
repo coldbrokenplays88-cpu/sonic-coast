@@ -1,6 +1,5 @@
+// Generated from src/level.js; run npm run build:compat after source edits.
 'use strict';
-// Distances and positions use the game's 960 × 540 world units.
-// Each district has an authored fast route and a recoverable lower route.
 function makeLevel() {
   const surfaces = [],
     hazards = [],

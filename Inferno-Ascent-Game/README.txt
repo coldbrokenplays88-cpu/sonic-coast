@@ -3,10 +3,14 @@ INFERNO ASCENT — PLAYABLE GAME BUILD
 This ZIP contains the complete game site and its art assets.
 
 START HERE
-1. Extract the ZIP, keeping the assets folder beside index.html.
-2. Open index.html in Chrome, Edge, or Firefox.
+1. Extract the ZIP completely, keeping the assets folder in place.
+2. Open PLAY.html in Chrome, Edge, or Firefox if it is present.
+   In the smaller player ZIP, open index.html instead.
+3. You do not need to install coding tools or type commands.
 
-If the game still appears blank, double-click RUN-GAME-WINDOWS.bat. This optional fallback uses Python (if installed) to serve the folder locally, then opens the game in your browser. Leave its command window open while playing.
+If the game appears blank on Windows, double-click RUN-GAME-WINDOWS.bat.
+This optional fallback requires Python already installed. It opens the game
+in your browser. Leave its command window open while playing.
 
 Controls are shown below the game.
 

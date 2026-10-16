@@ -1,3 +1,4 @@
+// Generated from src/midsection.js; run npm run build:compat after source edits.
 'use strict';
 function addMiddleSection(l) {
   if (l.middleSection) return l;
@@ -327,6 +328,7 @@ function addMiddleSection(l) {
   }
   return l;
 }
+
 function beginWrongRouteDrop() {
   p.wrongRouteDrop = true;
   p.poolApproach = false;
@@ -338,6 +340,7 @@ function beginWrongRouteDrop() {
   coyote = 0;
   jumpBuffer = 0;
 }
+
 function updateMiddleMotion() {
   if (p.wrongRouteDrop) {
     const spring = level.springs.find((d) => d.id === 'mid-low-spring');
@@ -346,12 +349,14 @@ function updateMiddleMotion() {
 
   return false;
 }
+
 function updateMiddleSection() {
   const m = level.middleSection;
   if (!m) return;
   if (!m.secretRevealed && p.x < m.start + 3300 && p.x > m.start && p.surface?.secretDepth >= 3)
     m.secretRevealed = true;
 }
+
 function drawMiddleSection() {
   const m = level.middleSection;
   if (!m) return;
@@ -430,7 +435,8 @@ function drawMiddleSection() {
   for (let x = pool.x1; x < pool.x2; x += 8) {
     const y = pool.y + Math.round(Math.sin(x * 0.04 + step * 0.08)) * 2;
     cityPixelRect(x, y, 8, 4, '#84eff6');
-    if (Math.floor((x + step * 2) / 16) % 3 === 0) cityPixelRect(x + 2, y + 6, 4, 2, '#408dbe');
+    if (Math.floor((x + step * 2) / 16) % 3 === 0)
+      cityPixelRect(x + 2, y + 6, 4, 2, '#408dbe');
   }
   for (let i = 0; i < 16; i++) {
     const x = pool.x1 + 30 + ((i * 37) % (pool.x2 - pool.x1 - 60)),

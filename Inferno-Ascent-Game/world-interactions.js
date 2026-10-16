@@ -1,6 +1,5 @@
+// Generated from src/world-interactions.js; run npm run build:compat after source edits.
 'use strict';
-// Existing world interactions, invoked synchronously in the controller's tick order.
-
 function updateWorldPlatforms() {
   for (const s of level.surfaces) {
     if (s.restoreAt && runFrames >= s.restoreAt) {
@@ -62,7 +61,10 @@ function activateWorldDevices() {
         level.blimpRoute.entered = true;
         launchAirDevice(spring);
       }
-    } else if (grounded && (spring.id !== 'blimp-return-spring' || level.blimpRoute?.entered))
+    } else if (
+      grounded &&
+      (spring.id !== 'blimp-return-spring' || level.blimpRoute?.entered)
+    )
       launchAirDevice(spring);
   }
 }
@@ -71,7 +73,8 @@ function updateWorldEnemies() {
   for (const e of enemies) {
     if (!e.alive) continue;
     e.x = e.base + Math.sin(runFrames * 0.018 + e.phase) * e.range;
-    e.y = e.baseY + (e.kind === 'drone' ? Math.sin(runFrames * 0.027 + e.phase) * 12 : 0);
+    e.y =
+      e.baseY + (e.kind === 'drone' ? Math.sin(runFrames * 0.027 + e.phase) * 12 : 0);
     if (Math.hypot(p.x - e.x, p.y - e.y) < 33) {
       const stomp = p.vy > 0 && feet() <= e.y + 12 && !e.jumpImmune,
         jumpHit = !p.ground && p.jumpAttack && p.hurt === 0 && !e.jumpImmune;
@@ -95,7 +98,6 @@ function updateWorldEnemies() {
   }
 }
 
-// Checkpoints require a safe main-road landing; falling past a marker cannot skip a challenge.
 function updateWorldCheckpoints() {
   for (let i = checkpoint + 1; i < level.checkpoints.length; i++) {
     const c = level.checkpoints[i];
@@ -109,7 +111,11 @@ function updateWorldCheckpoints() {
       checkpoint = i;
       stage = i;
       if (level.act !== 2)
-        notify(c.hint || level.sectors[level.sectors.findLastIndex((s) => s.x <= c.x)].hint);
+        notify(
+          c.hint ||
+            level.sectors[level.sectors.findLastIndex((s) => s.x <= c.x)]
+              .hint
+        );
       gameSound('checkpoint');
     }
   }

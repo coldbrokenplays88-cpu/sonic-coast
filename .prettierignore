@@ -7,3 +7,10 @@ Inferno-Ascent-Game/ending-frames.js
 Inferno-Ascent-Game/ending-polish-frames.js
 Inferno-Ascent-Game/supplemental-frames.js
 Inferno-Ascent-Game/traversal-frames.js
+
+# Canonical generated frame metadata and classic compatibility output.
+src/ending-frames.js
+src/ending-polish-frames.js
+src/supplemental-frames.js
+src/traversal-frames.js
+Inferno-Ascent-Game/*.js

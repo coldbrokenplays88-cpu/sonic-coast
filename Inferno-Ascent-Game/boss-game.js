@@ -1,7 +1,5 @@
-/* Glue to existing movement, checkpoint, camera and result systems. */
-let boss = null,
-  bossCheckpoint = false,
-  ending = null;
+// Generated from src/boss-game.js; run npm run build:compat after source edits.
+'use strict';
 function setupBossEncounter() {
   boss = null;
   bossCheckpoint = false;
@@ -17,9 +15,14 @@ function setupBossEncounter() {
       bossRing: true,
     });
 }
+
 function bossOwnsControls() {
-  return ending || (boss && ['entrance', 'destroyed', 'defeated'].includes(boss.state));
+  return (
+    ending ||
+    (boss && ['entrance', 'destroyed', 'defeated'].includes(boss.state))
+  );
 }
+
 function resetBossAttempt() {
   ending = null;
   $('#ending-loading').hidden = true;
@@ -32,9 +35,14 @@ function resetBossAttempt() {
   p.inv = 100;
   boost = BOOST_MAX;
 }
+
 function beginEndingScene() {
   if (ending || level.act !== 2) return;
-  ending = window.createEndingScene(level.arena, p, { x: cam, y: camY, zoom });
+  ending = window.createEndingScene(level.arena, p, {
+    x: cam,
+    y: camY,
+    zoom: zoom,
+  });
   ending.waitFrames = 0;
   keys.clear();
   charge = 0;
@@ -48,6 +56,7 @@ function beginEndingScene() {
   $('#ending-loading').hidden = endingArtReady();
   $('#ending-retry').onclick = retryEndingArt;
 }
+
 function updateEndingScene() {
   if (!endingArtReady()) {
     ending.waitFrames++;
@@ -73,6 +82,7 @@ function updateEndingScene() {
   for (const event of ending.events) gameSound(cues[event]);
   if (ending.done) finishAct();
 }
+
 function updateBossEncounter() {
   if (level.act !== 2) return;
   if (!boss) {
@@ -107,7 +117,8 @@ function updateBossEncounter() {
     sparks(boss.x + 155, boss.y, 18, '#b2b5c2');
     notify('Dodge the strikes • Jump at the eyes after a bite');
   }
-  if (['tail-windup', 'bite-windup', 'laser-windup'].includes(boss.event)) gameSound('warning');
+  if (['tail-windup', 'bite-windup', 'laser-windup'].includes(boss.event))
+    gameSound('warning');
   if (boss.event === 'tail-strike') {
     gameSound('bossStrike');
     shake = 3;
@@ -135,7 +146,8 @@ function updateBossEncounter() {
       charge = 0;
       gameSound('bossBreak');
     }
-  } else if (!p.inv && window.scorpionDanger(boss, p)) hurt(window.scorpionGeometry(boss).head.x);
+  } else if (!p.inv && window.scorpionDanger(boss, p))
+    hurt(window.scorpionGeometry(boss).head.x);
   if (bossOwnsControls()) {
     keys.clear();
     charge = 0;
@@ -154,6 +166,7 @@ function updateBossEncounter() {
     }
   }
 }
+
 function frameBossCamera() {
   if (!boss) return false;
   if (ending) {
@@ -170,11 +183,17 @@ function frameBossCamera() {
   camY += Math.max(-12, Math.min(12, (targetY - camY) * 0.07));
   return true;
 }
+
 function drawBossEncounter() {
   if (!boss || ending) return;
   renderEggScorpion(boss);
   if (!['entrance', 'destroyed', 'defeated'].includes(boss.state)) {
-    drawPixelSign(level.arena.x + 760, level.arena.y - 400, 'EGG SCORPION', 'danger');
+    drawPixelSign(
+      level.arena.x + 760,
+      level.arena.y - 400,
+      'EGG SCORPION',
+      'danger'
+    );
     for (let i = 0; i < 3; i++)
       cityPixelRect(
         level.arena.x + 690 + i * 48,
@@ -185,3 +204,7 @@ function drawBossEncounter() {
       );
   }
 }
+
+let boss = null;
+let bossCheckpoint = false;
+let ending = null;

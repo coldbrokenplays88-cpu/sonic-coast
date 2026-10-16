@@ -1,7 +1,5 @@
+// Generated from src/pixel-world.js; run npm run build:compat after source edits.
 'use strict';
-// Two world-unit pixels, a small material palette, and world-anchored patterns.
-// Geometry remains in the physics builder; all architectural bodies render behind decks.
-let cityRasterContext = null;
 function cityPixelRect(x, y, w, h, color) {
   if (w <= 0 || h <= 0) return;
   const dc = cityRasterContext || ctx;
@@ -13,6 +11,7 @@ function cityPixelRect(x, y, w, h, color) {
     Math.ceil(h / 2) * 2
   );
 }
+
 function cityPixelLine(x1, y1, x2, y2, color, width = 2) {
   const steps = Math.max(1, Math.ceil(Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1)) / 2));
   for (let i = 0; i <= steps; i++) {
@@ -26,6 +25,7 @@ function cityPixelLine(x1, y1, x2, y2, color, width = 2) {
     );
   }
 }
+
 function cityPixelOval(x, y, rx, ry, color) {
   for (let yy = -Math.ceil(ry / 2); yy <= ry / 2; yy++) {
     const dy = yy * 2,
@@ -33,45 +33,7 @@ function cityPixelOval(x, y, rx, ry, color) {
     cityPixelRect(x - w, y + dy, w * 2, 2, color);
   }
 }
-const cityMaterials = [
-  {
-    body: '#25223e',
-    shade: '#151b30',
-    light: '#57536f',
-    edge: '#8b758b',
-    window: '#d280ac',
-    glow: '#e6aecb',
-    cool: '#6189a5',
-  },
-  {
-    body: '#2c2441',
-    shade: '#181b30',
-    light: '#625173',
-    edge: '#a87b94',
-    window: '#c773a6',
-    glow: '#f2b0cb',
-    cool: '#657b9d',
-  },
-  {
-    body: '#283046',
-    shade: '#151e31',
-    light: '#53607a',
-    edge: '#819099',
-    window: '#769ab0',
-    glow: '#b6d0d6',
-    cool: '#c987a3',
-  },
-  {
-    body: '#332b43',
-    shade: '#1c1f32',
-    light: '#65566d',
-    edge: '#ac8b89',
-    window: '#c48c77',
-    glow: '#ebbd86',
-    cool: '#777fa3',
-  },
-];
-const cityFacadeTiles = new Map();
+
 function cityFacade(left, right, roofY, seed = 0, exposed = false, landmark = null) {
   left = Math.floor(left / 2) * 2;
   right = Math.floor(right / 2) * 2;
@@ -111,7 +73,16 @@ function cityFacade(left, right, roofY, seed = 0, exposed = false, landmark = nu
       ctx.drawImage(texture, x, y, 256, 256);
     }
 }
-function paintCityFacade(left, right, roofY, seed = 0, exposed = false, landmark = null, clip) {
+
+function paintCityFacade(
+  left,
+  right,
+  roofY,
+  seed = 0,
+  exposed = false,
+  landmark = null,
+  clip
+) {
   left = Math.floor(left / 2) * 2;
   right = Math.floor(right / 2) * 2;
   roofY = Math.floor(roofY / 2) * 2;
@@ -239,6 +210,7 @@ function paintCityFacade(left, right, roofY, seed = 0, exposed = false, landmark
     }
   }
 }
+
 function paintCityPillar(x, y, bottom, steel = false) {
   const p = cityMaterials[steel ? 2 : 0];
   cityPixelRect(x, y, steel ? 16 : 30, bottom - y, p.shade);
@@ -249,9 +221,7 @@ function paintCityPillar(x, y, bottom, steel = false) {
     if (steel) cityPixelLine(x + 4, yy + 8, x + 12, yy + 45, p.light, 2);
   }
 }
-const cityPillarTextures = new Map();
-const cityPillarFrameSpans = new Map();
-let cityPillarPass = false;
+
 function cityPillar(x, y, bottom, steel = false) {
   if (bottom <= y) return;
   if (!document.createElement) return paintCityPillar(x, y, bottom, steel);
@@ -273,7 +243,10 @@ function cityPillar(x, y, bottom, steel = false) {
   // World-anchored strips of twenty 52-unit repeats; crop the visible ends instead of allocating
   // a new texture as the camera rises. Only two texture variants are retained.
   const top = Math.max(Math.floor(y / 2) * 2, Math.floor((camY - 40) / 2) * 2);
-  let end = Math.min(Math.ceil(bottom / 2) * 2, Math.ceil((camY + H / zoom + 80) / 2) * 2);
+  let end = Math.min(
+    Math.ceil(bottom / 2) * 2,
+    Math.ceil((camY + H / zoom + 80) / 2) * 2
+  );
   // Stacked decks share identical world-anchored columns. Draw their union,
   // rather than repeatedly painting the same full-height steel over itself.
   if (cityPillarPass) {
@@ -300,6 +273,7 @@ function cityPillar(x, y, bottom, steel = false) {
       );
   }
 }
+
 function drawPixelCityStructures() {
   cityPillarFrameSpans.clear();
   cityPillarPass = true;
@@ -308,7 +282,8 @@ function drawPixelCityStructures() {
       if (b.scenery) continue;
       const roof = b.roofId && surfaceById(b.roofId),
         top = roof ? Math.min(roof.y1, roof.y2) + 26 : b.y;
-      if (b.x + b.w < cam - 40 || b.x > cam + W / zoom + 40) continue;
+      if (b.x + b.w < cam - 40 || b.x > cam + W / zoom + 40)
+        continue;
       ctx.save();
       ctx.globalAlpha = b.interiorOpacity ?? 1;
       if (roof && roof.y1 !== roof.y2) {
@@ -353,14 +328,25 @@ function drawPixelCityStructures() {
           railBottom = s.y1 + (s.motion?.amp || 0) + 60;
         if (horizontal) {
           const spanLeft = Math.max(s.x1 - s.motion.amp, cam - 40),
-            spanRight = Math.min(s.x2 + s.motion.amp, cam + W / zoom + 40);
+            spanRight = Math.min(
+              s.x2 + s.motion.amp,
+              cam + W / zoom + 40
+            );
           if (spanRight <= spanLeft || top > bottom || q.y1 + 14 < camY - 40) continue;
           cityPixelRect(spanLeft, top, spanRight - spanLeft, 8, '#405066');
           cityPixelRect(spanLeft, top, spanRight - spanLeft, 2, '#a2968a');
           for (const x of [q.x1 + 8, q.x2 - 12]) {
-            if (x < cam - 40 || x > cam + W / zoom + 40) continue;
+            if (x < cam - 40 || x > cam + W / zoom + 40)
+              continue;
             cityPixelRect(x - 4, top + 2, 12, 10, '#697b8e');
-            cityPixelLine(x, q.y1 + 14, x, Math.max(top + 10, camY - 40), '#697b8e', 2);
+            cityPixelLine(
+              x,
+              q.y1 + 14,
+              x,
+              Math.max(top + 10, camY - 40),
+              '#697b8e',
+              2
+            );
           }
         } else {
           const visibleTop = Math.max(top, camY - 40),
@@ -414,8 +400,7 @@ function drawPixelCityStructures() {
     cityPillarPass = false;
   }
 }
-const cityDeckTextures = new Map();
-const cityLoopTextures = new Map();
+
 function paintPixelCityLoop(cx, cy, r) {
   for (let y = -r - 14; y <= r + 14; y += 2)
     for (let x = -r - 14; x <= r + 14; x += 2) {
@@ -437,6 +422,7 @@ function paintPixelCityLoop(cx, cy, r) {
       cityPixelRect(cx + x, cy + y, 2, 2, color);
     }
 }
+
 function drawPixelCityLoop(l) {
   if (!document.createElement) {
     paintPixelCityLoop(l.x, l.y - l.r, l.r);
@@ -460,6 +446,7 @@ function drawPixelCityLoop(l) {
   }
   ctx.drawImage(texture, l.x - l.r - 14, l.y - l.r * 2 - 14, texture.width * 2, texture.height * 2);
 }
+
 function drawPixelCityDeck(s, left, right) {
   const q = pose(s),
     width = q.x2 - q.x1,
@@ -496,7 +483,9 @@ function drawPixelCityDeck(s, left, right) {
     const cut = Math.max(0, left - q.x1),
       span = Math.min(right - left, width - cut),
       offset =
-        s.crumbleTimer > 0 && s.crumbleTimer < 16 ? Math.round(Math.sin(runFrames * 3)) * 2 : 0;
+        s.crumbleTimer > 0 && s.crumbleTimer < 16
+          ? Math.round(Math.sin(runFrames * 3)) * 2
+          : 0;
     ctx.drawImage(
       texture,
       cut / 2,
@@ -514,6 +503,7 @@ function drawPixelCityDeck(s, left, right) {
   paintPixelCityDeck(s, left, right);
   drawClimbCue(s, left, right);
 }
+
 function paintPixelCityDeck(s, left, right) {
   const q = pose(s),
     type = s.cityType || 'scaffold',
@@ -538,7 +528,9 @@ function paintPixelCityDeck(s, left, right) {
               ? '#83b3b5'
               : '#8cafbd';
   const shakeOffset =
-    s.crumbleTimer > 0 && s.crumbleTimer < 16 ? Math.round(Math.sin(runFrames * 3)) * 2 : 0;
+    s.crumbleTimer > 0 && s.crumbleTimer < 16
+      ? Math.round(Math.sin(runFrames * 3)) * 2
+      : 0;
   for (let x = Math.floor(left / 2) * 2; x < right; x += 2) {
     const y = Math.round((yOn(s, x) + shakeOffset) / 2) * 2;
     cityPixelRect(x, y, 2, height, concrete ? '#4f4c62' : '#35455b');
@@ -578,26 +570,7 @@ function paintPixelCityDeck(s, left, right) {
       cityPixelRect(x + 8 + i * 12, y + 4, 6, 10, i % 2 ? '#bd85a9' : '#778fae');
   }
 }
-const ringPixels = [
-    '.....gggggg.....',
-    '...ggwwwwwwgg...',
-    '..gwyyyyyywwgg..',
-    '.gwyggssssgywgg.',
-    '.wygs......sgwg.',
-    'gwyg........gywg',
-    'gyg..........gyg',
-    'gyg..........gyg',
-    'gyg..........gyg',
-    'gyg..........gyg',
-    'gwg..........gwg',
-    '.gwg........gwg.',
-    '.gywg......gwyg.',
-    '..gywwyyyywwyg..',
-    '...ggwwwwwwgg...',
-    '.....ssssss.....',
-  ],
-  ringPalette = { g: '#efa900', y: '#f4ef00', w: '#f4f1ec', s: '#954100' };
-const pixelRingTextures = new Map();
+
 function paintPixelRing(dc, width, left = 0, top = 0) {
   for (let row = 0; row < 16; row++)
     for (let col = 0; col < 16; col++) {
@@ -616,6 +589,7 @@ function paintPixelRing(dc, width, left = 0, top = 0) {
       }
     }
 }
+
 function drawPixelRing(x, y, scale = 1) {
   const width = Math.max(4, Math.round(16 * scale)),
     left = Math.round(x - width / 2),
@@ -632,9 +606,9 @@ function drawPixelRing(x, y, scale = 1) {
   ctx.drawImage(texture, left, top);
 }
 
-// Opaque frontage hides undiscovered routes; breaches reveal a restrained cutaway.
 function drawCityCutaways(b) {
-  if (b.x + b.w < cam - 40 || b.x > cam + W / zoom + 40) return;
+  if (b.x + b.w < cam - 40 || b.x > cam + W / zoom + 40)
+    return;
   const gate = b.gateId && level.hazards.find((h) => h.id === b.gateId);
   if (gate && !gate.broken) return;
   for (const r of b.rooms || []) {
@@ -642,12 +616,18 @@ function drawCityCutaways(b) {
       bottom = r.sloped ? r.bottom : r.y + 12,
       left = Math.max(r.x1, cam - 40),
       right = Math.min(r.x2, cam + W / zoom + 40);
-    if (right <= left || bottom < camY - 40 || top > camY + H / zoom + 40) continue;
+    if (
+      right <= left ||
+      bottom < camY - 40 ||
+      top > camY + H / zoom + 40
+    )
+      continue;
     cityPixelRect(
       left,
       Math.max(top, camY - 40),
       right - left,
-      Math.min(bottom, camY + H / zoom + 40) - Math.max(top, camY - 40),
+      Math.min(bottom, camY + H / zoom + 40) -
+        Math.max(top, camY - 40),
       '#10182b'
     );
     cityPixelRect(left, top, right - left, 8, '#62596b');
@@ -677,6 +657,7 @@ function drawCityCutaways(b) {
     }
   }
 }
+
 function drawCityBreakable(h) {
   if (h.style === 'glass') {
     cityPixelRect(h.x, h.y, h.w, h.h, '#315675');
@@ -704,3 +685,69 @@ function drawCityBreakable(h) {
     }
   }
 }
+
+let cityRasterContext = null;
+const cityMaterials = [
+    {
+      body: '#25223e',
+      shade: '#151b30',
+      light: '#57536f',
+      edge: '#8b758b',
+      window: '#d280ac',
+      glow: '#e6aecb',
+      cool: '#6189a5',
+    },
+    {
+      body: '#2c2441',
+      shade: '#181b30',
+      light: '#625173',
+      edge: '#a87b94',
+      window: '#c773a6',
+      glow: '#f2b0cb',
+      cool: '#657b9d',
+    },
+    {
+      body: '#283046',
+      shade: '#151e31',
+      light: '#53607a',
+      edge: '#819099',
+      window: '#769ab0',
+      glow: '#b6d0d6',
+      cool: '#c987a3',
+    },
+    {
+      body: '#332b43',
+      shade: '#1c1f32',
+      light: '#65566d',
+      edge: '#ac8b89',
+      window: '#c48c77',
+      glow: '#ebbd86',
+      cool: '#777fa3',
+    },
+  ];
+const cityFacadeTiles = new Map();
+const cityPillarTextures = new Map();
+const cityPillarFrameSpans = new Map();
+let cityPillarPass = false;
+const cityDeckTextures = new Map();
+const cityLoopTextures = new Map();
+const ringPixels = [
+    '.....gggggg.....',
+    '...ggwwwwwwgg...',
+    '..gwyyyyyywwgg..',
+    '.gwyggssssgywgg.',
+    '.wygs......sgwg.',
+    'gwyg........gywg',
+    'gyg..........gyg',
+    'gyg..........gyg',
+    'gyg..........gyg',
+    'gyg..........gyg',
+    'gwg..........gwg',
+    '.gwg........gwg.',
+    '.gywg......gwyg.',
+    '..gywwyyyywwyg..',
+    '...ggwwwwwwgg...',
+    '.....ssssss.....',
+  ];
+const ringPalette = { g: '#efa900', y: '#f4ef00', w: '#f4f1ec', s: '#954100' };
+const pixelRingTextures = new Map();

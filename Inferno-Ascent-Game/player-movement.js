@@ -1,6 +1,5 @@
+// Generated from src/player-movement.js; run npm run build:compat after source edits.
 'use strict';
-// Shared player movement. State and the fixed-tick controller remain in game.js.
-
 function jump() {
   p.scriptedLaunch = false;
   p.jumpAttack = true;
@@ -15,7 +14,8 @@ function jump() {
     impulse = lift * (p.underwater ? 7 / 13 : 1);
   // Keep the full surface/platform velocity; an upright jump adds vertical lift.
   const carry = surface ? surfaceVelocity(surface) : { x: 0, y: 0 };
-  const inherited = (surface ? p.vx * slope : coyote > 0 ? (p.coyoteLaunchVy ?? 0) : 0) + carry.y;
+  const inherited =
+    (surface ? p.vx * slope : coyote > 0 ? (p.coyoteLaunchVy ?? 0) : 0) + carry.y;
   p.vy = inherited - impulse;
   p.vx += carry.x;
   p.jumpReleaseVy = inherited - (p.underwater ? 2.5 : 5);
@@ -84,12 +84,15 @@ function updateMovement() {
     charge = Math.min(20, charge + 0.2);
     if (runFrames % 10 === 0) {
       sparks(p.x - 15 * p.face, p.y + 18, 3, '#69efff');
-      if (typeof gameSound === 'function') gameSound('spindashCharge', { charge: charge / 20 });
+      if (typeof gameSound === 'function')
+        gameSound('spindashCharge', { charge: charge / 20 });
     }
   }
   if (charge && !down) {
     gameSound('spindashRelease', { charge: charge / 20 });
-    p.vx = (p.face * (12 + charge * 0.7)) / Math.hypot(1, p.surface ? pose(p.surface).slope : 0);
+    p.vx =
+      (p.face * (12 + charge * 0.7)) /
+      Math.hypot(1, p.surface ? pose(p.surface).slope : 0);
     charge = 0;
     p.rolling = true;
     p.dashRolling = true;
@@ -252,7 +255,6 @@ function updateMovement() {
   return true;
 }
 
-// Visual state tracks resisted momentum; it never gates jump, roll, or direction inputs.
 function updateBrakingPose(dir, incoming) {
   const speed = Math.abs(p.vx),
     opposing = dir && dir !== Math.sign(p.vx),
@@ -307,8 +309,6 @@ function updateBrakingPose(dir, incoming) {
   }
 }
 
-// Water follows the existing bowl collision profile, including its dry raised edges.
-// Classic ratios: Sonic 1 Sonic_Water / Sonic_Jump / Sonic_JumpHeight (s1disasm).
 function waterAt(x, y) {
   const pool = level.middleSection?.pool;
   if (!pool || x < pool.x1 || x > pool.x2 || y <= pool.y) return null;
@@ -322,6 +322,7 @@ function waterAt(x, y) {
   }
   return y < floor ? pool : null;
 }
+
 function resetPlayerAbilities() {
   Object.assign(p, {
     shield: null,
@@ -338,6 +339,7 @@ function resetPlayerAbilities() {
     dashRolling: false,
   });
 }
+
 function updateWaterState() {
   const wet = !!waterAt(p.x, p.y),
     wasWet = !!p.underwater;
@@ -353,6 +355,7 @@ function updateWaterState() {
   }
   p.underwater = wet;
 }
+
 function updateBreathing() {
   if (!waterAt(p.x, p.y - 10) || p.shield === 'bubble') {
     p.airRemaining = 1800;
@@ -372,6 +375,7 @@ function updateBreathing() {
     gameSound('airWarning');
   return true;
 }
+
 function beginBubbleSlam() {
   p.bubbleSlam = true;
   p.jumpReleaseVy = null;

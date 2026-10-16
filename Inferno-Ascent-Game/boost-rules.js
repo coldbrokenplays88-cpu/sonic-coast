@@ -1,7 +1,9 @@
+// Generated from src/boost-rules.js; run npm run build:compat after source edits.
 'use strict';
 function freeRailBoost() {
   return !!(p.ground && p.surface?.grindable && p.surface.infiniteBoost);
 }
+
 function updateBoostState(want) {
   if (!want) {
     p.boostLocked = false;
@@ -53,11 +55,13 @@ function updateBoostState(want) {
   }
   return p.boosting;
 }
+
 function measurementSpeed() {
   if (p.loop) return Math.abs(p.loop.speed);
   if (p.ground && p.surface) return Math.abs(p.vx) * Math.hypot(1, pose(p.surface).slope);
   return Math.hypot(p.vx, p.vy);
 }
+
 function configureBoostMonitors(l) {
   l.monitors ??= [];
   l.surfaceIndex = new Map(l.surfaces.map((s) => [s.id, s]));
@@ -137,15 +141,20 @@ function configureBoostMonitors(l) {
   for (const s of l.surfaces) if (s.grindable && s.routeType === 'boost') s.infiniteBoost = true;
   return l;
 }
+
 function surfaceById(id) {
-  return level.surfaceIndex?.get(id) || level.surfaces.find((s) => s.id === id);
+  return (
+    level.surfaceIndex?.get(id) || level.surfaces.find((s) => s.id === id)
+  );
 }
+
 function monitorPose(m) {
   const s = m.surfaceId && surfaceById(m.surfaceId);
   if (!s) return m;
   const q = pose(s);
   return { ...m, x: m.x + q.x1 - s.x1, y: yOn(s, m.x + q.x1 - s.x1) };
 }
+
 function collectBoostMonitors() {
   for (const m of level.monitors || []) {
     if (m.broken) continue;
@@ -171,9 +180,11 @@ function collectBoostMonitors() {
     if (typeof gameSound === 'function') gameSound('monitor');
   }
 }
+
 function resetBoostMonitors() {
   for (const m of level.monitors || []) m.broken = false;
 }
+
 function airDevicePose(d) {
   const s = d.surfaceId && surfaceById(d.surfaceId);
   if (!s) return d;

@@ -1,16 +1,5 @@
-/* Articulated source-resolution sprites with the original 2-world-unit anchor grid. */
-const scorpionParts = new Map(),
-  scorpionStamps = new Map();
-const scorpionBounds = {
-  body: [16, 125, 430, 503, 132],
-  head: [455, 88, 811, 460, 84],
-  jaw: [800, 177, 1184, 485, 64],
-  claw: [1198, 54, 1534, 506, 58],
-  tail: [65, 520, 327, 991, 46],
-  stinger: [369, 573, 779, 958, 65],
-  cannon: [796, 562, 1169, 966, 65],
-  eyes: [1176, 674, 1535, 991, 74],
-};
+// Generated from src/boss-art.js; run npm run build:compat after source edits.
+'use strict';
 function prepareScorpionArt(image) {
   scorpionStamps.clear();
   for (const [name, [x, y, r, b, width]] of Object.entries(scorpionBounds)) {
@@ -23,6 +12,7 @@ function prepareScorpionArt(image) {
     scorpionParts.set(name, { image: c, width, height: Math.round(((b - y) * width) / (r - x)) });
   }
 }
+
 function scorpionStamp(name, angle = 0, mirror = false) {
   const part = scorpionParts.get(name);
   if (!part) return null;
@@ -40,6 +30,7 @@ function scorpionStamp(name, angle = 0, mirror = false) {
   scorpionStamps.set(key, stamp);
   return stamp;
 }
+
 function scorpionPart(name, x, y, angle = 0, mirror = false) {
   const stamp = scorpionStamp(name, angle, mirror);
   if (!stamp) return;
@@ -57,12 +48,14 @@ function scorpionPart(name, x, y, angle = 0, mirror = false) {
   );
   ctx.restore();
 }
+
 function drawScorpionLink(a, z, width = 20) {
   cityPixelLine(a.x, a.y, z.x, z.y, '#07101d', width + 8);
   cityPixelLine(a.x, a.y, z.x, z.y, '#354254', width);
   cityPixelLine(a.x - 4, a.y - 3, z.x - 4, z.y - 3, '#72869a', 4);
   cityPixelLine(a.x + 7, a.y, z.x + 7, z.y, '#c91d2b', 4);
 }
+
 function renderEggScorpion(b) {
   const g = window.scorpionGeometry(b),
     s = b.state,
@@ -184,3 +177,16 @@ function renderEggScorpion(b) {
   }
   ctx.restore();
 }
+
+const scorpionParts = new Map();
+const scorpionStamps = new Map();
+const scorpionBounds = {
+    body: [16, 125, 430, 503, 132],
+    head: [455, 88, 811, 460, 84],
+    jaw: [800, 177, 1184, 485, 64],
+    claw: [1198, 54, 1534, 506, 58],
+    tail: [65, 520, 327, 991, 46],
+    stinger: [369, 573, 779, 958, 65],
+    cannon: [796, 562, 1169, 966, 65],
+    eyes: [1176, 674, 1535, 991, 74],
+  };

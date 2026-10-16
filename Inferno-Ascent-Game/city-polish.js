@@ -1,8 +1,5 @@
+// Generated from src/city-polish.js; run npm run build:compat after source edits.
 'use strict';
-// Original world sprites on the same two-unit grid as the recovered city art.
-// Frames are compiled into horizontal pixel runs once; no image smoothing,
-// gradients, path antialiasing, external assets, or per-frame rasterization.
-const polishSpriteCache = new Map();
 function polishVisible(x, y, w = 80, h = 120) {
   return (
     x + w >= cam - 40 &&
@@ -11,6 +8,7 @@ function polishVisible(x, y, w = 80, h = 120) {
     y - h <= camY + H / zoom + 40
   );
 }
+
 function polishRaster(width, height, paint) {
   const pixels = new Array(width * height).fill(null);
   const dot = (x, y, color) => {
@@ -42,6 +40,7 @@ function polishRaster(width, height, paint) {
   paint({ dot, box, line, disk });
   return { width, height, pixels };
 }
+
 function polishCompile(raster, angle = 0, anchorX = 0, anchorY = 0) {
   const runs = [],
     a = (angle * Math.PI) / 8,
@@ -72,6 +71,7 @@ function polishCompile(raster, angle = 0, anchorX = 0, anchorY = 0) {
   }
   return runs;
 }
+
 function polishCached(key, build) {
   let sprite = polishSpriteCache.get(key);
   if (!sprite) {
@@ -82,6 +82,7 @@ function polishCached(key, build) {
   }
   return sprite;
 }
+
 function polishDraw(runs, x, y) {
   x = Math.round(x / 2) * 2;
   y = Math.round(y / 2) * 2;
@@ -129,16 +130,19 @@ function polishDraw(runs, x, y) {
   }
   for (const r of runs) cityPixelRect(x + r[0], y + r[1], r[2], r[3], r[4]);
 }
+
 function polishDirection(device) {
   const horizontal = device.launchX ?? device.vx ?? 0,
     vertical = -(device.power ?? device.up ?? 25);
   return Math.round((Math.atan2(horizontal, -vertical) * 8) / Math.PI);
 }
+
 function polishedSpringFrame(device) {
   const age = runFrames - (device.firedAt ?? -1000);
   if (age < 0 || age >= 24) return 0;
   return age < 3 ? 1 : age < 6 ? 2 : age < 10 ? 3 : age < 15 ? 4 : age < 20 ? 5 : 0;
 }
+
 function drawPolishedSpring(device) {
   if (!polishVisible(device.x, device.y, 64, 90)) return;
   const frame = polishedSpringFrame(device),
@@ -178,6 +182,7 @@ function drawPolishedSpring(device) {
   });
   polishDraw(runs, device.x, device.y);
 }
+
 function drawBoostMonitor(monitor) {
   if (!polishVisible(monitor.x, monitor.y, 42, 70)) return;
   const broken = !!monitor.broken,
@@ -260,6 +265,7 @@ function drawBoostMonitor(monitor) {
     );
   }
 }
+
 function drawPoolBooster(device) {
   if (!polishVisible(device.x, device.y, 58, 90)) return;
   if (device.poolBooster && device.power === 0) {
@@ -341,6 +347,7 @@ function drawPoolBooster(device) {
   );
   polishDraw(runs, device.x, device.y);
 }
+
 function drawPolishedVent(device) {
   if (!polishVisible(device.x, device.y, 50, 100)) return;
   const phase = Math.floor(runFrames / 4) % 4,
@@ -377,6 +384,7 @@ function drawPolishedVent(device) {
   );
   polishDraw(runs, device.x, device.y);
 }
+
 function drawPixelDebris(debris) {
   if (!debris.triggered || debris.age < debris.warn || debris.age > debris.warn + debris.fall + 120)
     return;
@@ -417,6 +425,7 @@ function drawPixelDebris(debris) {
   );
   polishDraw(runs, debris.x, y);
 }
+
 function drawPixelEnemy(enemy) {
   if (enemy.alive === false || !polishVisible(enemy.x, enemy.y, 48, 60)) return;
   const drone = enemy.kind === 'drone',
@@ -501,6 +510,7 @@ function drawPixelEnemy(enemy) {
     cityPixelLine(enemy.x, y - 6, enemy.x + 8, y + 2, '#ffe0a1', 2);
   }
 }
+
 function drawPixelSpikes(hazard) {
   if (!polishVisible(hazard.x + hazard.w / 2, hazard.y, hazard.w / 2 + 20, hazard.h + 20)) return;
   const bottom = hazard.y + hazard.h,
@@ -520,6 +530,7 @@ function drawPixelSpikes(hazard) {
     cityPixelRect(x + 2, bottom - 6, w - 4, 2, '#7894a2');
   }
 }
+
 function drawDebrisWarning(debris) {
   if (
     !debris.triggered ||
@@ -539,7 +550,10 @@ function drawDebrisWarning(debris) {
     cityPixelRect(x - 2, debris.y - 20, 4, 18, bright);
     cityPixelRect(x + (side < 0 ? 0 : -10), debris.y - 20, 12, 4, bright);
   }
-  const y = Math.max(camY + 44, Math.min(debris.y - 112, camY + H / zoom - 126));
+  const y = Math.max(
+    camY + 44,
+    Math.min(debris.y - 112, camY + H / zoom - 126)
+  );
   for (let yy = 0; yy < 40; yy += 2) {
     const half = Math.floor((yy / 2 + 3) / 2) * 2;
     cityPixelRect(debris.x - half - 4, y + yy, half * 2 + 8, 2, '#132038');
@@ -555,51 +569,7 @@ function drawDebrisWarning(debris) {
     cityPixelLine(debris.x, yy + 8, debris.x + 10, yy, bright, 4);
   }
 }
-const polishFont = {
-  A: ['01110', '10001', '10001', '11111', '10001', '10001', '10001'],
-  B: ['11110', '10001', '10001', '11110', '10001', '10001', '11110'],
-  C: ['01111', '10000', '10000', '10000', '10000', '10000', '01111'],
-  D: ['11110', '10001', '10001', '10001', '10001', '10001', '11110'],
-  E: ['11111', '10000', '10000', '11110', '10000', '10000', '11111'],
-  F: ['11111', '10000', '10000', '11110', '10000', '10000', '10000'],
-  G: ['01111', '10000', '10000', '10111', '10001', '10001', '01111'],
-  H: ['10001', '10001', '10001', '11111', '10001', '10001', '10001'],
-  I: ['11111', '00100', '00100', '00100', '00100', '00100', '11111'],
-  J: ['00111', '00010', '00010', '00010', '10010', '10010', '01100'],
-  K: ['10001', '10010', '10100', '11000', '10100', '10010', '10001'],
-  L: ['10000', '10000', '10000', '10000', '10000', '10000', '11111'],
-  M: ['10001', '11011', '10101', '10101', '10001', '10001', '10001'],
-  N: ['10001', '11001', '10101', '10011', '10001', '10001', '10001'],
-  O: ['01110', '10001', '10001', '10001', '10001', '10001', '01110'],
-  P: ['11110', '10001', '10001', '11110', '10000', '10000', '10000'],
-  Q: ['01110', '10001', '10001', '10001', '10101', '10010', '01101'],
-  R: ['11110', '10001', '10001', '11110', '10100', '10010', '10001'],
-  S: ['01111', '10000', '10000', '01110', '00001', '00001', '11110'],
-  T: ['11111', '00100', '00100', '00100', '00100', '00100', '00100'],
-  U: ['10001', '10001', '10001', '10001', '10001', '10001', '01110'],
-  V: ['10001', '10001', '10001', '10001', '10001', '01010', '00100'],
-  W: ['10001', '10001', '10001', '10101', '10101', '10101', '01010'],
-  X: ['10001', '10001', '01010', '00100', '01010', '10001', '10001'],
-  Y: ['10001', '10001', '01010', '00100', '00100', '00100', '00100'],
-  Z: ['11111', '00001', '00010', '00100', '01000', '10000', '11111'],
-  0: ['01110', '10001', '10011', '10101', '11001', '10001', '01110'],
-  1: ['00100', '01100', '00100', '00100', '00100', '00100', '01110'],
-  2: ['01110', '10001', '00001', '00010', '00100', '01000', '11111'],
-  3: ['11110', '00001', '00001', '01110', '00001', '00001', '11110'],
-  4: ['00010', '00110', '01010', '10010', '11111', '00010', '00010'],
-  5: ['11111', '10000', '10000', '11110', '00001', '00001', '11110'],
-  6: ['01110', '10000', '10000', '11110', '10001', '10001', '01110'],
-  7: ['11111', '00001', '00010', '00100', '01000', '01000', '01000'],
-  8: ['01110', '10001', '10001', '01110', '10001', '10001', '01110'],
-  9: ['01110', '10001', '10001', '01111', '00001', '00001', '01110'],
-  '-': ['00000', '00000', '00000', '11111', '00000', '00000', '00000'],
-  '/': ['00001', '00001', '00010', '00100', '01000', '10000', '10000'],
-  '!': ['00100', '00100', '00100', '00100', '00100', '00000', '00100'],
-  '?': ['01110', '10001', '00001', '00010', '00100', '00000', '00100'],
-  '>': ['10000', '01000', '00100', '00010', '00100', '01000', '10000'],
-  '<': ['00001', '00010', '00100', '01000', '00100', '00010', '00001'],
-  ':': ['00000', '00100', '00100', '00000', '00100', '00100', '00000'],
-};
+
 function drawPixelSign(x, y, text, type) {
   text = String(text).toUpperCase().slice(0, 40);
   const width = Math.max(72, text.length * 12 + 16);
@@ -635,10 +605,12 @@ function drawPixelSign(x, y, text, type) {
   );
   polishDraw(runs, x - text.length * 6 + 2, y - 20);
 }
+
 function updateCityInteriors() {
   for (const building of level.buildings || []) {
     if (!building.rooms?.length) continue;
-    const gate = building.gateId && (level.hazards || []).find((h) => h.id === building.gateId),
+    const gate =
+        building.gateId && (level.hazards || []).find((h) => h.id === building.gateId),
       open = !building.gateId || !!gate?.broken;
     let inside = false;
     if (open)
@@ -665,19 +637,31 @@ function updateCityInteriors() {
     if (Math.abs(building.interiorOpacity - target) < 0.001) building.interiorOpacity = target;
   }
 }
+
 function drawCityDetails() {
   for (const s of level.surfaces || []) if (s.fallen || s.damaged) drawDamagedRoof(s);
   if (!level.buildings) return;
   for (const building of level.buildings) {
-    if (building.scenery || building.x + building.w < cam - 40 || building.x > cam + W / zoom + 40)
+    if (
+      building.scenery ||
+      building.x + building.w < cam - 40 ||
+      building.x > cam + W / zoom + 40
+    )
       continue;
-    const roof = building.roofId && (level.surfaces || []).find((s) => s.id === building.roofId),
+    const roof =
+        building.roofId &&
+        (level.surfaces || []).find((s) => s.id === building.roofId),
       roofY = roof && typeof yOn === 'function' ? yOn(roof, building.x) : building.y;
     const y = roofY + 38,
       seed = Math.abs(building.seed || 0),
       left = building.x + 22,
       right = building.x + building.w - 22;
-    if (y > camY + H / zoom + 40 || y + 160 < camY - 40 || right - left < 70) continue;
+    if (
+      y > camY + H / zoom + 40 ||
+      y + 160 < camY - 40 ||
+      right - left < 70
+    )
+      continue;
     const alpha = ctx.globalAlpha;
     ctx.globalAlpha = alpha * (building.interiorOpacity ?? 1);
     // Service architecture below the collision edge: no ornamental top occluders.
@@ -716,6 +700,7 @@ function drawCityDetails() {
     ctx.globalAlpha = alpha;
   }
 }
+
 function drawDamagedRoof(s) {
   const slope = (s.y2 - s.y1) / (s.x2 - s.x1),
     floor = (x) => s.y1 + (x - s.x1) * slope;
@@ -764,7 +749,6 @@ function drawDamagedRoof(s) {
   }
 }
 
-// Small pixel outlines leave the detailed character artwork visible through the shield.
 function drawPlayerAbilities() {
   if (p.shield === 'bubble') {
     const radius = p.bubbleSlam ? 29 : 31 + (Math.floor(runFrames / 10) % 2);
@@ -784,7 +768,12 @@ function drawPlayerAbilities() {
     cityPixelRect(p.x - 20, p.y - 23, 8, 2, '#ffffff');
     cityPixelRect(p.x - 23, p.y - 20, 2, 6, '#baffff');
   }
-  if (p.underwater && p.shield !== 'bubble' && p.airRemaining <= 720 && mode === 'playing') {
+  if (
+    p.underwater &&
+    p.shield !== 'bubble' &&
+    p.airRemaining <= 720 &&
+    mode === 'playing'
+  ) {
     // Classic 5..0 bubble countdown, one number per two seconds during the last twelve.
     const value = Math.min(5, Math.floor(Math.max(0, p.airRemaining - 1) / 120));
     const glyph = [
@@ -803,3 +792,50 @@ function drawPlayerAbilities() {
         cityPixelRect(x + (i % 3) * 4, y + Math.floor(i / 3) * 4, 4, 4, '#e6faff');
   }
 }
+
+const polishSpriteCache = new Map();
+const polishFont = {
+    A: ['01110', '10001', '10001', '11111', '10001', '10001', '10001'],
+    B: ['11110', '10001', '10001', '11110', '10001', '10001', '11110'],
+    C: ['01111', '10000', '10000', '10000', '10000', '10000', '01111'],
+    D: ['11110', '10001', '10001', '10001', '10001', '10001', '11110'],
+    E: ['11111', '10000', '10000', '11110', '10000', '10000', '11111'],
+    F: ['11111', '10000', '10000', '11110', '10000', '10000', '10000'],
+    G: ['01111', '10000', '10000', '10111', '10001', '10001', '01111'],
+    H: ['10001', '10001', '10001', '11111', '10001', '10001', '10001'],
+    I: ['11111', '00100', '00100', '00100', '00100', '00100', '11111'],
+    J: ['00111', '00010', '00010', '00010', '10010', '10010', '01100'],
+    K: ['10001', '10010', '10100', '11000', '10100', '10010', '10001'],
+    L: ['10000', '10000', '10000', '10000', '10000', '10000', '11111'],
+    M: ['10001', '11011', '10101', '10101', '10001', '10001', '10001'],
+    N: ['10001', '11001', '10101', '10011', '10001', '10001', '10001'],
+    O: ['01110', '10001', '10001', '10001', '10001', '10001', '01110'],
+    P: ['11110', '10001', '10001', '11110', '10000', '10000', '10000'],
+    Q: ['01110', '10001', '10001', '10001', '10101', '10010', '01101'],
+    R: ['11110', '10001', '10001', '11110', '10100', '10010', '10001'],
+    S: ['01111', '10000', '10000', '01110', '00001', '00001', '11110'],
+    T: ['11111', '00100', '00100', '00100', '00100', '00100', '00100'],
+    U: ['10001', '10001', '10001', '10001', '10001', '10001', '01110'],
+    V: ['10001', '10001', '10001', '10001', '10001', '01010', '00100'],
+    W: ['10001', '10001', '10001', '10101', '10101', '10101', '01010'],
+    X: ['10001', '10001', '01010', '00100', '01010', '10001', '10001'],
+    Y: ['10001', '10001', '01010', '00100', '00100', '00100', '00100'],
+    Z: ['11111', '00001', '00010', '00100', '01000', '10000', '11111'],
+    0: ['01110', '10001', '10011', '10101', '11001', '10001', '01110'],
+    1: ['00100', '01100', '00100', '00100', '00100', '00100', '01110'],
+    2: ['01110', '10001', '00001', '00010', '00100', '01000', '11111'],
+    3: ['11110', '00001', '00001', '01110', '00001', '00001', '11110'],
+    4: ['00010', '00110', '01010', '10010', '11111', '00010', '00010'],
+    5: ['11111', '10000', '10000', '11110', '00001', '00001', '11110'],
+    6: ['01110', '10000', '10000', '11110', '10001', '10001', '01110'],
+    7: ['11111', '00001', '00010', '00100', '01000', '01000', '01000'],
+    8: ['01110', '10001', '10001', '01110', '10001', '10001', '01110'],
+    9: ['01110', '10001', '10001', '01111', '00001', '00001', '01110'],
+    '-': ['00000', '00000', '00000', '11111', '00000', '00000', '00000'],
+    '/': ['00001', '00001', '00010', '00100', '01000', '10000', '10000'],
+    '!': ['00100', '00100', '00100', '00100', '00100', '00000', '00100'],
+    '?': ['01110', '10001', '00001', '00010', '00100', '00000', '00100'],
+    '>': ['10000', '01000', '00100', '00010', '00100', '01000', '10000'],
+    '<': ['00001', '00010', '00100', '01000', '00100', '00010', '00001'],
+    ':': ['00000', '00100', '00100', '00000', '00100', '00100', '00000'],
+  };

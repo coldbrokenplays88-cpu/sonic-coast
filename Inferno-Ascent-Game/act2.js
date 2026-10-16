@@ -1,10 +1,13 @@
+// Generated from src/act2.js; run npm run build:compat after source edits.
 'use strict';
 function selectAct(act) {
   selectedAct = act === 2 ? 2 : 1;
   setup();
   mode = 'ready';
   show(
-    selectedAct === 2 ? 'City on<br><em>the brink.</em>' : 'Ready.<br><em>Gotta go.</em>',
+    selectedAct === 2
+      ? 'City on<br><em>the brink.</em>'
+      : 'Ready.<br><em>Gotta go.</em>',
     selectedAct === 2
       ? 'Through ruined streets and exposed towers.<br>Reach the rooftop helipad.'
       : 'Build momentum. Jump the rails and roll through tunnels.',
@@ -12,6 +15,7 @@ function selectAct(act) {
   );
   $('#act-select').value = String(selectedAct);
 }
+
 function resetAct2() {
   if (level.act !== 2) return;
   for (const group of level.collapseGroups || []) group.triggered = false;
@@ -19,14 +23,17 @@ function resetAct2() {
     d.triggered = d.x < level.checkpoints[checkpoint].x;
     d.age = d.triggered ? 240 : 0;
   }
-  for (const e of level.events) e.age = e.trigger < level.checkpoints[checkpoint].x ? 150 : -1;
+  for (const e of level.events)
+    e.age = e.trigger < level.checkpoints[checkpoint].x ? 150 : -1;
   for (const l of level.loops) {
     l.used = l.x < level.checkpoints[checkpoint].x;
     l.solved = false;
   }
   for (const h of level.hazards)
-    if (h.type === 'breakable') h.broken = !!h.broken && h.x < level.checkpoints[checkpoint].x;
+    if (h.type === 'breakable')
+      h.broken = !!h.broken && h.x < level.checkpoints[checkpoint].x;
 }
+
 function launchAirDevice(device) {
   // Keep the existing aiming strength for the whole spring/vent flight.
   p.scriptedLaunch = true;
@@ -56,6 +63,7 @@ function launchAirDevice(device) {
   });
   beginTraversalLaunch(device);
 }
+
 function beginLoop(l) {
   p.brakeActive = false;
   p.brakeAge = 0;
@@ -72,6 +80,7 @@ function beginLoop(l) {
   p.surface = null;
   l.used = true;
 }
+
 function updateLoop() {
   const l = level.loops.find((l) => l.id === p.loop.id),
     q = p.loop;
@@ -99,7 +108,10 @@ function updateLoop() {
     p.x = l.x + Math.sin(q.theta) * l.r;
     p.y = l.y - l.r + Math.cos(q.theta) * l.r - 20;
     // The ceiling can hold Sonic only while centripetal acceleration supplies contact.
-    if (jumpBuffer > 0 || (q.speed * q.speed) / l.r + gravity * Math.cos(q.theta) < 0) {
+    if (
+      jumpBuffer > 0 ||
+      (q.speed * q.speed) / l.r + gravity * Math.cos(q.theta) < 0
+    ) {
       p.vx = Math.cos(q.theta) * q.speed;
       p.vy = -Math.sin(q.theta) * q.speed;
       if (jumpBuffer) {
@@ -146,6 +158,7 @@ function updateLoop() {
   p.ground = true;
   return true;
 }
+
 function updateAct2() {
   if (level.act !== 2) return;
   for (const l of level.loops)
@@ -197,7 +210,7 @@ function updateAct2() {
     }
   }
 }
-// Predict an upcoming foot crossing for framing only; never alter movement or landing.
+
 function predictLanding() {
   if (level.act !== 2 || p.ground || p.loop || Math.abs(p.vx) < 9) return null;
   let best = null;
@@ -230,7 +243,7 @@ function predictLanding() {
   }
   return best;
 }
-const cameraTracking = { anchor: 0.64, lift: 0, prediction: 0, velocity: 0, lastY: null };
+
 function resetCameraTracking() {
   cameraTracking.anchor = 0.64;
   cameraTracking.lift = 0;
@@ -238,6 +251,7 @@ function resetCameraTracking() {
   cameraTracking.velocity = 0;
   cameraTracking.lastY = p.y;
 }
+
 function updateCamera() {
   if (frameBossCamera()) return;
   const speed = p.loop ? p.loop.speed : Math.abs(p.vx),
@@ -249,7 +263,9 @@ function updateCamera() {
   const vw = W / zoom,
     lead = Math.min(act2 ? 340 : 230, Math.max(-180, p.vx * (act2 ? 12 : 9))),
     anchor = act2 ? (W / zoom) * 0.38 : 280;
-  cam += (Math.max(0, Math.min(END - vw + 260, p.x - anchor + lead)) - cam) * 0.15;
+  cam +=
+    (Math.max(0, Math.min(END - vw + 260, p.x - anchor + lead)) - cam) *
+    0.15;
   // Ground framing must ease too: the former speed<9 switch jerked the
   // entire scene during ordinary acceleration and braking, despite smooth zoom.
   const groundBlend = Math.max(0, Math.min(1, (speed - 6) / 6)),
@@ -267,21 +283,29 @@ function updateCamera() {
   let prediction = 0;
   if (landing) {
     const confidence = Math.max(0, Math.min(1, (speed - 9) / 5));
-    const framed = Math.min(p.y - (H / zoom) * 0.3, Math.max(baseY, landing.y - (H / zoom) * 0.82));
+    const framed = Math.min(
+      p.y - (H / zoom) * 0.3,
+      Math.max(baseY, landing.y - (H / zoom) * 0.82)
+    );
     prediction = (framed - baseY) * confidence * confidence * (3 - 2 * confidence);
   }
   cameraTracking.prediction += (prediction - cameraTracking.prediction) * 0.045;
   let targetY = baseY + cameraTracking.prediction;
   if (level.verticalCity)
-    targetY = Math.max(p.y - (H / zoom) * 0.78, Math.min(p.y - (H / zoom) * 0.25, targetY));
+    targetY = Math.max(
+      p.y - (H / zoom) * 0.78,
+      Math.min(p.y - (H / zoom) * 0.25, targetY)
+    );
   const movement = cameraTracking.lastY === null ? 0 : p.y - cameraTracking.lastY;
   cameraTracking.lastY = p.y;
   const limit = Math.min(25, Math.max(3, Math.max(Math.abs(p.vy), Math.abs(movement)) * 1.05 + 2));
   cameraTracking.velocity +=
-    (Math.max(-limit, Math.min(limit, (targetY - camY) * 0.14)) - cameraTracking.velocity) * 0.3;
+    (Math.max(-limit, Math.min(limit, (targetY - camY) * 0.14)) -
+      cameraTracking.velocity) *
+    0.3;
   camY += Math.max(-limit, Math.min(limit, cameraTracking.velocity));
 }
-// Small deterministic pixel effects keep fire and smoke anchored to the artwork.
+
 function cityFlame(x, y, w, h, seed = 0, alpha = 1) {
   const beat = Math.floor(step / 2),
     unit = 1;
@@ -304,6 +328,7 @@ function cityFlame(x, y, w, h, seed = 0, alpha = 1) {
   }
   ctx.restore();
 }
+
 function citySmoke(x, y, size, seed = 0, alpha = 0.2) {
   ctx.save();
   for (let j = 0; j < 8; j++) {
@@ -322,7 +347,7 @@ function citySmoke(x, y, size, seed = 0, alpha = 0.2) {
   }
   ctx.restore();
 }
-const skylineSmokeSprites = new Map();
+
 function drawSkylineSmoke(x, y, size, seed, alpha) {
   if (!document.createElement) return citySmoke(x, y, size, seed, alpha);
   const variant = seed % 8;
@@ -360,6 +385,7 @@ function drawSkylineSmoke(x, y, size, seed, alpha) {
   }
   ctx.restore();
 }
+
 function drawAct2Background() {
   const progress = Math.max(0, Math.min(1, p.x / END)),
     im = art.recoveredCity || art.collapse || art.city;
@@ -428,17 +454,22 @@ function drawAct2Background() {
   ctx.fillStyle = `rgba(32,9,38,${0.05 + progress * 0.07})`;
   ctx.fillRect(0, 0, W, H);
   for (let i = 0; i < 16 + progress * 18; i++) {
-    const x = (((i * 137 - cam * 0.18 + Math.sin(step * 0.012 + i) * 8) % W) + W) % W,
+    const x =
+        (((i * 137 - cam * 0.18 + Math.sin(step * 0.012 + i) * 8) % W) +
+          W) %
+        W,
       y = (((i * 91 - step * (0.5 + progress * 0.6)) % H) + H) % H;
     ctx.fillStyle = i % 3 ? '#ffb54c70' : '#ff6b3160';
     ctx.fillRect(x, y, 2, 3);
   }
 }
+
 function drawAct2Structures() {
   for (const b of level.buildings) drawCityCutaways(b);
   drawPixelCityStructures();
   drawBlimpRoute();
 }
+
 function drawAct2Bulkhead(h) {
   const bottom = Math.min(h.y + h.h, camY + H / zoom + 50),
     top = Math.max(h.y, camY - 40),
@@ -459,7 +490,7 @@ function drawAct2Bulkhead(h) {
     cityPixelRect(x + h.w - 9, y, 4, 4, '#8ba8b1');
   }
 }
-// Surface skins reuse collision tops; every solid highlight follows yOn exactly.
+
 function drawAct2Supports(s, left, right) {
   if (s.grindable) drawGrindRail(s, left, right);
   else if (s.cityType === 'blimp-anchor') {
@@ -467,9 +498,14 @@ function drawAct2Supports(s, left, right) {
     cityPixelRect(left, yOn(s, left) + 8, right - left, 8, '#28374e');
   } else if (s.cityType !== 'blimp') drawPixelCityDeck(s, left, right);
 }
+
 function drawAct2World() {
   for (const l of level.loops) {
-    if (l.x + l.r < cam - 50 || l.x - l.r > cam + W / zoom + 50) continue;
+    if (
+      l.x + l.r < cam - 50 ||
+      l.x - l.r > cam + W / zoom + 50
+    )
+      continue;
     drawPixelCityLoop(l);
   }
   for (const d of level.debris) {
@@ -484,7 +520,13 @@ function drawAct2World() {
     else drawPixelDebris(d);
   }
   for (const e of level.events) {
-    if (e.age < 0 || e.age > 150 || e.x + e.width < cam || e.x > cam + W / zoom) continue;
+    if (
+      e.age < 0 ||
+      e.age > 150 ||
+      e.x + e.width < cam ||
+      e.x > cam + W / zoom
+    )
+      continue;
     for (let i = 0; i < 8; i++) {
       const x = e.x + (i * e.width) / 8,
         y = e.y + e.age * e.age * 0.035 + (i % 3) * 15;
@@ -519,7 +561,6 @@ function drawAct2World() {
   }
 }
 
-// The gold rounded tube is a real collision surface, reserved for the skyline shortcut.
 function drawGrindRail(s, left, right) {
   for (let x = Math.floor(left / 2) * 2; x < right; x += 2) {
     const y = yOn(s, x);
@@ -530,7 +571,6 @@ function drawGrindRail(s, left, right) {
   }
 }
 
-// Paint and structural detail always sit below the real collision edge.
 function drawClimbCue(s, left, right) {
   const cue = level.routeCues?.find((c) => c.id === s.id);
   if (!cue || right - left < 70) return;
@@ -552,3 +592,6 @@ function drawClimbCue(s, left, right) {
   ctx.lineTo(x + 3 * dir, y + 3);
   ctx.stroke();
 }
+
+const cameraTracking = { anchor: 0.64, lift: 0, prediction: 0, velocity: 0, lastY: null };
+const skylineSmokeSprites = new Map();

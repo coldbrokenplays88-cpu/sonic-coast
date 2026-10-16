@@ -1,11 +1,11 @@
+// Generated from src/traversal-animations.js; run npm run build:compat after source edits.
 'use strict';
-// Cosmetic state only. Never writes player motion, contacts, controls or terrain.
-const traversalAnimation = { state: null, since: 0, launch: null };
 function resetTraversalAnimation() {
   traversalAnimation.state = null;
   traversalAnimation.since = 0;
   traversalAnimation.launch = null;
 }
+
 function beginTraversalLaunch(device) {
   traversalAnimation.launch = {
     kind: device.cityVent ? 'vent-launch' : 'spring-launch',
@@ -13,6 +13,7 @@ function beginTraversalLaunch(device) {
     face: p.face,
   };
 }
+
 function traversalLaunchValid() {
   const launch = traversalAnimation.launch;
   return (
@@ -26,6 +27,7 @@ function traversalLaunchValid() {
     !p.bubbleSlam
   );
 }
+
 function traversalGroundState() {
   if (
     !p.ground ||
@@ -40,7 +42,11 @@ function traversalGroundState() {
     p.airBoostActive
   )
     return null;
-  if (runFrames - p.poseLandingFrame >= 0 && runFrames - p.poseLandingFrame < 6) return null;
+  if (
+    runFrames - p.poseLandingFrame >= 0 &&
+    runFrames - p.poseLandingFrame < 6
+  )
+    return null;
   const dir =
     Number(keys.has('ArrowRight') || keys.has('KeyD')) -
     Number(keys.has('ArrowLeft') || keys.has('KeyA'));
@@ -72,6 +78,7 @@ function traversalGroundState() {
   const edge = left ? 1 : -1;
   return edge === p.face ? 'balance-forward' : 'balance-backward';
 }
+
 function updateTraversalAnimation() {
   if (!traversalLaunchValid()) traversalAnimation.launch = null;
   const state = traversalGroundState();
@@ -80,6 +87,7 @@ function updateTraversalAnimation() {
     traversalAnimation.since = runFrames;
   }
 }
+
 function traversalSonicPose() {
   if (p.hurt || p.airBoostActive || p.bubbleSlam || charge || p.rolling) return null;
   const out = (state, sheet, frame, extra = {}) => ({
@@ -121,7 +129,9 @@ function traversalSonicPose() {
   const state = traversalGroundState();
   if (!state) return null;
   const age =
-    state === traversalAnimation.state ? Math.max(0, runFrames - traversalAnimation.since) : 0;
+    state === traversalAnimation.state
+      ? Math.max(0, runFrames - traversalAnimation.since)
+      : 0;
   const frame = Math.floor(age / (state === 'push' ? 4 : 5)) % 8;
   return out(
     state,
@@ -129,3 +139,5 @@ function traversalSonicPose() {
     (state === 'push' ? 16 : state === 'balance-backward' ? 8 : 0) + frame
   );
 }
+
+const traversalAnimation = { state: null, since: 0, launch: null };

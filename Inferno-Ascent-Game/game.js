@@ -1,132 +1,5 @@
+// Generated from src/game.js; run npm run build:compat after source edits.
 'use strict';
-const canvas = document.querySelector('#game'),
-  ctx = canvas.getContext('2d'),
-  $ = (s) => document.querySelector(s);
-const W = 960,
-  H = 540,
-  SONIC_VISUAL_SCALE = 1.07,
-  FOOT_RADIUS = 9,
-  keys = new Set(),
-  JUMP_KEYS = ['Space', 'ArrowUp', 'KeyW'];
-const tuning = { lives: 3, inv: 78, coyote: 6, buffer: 8 },
-  BOOST_MAX = 90;
-const movementTuning = {
-  counterBrake: 1.25,
-  precisionSpeed: 3,
-  groundGrip: 0.65,
-  recoveryGrip: 0.8,
-};
-let testControlled = false;
-let selectedAct = window.DEFAULT_ACT === 2 ? 2 : 1;
-let level,
-  END = 29000,
-  mode = 'ready',
-  cam = 0,
-  camY = 0,
-  zoom = 1,
-  clock = 0,
-  lives = 3,
-  count = 0,
-  score = 0,
-  charge = 0,
-  checkpoint = 0,
-  toastTime = 0,
-  sound = false,
-  particles = [],
-  rings = [],
-  enemies = [],
-  last = 0,
-  acc = 0,
-  step = 0,
-  boost = BOOST_MAX,
-  shake = 0,
-  anim = 0,
-  jumpBuffer = 0,
-  coyote = 0,
-  stage = 0,
-  runFrames = 0;
-let stats = {
-    jumps: 0,
-    rolls: 0,
-    hits: 0,
-    deaths: 0,
-    expressLandings: 0,
-    recoveries: 0,
-    rebound: 0,
-    maxSpeed: 0,
-    loops: 0,
-    barriers: 0,
-  },
-  visited = new Set();
-const p = {
-  x: 120,
-  y: 400,
-  vx: 0,
-  vy: 0,
-  ground: false,
-  face: 1,
-  inv: 0,
-  roll: false,
-  boosting: false,
-  surface: null,
-  hurt: 0,
-  jumpAttack: false,
-  airSpeedLimit: null,
-  scriptedLaunch: false,
-  jumpHeld: false,
-  jumpCut: false,
-  boostLocked: false,
-  rolling: false,
-  rollAge: 0,
-  lowRollFrames: 0,
-  rollSpent: false,
-  downHeld: false,
-  rollBuffer: 0,
-};
-// prettier-ignore
-const extraMotion={"detail":{"frames":[[39,53,253,320],[299,52,504,320],[553,52,751,320],[805,52,1012,320],[1057,50,1262,320],[1308,47,1510,320],[31,365,256,630],[294,364,512,635],[568,363,760,631],[779,365,1024,639],[1071,363,1267,635],[1301,365,1514,635],[28,727,249,936],[307,682,512,957],[565,682,768,957],[808,734,1017,942],[1044,712,1271,957],[1280,717,1525,958]],"scales":[0.21245421245421245,0.21245421245421245,0.21245421245421245,0.21245421245421245,0.21245421245421245,0.21245421245421245,0.2116788321167883,0.2116788321167883,0.2116788321167883,0.2116788321167883,0.2116788321167883,0.2116788321167883,0.2109090909090909,0.2109090909090909,0.2109090909090909,0.2109090909090909,0.2109090909090909,0.2109090909090909]},"wind":{"frames":[[21,37,251,250],[272,42,509,251],[527,36,759,253],[776,36,1009,253],[1031,37,1265,251],[1287,35,1514,251],[24,285,256,501],[285,292,512,501],[543,292,760,501],[784,292,1012,501],[1048,285,1263,501],[1299,292,1509,501],[14,526,256,736],[287,534,512,738],[527,532,768,738],[796,535,1024,738],[1050,527,1274,738],[1290,539,1527,738],[23,775,256,993],[275,770,512,1002],[535,775,768,994],[815,784,1024,994],[1074,775,1277,998],[1309,769,1500,999]],"scales":[0.2672811059907834,0.2672811059907834,0.2672811059907834,0.2672811059907834,0.2672811059907834,0.2672811059907834,0.26851851851851855,0.26851851851851855,0.26851851851851855,0.26851851851851855,0.26851851851851855,0.26851851851851855,0.27488151658767773,0.27488151658767773,0.27488151658767773,0.27488151658767773,0.27488151658767773,0.27488151658767773,0.25,0.25,0.25,0.25,0.25,0.25]},"transitions":{"frames":[[55,37,352,362],[403,119,697,362],[763,76,1044,362],[1144,48,1403,362],[34,420,362,724],[427,441,685,724],[754,425,1085,724],[1147,422,1416,724],[67,772,325,1024],[421,770,677,1024],[776,770,1033,1024],[1141,770,1397,1026]],"scales":[0.17846153846153845,0.17846153846153845,0.17846153846153845,0.17846153846153845,0.19078947368421054,0.19078947368421054,0.19078947368421054,0.19078947368421054,0.2265625,0.2265625,0.2265625,0.2265625]}};
-const artFiles = {
-  recoveredCity: 'city-recovered-burning.png',
-  recoveredSpeedster: 'sonic-recovered-speedster.png',
-  recoveredPeelout: 'sonic-recovered-peelout.png',
-  city: 'city.png',
-  collapse: 'city-collapse.png',
-  sonic: 'sonic-expressive.png',
-  motion: 'sonic-motion.png',
-  boost: 'sonic-boost.png',
-  brake: 'sonic-brake.png',
-  grind: 'sonic-grind.png',
-  detail: 'sonic-detail.png',
-  wind: 'sonic-wind.png',
-  transitions: 'sonic-transitions.png',
-  supplemental: 'sonic-supplemental.png',
-  peeloutCycle: 'sonic-peelout-cycle.png',
-  traversalActing: 'sonic-traversal-acting.png',
-  traversalLaunch: 'sonic-traversal-launch.png',
-  scorpion: 'egg-scorpion-parts.png',
-};
-// Known sheets remain enumerable; a truthy value means the image has loaded.
-const art = Object.fromEntries(Object.keys(artFiles).map((name) => [name, null]));
-const artLoads = new Map(),
-  failedArt = new Set();
-const sharedArt = [
-  'recoveredSpeedster',
-  'recoveredPeelout',
-  'supplemental',
-  'peeloutCycle',
-  'traversalActing',
-  'traversalLaunch',
-];
-const legacySonicArt = [
-  'sonic',
-  'motion',
-  'boost',
-  'brake',
-  'grind',
-  'detail',
-  'wind',
-  'transitions',
-];
 function loadArt(name) {
   if (artLoads.has(name)) return artLoads.get(name);
   const image = new Image();
@@ -149,12 +22,12 @@ function loadArt(name) {
   image.src = 'assets/' + artFiles[name];
   return loading;
 }
+
 function loadActArt(act) {
   for (const name of sharedArt) loadArt(name);
   for (const name of act === 2 ? ['recoveredCity', 'scorpion'] : ['city']) loadArt(name);
 }
-loadActArt(selectedAct);
-// Scale2x reconstructs corners using existing colors only; no soft interpolation.
+
 function reconstructPixels(source, w, h) {
   const out = new Uint32Array(w * h * 4),
     ow = w * 2;
@@ -174,7 +47,7 @@ function reconstructPixels(source, w, h) {
     }
   return out;
 }
-const cityTextureCache = new WeakMap();
+
 function cityTexture(im) {
   if (cityTextureCache.has(im)) return cityTextureCache.get(im);
   if (!document.createElement) return im;
@@ -201,11 +74,7 @@ function cityTexture(im) {
     return im;
   }
 }
-// Conservative sky envelope, in source-art pixels: leave towers and antennas fixed.
-const citySkyHeights = [
-  350, 350, 240, 240, 240, 305, 305, 350, 400, 420, 395, 395, 270, 270, 270, 315,
-];
-const backdropScaleCache = new WeakMap();
+
 function sizedCityBackdrop(im, w, h) {
   if (!document.createElement) return cityTexture(im);
   const width = Math.round((w * canvas.width) / W),
@@ -226,6 +95,7 @@ function sizedCityBackdrop(im, w, h) {
   entries.set(key, c);
   return c;
 }
+
 function drawCityBackdrop(im, x, y, w, h, mirrored = false, layered = false) {
   const texture = sizedCityBackdrop(im, w, h),
     drift = Math.sin(step * 0.004) * 18,
@@ -258,7 +128,7 @@ function drawCityBackdrop(im, x, y, w, h, mirrored = false, layered = false) {
   else if (drift < 0) ctx.drawImage(texture, x + drift + w, y, w, h);
   ctx.restore();
 }
-const cityCloudLayers = new WeakMap();
+
 function cityCloudLayer(im, w, h) {
   const texture = sizedCityBackdrop(im, w, h);
   if (!document.createElement) return null;
@@ -281,6 +151,7 @@ function cityCloudLayer(im, w, h) {
   cityCloudLayers.set(texture, layer);
   return layer;
 }
+
 function drawCityClouds(im, w, h, top) {
   const layer = cityCloudLayer(im, w, h);
   if (!layer) return;
@@ -298,14 +169,17 @@ function drawCityClouds(im, w, h, top) {
     ctx.restore();
   }
 }
+
 function gameSound(name, options) {
   return window.playGameSound?.(name, options) ?? false;
 }
+
 function notify(t) {
   $('#toast').textContent = t;
   toastTime = 160;
   $('#toast').style.display = 'block';
 }
+
 function sparks(x, y, n = 8, color = '#ffda56') {
   for (let i = 0; i < n; i++)
     particles.push({
@@ -317,16 +191,28 @@ function sparks(x, y, n = 8, color = '#ffda56') {
       color,
     });
 }
+
 function setup() {
   loadActArt(selectedAct);
-  window.syncGameMusic?.({ enabled: sound, mode: 'ready', act: selectedAct, restart: true });
+  window.syncGameMusic?.({
+    enabled: sound,
+    mode: 'ready',
+    act: selectedAct,
+    restart: true,
+  });
   testControlled = false;
-  level = configureBoostMonitors(selectedAct === 2 ? addMiddleSection(makeLevel2()) : makeLevel());
+  level = configureBoostMonitors(
+    selectedAct === 2 ? addMiddleSection(makeLevel2()) : makeLevel()
+  );
   selectStageRuntime();
   END = level.end;
   setupBossEncounter();
   rings = level.rings;
-  enemies = level.enemies.map((e, i) => ({ ...e, alive: true, phase: i * 1.3 }));
+  enemies = level.enemies.map((e, i) => ({
+    ...e,
+    alive: true,
+    phase: i * 1.3,
+  }));
   particles = [];
   clock = 0;
   runFrames = 0;
@@ -362,6 +248,7 @@ function setup() {
   $('.brand-sub').textContent = level.title || 'NEON EXPRESS';
   $('#act-select').value = String(selectedAct);
 }
+
 function respawn() {
   resetTraversalAnimation();
   const c = level.checkpoints[checkpoint];
@@ -378,7 +265,9 @@ function respawn() {
     boosting: false,
     surface:
       level.surfaces.find((s) => s.id === c.surfaceId) ??
-      level.surfaces.find((s) => c.x >= s.x1 && c.x <= s.x2 && Math.abs(yOn(s, c.x) - c.y) < 2) ??
+      level.surfaces.find(
+        (s) => c.x >= s.x1 && c.x <= s.x2 && Math.abs(yOn(s, c.x) - c.y) < 2
+      ) ??
       topAt(c.x)?.s ??
       null,
     hurt: 0,
@@ -429,6 +318,7 @@ function respawn() {
   visited.clear();
   for (const r of rings) if (r.x >= c.x && r.x < c.x + 550) r.taken = false;
 }
+
 function start() {
   testControlled = false;
   if (mode === 'over' && bossCheckpoint) {
@@ -443,12 +333,14 @@ function start() {
   gameSound('start');
   updateHud();
 }
+
 function show(title, text, label) {
   $('#overlay').classList.remove('hidden');
   $('.intro').innerHTML =
     `<span class="eyebrow">${level.title || 'NEON EXPRESS'} ACT ${selectedAct}</span><h1>${title}</h1><p>${text}</p><button id="play" class="primary">${label} <span>▶</span></button><span class="start-note">Tap / hold Space: jump height · Down: roll · Left click / Shift / X: boost</span>`;
   $('#play').onclick = start;
 }
+
 function pause() {
   if (mode === 'playing') {
     mode = 'paused';
@@ -459,6 +351,7 @@ function pause() {
     updateHud();
   } else if (mode === 'paused') start();
 }
+
 function die() {
   gameSound('death');
   lives--;
@@ -480,6 +373,7 @@ function die() {
   }
   updateHud();
 }
+
 function hurt(x, gate = false) {
   if (p.inv > 0) return;
   stats.hits++;
@@ -526,6 +420,7 @@ function hurt(x, gate = false) {
     gameSound('hurt');
   } else die();
 }
+
 function press(k, automated = false) {
   if (!automated) testControlled = false;
   if ((k === 'ArrowDown' || k === 'KeyS') && !keys.has(k) && mode === 'playing') {
@@ -584,6 +479,7 @@ function press(k, automated = false) {
   }
   keys.add(k);
 }
+
 function release(k, automated = false) {
   if (!automated) testControlled = false;
   keys.delete(k);
@@ -603,6 +499,7 @@ function release(k, automated = false) {
     if (p.vy < cut && runFrames >= (p.airLaunchUntil || 0)) p.vy = cut;
   }
 }
+
 function restart() {
   setup();
   mode = 'playing';
@@ -612,23 +509,30 @@ function restart() {
   gameSound('start');
   updateHud();
 }
+
 function updateHud() {
-  window.syncGameMusic?.({ enabled: sound, mode, act: selectedAct });
+  window.syncGameMusic?.({
+    enabled: sound,
+    mode: mode,
+    act: selectedAct,
+  });
   if (typeof window.updatePixelHud === 'function')
     window.updatePixelHud({
       rings: count,
-      lives,
+      lives: lives,
       lifeImage: art.recoveredSpeedster,
       time: clock,
-      score,
-      boost,
+      score: score,
+      boost: boost,
       maxBoost: BOOST_MAX,
       speed: Math.round(measurementSpeed() * 60),
-      mode,
+      mode: mode,
       frame: step,
     });
-  $('#progress-fill').style.width = (mode === 'win' ? 100 : Math.min(100, (p.x / END) * 100)) + '%';
+  $('#progress-fill').style.width =
+    (mode === 'win' ? 100 : Math.min(100, (p.x / END) * 100)) + '%';
 }
+
 function update() {
   step++;
   if (mode !== 'playing') return;
@@ -685,6 +589,7 @@ function update() {
   updateCamera();
   updateHud();
 }
+
 function updateParticles() {
   for (const a of particles) {
     a.x += a.vx;
@@ -707,12 +612,16 @@ function updateParticles() {
   }
   particles = particles.filter((a) => a.life > 0);
 }
+
 function finishAct() {
   mode = 'win';
   const rank =
-    stats.deaths === 0 && stats.hits <= 1 && clock < (level.act === 2 ? 175 : 70)
+    stats.deaths === 0 &&
+    stats.hits <= 1 &&
+    clock < (level.act === 2 ? 175 : 70)
       ? 'S'
-      : stats.deaths === 0 && clock < (level.act === 2 ? 220 : 100)
+      : stats.deaths === 0 &&
+          clock < (level.act === 2 ? 220 : 100)
         ? 'A'
         : 'B';
   show(
@@ -730,98 +639,18 @@ function finishAct() {
   }
   gameSound('clear');
 }
+
 function ellipse(x, y, rx, ry, color) {
   ctx.fillStyle = color;
   ctx.beginPath();
   ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
   ctx.fill();
 }
+
 function ring(x, y, scale = 1) {
   drawPixelRing(x, y, scale);
 }
-// Authored atlas bounds; fixed world scale keeps head size stable across poses.
-const sonicFrames = [
-  [37, 15, 235, 269],
-  [287, 17, 481, 269],
-  [547, 15, 728, 269],
-  [800, 15, 987, 269],
-  [1048, 17, 1264, 269],
-  [1309, 15, 1495, 269],
-  [32, 290, 246, 542],
-  [279, 293, 521, 538],
-  [564, 295, 749, 538],
-  [783, 294, 1044, 542],
-  [1077, 290, 1261, 541],
-  [1316, 294, 1509, 540],
-  [35, 588, 235, 775],
-  [296, 544, 518, 789],
-  [557, 590, 747, 771],
-  [780, 545, 1012, 781],
-  [1048, 587, 1285, 781],
-  [1306, 562, 1515, 778],
-  [10, 790, 265, 1009],
-  [281, 790, 508, 1010],
-  [533, 800, 798, 1009],
-  [809, 800, 1050, 1008],
-  [1085, 822, 1265, 1001],
-  [1327, 820, 1505, 998],
-];
-// Expanded running and jump transitions use the same character design.
-const motionFrames = [
-  [30, 18, 282, 259],
-  [320, 23, 506, 261],
-  [566, 22, 745, 263],
-  [820, 18, 1011, 263],
-  [1054, 28, 1297, 261],
-  [1320, 20, 1526, 263],
-  [25, 287, 256, 537],
-  [298, 288, 536, 544],
-  [561, 288, 749, 541],
-  [786, 285, 1052, 521],
-  [1073, 291, 1271, 541],
-  [1309, 288, 1536, 541],
-  [27, 586, 235, 777],
-  [296, 556, 516, 795],
-  [554, 552, 749, 795],
-  [808, 565, 1032, 779],
-  [1078, 586, 1277, 769],
-  [1327, 594, 1512, 775],
-  [44, 809, 235, 999],
-  [292, 811, 487, 999],
-  [547, 805, 777, 1003],
-  [797, 806, 1035, 1016],
-  [1045, 795, 1293, 1007],
-  [1313, 816, 1511, 1005],
-];
-const grindFrames = [
-  [62, 46, 418, 380],
-  [537, 53, 903, 380],
-  [1021, 71, 1379, 380],
-  [1500, 53, 1859, 380],
-  [1935, 61, 2384, 380],
-  [2432, 82, 2848, 380],
-  [2907, 84, 3332, 380],
-  [3393, 77, 3807, 380],
-];
-const brakeFrames = [
-  [42, 20, 405, 368],
-  [469, 33, 875, 368],
-  [928, 36, 1311, 368],
-  [1383, 32, 1752, 368],
-  [1873, 36, 2158, 368],
-  [2338, 24, 2590, 368],
-];
-const boostFrames = [
-  [32, 80, 451, 410],
-  [486, 80, 893, 410],
-  [944, 80, 1320, 414],
-  [1389, 80, 1747, 416],
-  [32, 517, 451, 842],
-  [486, 517, 896, 843],
-  [958, 517, 1311, 845],
-  [1389, 517, 1744, 844],
-];
-// Pure visual selection: never adds input delays or changes the collision body.
+
 function sonicPose() {
   const traversal = traversalSonicPose();
   if (traversal) return traversal;
@@ -850,7 +679,10 @@ function sonicPose() {
       : extra('hurt', 'transitions', 3 + phase);
   }
   if (p.airBoostActive)
-    return out('boost', Math.floor(runFrames / 2) % 8, { sheet: 'boost', scale: 52 / 336 });
+    return out('boost', Math.floor(runFrames / 2) % 8, {
+      sheet: 'boost',
+      scale: 52 / 336,
+    });
   if (p.ground && p.surface?.grindable) {
     const fast = p.boosting || speed > 18 || (p.grindFast && speed > 16);
     const phase = Math.floor(runFrames / 2) % 10;
@@ -897,7 +729,11 @@ function sonicPose() {
       if (p.vy >= -10.5 && p.vy < -9.5)
         return extra('rise', 'detail', 14, { scale: (extraMotion.detail.scales[14] * 50) / 58 });
       if (p.vy >= -7.5 && p.vy < -6.5)
-        return extra('rise', 'detail', 15, { ball: true, diameter: 38, rotation: anim * 0.04 });
+        return extra('rise', 'detail', 15, {
+          ball: true,
+          diameter: 38,
+          rotation: anim * 0.04,
+        });
       return out('rise', p.vy < -9.5 ? 14 : p.vy < -6.5 ? 15 : 16, {
         sheet: 'motion',
         scale: 50 / 254,
@@ -906,7 +742,11 @@ function sonicPose() {
     if (p.vy < 3) {
       const phase = Math.floor(ja / 2) % 4;
       if (phase === 1)
-        return extra('apex', 'detail', 15, { ball: true, diameter: 38, rotation: anim * 0.04 });
+        return extra('apex', 'detail', 15, {
+          ball: true,
+          diameter: 38,
+          rotation: anim * 0.04,
+        });
       return out('apex', [17, 17, 18, 19][phase], {
         sheet: 'motion',
         ball: true,
@@ -978,11 +818,12 @@ function sonicPose() {
   if (phase < 140) return extra('idle', 'detail', Math.floor(runFrames / 8) % 6);
   return out('idle', frame, { stretchY: 1 + Math.sin(runFrames * 0.075) * 0.008 });
 }
-// Round to backing-store pixels, independent of responsive CSS size and camera zoom.
+
 function spritePixel(value, axis = 'x') {
   const pixels = zoom * (axis === 'x' ? canvas.width / W : canvas.height / H);
   return Math.round(value * pixels) / pixels;
 }
+
 function drawSonicFrame(q) {
   if (recoveredSpriteFrames[q.sheet] && art[q.sheet] && document.createElement)
     return drawRecoveredSonicFrame(q);
@@ -1063,6 +904,7 @@ function drawSonicFrame(q) {
   }
   ctx.drawImage(im, l, t, sw, sh, spritePixel(-dw * pivot), spritePixel(20, 'y') - dh, dw, dh);
 }
+
 function sonic() {
   if (p.inv > 0 && step % 10 < 4 && mode === 'playing') return;
   const q = sonicPose();
@@ -1127,9 +969,11 @@ function sonic() {
   }
   ctx.restore();
 }
+
 function sign(x, y, text, type) {
   drawPixelSign(x, y, text, type);
 }
+
 function drawRail(s) {
   if (s.secretDepth > 4 && !level.middleSection?.secretRevealed) return;
   if (s.sealedBy && !active(s)) return;
@@ -1166,8 +1010,10 @@ function draw() {
   ctx.save();
   ctx.scale(zoom, zoom);
   ctx.translate(
-    -cam + (shake ? Math.sin(step * 3) * shake * 0.3 : 0),
-    -camY + (shake ? Math.cos(step * 2) * shake * 0.2 : 0)
+    -cam +
+      (shake ? Math.sin(step * 3) * shake * 0.3 : 0),
+    -camY +
+      (shake ? Math.cos(step * 2) * shake * 0.2 : 0)
   );
   if (level.act === 2) {
     drawAct2Structures();
@@ -1179,7 +1025,8 @@ function draw() {
   drawBossEncounter();
   for (const h of level.hazards) {
     if (h.broken) continue;
-    if (h.x + h.w < cam - 100 || h.x > cam + W / zoom + 100) continue;
+    if (h.x + h.w < cam - 100 || h.x > cam + W / zoom + 100)
+      continue;
     if (h.type === 'bulkhead') {
       drawAct2Bulkhead(h);
       continue;
@@ -1209,8 +1056,10 @@ function draw() {
     }
   }
   for (const pad of level.pads) {
-    if (pad.sealedBy && !level.hazards.find((h) => h.id === pad.sealedBy)?.broken) continue;
-    if (pad.x < cam - 60 || pad.x > cam + W / zoom + 60) continue;
+    if (pad.sealedBy && !level.hazards.find((h) => h.id === pad.sealedBy)?.broken)
+      continue;
+    if (pad.x < cam - 60 || pad.x > cam + W / zoom + 60)
+      continue;
     if (pad.poolBooster) continue;
     if (pad.cityVent) {
       drawPolishedVent(pad);
@@ -1221,7 +1070,8 @@ function draw() {
   for (const spring of level.springs || []) drawPolishedSpring(airDevicePose(spring));
   for (const monitor of level.monitors || []) drawBoostMonitor(monitorPose(monitor));
   for (const s of level.signs)
-    if (s.x > cam - 200 && s.x < cam + W / zoom + 200) sign(s.x, s.y, s.text, s.type);
+    if (s.x > cam - 200 && s.x < cam + W / zoom + 200)
+      sign(s.x, s.y, s.text, s.type);
   for (const r of rings)
     if (
       !r.taken &&
@@ -1231,7 +1081,11 @@ function draw() {
     )
       ring(r.x, r.y, 0.35 + 0.65 * Math.abs(Math.cos(step * 0.065)));
   for (const e of enemies)
-    if (e.alive && e.x > cam - 60 && e.x < cam + W / zoom + 60) {
+    if (
+      e.alive &&
+      e.x > cam - 60 &&
+      e.x < cam + W / zoom + 60
+    ) {
       drawPixelEnemy(e);
     }
   for (const [i, c] of level.checkpoints.entries()) {
@@ -1242,13 +1096,18 @@ function draw() {
   }
   const goalY = level.act === 2 ? level.arena.y - 70 : 325;
   if (level.act !== 2) sign(END, goalY, 'GOAL', 'express');
-  for (let x = END - 24; level.act !== 2 && x < END + 24; x += 8)
+  for (
+    let x = END - 24;
+    level.act !== 2 && x < END + 24;
+    x += 8
+  )
     for (let y = goalY - 20; y < goalY + 55; y += 8) {
       ctx.fillStyle = (Math.floor(x / 8) + Math.floor(y / 8)) % 2 ? '#fcf5ff' : '#19264a';
       ctx.fillRect(x, y, 8, 8);
     }
   for (const a of particles) {
-    if (a.x < cam - 100 || a.x > cam + W / zoom + 100) continue;
+    if (a.x < cam - 100 || a.x > cam + W / zoom + 100)
+      continue;
     ctx.globalAlpha = Math.min(1, a.life / 16);
     if (a.ring) ring(a.x, a.y, 0.8);
     else if (a.grind) {
@@ -1279,6 +1138,7 @@ function draw() {
   ctx.restore();
   if (mode !== 'playing') updateHud();
 }
+
 function frame(t) {
   if (!last) last = t;
   acc += Math.min(100, t - last);
@@ -1294,79 +1154,14 @@ function frame(t) {
   if (updated || testControlled || mode !== 'playing') draw();
   requestAnimationFrame(frame);
 }
-$('#act-select').onchange = (e) => {
-  selectAct(Number(e.target.value));
-  canvas.focus();
-};
-$('#play').onclick = start;
-$('#pause').onclick = pause;
-$('#restart').onclick = restart;
-$('#sound').onclick = () => {
-  sound = window.setGameSoundEnabled?.(!sound) ?? false;
-  $('#sound').textContent = sound ? 'Sound on' : 'Sound off';
-  $('#sound').setAttribute('aria-label', sound ? 'Disable sound' : 'Enable sound');
-  gameSound('menu');
-  window.syncGameMusic?.({ enabled: sound, mode, act: selectedAct, gesture: true });
-  canvas.focus();
-};
-canvas.addEventListener('pointerdown', (e) => {
-  if (e.pointerType !== 'mouse' || e.button !== 0 || mode !== 'playing') return;
-  e.preventDefault();
-  canvas.focus();
-  canvas.setPointerCapture(e.pointerId);
-  press('MouseBoost');
-});
-for (const name of ['pointerup', 'pointercancel', 'lostpointercapture'])
-  canvas.addEventListener(name, (e) => {
-    if (e.pointerType === 'mouse') release('MouseBoost');
-  });
-window.addEventListener('keydown', (e) => {
-  if (
-    [
-      'ArrowLeft',
-      'ArrowRight',
-      'ArrowUp',
-      'ArrowDown',
-      'Space',
-      'KeyW',
-      'KeyA',
-      'KeyS',
-      'KeyD',
-      'Escape',
-      'KeyP',
-      'KeyR',
-      'ShiftLeft',
-      'ShiftRight',
-      'KeyX',
-    ].includes(e.code) &&
-    !e.target.matches('button,a,select')
-  ) {
-    e.preventDefault();
-    if (!e.repeat) press(e.code);
-  }
-});
-window.addEventListener('keyup', (e) => release(e.code));
-window.addEventListener('blur', () => {
-  keys.clear();
-  if (mode === 'playing') pause();
-});
 
-// Testing commands use the normal input handlers and fixed physics tick.
-// Freeze between commands so screenshots and model latency cannot advance a run.
-const testInputCodes = {
-  left: 'ArrowLeft',
-  right: 'ArrowRight',
-  jump: 'Space',
-  down: 'ArrowDown',
-  boost: 'ShiftLeft',
-};
 function readGameState() {
   return {
     status: mode,
     act: selectedAct,
     route: p.surface?.kind ?? 'air',
     rings: count,
-    lives,
+    lives: lives,
     boost: Math.round(boost),
     progress: Math.round((p.x / END) * 100),
     timeSeconds: Math.floor(clock),
@@ -1380,16 +1175,28 @@ function readGameState() {
     underwater: p.underwater,
     airSeconds: Math.ceil(p.airRemaining / 60),
     airBoostAvailable: !p.airBoostUsed,
-    checkpoint,
+    checkpoint: checkpoint,
     sector: level.sectors[stage].name,
-    testControlled,
-    ending: ending ? { beat: ending.beat, frame: ending.frame, done: ending.done } : null,
+    testControlled: testControlled,
+    ending: ending
+      ? {
+          beat: ending.beat,
+          frame: ending.frame,
+          done: ending.done,
+        }
+      : null,
     boss: boss
-      ? { state: boss.state, hits: boss.hits, bites: boss.bites, laserMode: boss.laserMode }
+      ? {
+          state: boss.state,
+          hits: boss.hits,
+          bites: boss.bites,
+          laserMode: boss.laserMode,
+        }
       : null,
     ...stats,
   };
 }
+
 function stepGameFrames(input) {
   if (
     !input ||
@@ -1431,55 +1238,325 @@ function stepGameFrames(input) {
   return { ...readGameState(), framesAdvanced };
 }
 
+const canvas = document.querySelector('#game');
+const ctx = canvas.getContext('2d');
+const $ = (s) => document.querySelector(s);
+const W = 960;
+const H = 540;
+const SONIC_VISUAL_SCALE = 1.07;
+const FOOT_RADIUS = 9;
+const keys = new Set();
+const JUMP_KEYS = ['Space', 'ArrowUp', 'KeyW'];
+const tuning = { lives: 3, inv: 78, coyote: 6, buffer: 8 };
+const BOOST_MAX = 90;
+const movementTuning = {
+    counterBrake: 1.25,
+    precisionSpeed: 3,
+    groundGrip: 0.65,
+    recoveryGrip: 0.8,
+  };
+let testControlled = false;
+let selectedAct = window.DEFAULT_ACT === 2 ? 2 : 1;
+let level = undefined;
+let END = 29000;
+let mode = 'ready';
+let cam = 0;
+let camY = 0;
+let zoom = 1;
+let clock = 0;
+let lives = 3;
+let count = 0;
+let score = 0;
+let charge = 0;
+let checkpoint = 0;
+let toastTime = 0;
+let sound = false;
+let particles = [];
+let rings = [];
+let enemies = [];
+let last = 0;
+let acc = 0;
+let step = 0;
+let boost = BOOST_MAX;
+let shake = 0;
+let anim = 0;
+let jumpBuffer = 0;
+let coyote = 0;
+let stage = 0;
+let runFrames = 0;
+let stats = {
+    jumps: 0,
+    rolls: 0,
+    hits: 0,
+    deaths: 0,
+    expressLandings: 0,
+    recoveries: 0,
+    rebound: 0,
+    maxSpeed: 0,
+    loops: 0,
+    barriers: 0,
+  };
+let visited = new Set();
+const p = {
+    x: 120,
+    y: 400,
+    vx: 0,
+    vy: 0,
+    ground: false,
+    face: 1,
+    inv: 0,
+    roll: false,
+    boosting: false,
+    surface: null,
+    hurt: 0,
+    jumpAttack: false,
+    airSpeedLimit: null,
+    scriptedLaunch: false,
+    jumpHeld: false,
+    jumpCut: false,
+    boostLocked: false,
+    rolling: false,
+    rollAge: 0,
+    lowRollFrames: 0,
+    rollSpent: false,
+    downHeld: false,
+    rollBuffer: 0,
+  };
+const extraMotion = {"detail":{"frames":[[39,53,253,320],[299,52,504,320],[553,52,751,320],[805,52,1012,320],[1057,50,1262,320],[1308,47,1510,320],[31,365,256,630],[294,364,512,635],[568,363,760,631],[779,365,1024,639],[1071,363,1267,635],[1301,365,1514,635],[28,727,249,936],[307,682,512,957],[565,682,768,957],[808,734,1017,942],[1044,712,1271,957],[1280,717,1525,958]],"scales":[0.21245421245421245,0.21245421245421245,0.21245421245421245,0.21245421245421245,0.21245421245421245,0.21245421245421245,0.2116788321167883,0.2116788321167883,0.2116788321167883,0.2116788321167883,0.2116788321167883,0.2116788321167883,0.2109090909090909,0.2109090909090909,0.2109090909090909,0.2109090909090909,0.2109090909090909,0.2109090909090909]},"wind":{"frames":[[21,37,251,250],[272,42,509,251],[527,36,759,253],[776,36,1009,253],[1031,37,1265,251],[1287,35,1514,251],[24,285,256,501],[285,292,512,501],[543,292,760,501],[784,292,1012,501],[1048,285,1263,501],[1299,292,1509,501],[14,526,256,736],[287,534,512,738],[527,532,768,738],[796,535,1024,738],[1050,527,1274,738],[1290,539,1527,738],[23,775,256,993],[275,770,512,1002],[535,775,768,994],[815,784,1024,994],[1074,775,1277,998],[1309,769,1500,999]],"scales":[0.2672811059907834,0.2672811059907834,0.2672811059907834,0.2672811059907834,0.2672811059907834,0.2672811059907834,0.26851851851851855,0.26851851851851855,0.26851851851851855,0.26851851851851855,0.26851851851851855,0.26851851851851855,0.27488151658767773,0.27488151658767773,0.27488151658767773,0.27488151658767773,0.27488151658767773,0.27488151658767773,0.25,0.25,0.25,0.25,0.25,0.25]},"transitions":{"frames":[[55,37,352,362],[403,119,697,362],[763,76,1044,362],[1144,48,1403,362],[34,420,362,724],[427,441,685,724],[754,425,1085,724],[1147,422,1416,724],[67,772,325,1024],[421,770,677,1024],[776,770,1033,1024],[1141,770,1397,1026]],"scales":[0.17846153846153845,0.17846153846153845,0.17846153846153845,0.17846153846153845,0.19078947368421054,0.19078947368421054,0.19078947368421054,0.19078947368421054,0.2265625,0.2265625,0.2265625,0.2265625]}};
+const artFiles = {
+    recoveredCity: 'city-recovered-burning.png',
+    recoveredSpeedster: 'sonic-recovered-speedster.png',
+    recoveredPeelout: 'sonic-recovered-peelout.png',
+    city: 'city.png',
+    collapse: 'city-collapse.png',
+    sonic: 'sonic-expressive.png',
+    motion: 'sonic-motion.png',
+    boost: 'sonic-boost.png',
+    brake: 'sonic-brake.png',
+    grind: 'sonic-grind.png',
+    detail: 'sonic-detail.png',
+    wind: 'sonic-wind.png',
+    transitions: 'sonic-transitions.png',
+    supplemental: 'sonic-supplemental.png',
+    peeloutCycle: 'sonic-peelout-cycle.png',
+    traversalActing: 'sonic-traversal-acting.png',
+    traversalLaunch: 'sonic-traversal-launch.png',
+    scorpion: 'egg-scorpion-parts.png',
+  };
+const art = Object.fromEntries(Object.keys(artFiles).map((name) => [name, null]));
+const artLoads = new Map();
+const failedArt = new Set();
+const sharedArt = [
+    'recoveredSpeedster',
+    'recoveredPeelout',
+    'supplemental',
+    'peeloutCycle',
+    'traversalActing',
+    'traversalLaunch',
+  ];
+const legacySonicArt = ['sonic', 'motion', 'boost', 'brake', 'grind', 'detail', 'wind', 'transitions'];
+loadActArt(selectedAct);
+const cityTextureCache = new WeakMap();
+const citySkyHeights = [350, 350, 240, 240, 240, 305, 305, 350, 400, 420, 395, 395, 270, 270, 270, 315];
+const backdropScaleCache = new WeakMap();
+const cityCloudLayers = new WeakMap();
+const sonicFrames = [
+    [37, 15, 235, 269],
+    [287, 17, 481, 269],
+    [547, 15, 728, 269],
+    [800, 15, 987, 269],
+    [1048, 17, 1264, 269],
+    [1309, 15, 1495, 269],
+    [32, 290, 246, 542],
+    [279, 293, 521, 538],
+    [564, 295, 749, 538],
+    [783, 294, 1044, 542],
+    [1077, 290, 1261, 541],
+    [1316, 294, 1509, 540],
+    [35, 588, 235, 775],
+    [296, 544, 518, 789],
+    [557, 590, 747, 771],
+    [780, 545, 1012, 781],
+    [1048, 587, 1285, 781],
+    [1306, 562, 1515, 778],
+    [10, 790, 265, 1009],
+    [281, 790, 508, 1010],
+    [533, 800, 798, 1009],
+    [809, 800, 1050, 1008],
+    [1085, 822, 1265, 1001],
+    [1327, 820, 1505, 998],
+  ];
+const motionFrames = [
+    [30, 18, 282, 259],
+    [320, 23, 506, 261],
+    [566, 22, 745, 263],
+    [820, 18, 1011, 263],
+    [1054, 28, 1297, 261],
+    [1320, 20, 1526, 263],
+    [25, 287, 256, 537],
+    [298, 288, 536, 544],
+    [561, 288, 749, 541],
+    [786, 285, 1052, 521],
+    [1073, 291, 1271, 541],
+    [1309, 288, 1536, 541],
+    [27, 586, 235, 777],
+    [296, 556, 516, 795],
+    [554, 552, 749, 795],
+    [808, 565, 1032, 779],
+    [1078, 586, 1277, 769],
+    [1327, 594, 1512, 775],
+    [44, 809, 235, 999],
+    [292, 811, 487, 999],
+    [547, 805, 777, 1003],
+    [797, 806, 1035, 1016],
+    [1045, 795, 1293, 1007],
+    [1313, 816, 1511, 1005],
+  ];
+const grindFrames = [
+    [62, 46, 418, 380],
+    [537, 53, 903, 380],
+    [1021, 71, 1379, 380],
+    [1500, 53, 1859, 380],
+    [1935, 61, 2384, 380],
+    [2432, 82, 2848, 380],
+    [2907, 84, 3332, 380],
+    [3393, 77, 3807, 380],
+  ];
+const brakeFrames = [
+    [42, 20, 405, 368],
+    [469, 33, 875, 368],
+    [928, 36, 1311, 368],
+    [1383, 32, 1752, 368],
+    [1873, 36, 2158, 368],
+    [2338, 24, 2590, 368],
+  ];
+const boostFrames = [
+    [32, 80, 451, 410],
+    [486, 80, 893, 410],
+    [944, 80, 1320, 414],
+    [1389, 80, 1747, 416],
+    [32, 517, 451, 842],
+    [486, 517, 896, 843],
+    [958, 517, 1311, 845],
+    [1389, 517, 1744, 844],
+  ];
+$('#act-select').onchange = (e) => {
+    selectAct(Number(e.target.value));
+    canvas.focus();
+  };
+$('#play').onclick = start;
+$('#pause').onclick = pause;
+$('#restart').onclick = restart;
+$('#sound').onclick = () => {
+    sound = window.setGameSoundEnabled?.(!sound) ?? false;
+    $('#sound').textContent = sound ? 'Sound on' : 'Sound off';
+    $('#sound').setAttribute('aria-label', sound ? 'Disable sound' : 'Enable sound');
+    gameSound('menu');
+    window.syncGameMusic?.({
+      enabled: sound,
+      mode: mode,
+      act: selectedAct,
+      gesture: true,
+    });
+    canvas.focus();
+  };
+canvas.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'mouse' || e.button !== 0 || mode !== 'playing') return;
+    e.preventDefault();
+    canvas.focus();
+    canvas.setPointerCapture(e.pointerId);
+    press('MouseBoost');
+  });
+for (const name of ['pointerup', 'pointercancel', 'lostpointercapture'])
+    canvas.addEventListener(name, (e) => {
+      if (e.pointerType === 'mouse') release('MouseBoost');
+    });
+window.addEventListener('keydown', (e) => {
+    if (
+      [
+        'ArrowLeft',
+        'ArrowRight',
+        'ArrowUp',
+        'ArrowDown',
+        'Space',
+        'KeyW',
+        'KeyA',
+        'KeyS',
+        'KeyD',
+        'Escape',
+        'KeyP',
+        'KeyR',
+        'ShiftLeft',
+        'ShiftRight',
+        'KeyX',
+      ].includes(e.code) &&
+      !e.target.matches('button,a,select')
+    ) {
+      e.preventDefault();
+      if (!e.repeat) press(e.code);
+    }
+  });
+window.addEventListener('keyup', (e) => release(e.code));
+window.addEventListener('blur', () => {
+    keys.clear();
+    if (mode === 'playing') pause();
+  });
+const testInputCodes = {
+    left: 'ArrowLeft',
+    right: 'ArrowRight',
+    jump: 'Space',
+    down: 'ArrowDown',
+    boost: 'ShiftLeft',
+  };
 if (document.modelContext?.registerTool) {
-  const life = new AbortController();
-  for (const tool of [
-    {
-      name: 'read_game_state',
-      description: 'Read route, rings, lives, boost, progress and run statistics.',
-      inputSchema: { type: 'object', properties: {}, additionalProperties: false },
-      annotations: { readOnlyHint: true },
-      execute: readGameState,
-    },
-    {
-      name: 'step_game_frames',
-      description:
-        'Hold controls for 1–600 fixed 60 Hz physics frames, then release all inputs and freeze for inspection. Use keys [] to coast. Stops on death or stage end. Physical input or restart restores real-time play.',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          keys: {
-            type: 'array',
-            items: { type: 'string', enum: ['left', 'right', 'jump', 'down', 'boost'] },
-            uniqueItems: true,
+    const life = new AbortController();
+    for (const tool of [
+      {
+        name: 'read_game_state',
+        description: 'Read route, rings, lives, boost, progress and run statistics.',
+        inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+        annotations: { readOnlyHint: true },
+        execute: readGameState,
+      },
+      {
+        name: 'step_game_frames',
+        description:
+          'Hold controls for 1–600 fixed 60 Hz physics frames, then release all inputs and freeze for inspection. Use keys [] to coast. Stops on death or stage end. Physical input or restart restores real-time play.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            keys: {
+              type: 'array',
+              items: { type: 'string', enum: ['left', 'right', 'jump', 'down', 'boost'] },
+              uniqueItems: true,
+            },
+            frames: { type: 'integer', minimum: 1, maximum: 600 },
           },
-          frames: { type: 'integer', minimum: 1, maximum: 600 },
+          required: ['keys', 'frames'],
+          additionalProperties: false,
         },
-        required: ['keys', 'frames'],
-        additionalProperties: false,
+        annotations: { readOnlyHint: false },
+        execute: stepGameFrames,
       },
-      annotations: { readOnlyHint: false },
-      execute: stepGameFrames,
-    },
-    {
-      name: 'restart_game',
-      description: 'Restart the tutorial.',
-      inputSchema: { type: 'object', properties: {}, additionalProperties: false },
-      annotations: { readOnlyHint: false },
-      execute: (input) => {
-        if (!input || Object.keys(input).length) throw Error('Expected an empty object');
-        restart();
-        return { status: mode, lives };
+      {
+        name: 'restart_game',
+        description: 'Restart the tutorial.',
+        inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+        annotations: { readOnlyHint: false },
+        execute: (input) => {
+          if (!input || Object.keys(input).length) throw Error('Expected an empty object');
+          restart();
+          return { status: mode, lives: lives };
+        },
       },
-    },
-  ])
-    try {
-      Promise.resolve(document.modelContext.registerTool(tool, { signal: life.signal })).catch(
-        () => {}
-      );
-    } catch {}
-  window.addEventListener('pagehide', () => life.abort());
-}
+    ])
+      try {
+        Promise.resolve(document.modelContext.registerTool(tool, { signal: life.signal })).catch(
+          () => {}
+        );
+      } catch {}
+    window.addEventListener('pagehide', () => life.abort());
+  }
 setup();
 p.inv = 0;
 if (selectedAct === 2) selectAct(2);

@@ -49,3 +49,18 @@ test('staging rejects missing entry resources instead of publishing a broken gam
     fs.rmSync(parent, { recursive: true, force: true });
   }
 });
+
+test('staging refuses source directories and their ancestors', () => {
+  const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'neon-protect-'));
+  try {
+    const gameDir = path.join(parent, 'source');
+    fs.mkdirSync(gameDir);
+    fs.mkdirSync(path.join(gameDir, 'assets'));
+    fs.writeFileSync(path.join(gameDir, 'index.html'), '<link href="style.css">');
+    fs.writeFileSync(path.join(gameDir, 'style.css'), 'body{}');
+    assert.throws(() => stageSite({ gameDir, outputDir: parent }), /must not contain or overlap/);
+    assert.ok(fs.existsSync(path.join(gameDir, 'index.html')));
+  } finally {
+    fs.rmSync(parent, { recursive: true, force: true });
+  }
+});

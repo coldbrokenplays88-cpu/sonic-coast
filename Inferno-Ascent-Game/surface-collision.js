@@ -1,7 +1,5 @@
+// Generated from src/surface-collision.js; run npm run build:compat after source edits.
 'use strict';
-// Shared surface queries and contact resolution; no stage initialization here.
-
-const staticSurfacePoses = new WeakMap();
 function pose(s, t = runFrames) {
   if (!s.motion) {
     const cached = staticSurfacePoses.get(s);
@@ -64,8 +62,6 @@ function active(s) {
   );
 }
 
-// Conservative horizontal travel bounds avoid posing distant surfaces. Air
-// collision passes the entire player sweep, expanded by the existing foot radius.
 function surfaceOverlaps(s, left, right) {
   let x1 = s.x1,
     x2 = s.x2;
@@ -227,7 +223,6 @@ function resolveHazards(oldX, oldY) {
   }
 }
 
-// Surface carry and gravity/contact integration run at distinct movement phases.
 function applySurfaceMotion() {
   if (p.ground && p.surface) {
     const slope = pose(p.surface).slope,
@@ -283,6 +278,7 @@ function moveAndResolveSurfaces() {
   p.lastX = lastX;
   p.lastY = lastY;
 }
+
 function integrateSurfaceStep(dt) {
   const oldX = p.x,
     oldY = p.y,
@@ -383,3 +379,5 @@ function integrateSurfaceStep(dt) {
   }
   p.roll = p.rolling || charge > 0 || !p.ground;
 }
+
+const staticSurfacePoses = new WeakMap();
