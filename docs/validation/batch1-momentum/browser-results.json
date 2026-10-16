@@ -1,0 +1,75 @@
+{
+  "runtime": [
+    "http://127.0.0.1:8018/runtime-ca86f2d971826400.js"
+  ],
+  "result": [
+    {
+      "id": "city-climax-loop-248",
+      "speed": 14,
+      "radius": 94,
+      "surface": "city-climax-act2-247",
+      "entrySpeed": 14,
+      "ticks": 54,
+      "completed": true
+    },
+    {
+      "id": "city-climax-loop-248",
+      "speed": 23,
+      "radius": 94,
+      "surface": "city-climax-act2-247",
+      "entrySpeed": 22.816551264368,
+      "ticks": 32,
+      "completed": true
+    },
+    {
+      "id": "draw-loop-1",
+      "speed": 14,
+      "radius": 130,
+      "surface": "draw-loop-flat-1",
+      "entrySpeed": 14,
+      "ticks": 78,
+      "completed": true
+    },
+    {
+      "id": "draw-loop-2",
+      "speed": 14,
+      "radius": 95,
+      "surface": "draw-loop-flat-2",
+      "entrySpeed": 14,
+      "ticks": 55,
+      "completed": true
+    },
+    {
+      "scenario": "Spin Dash terrain route",
+      "ticks": 183,
+      "loops": 2,
+      "maxSpeed": 29.43477003137785,
+      "passiveRoofLanding": true
+    },
+    {
+      "act": 1,
+      "brake": -1.0793870803654757,
+      "stopped": {
+        "vx": 0,
+        "rolling": false
+      },
+      "boosted": 22.902457013864836,
+      "airRetained": 19.408619345261712
+    },
+    {
+      "act": 2,
+      "brake": -1.0793870803654757,
+      "stopped": {
+        "vx": 0,
+        "rolling": false
+      },
+      "boosted": 22.902457013864836,
+      "airRetained": 19.408619345261712
+    }
+  ],
+  "pageErrors": [],
+  "failedRequests": [],
+  "frames": 278,
+  "automatedBrowserReplay": true,
+  "humanPlaytest": false
+}
