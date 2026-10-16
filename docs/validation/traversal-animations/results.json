@@ -1,0 +1,81 @@
+{
+  "results": [
+    {
+      "act": 1,
+      "edge": "rail-5",
+      "forward": "balance-forward",
+      "backward": "balance-backward",
+      "moving": "run",
+      "wall": "gate-4",
+      "pushing": "push",
+      "released": "idle"
+    },
+    {
+      "act": 2,
+      "edge": "arrival",
+      "forward": "balance-forward",
+      "backward": "balance-backward",
+      "moving": "run",
+      "wall": "teaching-glass",
+      "pushing": "push",
+      "released": "idle"
+    },
+    {
+      "launch": [
+        {
+          "device": "vent-lower-spring",
+          "states": [
+            "spring-launch",
+            "spring-launch",
+            "spring-launch",
+            "spring-launch",
+            "spring-launch",
+            "spring-launch",
+            "spring-launch",
+            "spring-launch",
+            "spring-launch",
+            "spring-launch",
+            "spring-launch",
+            "spring-launch"
+          ]
+        },
+        {
+          "device": "momentum-vent",
+          "states": [
+            "vent-launch",
+            "vent-launch",
+            "vent-launch",
+            "vent-launch",
+            "vent-launch",
+            "vent-launch",
+            "vent-launch",
+            "vent-launch",
+            "vent-launch",
+            "vent-launch",
+            "vent-launch",
+            "vent-launch"
+          ]
+        }
+      ]
+    }
+  ],
+  "perf": [
+    {
+      "sheet": "recoveredSpeedster",
+      "medianMs": 0.0020000004768371583,
+      "p95Ms": 0.006000001430511475
+    },
+    {
+      "sheet": "traversalActing",
+      "medianMs": 0.0020000004768371583,
+      "p95Ms": 0.004000000953674317
+    },
+    {
+      "sheet": "traversalLaunch",
+      "medianMs": 0.0020000004768371583,
+      "p95Ms": 0.0059999990463256835
+    }
+  ],
+  "errors": [],
+  "previewFrames": 240
+}

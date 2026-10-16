@@ -1,0 +1,29 @@
+{
+  "assets": [
+    {
+      "file": "assets/sonic-traversal-acting.png",
+      "sha256": "195a706c29668b2962e3bb1a2800104d375151100a65d73f295521db83fcdcf7",
+      "size": [
+        2048,
+        768
+      ],
+      "frames": 24
+    },
+    {
+      "file": "assets/sonic-traversal-launch.png",
+      "sha256": "c8af6de1d94cc134c393599ee2772f2ff312f6ed17f6af628b65e1ce4f646c51",
+      "size": [
+        1774,
+        887
+      ],
+      "frames": 32
+    }
+  ],
+  "reference": [
+    "sonic-recovered-speedster.png",
+    "sonic-supplemental.png"
+  ],
+  "acting": "8 forward balance, 8 backward balance, 8 pushing poses",
+  "launch": "8 upright spring poses, 8 vent poses, 16 spiral grinding poses",
+  "production": "Generated with imagegen from the existing character artwork. Motion references guide poses only. Original sheets and generated source pixels are unchanged."
+}
