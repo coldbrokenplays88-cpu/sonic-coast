@@ -6,7 +6,7 @@ Existing tests and image files must remain unchanged.
 
 - [x] 1. Stop horizontal velocity at both world edges; add a 200-tick regression test.
 - [x] 2. Restore keyboard controls after Sound and stage selection; reproduce in Chromium.
-- [x] 3. Leave touch controls unchanged and report the required decision.
+- [x] 3. Decision received: no mobile play. No on-screen buttons; unused touch scaffolding is proposed for a later cleanup.
 - [ ] 4. Consolidate breakable drawing; investigate duplicate water checks without changing behavior or sounds.
 - [x] 5. Load artwork by act with error fallbacks; measure compression only; inspect city cache.
 - [x] 6. Cull distant surfaces and cache static poses; compare collisions and call counts.
@@ -21,11 +21,11 @@ Baseline: **339 passed / 0 failed**.
 Item 1: **341 passed / 0 failed**, including two new regressions. Both failed before the fix (200-tick Left ended at vx=-14); both pass afterwards. Turning right moves immediately.
 
 Draft PR creation was attempted immediately after the setup commit and failed: GitHub GraphQL returned Forbidden. The branch push succeeded; this checklist is the fallback progress record.
-GitHub API access currently returns `Forbidden`; draft PR creation will be attempted after this initial tracking commit.
+GitHub API access returned `Forbidden`; the attempted draft creation failed.
 
 Item 2: **341 passed / 0 failed**. Chromium reproduced focus staying on Sound, ignored Right input and Space toggling sound again. New browser regression fails before the change and passes afterwards: focus returns to the canvas after Sound and stage selection, Right reaches game controls and Space leaves sound unchanged.
 
-Item 3: no changes. Decision and yes/no consequences will be in the final report.
+Item 3: the owner declined mobile play. No gameplay code changed in the proposals-only phase; unused touch styles/bindings are proposed for a separate cleanup.
 
 Item 4: breakable drawing consolidated. **343 passed / 0 failed** (two added water regressions). Water-call removal is deliberately unfinished: deleting the post-movement call changed crossing-tick vx from 4 to 8, vy from 1.145 to 4.58, left underwater false and omitted the splash. The pre-movement check also handles placement/respawn before water physics. Both retained to preserve behavior.
 
@@ -39,4 +39,6 @@ Part 3: docs/review-proposals.md covers formatting/config, 30 script tags and mo
 
 Independent review of runtime commits 710786e..ca40891: no critical, important or minor findings; reviewer separately ran all 11 added tests (11/0) and git diff --check. Browser and full-suite evidence reviewed but not independently rerun by reviewer.
 
-Final evidence/report: docs/review-report.md and docs/validation/review-verification.json. Existing browser verifier passes at root and `/sonic-coast/`; ending verifier passes through results, with pause/resume, art retry and act switching. Independent review found no issues. Direct file launch blocked by managed browser policy; launcher inspected only. Final branch push succeeded; remote branch content was verified against the local commit, and remote main is still 710786e. Draft PR still blocked by GitHub API Forbidden. Item 4 remains explicitly partial; item 3 remains your decision.
+Final evidence/report: docs/review-report.md and docs/validation/review-verification.json. Existing browser verifier passes at root and `/sonic-coast/`; ending verifier passes through results, with pause/resume, art retry and act switching. Independent review found no issues. Direct file launch blocked by managed browser policy; launcher inspected only. Final branch push succeeded; remote branch content was verified against the local commit, and remote main is still 710786e. Draft PR still blocked by GitHub API Forbidden. Item 4 remains explicitly partial; item 3 is resolved: no mobile play.
+
+Phase 3 follow-up: owner reports the fixes seem to work without breaking the game. Proposals now include a plain-English summary of all five recommendations, effort and risk. Mobile play is ruled out; touch-code removal is documented as a later cleanup. Only documentation changed, so the previous 350/0 runtime result is retained as historical evidence; no new runtime test run is claimed.

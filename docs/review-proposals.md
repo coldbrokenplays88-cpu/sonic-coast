@@ -2,6 +2,16 @@
 
 These are proposals only. This branch does not reformat the game, introduce a build system, combine level builders, delete assets/CSS or change publishing.
 
+The owner has ruled out mobile play and reported that the bug fixes seem to work without breaking the game. On-screen controls are therefore out of scope. Removing the unused touch code belongs in the proposed cleanup; it is not a code change in this phase.
+
+| Proposal | Recommendation | Estimated effort | Risk |
+| --- | --- | --- | --- |
+| Readable code formatting | Do separately after the publishing cleanup; preserve generated data and tests. | Half a day to one day | Low to medium |
+| Explicit imports and packaging | Defer; use esbuild when this larger migration is scheduled. | Several days to a week | High |
+| One Act 2 builder | Keep all three active layers for now; consolidate only with exact output and route comparisons. | Two to four days | Medium to high |
+| Unused images and HUD/touch code | Remove only verified unused parts in a separate cleanup; do not add mobile controls. | Half a day to one day | Low for unused files; medium for inherited styles |
+| Smaller published site | Do next: publish an explicit list of game files and preserve all fallback artwork. | Half a day to one day | Low to medium |
+
 ## 1. Make the code easier to read
 
 **Recommendation:** do a formatting-only change in its own branch, after the gameplay fixes are played. Use Prettier with this proposed configuration:
@@ -66,11 +76,11 @@ These class selectors in `style.css` have no matching current markup or runtime 
 | Old boost track | `.meter-track`, `.meter-track i` |
 | Old text speed display | `.speed-read`, `.speed-read b`, responsive overrides |
 
-The `.touch` family also has no markup, but it belongs to the explicit phone/tablet decision below. Keep `.run-meter` and its inherited styling: the current pixel meter still uses that class. Broad rules such as `.hud strong`, `.run-meter > span` or generic `canvas` rules are not proven dead just because their original use changed. Responsive overrides and CSS rule order need careful inspection.
+The `.touch` family also has no markup. The owner has now declined mobile play, so its styles and the `[data-key]` touch-button event bindings are removal candidates for the separate cleanup. Keep mouse boost, keyboard controls, responsive desktop layout, fullscreen and the shared input handlers intact. Keep `.run-meter` and its inherited styling: the current pixel meter still uses that class. Broad rules such as `.hud strong`, `.run-meter > span` or generic `canvas` rules are not proven dead just because their original use changed. Responsive overrides and CSS rule order need careful inspection.
 
 **Effort:** half a day to one day. **Risk:** low for the two unreferenced images after reference/provenance checks, medium for CSS because inherited rules can affect the current HUD. Compare desktop, small-screen, fullscreen, ready, paused and results screens before deleting anything.
 
-**Phone/tablet decision:** Do you want people to be able to play on phones and tablets with on-screen buttons? I recommend yes if mobile visitors are intended. Yes means adding reachable Left, Right, Down/Roll, Jump and Boost buttons, checking multi-touch, held/released inputs and HUD overlap on devices. No means a separate cleanup can remove the unused touch styles and event bindings. This branch takes the stated default and changes neither.
+**Phone/tablet decision: no mobile play.** Do not add on-screen buttons. In the separate cleanup, remove the unused touch-only styles and button bindings after confirming they do not affect the desktop controls or inherited layout. This proposal does not require another mobile-play decision.
 
 ## 5. Publish only the playable site
 
@@ -84,4 +94,4 @@ Check every entry-page script and asset URL against the staging folder, serve it
 
 ## What I would do next
 
-First, publish only the playable site: it removes unnecessary public developer files with little gameplay risk when the staged site is checked. Second, make the authored code readable in a formatting-only change. That will make the later, more delicate module and Act 2 work easier to review and maintain. Resolve the phone/tablet question separately before either adding controls or deleting its unused scaffolding.
+First, publish only the playable site: it removes unnecessary public developer files with little gameplay risk when the staged site is checked. Second, make the authored code readable in a formatting-only change. That will make the later, more delicate module and Act 2 work easier to review and maintain. Mobile play has been declined; include removal of the unused touch scaffolding when the separate unused-code cleanup is scheduled. Leave the module and Act 2 rewrites until the smaller work is complete.
