@@ -11,7 +11,7 @@ Existing tests and image files must remain unchanged.
 - [x] 5. Load artwork by act with error fallbacks; measure compression only; inspect city cache.
 - [x] 6. Cull distant surfaces and cache static poses; compare collisions and call counts.
 - [x] 7. Skip unchanged playing frames; retain controlled/non-playing drawing; run browser verifier.
-- [ ] Part 3. Write plain-English proposals only, including recommended next work.
+- [x] Part 3. Write plain-English proposals only, including recommended next work.
 - [ ] Final. Check all changes, record proof and limits, push branch, update draft PR, provide play instructions and merge recommendation.
 
 ## Baseline and validation
@@ -34,3 +34,7 @@ Item 5: **343 passed / 0 failed**. Chromium verifies 7/8 gameplay-sheet startup 
 Item 6: **348 passed / 0 failed**. Three optimization regressions fail before and pass after. **13,566 identical contact states and 9,044 identical topAt queries** vs preceding collision source; seven phases, every surface in both acts. All existing route/physics tests pass unchanged. Mean pose calls per tick: Act 1 run 233.42→16.42 / jump 246.23→15.04; Act 2 run 1462.46→55.19 / jump 1401.18→52.91. Full method and counts in review-performance.md.
 
 Item 7: **350 passed / 0 failed**, compared with baseline 339/0 (11 added tests). The frame regression fails before and passes after: no draw without an update during normal play, one draw after catch-up updates; controlled/ready/paused/win/over states still draw. Existing `node scripts/verify-browser.cjs http://127.0.0.1:8000` passes on the final runtime changes with zero page errors. No physical high-refresh monitor tested.
+
+Part 3: docs/review-proposals.md covers formatting/config, 30 script tags and module/build migration, live three-layer Act 2 construction, two unused images and five old HUD class groups, Pages staging allowlist, and recommended next work. Proposals only: no workflow, asset, CSS, level-builder, bundler or formatting changes.
+
+Independent review of runtime commits 710786e..ca40891: no critical, important or minor findings; reviewer separately ran all 11 added tests (11/0) and git diff --check. Browser and full-suite evidence reviewed but not independently rerun by reviewer.
