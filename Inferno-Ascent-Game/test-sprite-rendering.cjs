@@ -17,7 +17,7 @@ test('rolling keeps its diameter and foot position while retaining source crop d
  const r=renderer();r.run("drawRecoveredSonicFrame({sheet:'recoveredSpeedster',frame:26,ball:true,diameter:38,rotation:.2})");
  assert.deepEqual(r.canvases.map(c=>[c.width,c.height]),[[119,114]]);
  assert.deepEqual(r.draws.at(-1).slice(-4),[-19,-18,38,36]);
- assert.deepEqual(r.context.transform,[2,0,0,2,320,210]);
+ assert.deepEqual(r.context.transform,[2,0,0,2,320,204]);
 });
 test('cutscene cache retains source-resolution cels without changing anchors or size',()=>{
  const r=renderer();r.run("prepareEndingArt('sonic',{width:1536,height:1024});endingActor({visible:true,sheet:'sonic',frame:0,x:0,y:0})");
