@@ -5,8 +5,8 @@ The starting working folder was clean. No merges or pushes to main are authorize
 Existing tests and image files must remain unchanged.
 
 - [x] 1. Stop horizontal velocity at both world edges; add a 200-tick regression test.
-- [ ] 2. Restore keyboard controls after Sound and stage selection; reproduce in Chromium.
-- [ ] 3. Leave touch controls unchanged and report the required decision.
+- [x] 2. Restore keyboard controls after Sound and stage selection; reproduce in Chromium.
+- [x] 3. Leave touch controls unchanged and report the required decision.
 - [ ] 4. Consolidate breakable drawing; investigate duplicate water checks without changing behavior or sounds.
 - [ ] 5. Load artwork by act with error fallbacks; measure compression only; inspect city cache.
 - [ ] 6. Cull distant surfaces and cache static poses; compare collisions and call counts.
@@ -22,3 +22,7 @@ Item 1: **341 passed / 0 failed**, including two new regressions. Both failed be
 
 Draft PR creation was attempted immediately after the setup commit and failed: GitHub GraphQL returned Forbidden. The branch push succeeded; this checklist is the fallback progress record.
 GitHub API access currently returns `Forbidden`; draft PR creation will be attempted after this initial tracking commit.
+
+Item 2: **341 passed / 0 failed**. Chromium reproduced focus staying on Sound, ignored Right input and Space toggling sound again. New browser regression fails before the change and passes afterwards: focus returns to the canvas after Sound and stage selection, Right reaches game controls and Space leaves sound unchanged.
+
+Item 3: no changes. Decision and yes/no consequences will be in the final report.
