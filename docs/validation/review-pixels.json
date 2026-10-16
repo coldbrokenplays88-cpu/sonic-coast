@@ -1,0 +1,96 @@
+{
+  "comparisons": [
+    {
+      "name": "normal",
+      "act": 1,
+      "matchingFrames": 20
+    },
+    {
+      "name": "normal",
+      "act": 2,
+      "matchingFrames": 20
+    },
+    {
+      "name": "oneSonic",
+      "act": 1,
+      "matchingFrames": 20
+    },
+    {
+      "name": "oneSonic",
+      "act": 2,
+      "matchingFrames": 20
+    },
+    {
+      "name": "bothSonic",
+      "act": 1,
+      "matchingFrames": 20
+    },
+    {
+      "name": "bothSonic",
+      "act": 2,
+      "matchingFrames": 20
+    },
+    {
+      "name": "noSonic",
+      "act": 1,
+      "matchingFrames": 20
+    },
+    {
+      "name": "noSonic",
+      "act": 2,
+      "matchingFrames": 20
+    },
+    {
+      "name": "oldCity",
+      "act": 1,
+      "matchingFrames": 20
+    },
+    {
+      "name": "oldCity",
+      "act": 2,
+      "matchingFrames": 20
+    },
+    {
+      "name": "oldestCity",
+      "act": 1,
+      "matchingFrames": 20
+    },
+    {
+      "name": "oldestCity",
+      "act": 2,
+      "matchingFrames": 20
+    },
+    {
+      "name": "noCity",
+      "act": 1,
+      "matchingFrames": 20
+    },
+    {
+      "name": "noCity",
+      "act": 2,
+      "matchingFrames": 20
+    },
+    {
+      "name": "noSupplemental",
+      "act": 1,
+      "matchingFrames": 20
+    },
+    {
+      "name": "noSupplemental",
+      "act": 2,
+      "matchingFrames": 20
+    },
+    {
+      "name": "noTraversal",
+      "act": 1,
+      "matchingFrames": 20
+    },
+    {
+      "name": "noTraversal",
+      "act": 2,
+      "matchingFrames": 20
+    }
+  ],
+  "matchingFrames": 360,
+  "pageErrors": 0
+}

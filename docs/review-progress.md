@@ -8,7 +8,7 @@ Existing tests and image files must remain unchanged.
 - [x] 2. Restore keyboard controls after Sound and stage selection; reproduce in Chromium.
 - [x] 3. Leave touch controls unchanged and report the required decision.
 - [ ] 4. Consolidate breakable drawing; investigate duplicate water checks without changing behavior or sounds.
-- [ ] 5. Load artwork by act with error fallbacks; measure compression only; inspect city cache.
+- [x] 5. Load artwork by act with error fallbacks; measure compression only; inspect city cache.
 - [ ] 6. Cull distant surfaces and cache static poses; compare collisions and call counts.
 - [ ] 7. Skip unchanged playing frames; retain controlled/non-playing drawing; run browser verifier.
 - [ ] Part 3. Write plain-English proposals only, including recommended next work.
@@ -28,3 +28,5 @@ Item 2: **341 passed / 0 failed**. Chromium reproduced focus staying on Sound, i
 Item 3: no changes. Decision and yes/no consequences will be in the final report.
 
 Item 4: breakable drawing consolidated. **343 passed / 0 failed** (two added water regressions). Water-call removal is deliberately unfinished: deleting the post-movement call changed crossing-tick vx from 4 to 8, vy from 1.145 to 4.58, left underwater false and omitted the splash. The pre-movement check also handles placement/respawn before water physics. Both retained to preserve behavior.
+
+Item 5: **343 passed / 0 failed**. Chromium verifies 7/8 gameplay-sheet startup requests for Act 1/2, no unnecessary fallback requests and no repeat downloads on restart. Existing verify-browser passes, zero page errors. Raw canvas comparisons: **360 identical frames**, both acts × 9 normal/missing-art cases × 20 scenes, zero page errors. Gameplay-loader PNG bytes: 34,315,885 → 13,979,916 (Act 1) / 16,145,899 (Act 2). Compression measured only; details in review-assets.md. City cache unchanged after inspection.
