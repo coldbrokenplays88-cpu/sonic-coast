@@ -1,0 +1,346 @@
+{
+  "baselineRef": "548ac04",
+  "runtimeRef": "fcd127b",
+  "reviewFixRef": "9e5535c",
+  "gameBaseline": {
+    "tests": 350,
+    "pass": 350,
+    "fail": 0,
+    "skipped": 0
+  },
+  "gameFinal": {
+    "tests": 350,
+    "pass": 350,
+    "fail": 0,
+    "skipped": 0
+  },
+  "buildFinal": {
+    "tests": 9,
+    "pass": 9,
+    "fail": 0,
+    "skipped": 0
+  },
+  "pixels": {
+    "comparisons": [
+      {
+        "name": "normal",
+        "act": 1,
+        "matchingFrames": 20
+      },
+      {
+        "name": "normal",
+        "act": 2,
+        "matchingFrames": 20
+      },
+      {
+        "name": "oneSonic",
+        "act": 1,
+        "matchingFrames": 20
+      },
+      {
+        "name": "oneSonic",
+        "act": 2,
+        "matchingFrames": 20
+      },
+      {
+        "name": "bothSonic",
+        "act": 1,
+        "matchingFrames": 20
+      },
+      {
+        "name": "bothSonic",
+        "act": 2,
+        "matchingFrames": 20
+      },
+      {
+        "name": "noSonic",
+        "act": 1,
+        "matchingFrames": 20
+      },
+      {
+        "name": "noSonic",
+        "act": 2,
+        "matchingFrames": 20
+      },
+      {
+        "name": "oldCity",
+        "act": 1,
+        "matchingFrames": 20
+      },
+      {
+        "name": "oldCity",
+        "act": 2,
+        "matchingFrames": 20
+      },
+      {
+        "name": "oldestCity",
+        "act": 1,
+        "matchingFrames": 20
+      },
+      {
+        "name": "oldestCity",
+        "act": 2,
+        "matchingFrames": 20
+      },
+      {
+        "name": "noCity",
+        "act": 1,
+        "matchingFrames": 20
+      },
+      {
+        "name": "noCity",
+        "act": 2,
+        "matchingFrames": 20
+      },
+      {
+        "name": "noSupplemental",
+        "act": 1,
+        "matchingFrames": 20
+      },
+      {
+        "name": "noSupplemental",
+        "act": 2,
+        "matchingFrames": 20
+      },
+      {
+        "name": "noTraversal",
+        "act": 1,
+        "matchingFrames": 20
+      },
+      {
+        "name": "noTraversal",
+        "act": 2,
+        "matchingFrames": 20
+      }
+    ],
+    "matchingFrames": 360,
+    "pageErrors": 0
+  },
+  "ui": {
+    "matchingWholePageScreenshots": 24,
+    "views": "ready, playing, paused, fullscreen; both acts; 1440, 1024, 640 widths",
+    "pageErrors": 0
+  },
+  "browserPagesPrefix": "Browser checks passed: both acts, release gauge, pause HUD, six facade pixel comparisons, pool arc, new atlases, actual MP3 play/pause/mute/restart and real sound-effect wiring, fullscreen, native keyboard movement/pause/fullscreen, tablet/mobile layout; zero page errors.",
+  "sourceEntryFocus": {
+    "soundFocus": "game",
+    "arrow": {
+      "held": true,
+      "controlled": false
+    },
+    "soundBeforeSpace": true,
+    "soundAfterSpace": true,
+    "actFocus": "game"
+  },
+  "sourceEntryAssetRequests": [
+    {
+      "act": 1,
+      "requests": [
+        "ending-sonic.png",
+        "ending-shadow.png",
+        "ending-eggman.png",
+        "ending-sonic-polish.png",
+        "ending-shadow-polish.png",
+        "ending-eggman-polish.png",
+        "sonic-recovered-speedster.png",
+        "sonic-recovered-peelout.png",
+        "sonic-supplemental.png",
+        "sonic-peelout-cycle.png",
+        "sonic-traversal-acting.png",
+        "sonic-traversal-launch.png",
+        "city.png"
+      ]
+    },
+    {
+      "act": 2,
+      "requests": [
+        "ending-sonic.png",
+        "ending-shadow.png",
+        "ending-eggman.png",
+        "ending-sonic-polish.png",
+        "ending-shadow-polish.png",
+        "ending-eggman-polish.png",
+        "sonic-recovered-speedster.png",
+        "sonic-recovered-peelout.png",
+        "sonic-supplemental.png",
+        "sonic-peelout-cycle.png",
+        "sonic-traversal-acting.png",
+        "sonic-traversal-launch.png",
+        "city-recovered-burning.png",
+        "egg-scorpion-parts.png"
+      ]
+    }
+  ],
+  "ending": {
+    "frames": 322,
+    "captureFps": 20,
+    "seconds": 16.1,
+    "beats": [
+      "escape",
+      "aim",
+      "rocket",
+      "kick",
+      "return",
+      "explode",
+      "jetpack",
+      "offer",
+      "approach",
+      "nod",
+      "annoy",
+      "swing",
+      "realize",
+      "vanish",
+      "sigh",
+      "end"
+    ],
+    "events": [
+      "rocketFire",
+      "shadowTeleport",
+      "kickImpact",
+      "podExplosion",
+      "jetpack",
+      "emeraldOffer",
+      "chaosCharge",
+      "chaosWarp",
+      "relievedSigh"
+    ],
+    "errors": [],
+    "assetRetry": true,
+    "pauseResume": true,
+    "actSwitch": true
+  },
+  "blimp": {
+    "desktop": "dash and boost, fast and cautious, both rewards, zero hits/deaths",
+    "laptop": "route and final render passed",
+    "renderedFrames": 344,
+    "meanDrawMs": 1.14,
+    "maxDrawMs": 24.6,
+    "errors": []
+  },
+  "boss": {
+    "status": "win",
+    "hits": 3,
+    "bites": 3,
+    "deaths": 0,
+    "damage": 0,
+    "history": [
+      {
+        "frame": 0,
+        "state": "entrance",
+        "x": 540,
+        "hits": 0
+      },
+      {
+        "frame": 240,
+        "state": "idle",
+        "x": 539,
+        "hits": 0
+      },
+      {
+        "frame": 305,
+        "state": "tail-windup",
+        "x": 505,
+        "hits": 0
+      },
+      {
+        "frame": 370,
+        "state": "tail-strike",
+        "x": 413,
+        "hits": 0
+      },
+      {
+        "frame": 394,
+        "state": "tail-retract",
+        "x": 413,
+        "hits": 0
+      },
+      {
+        "frame": 573,
+        "state": "bite-windup",
+        "x": 657,
+        "hits": 0
+      },
+      {
+        "frame": 628,
+        "state": "bite-lunge",
+        "x": 600,
+        "hits": 0
+      },
+      {
+        "frame": 652,
+        "state": "bite-hold",
+        "x": 600,
+        "hits": 0
+      },
+      {
+        "frame": 674,
+        "state": "bite-open",
+        "x": 601,
+        "hits": 0
+      },
+      {
+        "frame": 694,
+        "state": "hit",
+        "x": 685,
+        "hits": 1
+      },
+      {
+        "frame": 1328,
+        "state": "laser-windup",
+        "x": 495,
+        "hits": 2
+      },
+      {
+        "frame": 1398,
+        "state": "laser-fire",
+        "x": 656,
+        "hits": 2
+      },
+      {
+        "frame": 1430,
+        "state": "laser-cool",
+        "x": 656,
+        "hits": 2
+      },
+      {
+        "frame": 1890,
+        "state": "destroyed",
+        "x": 678,
+        "hits": 3
+      },
+      {
+        "frame": 2040,
+        "state": "defeated",
+        "x": 678,
+        "hits": 3
+      }
+    ],
+    "cache": 9,
+    "frames": 2041,
+    "tailStrikes": 4,
+    "laserShots": 3
+  },
+  "package": {
+    "files": 37,
+    "externalScripts": 1,
+    "bytes": 52304513,
+    "fallbackAndEndingPresent": true,
+    "developerFilesExcluded": true
+  },
+  "allExistingTestsAndVerifiersUnchanged": true,
+  "allRemainingAssetsUnchanged": true,
+  "independentReview": {
+    "initialGamePass": 350,
+    "initialBuildPass": 7,
+    "important": "Linked output/parent bypass of lexical staging guard; corrected with 2 RED-to-GREEN regressions and full 350+9 suite.",
+    "unresolvedMaterialFindings": 0
+  },
+  "notVerified": [
+    "direct file navigation blocked by managed Chromium policy",
+    "Windows launcher execution",
+    "physical devices",
+    "non-Chromium browsers",
+    "human listening",
+    "live Actions/Pages deployment"
+  ]
+}
