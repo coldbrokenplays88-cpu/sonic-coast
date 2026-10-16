@@ -1,0 +1,282 @@
+{
+  "modules": [
+    {
+      "file": "level.js",
+      "kinds": {}
+    },
+    {
+      "file": "midsection.js",
+      "kinds": {}
+    },
+    {
+      "file": "blimp-route.js",
+      "kinds": {
+        "blimpTextures": "const"
+      }
+    },
+    {
+      "file": "level2.js",
+      "kinds": {
+        "act2LevelTemplate": "const"
+      }
+    },
+    {
+      "file": "act2.js",
+      "kinds": {
+        "cameraTracking": "const",
+        "skylineSmokeSprites": "const"
+      }
+    },
+    {
+      "file": "pixel-world.js",
+      "kinds": {
+        "cityRasterContext": "let",
+        "cityMaterials": "const",
+        "cityFacadeTiles": "const",
+        "cityPillarTextures": "const",
+        "cityPillarFrameSpans": "const",
+        "cityPillarPass": "let",
+        "cityDeckTextures": "const",
+        "cityLoopTextures": "const",
+        "ringPixels": "const",
+        "ringPalette": "const",
+        "pixelRingTextures": "const"
+      }
+    },
+    {
+      "file": "city-polish.js",
+      "kinds": {
+        "polishSpriteCache": "const",
+        "polishFont": "const"
+      }
+    },
+    {
+      "file": "supplemental-frames.js",
+      "kinds": {
+        "supplementalSpriteFrames": "const"
+      }
+    },
+    {
+      "file": "traversal-frames.js",
+      "kinds": {
+        "traversalSpriteFrames": "const"
+      }
+    },
+    {
+      "file": "traversal-animations.js",
+      "kinds": {
+        "traversalAnimation": "const"
+      }
+    },
+    {
+      "file": "recovered-art.js",
+      "kinds": {
+        "recoveredSpriteTextures": "const",
+        "recoveredSpriteFrames": "const"
+      }
+    },
+    {
+      "file": "boost-rules.js",
+      "kinds": {}
+    },
+    {
+      "file": "game-audio.js",
+      "kinds": {}
+    },
+    {
+      "file": "game-music.js",
+      "kinds": {}
+    },
+    {
+      "file": "hud.js",
+      "kinds": {}
+    },
+    {
+      "file": "egg-scorpion.js",
+      "kinds": {}
+    },
+    {
+      "file": "boss-art.js",
+      "kinds": {
+        "scorpionParts": "const",
+        "scorpionStamps": "const",
+        "scorpionBounds": "const"
+      }
+    },
+    {
+      "file": "ending-scene.js",
+      "kinds": {}
+    },
+    {
+      "file": "ending-frames.js",
+      "kinds": {
+        "endingFrames": "const"
+      }
+    },
+    {
+      "file": "ending-polish-frames.js",
+      "kinds": {}
+    },
+    {
+      "file": "ending-art.js",
+      "kinds": {
+        "endingSprites": "const",
+        "endingLoadErrors": "const",
+        "endingSheets": "const"
+      }
+    },
+    {
+      "file": "boss-game.js",
+      "kinds": {
+        "boss": "let",
+        "bossCheckpoint": "let",
+        "ending": "let"
+      }
+    },
+    {
+      "file": "surface-collision.js",
+      "kinds": {
+        "staticSurfacePoses": "const"
+      }
+    },
+    {
+      "file": "player-movement.js",
+      "kinds": {}
+    },
+    {
+      "file": "world-interactions.js",
+      "kinds": {}
+    },
+    {
+      "file": "stage-runtime.js",
+      "kinds": {
+        "stageRuntime": "let",
+        "neonExpressAct1Runtime": "const",
+        "neonExpressAct2Runtime": "const"
+      }
+    },
+    {
+      "file": "game.js",
+      "kinds": {
+        "canvas": "const",
+        "ctx": "const",
+        "$": "const",
+        "W": "const",
+        "H": "const",
+        "SONIC_VISUAL_SCALE": "const",
+        "FOOT_RADIUS": "const",
+        "keys": "const",
+        "JUMP_KEYS": "const",
+        "tuning": "const",
+        "BOOST_MAX": "const",
+        "movementTuning": "const",
+        "testControlled": "let",
+        "selectedAct": "let",
+        "level": "let",
+        "END": "let",
+        "mode": "let",
+        "cam": "let",
+        "camY": "let",
+        "zoom": "let",
+        "clock": "let",
+        "lives": "let",
+        "count": "let",
+        "score": "let",
+        "charge": "let",
+        "checkpoint": "let",
+        "toastTime": "let",
+        "sound": "let",
+        "particles": "let",
+        "rings": "let",
+        "enemies": "let",
+        "last": "let",
+        "acc": "let",
+        "step": "let",
+        "boost": "let",
+        "shake": "let",
+        "anim": "let",
+        "jumpBuffer": "let",
+        "coyote": "let",
+        "stage": "let",
+        "runFrames": "let",
+        "stats": "let",
+        "visited": "let",
+        "p": "const",
+        "extraMotion": "const",
+        "artFiles": "const",
+        "art": "const",
+        "artLoads": "const",
+        "failedArt": "const",
+        "sharedArt": "const",
+        "legacySonicArt": "const",
+        "cityTextureCache": "const",
+        "citySkyHeights": "const",
+        "backdropScaleCache": "const",
+        "cityCloudLayers": "const",
+        "sonicFrames": "const",
+        "motionFrames": "const",
+        "grindFrames": "const",
+        "brakeFrames": "const",
+        "boostFrames": "const",
+        "testInputCodes": "const"
+      }
+    }
+  ],
+  "mutable": [
+    "cityRasterContext",
+    "cityPillarPass",
+    "boss",
+    "bossCheckpoint",
+    "ending",
+    "stageRuntime",
+    "testControlled",
+    "selectedAct",
+    "level",
+    "END",
+    "mode",
+    "cam",
+    "camY",
+    "zoom",
+    "clock",
+    "lives",
+    "count",
+    "score",
+    "charge",
+    "checkpoint",
+    "toastTime",
+    "sound",
+    "particles",
+    "rings",
+    "enemies",
+    "last",
+    "acc",
+    "step",
+    "boost",
+    "shake",
+    "anim",
+    "jumpBuffer",
+    "coyote",
+    "stage",
+    "runFrames",
+    "stats",
+    "visited"
+  ],
+  "browserApis": {
+    "setGameSoundEnabled": "game-audio.js",
+    "playGameSound": "game-audio.js",
+    "syncGameMusic": "game-music.js",
+    "setGameMusicVolume": "game-music.js",
+    "updatePixelHud": "hud.js",
+    "drawPixelBoostBar": "hud.js",
+    "toggleGameFullscreen": "hud.js",
+    "createEggScorpion": "egg-scorpion.js",
+    "tickEggScorpion": "egg-scorpion.js",
+    "scorpionGeometry": "egg-scorpion.js",
+    "damageEggScorpion": "egg-scorpion.js",
+    "scorpionDanger": "egg-scorpion.js",
+    "ENDING_BEATS": "ending-scene.js",
+    "createEndingScene": "ending-scene.js",
+    "tickEndingScene": "ending-scene.js",
+    "endingPose": "ending-scene.js"
+  }
+}

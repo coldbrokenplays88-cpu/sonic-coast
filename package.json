@@ -1,0 +1,22 @@
+{
+  "name": "neon-express",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "cd Inferno-Ascent-Game && node --test",
+    "test:build": "node --test tools/test-*.cjs",
+    "build": "npm run check:compat && npm run check:player",
+    "package": "npm run check:compat && npm run check:player && node tools/package-player.cjs",
+    "build:compat": "node tools/build-compat.cjs",
+    "check:compat": "node tools/build-compat.cjs --check",
+    "build:player": "npm run build:compat && node tools/build-player-entry.cjs",
+    "check:player": "node tools/build-player-entry.cjs --check"
+  },
+  "devDependencies": {
+    "acorn": "8.15.0",
+    "esbuild": "0.25.11",
+    "eslint-scope": "8.4.0",
+    "fflate": "0.8.2",
+    "prettier": "3.6.2"
+  }
+}

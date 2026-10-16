@@ -5,8 +5,11 @@ on:
     branches:
       - main
     paths:
-      - "Inferno-Ascent-Game/**"
-      - ".github/workflows/pages.yml"
+      - 'Inferno-Ascent-Game/**'
+      - '.github/workflows/pages.yml'
+      - 'tools/**'
+      - 'package.json'
+      - 'package-lock.json'
   workflow_dispatch:
 
 permissions:
@@ -27,12 +30,28 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install pinned build tools
+        run: npm ci
+      - name: Check the game and staging rules
+        run: npm test && npm run test:build
+      - name: Build playable site and player ZIP
+        run: npm run package
+      - name: Save downloadable player ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: Neon-Express-player
+          path: dist/Neon-Express-player.zip
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload game files
         uses: actions/upload-pages-artifact@v4
         with:
-          path: ./Inferno-Ascent-Game
+          path: ./dist/site
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

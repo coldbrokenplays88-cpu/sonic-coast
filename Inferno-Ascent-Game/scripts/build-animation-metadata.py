@@ -1,5 +1,6 @@
 """Optional authoring tool; never modifies PNG pixels. Requires Pillow, NumPy, SciPy."""
 from pathlib import Path
+from runtime_metadata import write_runtime_metadata
 import json,hashlib
 import numpy as np
 from PIL import Image
@@ -23,6 +24,6 @@ for key,file,cols,rows in [('supplemental','sonic-supplemental.png',8,4),('peelo
   baseline=max(c['bounds'][3] for c in components if c['row']==d['row'])
   out.append({'bounds':[x1,y1,x2,y2],'anchor':[round(center-x1),baseline-y1],'scale':scale})
  frames[key]=out;sources.append({'file':'assets/'+file,'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'size':[im.width,im.height],'frames':cols*rows,'source':'Generated supplement from supplied Sonic expression reference and October 7 atlas; source sheets unchanged.'})
-(root/'supplemental-frames.js').write_text("'use strict';\n// Authored poses supplement, never replace, the recovered source atlases.\nconst supplementalSpriteFrames="+json.dumps(frames,separators=(',',':'))+';\n')
+write_runtime_metadata(root, 'supplemental-frames.js', 'supplementalSpriteFrames', frames)
 (root/'assets'/'supplemental-art-metadata.json').write_text(json.dumps({'assets':sources,'normalFast':'8 distinct open-handed circular-shoe poses','boost':'8 closed-fist poses','grind':'8 planted-foot quill-flow poses','transitions':'2 entry, 2 exit, 2 landing, 2 charge','normalization':'Uniform per-sheet scale based on source-cell width; eye-relative body anchors and common row foot baseline.'},indent=2)+'\n')
 print('Mapped',sum(len(v)for v in frames.values()),'additional poses; PNGs unchanged.')
