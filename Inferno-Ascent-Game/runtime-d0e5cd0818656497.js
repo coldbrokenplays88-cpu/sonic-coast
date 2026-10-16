@@ -369,7 +369,6 @@
   var blimp_route_exports = {};
   __export(blimp_route_exports, {
     addBlimpRoute: () => addBlimpRoute,
-    blimpSpringContact: () => blimpSpringContact,
     blimpTextures: () => blimpTextures,
     drawBlimpRoute: () => drawBlimpRoute,
     getRuntimeBindings: () => getRuntimeBindings24,
@@ -1677,8 +1676,8 @@
   var boss_art_exports = {};
   __export(boss_art_exports, {
     drawScorpionLink: () => drawScorpionLink,
-    getRuntimeBindings: () => getRuntimeBindings18,
-    initializeRuntimeModule: () => initializeRuntimeModule18,
+    getRuntimeBindings: () => getRuntimeBindings19,
+    initializeRuntimeModule: () => initializeRuntimeModule19,
     prepareScorpionArt: () => prepareScorpionArt,
     renderEggScorpion: () => renderEggScorpion,
     scorpionBounds: () => scorpionBounds,
@@ -1950,8 +1949,8 @@
     drawPixelCityLoop: () => drawPixelCityLoop,
     drawPixelCityStructures: () => drawPixelCityStructures,
     drawPixelRing: () => drawPixelRing,
-    getRuntimeBindings: () => getRuntimeBindings17,
-    initializeRuntimeModule: () => initializeRuntimeModule17,
+    getRuntimeBindings: () => getRuntimeBindings18,
+    initializeRuntimeModule: () => initializeRuntimeModule18,
     paintCityFacade: () => paintCityFacade,
     paintCityPillar: () => paintCityPillar,
     paintPixelCityDeck: () => paintPixelCityDeck,
@@ -1970,9 +1969,9 @@
     bodyHeight: () => bodyHeight,
     canStand: () => canStand,
     feet: () => feet,
-    getRuntimeBindings: () => getRuntimeBindings16,
+    getRuntimeBindings: () => getRuntimeBindings17,
     groundSlopeForce: () => groundSlopeForce,
-    initializeRuntimeModule: () => initializeRuntimeModule16,
+    initializeRuntimeModule: () => initializeRuntimeModule17,
     integrateSurfaceStep: () => integrateSurfaceStep,
     land: () => land,
     leaveSurface: () => leaveSurface,
@@ -1982,12 +1981,15 @@
     pose: () => pose,
     resetPlatforms: () => resetPlatforms,
     resolveHazards: () => resolveHazards,
+    spikeContact: () => spikeContact,
     staticSurfacePoses: () => staticSurfacePoses,
     surfaceBasis: () => surfaceBasis,
     surfaceNormalReaction: () => surfaceNormalReaction,
     surfaceOverlaps: () => surfaceOverlaps,
     surfaceTravelSpeed: () => surfaceTravelSpeed,
     surfaceVelocity: () => surfaceVelocity,
+    sweptBoxTime: () => sweptBoxTime,
+    sweptCircleTime: () => sweptCircleTime,
     sweptOrientedContact: () => sweptOrientedContact,
     topAt: () => topAt,
     yOn: () => yOn
@@ -3192,6 +3194,26 @@
   __name(drawPixelEnemy, "drawPixelEnemy");
   function drawPixelSpikes(hazard) {
     if (!polishVisible(hazard.x + hazard.w / 2, hazard.y, hazard.w / 2 + 20, hazard.h + 20)) return;
+    ctx.save();
+    const direction = hazard.direction ?? "up";
+    if (direction !== "up") {
+      if (direction === "left") {
+        ctx.translate(hazard.x, hazard.y + hazard.h);
+        ctx.rotate(-Math.PI / 2);
+      } else if (direction === "right") {
+        ctx.translate(hazard.x + hazard.w, hazard.y);
+        ctx.rotate(Math.PI / 2);
+      } else {
+        ctx.translate(hazard.x + hazard.w, hazard.y + hazard.h);
+        ctx.rotate(Math.PI);
+      }
+      hazard = {
+        x: 0,
+        y: 0,
+        w: direction === "down" ? hazard.w : hazard.h,
+        h: direction === "down" ? hazard.h : hazard.w
+      };
+    }
     const bottom = hazard.y + hazard.h, top = hazard.y, width = Math.min(20, hazard.w);
     cityPixelRect(hazard.x, bottom - 6, hazard.w, 6, "#152136");
     cityPixelRect(hazard.x, bottom - 6, hazard.w, 2, "#aa435f");
@@ -3205,6 +3227,7 @@
       }
       cityPixelRect(x + 2, bottom - 6, w - 4, 2, "#7894a2");
     }
+    ctx.restore();
   }
   __name(drawPixelSpikes, "drawPixelSpikes");
   function drawDebrisWarning(debris) {
@@ -4876,7 +4899,6 @@
     if (!p.ground && p.airSpeedLimit)
       p.vx = Math.max(-p.airSpeedLimit, Math.min(p.airSpeedLimit, p.vx));
     moveAndResolveSurfaces();
-    resolveHazards(p.lastX, p.lastY);
     stopRollAtRest();
     updateBrakingPose(dir, beforeSpeed);
     if (p.ground && p.surface?.grindable && Math.abs(p.vx) > 2 && state.runFrames % 3 === 0) {
@@ -5128,6 +5150,234 @@
   }
   __name(getRuntimeBindings15, "getRuntimeBindings");
 
+  // src/world-interactions.js
+  var world_interactions_exports = {};
+  __export(world_interactions_exports, {
+    activateWorldDevices: () => activateWorldDevices,
+    collectWorldRings: () => collectWorldRings,
+    configureDirectionalSpikes: () => configureDirectionalSpikes,
+    getRuntimeBindings: () => getRuntimeBindings16,
+    initializeRuntimeModule: () => initializeRuntimeModule16,
+    resolveMotionInteractions: () => resolveMotionInteractions,
+    resolveSpringContact: () => resolveSpringContact,
+    springFace: () => springFace,
+    updateWorldCheckpoints: () => updateWorldCheckpoints,
+    updateWorldEnemies: () => updateWorldEnemies,
+    updateWorldPlatforms: () => updateWorldPlatforms
+  });
+  function configureDirectionalSpikes(level) {
+    level.hazards = level.hazards.flatMap((h) => {
+      if (h.type !== "spikes" || h.direction || !(/^spike-\d+$/.test(h.id) || ["under-attack-spike-1", "split-skyline-spike-204"].includes(h.id)))
+        return [h];
+      const floor = h.y + h.h, depth = 12, height = 32;
+      return [
+        { ...h, direction: "left", y: floor - height, w: depth, h: height },
+        {
+          id: h.id + "-mount",
+          type: "bulkhead",
+          spikeMount: true,
+          x: h.x + depth,
+          y: floor - height,
+          w: h.w - 2 * depth,
+          h: height,
+          kind: "solid",
+          x1: h.x + depth,
+          x2: h.x + h.w - depth,
+          y1: floor - height,
+          y2: floor - height
+        },
+        {
+          ...h,
+          id: h.id + "-right",
+          direction: "right",
+          x: h.x + h.w - depth,
+          y: floor - height,
+          w: depth,
+          h: height
+        }
+      ];
+    });
+    return level;
+  }
+  __name(configureDirectionalSpikes, "configureDirectionalSpikes");
+  function updateWorldPlatforms() {
+    for (const s of state.level.surfaces) {
+      if (s.restoreAt && state.runFrames >= s.restoreAt) {
+        s.restoreAt = 0;
+        s.crumbleTimer = -1;
+      }
+      if (s.crumbleTimer >= 0 && !s.restoreAt) {
+        s.crumbleTimer--;
+        if (s.crumbleTimer === 0) {
+          s.restoreAt = state.runFrames + 240;
+          s.crumbleTimer = -1;
+          sparks((s.x1 + s.x2) / 2, s.y1, 10, "#ffac54");
+        }
+      }
+    }
+  }
+  __name(updateWorldPlatforms, "updateWorldPlatforms");
+  function collectWorldRings(oldX = p.x, oldY = p.y) {
+    for (const r of state.rings)
+      if (!r.taken && (!r.sealedBy || state.level.hazards.find((h) => h.id === r.sealedBy)?.broken) && sweptCircleTime(oldX, oldY, p.x, p.y, r.x, r.y, 29) !== null) {
+        r.taken = true;
+        state.count++;
+        state.score += 100;
+        gameSound("ring");
+        sparks(r.x, r.y, 3);
+      }
+  }
+  __name(collectWorldRings, "collectWorldRings");
+  function activateWorldDevices() {
+    for (const pad of state.level.pads)
+      if (p.ground && Math.abs(p.x - pad.x) < 25 && Math.abs(feet() - pad.y) < 8 && (pad.cityVent || pad.poolBooster || p.vx > 0) && (!pad.sealedBy || state.level.hazards.find((h) => h.id === pad.sealedBy)?.broken)) {
+        if (pad.poolBooster) {
+          p.vx = Math.max(p.vx, pad.launchX);
+          p.rolling = true;
+          p.roll = true;
+          p.rollAge = 0;
+          p.poolExit = true;
+          pad.firedAt = state.runFrames;
+          gameSound("pool", { launch: true });
+        } else if (pad.cityVent) launchAirDevice(pad);
+        else p.vx = Math.max(p.vx, 18.5);
+      }
+  }
+  __name(activateWorldDevices, "activateWorldDevices");
+  function springFace(d, t = state.runFrames) {
+    const s = state.level.surfaces.find((s2) => s2.id === d.surfaceId), q = s ? pose(s, t) : null;
+    const x = d.x + (q ? q.x1 - s.x1 : 0), y = q ? q.y1 + (d.x - s.x1) * q.slope : d.y;
+    const angle = polishDirection(d) * Math.PI / 8, nx = Math.sin(angle), ny = -Math.cos(angle);
+    const offset = 40 - [0, 4, -9, -6, -3, 1][polishedSpringFrame(d)] * 2;
+    return { x: x + nx * offset, y: y + ny * offset, nx, ny, tx: -ny, ty: nx };
+  }
+  __name(springFace, "springFace");
+  function resolveSpringContact(oldX, oldY, t0 = 0, t1 = 1) {
+    if (p.loop || p.wrongRouteDrop || bossOwnsControls()) return;
+    const half = bodyHeight() / 2, centerY = p.y + 20 - half, oldCenterY = oldY + 20 - half;
+    let hit = null;
+    for (const d of state.level.springs || []) {
+      if (d.id === "blimp-entry-spring" && !qualifyingBlimpEntry()) continue;
+      if (d.id === "blimp-return-spring" && !state.level.blimpRoute?.entered) continue;
+      const b = springFace(d, state.runFrames - 1 + t0), c = springFace(d, state.runFrames - 1 + t1);
+      const radius = Math.abs(c.nx) * 13 + Math.abs(c.ny) * half;
+      const before = (oldX - b.x) * c.nx + (oldCenterY - b.y) * c.ny - radius, after = (p.x - c.x) * c.nx + (centerY - c.y) * c.ny - radius;
+      const flush = p.ground && Math.abs(before) < 1e-8 && Math.abs(after) < 1e-8;
+      if (!flush && (before < -0.01 || after > 0 || after >= before)) continue;
+      const vx = Math.abs(c.nx) < 1e-8 ? 0 : -Math.sign(c.nx) * 13, vy = Math.abs(c.ny) < 1e-8 ? 0 : -Math.sign(c.ny) * half;
+      const edge = (Math.abs(c.nx) < 1e-8 ? 13 * Math.abs(c.tx) : 0) + (Math.abs(c.ny) < 1e-8 ? half * Math.abs(c.ty) : 0);
+      const from = (oldX + vx - b.x) * c.tx + (oldCenterY + vy - b.y) * c.ty, to = (p.x + vx - c.x) * c.tx + (centerY + vy - c.y) * c.ty;
+      const t = flush ? sweptBoxTime(from, 0, to, 0, -24 - edge, -1, 24 + edge, 1) : before / (before - after);
+      if (t === null) continue;
+      const x = oldX + (p.x - oldX) * t, y = oldCenterY + (centerY - oldCenterY) * t, tangent = from + (to - from) * t;
+      if (Math.abs(tangent) > 24 + edge || hit && hit.t <= t) continue;
+      hit = { d, t, x, y: y - 20 + half };
+    }
+    if (!hit) return;
+    p.x = hit.x;
+    p.y = hit.y;
+    if (hit.d.id === "blimp-entry-spring") state.level.blimpRoute.entered = true;
+    launchAirDevice(hit.d);
+  }
+  __name(resolveSpringContact, "resolveSpringContact");
+  function resolveMotionInteractions(oldX, oldY, oldSurface = null) {
+    if (bossOwnsControls()) return;
+    const deaths = state.stats.deaths;
+    p.interactionsFrame = state.runFrames;
+    collectWorldRings(oldX, oldY);
+    if (!p.loop) activateWorldDevices();
+    collectBoostMonitors(oldX, oldY);
+    updateWorldEnemies(oldX, oldY);
+    if (state.stats.deaths === deaths) updateWorldCheckpoints(oldX, oldY, oldSurface);
+  }
+  __name(resolveMotionInteractions, "resolveMotionInteractions");
+  function updateWorldEnemies(oldX = p.x, oldY = p.y) {
+    for (const e of state.enemies) {
+      if (!e.alive) continue;
+      e.x = e.base + Math.sin(state.runFrames * 0.018 + e.phase) * e.range;
+      e.y = e.baseY + (e.kind === "drone" ? Math.sin(state.runFrames * 0.027 + e.phase) * 12 : 0);
+      const contact = sweptCircleTime(oldX, oldY, p.x, p.y, e.x, e.y, 33);
+      if (contact !== null) {
+        const stomp = p.vy > 0 && oldY + (p.y - oldY) * contact + 20 <= e.y + 12 && !e.jumpImmune, jumpHit = !p.ground && p.jumpAttack && p.hurt === 0 && !e.jumpImmune;
+        if (p.boosting || p.ground && p.roll && Math.abs(p.vx) > 3 || stomp || jumpHit) {
+          e.alive = false;
+          state.score += 500;
+          sparks(e.x, e.y, 14, "#ff9556");
+          if (stomp && !p.boosting && e.rebound !== false) {
+            p.vy = p.jumpHeld ? -16 : -8;
+            p.poseJumpFrame = state.runFrames;
+            p.ground = false;
+            p.surface = null;
+            state.stats.rebound++;
+            gameSound("enemy");
+          } else gameSound("enemy");
+        } else if (!p.inv) {
+          hurt(e.x);
+          handleStageEnemyDamage(e);
+        }
+      }
+    }
+  }
+  __name(updateWorldEnemies, "updateWorldEnemies");
+  function updateWorldCheckpoints(oldX = p.x, oldY = p.y, oldSurface = null) {
+    for (let i = state.checkpoint + 1; i < state.level.checkpoints.length; i++) {
+      const c = state.level.checkpoints[i];
+      const crossed = oldSurface && oldX <= c.x && p.x >= c.x && ["main", "express"].includes(oldSurface.kind) && (!state.level.verticalCity || oldSurface.id === c.surfaceId) && c.x >= pose(oldSurface).x1 && c.x <= pose(oldSurface).x2 && Math.abs(yOn(oldSurface, c.x) - c.y) < 150;
+      if (crossed || p.x >= c.x && p.ground && ["main", "express"].includes(p.surface?.kind) && (!state.level.verticalCity || p.surface.id === c.surfaceId) && Math.abs(feet() - c.y) < 150) {
+        state.checkpoint = i;
+        state.stage = i;
+        if (state.level.act !== 2)
+          notify(
+            c.hint || state.level.sectors[state.level.sectors.findLastIndex((s) => s.x <= c.x)].hint
+          );
+        gameSound("checkpoint");
+      }
+    }
+    state.stage = Math.max(
+      0,
+      state.level.sectors.findLastIndex((s) => p.x >= s.x)
+    );
+  }
+  __name(updateWorldCheckpoints, "updateWorldCheckpoints");
+  function initializeRuntimeModule16() {
+  }
+  __name(initializeRuntimeModule16, "initializeRuntimeModule");
+  function getRuntimeBindings16() {
+    return {
+      updateWorldPlatforms: {
+        get: /* @__PURE__ */ __name(() => updateWorldPlatforms, "get"),
+        set: /* @__PURE__ */ __name((value) => {
+          updateWorldPlatforms = value;
+        }, "set")
+      },
+      collectWorldRings: {
+        get: /* @__PURE__ */ __name(() => collectWorldRings, "get"),
+        set: /* @__PURE__ */ __name((value) => {
+          collectWorldRings = value;
+        }, "set")
+      },
+      activateWorldDevices: {
+        get: /* @__PURE__ */ __name(() => activateWorldDevices, "get"),
+        set: /* @__PURE__ */ __name((value) => {
+          activateWorldDevices = value;
+        }, "set")
+      },
+      updateWorldEnemies: {
+        get: /* @__PURE__ */ __name(() => updateWorldEnemies, "get"),
+        set: /* @__PURE__ */ __name((value) => {
+          updateWorldEnemies = value;
+        }, "set")
+      },
+      updateWorldCheckpoints: {
+        get: /* @__PURE__ */ __name(() => updateWorldCheckpoints, "get"),
+        set: /* @__PURE__ */ __name((value) => {
+          updateWorldCheckpoints = value;
+        }, "set")
+      }
+    };
+  }
+  __name(getRuntimeBindings16, "getRuntimeBindings");
+
   // src/surface-collision.js
   var staticSurfacePoses;
   function pose(s, t = state.runFrames) {
@@ -5327,9 +5577,56 @@
     );
   }
   __name(canStand, "canStand");
+  function sweptBoxTime(ax, ay, bx, by, left, top, right, bottom) {
+    let enter = 0, exit = 1;
+    for (let axis = 0; axis < 2; axis++) {
+      const a = axis ? ay : ax, d = axis ? by - ay : bx - ax, lo = axis ? top : left, hi = axis ? bottom : right;
+      if (Math.abs(d) < 1e-10) {
+        if (a < lo || a > hi) return null;
+        continue;
+      }
+      const u = (lo - a) / d, v = (hi - a) / d;
+      enter = Math.max(enter, Math.min(u, v));
+      exit = Math.min(exit, Math.max(u, v));
+      if (enter > exit) return null;
+    }
+    return enter;
+  }
+  __name(sweptBoxTime, "sweptBoxTime");
+  function sweptCircleTime(ax, ay, bx, by, cx, cy, radius) {
+    const x = ax - cx, y = ay - cy, dx = bx - ax, dy = by - ay, c = x * x + y * y - radius * radius;
+    if (c <= 0) return 0;
+    const a = dx * dx + dy * dy;
+    if (a < 1e-10) return null;
+    const b = x * dx + y * dy, disc = b * b - a * c;
+    if (disc < 0) return null;
+    const t = (-b - Math.sqrt(disc)) / a;
+    return t >= 0 && t <= 1 ? t : null;
+  }
+  __name(sweptCircleTime, "sweptCircleTime");
+  function spikeContact(h, oldX, oldY) {
+    const direction = h.direction ?? "up", height = bodyHeight();
+    const nx = direction === "left" ? -1 : direction === "right" ? 1 : 0, ny = direction === "up" ? -1 : direction === "down" ? 1 : 0;
+    const cx = nx < 0 ? h.x : nx > 0 ? h.x + h.w : h.x + h.w / 2, cy = ny < 0 ? h.y : ny > 0 ? h.y + h.h : h.y + h.h / 2;
+    const half = height / 2, radius = Math.abs(nx) * 13 + Math.abs(ny) * half;
+    const before = (oldX - cx) * nx + (oldY + 20 - half - cy) * ny - radius, after = (p.x - cx) * nx + (p.y + 20 - half - cy) * ny - radius;
+    if (before < -0.01 || after > 0 || after > before) return false;
+    const t = before === after ? 0 : before / (before - after), x = oldX + (p.x - oldX) * t, y = oldY + (p.y - oldY) * t + 20 - half;
+    const along = nx ? y - cy : x - cx, span = nx ? h.h : h.w, extent = nx ? half : 13;
+    for (let start2 = 0; start2 < span; start2 += 20) {
+      const tip = -span / 2 + start2 + Math.min(20, span - start2) / 2;
+      if (Math.abs(along - tip) <= extent) return true;
+    }
+    return false;
+  }
+  __name(spikeContact, "spikeContact");
   function resolveHazards(oldX, oldY) {
     for (const h of state.level.hazards) {
       if (h.broken) continue;
+      if (h.type === "spikes") {
+        if (spikeContact(h, oldX, oldY)) hurt(h.x + h.w / 2);
+        continue;
+      }
       if (p.x + 13 < h.x || p.x - 13 > h.x + h.w) continue;
       const foot = feet(), height = bodyHeight(), top = foot - height;
       if (foot <= h.y || top >= h.y + h.h) continue;
@@ -5341,16 +5638,15 @@
         sparks(h.x, h.floor - 40, 18, "#ffcc70");
         continue;
       }
-      if (h.type === "spikes") {
-        hurt(h.x + h.w / 2);
-        continue;
-      }
       const previousTop = oldY + 20 - height;
       if (oldY + 20 <= h.y && p.vy >= 0) {
-        p.y = h.y - 20;
-        p.vy = 0;
-        p.ground = false;
-        reboundBubbleShield();
+        if (h.spikeMount) land(h, h.y);
+        else {
+          p.y = h.y - 20;
+          p.vy = 0;
+          p.ground = false;
+          reboundBubbleShield();
+        }
       } else if (previousTop >= h.y + h.h && p.vy < 0) {
         p.y = h.y + h.h + height - 20;
         p.vy = 1;
@@ -5417,8 +5713,12 @@
     ), dt = 1 / count;
     const lastX = p.x, lastY = p.y, deaths = state.stats.deaths;
     for (let i = 0; i < count; i++) {
+      const oldX = p.x, oldY = p.y, oldSurface = p.ground ? p.surface : null;
       integrateSurfaceStep(dt);
-      if (count > 1) resolveHazards(p.lastX, p.lastY);
+      resolveSpringContact(oldX, oldY, i / count, (i + 1) / count);
+      resolveHazards(oldX, oldY);
+      if (state.stats.deaths !== deaths) break;
+      resolveMotionInteractions(oldX, oldY, oldSurface);
       if (state.stats.deaths !== deaths) break;
     }
     p.lastX = lastX;
@@ -5619,11 +5919,11 @@
     p.roll = p.rolling || state.charge > 0 || !p.ground;
   }
   __name(integrateSurfaceStep, "integrateSurfaceStep");
-  function initializeRuntimeModule16() {
+  function initializeRuntimeModule17() {
     staticSurfacePoses = /* @__PURE__ */ new WeakMap();
   }
-  __name(initializeRuntimeModule16, "initializeRuntimeModule");
-  function getRuntimeBindings16() {
+  __name(initializeRuntimeModule17, "initializeRuntimeModule");
+  function getRuntimeBindings17() {
     return {
       staticSurfacePoses: {
         get: /* @__PURE__ */ __name(() => staticSurfacePoses, "get"),
@@ -5729,7 +6029,7 @@
       }
     };
   }
-  __name(getRuntimeBindings16, "getRuntimeBindings");
+  __name(getRuntimeBindings17, "getRuntimeBindings");
 
   // src/pixel-world.js
   var cityMaterials;
@@ -6307,7 +6607,7 @@
     }
   }
   __name(drawCityBreakable, "drawCityBreakable");
-  function initializeRuntimeModule17() {
+  function initializeRuntimeModule18() {
     state.cityRasterContext = null;
     cityMaterials = [
       {
@@ -6374,8 +6674,8 @@
     ringPalette = { g: "#efa900", y: "#f4ef00", w: "#f4f1ec", s: "#954100" };
     pixelRingTextures = /* @__PURE__ */ new Map();
   }
-  __name(initializeRuntimeModule17, "initializeRuntimeModule");
-  function getRuntimeBindings17() {
+  __name(initializeRuntimeModule18, "initializeRuntimeModule");
+  function getRuntimeBindings18() {
     return {
       cityPixelRect: {
         get: /* @__PURE__ */ __name(() => cityPixelRect, "get"),
@@ -6529,7 +6829,7 @@
       }
     };
   }
-  __name(getRuntimeBindings17, "getRuntimeBindings");
+  __name(getRuntimeBindings18, "getRuntimeBindings");
 
   // src/boss-art.js
   var scorpionParts;
@@ -6692,7 +6992,7 @@
     ctx.restore();
   }
   __name(renderEggScorpion, "renderEggScorpion");
-  function initializeRuntimeModule18() {
+  function initializeRuntimeModule19() {
     scorpionParts = /* @__PURE__ */ new Map();
     scorpionStamps = /* @__PURE__ */ new Map();
     scorpionBounds = {
@@ -6706,8 +7006,8 @@
       eyes: [1176, 674, 1535, 991, 74]
     };
   }
-  __name(initializeRuntimeModule18, "initializeRuntimeModule");
-  function getRuntimeBindings18() {
+  __name(initializeRuntimeModule19, "initializeRuntimeModule");
+  function getRuntimeBindings19() {
     return {
       scorpionParts: {
         get: /* @__PURE__ */ __name(() => scorpionParts, "get"),
@@ -6759,14 +7059,14 @@
       }
     };
   }
-  __name(getRuntimeBindings18, "getRuntimeBindings");
+  __name(getRuntimeBindings19, "getRuntimeBindings");
 
   // src/level2.js
   var level2_exports = {};
   __export(level2_exports, {
     act2LevelTemplate: () => act2LevelTemplate,
-    getRuntimeBindings: () => getRuntimeBindings19,
-    initializeRuntimeModule: () => initializeRuntimeModule19,
+    getRuntimeBindings: () => getRuntimeBindings20,
+    initializeRuntimeModule: () => initializeRuntimeModule20,
     makeLevel2: () => makeLevel2
   });
   var act2LevelTemplate;
@@ -6785,7 +7085,7 @@
     return level;
   }
   __name(makeLevel2, "makeLevel2");
-  function initializeRuntimeModule19() {
+  function initializeRuntimeModule20() {
     act2LevelTemplate = {
       blimpRoute: {
         entered: false,
@@ -14171,8 +14471,8 @@
       ]
     };
   }
-  __name(initializeRuntimeModule19, "initializeRuntimeModule");
-  function getRuntimeBindings19() {
+  __name(initializeRuntimeModule20, "initializeRuntimeModule");
+  function getRuntimeBindings20() {
     return {
       act2LevelTemplate: {
         get: /* @__PURE__ */ __name(() => act2LevelTemplate, "get"),
@@ -14188,14 +14488,14 @@
       }
     };
   }
-  __name(getRuntimeBindings19, "getRuntimeBindings");
+  __name(getRuntimeBindings20, "getRuntimeBindings");
 
   // src/traversal-animations.js
   var traversal_animations_exports = {};
   __export(traversal_animations_exports, {
     beginTraversalLaunch: () => beginTraversalLaunch,
-    getRuntimeBindings: () => getRuntimeBindings20,
-    initializeRuntimeModule: () => initializeRuntimeModule20,
+    getRuntimeBindings: () => getRuntimeBindings21,
+    initializeRuntimeModule: () => initializeRuntimeModule21,
     resetTraversalAnimation: () => resetTraversalAnimation,
     traversalAnimation: () => traversalAnimation,
     traversalGroundState: () => traversalGroundState,
@@ -14301,11 +14601,11 @@
     );
   }
   __name(traversalSonicPose, "traversalSonicPose");
-  function initializeRuntimeModule20() {
+  function initializeRuntimeModule21() {
     traversalAnimation = { state: null, since: 0, launch: null };
   }
-  __name(initializeRuntimeModule20, "initializeRuntimeModule");
-  function getRuntimeBindings20() {
+  __name(initializeRuntimeModule21, "initializeRuntimeModule");
+  function getRuntimeBindings21() {
     return {
       traversalAnimation: {
         get: /* @__PURE__ */ __name(() => traversalAnimation, "get"),
@@ -14347,157 +14647,6 @@
         get: /* @__PURE__ */ __name(() => traversalSonicPose, "get"),
         set: /* @__PURE__ */ __name((value) => {
           traversalSonicPose = value;
-        }, "set")
-      }
-    };
-  }
-  __name(getRuntimeBindings20, "getRuntimeBindings");
-
-  // src/world-interactions.js
-  var world_interactions_exports = {};
-  __export(world_interactions_exports, {
-    activateWorldDevices: () => activateWorldDevices,
-    collectWorldRings: () => collectWorldRings,
-    getRuntimeBindings: () => getRuntimeBindings21,
-    initializeRuntimeModule: () => initializeRuntimeModule21,
-    updateWorldCheckpoints: () => updateWorldCheckpoints,
-    updateWorldEnemies: () => updateWorldEnemies,
-    updateWorldPlatforms: () => updateWorldPlatforms
-  });
-  function updateWorldPlatforms() {
-    for (const s of state.level.surfaces) {
-      if (s.restoreAt && state.runFrames >= s.restoreAt) {
-        s.restoreAt = 0;
-        s.crumbleTimer = -1;
-      }
-      if (s.crumbleTimer >= 0 && !s.restoreAt) {
-        s.crumbleTimer--;
-        if (s.crumbleTimer === 0) {
-          s.restoreAt = state.runFrames + 240;
-          s.crumbleTimer = -1;
-          sparks((s.x1 + s.x2) / 2, s.y1, 10, "#ffac54");
-        }
-      }
-    }
-  }
-  __name(updateWorldPlatforms, "updateWorldPlatforms");
-  function collectWorldRings() {
-    for (const r of state.rings)
-      if (!r.taken && (!r.sealedBy || state.level.hazards.find((h) => h.id === r.sealedBy)?.broken) && Math.hypot(r.x - p.x, r.y - p.y) < 29) {
-        r.taken = true;
-        state.count++;
-        state.score += 100;
-        gameSound("ring");
-        sparks(r.x, r.y, 3);
-      }
-  }
-  __name(collectWorldRings, "collectWorldRings");
-  function activateWorldDevices() {
-    for (const pad of state.level.pads)
-      if (p.ground && Math.abs(p.x - pad.x) < 25 && Math.abs(feet() - pad.y) < 8 && (pad.cityVent || pad.poolBooster || p.vx > 0) && (!pad.sealedBy || state.level.hazards.find((h) => h.id === pad.sealedBy)?.broken)) {
-        if (pad.poolBooster) {
-          p.vx = Math.max(p.vx, pad.launchX);
-          p.rolling = true;
-          p.roll = true;
-          p.rollAge = 0;
-          p.poolExit = true;
-          pad.firedAt = state.runFrames;
-          gameSound("pool", { launch: true });
-        } else if (pad.cityVent) launchAirDevice(pad);
-        else p.vx = Math.max(p.vx, 18.5);
-      }
-    for (const spring of state.level.springs || []) {
-      const device = airDevicePose(spring);
-      const grounded = p.ground && p.surface?.id === spring.surfaceId && Math.abs(p.x - device.x) < 23;
-      if (spring.id === "blimp-entry-spring") {
-        if (qualifyingBlimpEntry() && (grounded || blimpSpringContact(device))) {
-          state.level.blimpRoute.entered = true;
-          launchAirDevice(spring);
-        }
-      } else if (grounded && (spring.id !== "blimp-return-spring" || state.level.blimpRoute?.entered))
-        launchAirDevice(spring);
-    }
-  }
-  __name(activateWorldDevices, "activateWorldDevices");
-  function updateWorldEnemies() {
-    for (const e of state.enemies) {
-      if (!e.alive) continue;
-      e.x = e.base + Math.sin(state.runFrames * 0.018 + e.phase) * e.range;
-      e.y = e.baseY + (e.kind === "drone" ? Math.sin(state.runFrames * 0.027 + e.phase) * 12 : 0);
-      if (Math.hypot(p.x - e.x, p.y - e.y) < 33) {
-        const stomp = p.vy > 0 && feet() <= e.y + 12 && !e.jumpImmune, jumpHit = !p.ground && p.jumpAttack && p.hurt === 0 && !e.jumpImmune;
-        if (p.boosting || p.ground && p.roll && Math.abs(p.vx) > 3 || stomp || jumpHit) {
-          e.alive = false;
-          state.score += 500;
-          sparks(e.x, e.y, 14, "#ff9556");
-          if (stomp && !p.boosting && e.rebound !== false) {
-            p.vy = p.jumpHeld ? -16 : -8;
-            p.poseJumpFrame = state.runFrames;
-            p.ground = false;
-            p.surface = null;
-            state.stats.rebound++;
-            gameSound("enemy");
-          } else gameSound("enemy");
-        } else if (!p.inv) {
-          hurt(e.x);
-          handleStageEnemyDamage(e);
-        }
-      }
-    }
-  }
-  __name(updateWorldEnemies, "updateWorldEnemies");
-  function updateWorldCheckpoints() {
-    for (let i = state.checkpoint + 1; i < state.level.checkpoints.length; i++) {
-      const c = state.level.checkpoints[i];
-      if (p.x >= c.x && p.ground && ["main", "express"].includes(p.surface?.kind) && (!state.level.verticalCity || p.surface.id === c.surfaceId) && Math.abs(feet() - c.y) < 150) {
-        state.checkpoint = i;
-        state.stage = i;
-        if (state.level.act !== 2)
-          notify(
-            c.hint || state.level.sectors[state.level.sectors.findLastIndex((s) => s.x <= c.x)].hint
-          );
-        gameSound("checkpoint");
-      }
-    }
-    state.stage = Math.max(
-      0,
-      state.level.sectors.findLastIndex((s) => p.x >= s.x)
-    );
-  }
-  __name(updateWorldCheckpoints, "updateWorldCheckpoints");
-  function initializeRuntimeModule21() {
-  }
-  __name(initializeRuntimeModule21, "initializeRuntimeModule");
-  function getRuntimeBindings21() {
-    return {
-      updateWorldPlatforms: {
-        get: /* @__PURE__ */ __name(() => updateWorldPlatforms, "get"),
-        set: /* @__PURE__ */ __name((value) => {
-          updateWorldPlatforms = value;
-        }, "set")
-      },
-      collectWorldRings: {
-        get: /* @__PURE__ */ __name(() => collectWorldRings, "get"),
-        set: /* @__PURE__ */ __name((value) => {
-          collectWorldRings = value;
-        }, "set")
-      },
-      activateWorldDevices: {
-        get: /* @__PURE__ */ __name(() => activateWorldDevices, "get"),
-        set: /* @__PURE__ */ __name((value) => {
-          activateWorldDevices = value;
-        }, "set")
-      },
-      updateWorldEnemies: {
-        get: /* @__PURE__ */ __name(() => updateWorldEnemies, "get"),
-        set: /* @__PURE__ */ __name((value) => {
-          updateWorldEnemies = value;
-        }, "set")
-      },
-      updateWorldCheckpoints: {
-        get: /* @__PURE__ */ __name(() => updateWorldCheckpoints, "get"),
-        set: /* @__PURE__ */ __name((value) => {
-          updateWorldCheckpoints = value;
         }, "set")
       }
     };
@@ -14723,6 +14872,7 @@
     state.level = configureBoostMonitors(
       state.selectedAct === 2 ? addMiddleSection(makeLevel2()) : makeLevel()
     );
+    configureDirectionalSpikes(state.level);
     selectStageRuntime();
     state.END = state.level.end;
     setupBossEncounter();
@@ -14795,6 +14945,7 @@
       rolling: false,
       dashRolling: false,
       contactSpeed: null,
+      interactionsFrame: -1,
       rollAge: 0,
       lowRollFrames: 0,
       rollSpent: false,
@@ -15068,12 +15219,17 @@
       updateHud();
       return;
     }
-    collectWorldRings();
-    activateWorldDevices();
-    collectBoostMonitors();
+    const motionHandled = p.interactionsFrame === state.runFrames;
+    if (!motionHandled) {
+      collectWorldRings();
+      activateWorldDevices();
+      collectBoostMonitors();
+    }
     updateBossEncounter();
-    updateWorldEnemies();
-    updateWorldCheckpoints();
+    if (!motionHandled) {
+      updateWorldEnemies();
+      updateWorldCheckpoints();
+    }
     updateStageCompletion();
     updateTraversalAnimation();
     updateParticles();
@@ -15735,6 +15891,7 @@
       rolling: false,
       dashRolling: false,
       contactSpeed: null,
+      interactionsFrame: -1,
       rollAge: 0,
       lowRollFrames: 0,
       rollSpent: false,
@@ -16405,7 +16562,8 @@
       p.groundBoostHeld = want;
     }
     const free = freeRailBoost(), eligible = !state.charge && !p.hurt && !p.wrongRouteDrop && !p.bubbleSlam;
-    if (p.airBoostRequested && want && !p.ground && !p.airBoostUsed && state.boost > 0 && !p.boostLocked && eligible) {
+    if (p.airBoostRequested && want && !p.ground && !p.airBoostUsed && state.boost >= BOOST_MAX / 4 && !p.boostLocked && eligible) {
+      state.boost -= BOOST_MAX / 4;
       p.airBoostUsed = true;
       p.airBoostFrames = 18;
       p.groundBoostHeld = false;
@@ -16418,13 +16576,13 @@
       p.jumpAttack = true;
     }
     p.airBoostRequested = false;
-    p.boosting = !!(want && (p.ground || p.groundBoostHeld || p.airBoostFrames > 0) && (free || state.boost > 0 && !p.boostLocked) && eligible);
+    p.boosting = !!(want && (p.ground ? free || state.boost > 0 && !p.boostLocked : p.airBoostFrames > 0) && eligible);
     if (p.boosting && p.airBoostFrames > 0) {
       p.vy = 0;
       p.airBoostFrames--;
       p.airBoostActive = true;
     } else p.airBoostActive = false;
-    if (p.boosting && !free) {
+    if (p.boosting && p.ground && !free) {
       state.boost = Math.max(0, state.boost - 0.5);
       if (!state.boost) p.boostLocked = true;
     }
@@ -16505,11 +16663,13 @@
     return { ...m, x: m.x + q.x1 - s.x1, y: yOn(s, m.x + q.x1 - s.x1) };
   }
   __name(monitorPose, "monitorPose");
-  function collectBoostMonitors() {
+  function collectBoostMonitors(oldX = p.x, oldY = p.y) {
     for (const m of state.level.monitors || []) {
       if (m.broken) continue;
       const q = monitorPose(m);
-      if (Math.abs(p.x - q.x) > 34 || feet() < q.y - 58 || feet() - bodyHeight() > q.y) continue;
+      const height = bodyHeight();
+      if (sweptBoxTime(oldX, oldY, p.x, p.y, q.x - 34, q.y - 78, q.x + 34, q.y - 20 + height) === null)
+        continue;
       const attacking = p.boosting || p.rolling && Math.abs(p.vx) > 2 || !p.ground && p.jumpAttack;
       if (!attacking) continue;
       m.broken = true;
@@ -16747,16 +16907,6 @@
     return r && r.entryJumpFrame === p.poseJumpFrame && r.entryJumpSpeed >= 24 && !p.airBoostUsed;
   }
   __name(qualifyingBlimpEntry, "qualifyingBlimpEntry");
-  function blimpSpringContact(d) {
-    const a = polishDirection(d) * Math.PI / 8, tx = Math.cos(a), ty = Math.sin(a), nx = ty, ny = -tx;
-    const cx = d.x + nx * 40, cy = d.y + ny * 40, normalRadius = Math.abs(nx) * 13;
-    const before = (p.lastX - cx) * nx + (p.lastY + 20 - cy) * ny - normalRadius, after = (p.x - cx) * nx + (feet() - cy) * ny - normalRadius;
-    if (before < -8 || after > 0 || after >= before) return false;
-    const t = Math.max(0, Math.min(1, before / (before - after))), x = p.lastX + (p.x - p.lastX) * t, y = p.lastY + 20 + (feet() - p.lastY - 20) * t;
-    const halfHeight = bodyHeight() / 2, tangent = (x - cx) * tx + (y - halfHeight - cy) * ty;
-    return Math.abs(tangent) <= 24 + Math.abs(tx) * 13 + Math.abs(ty) * halfHeight;
-  }
-  __name(blimpSpringContact, "blimpSpringContact");
   function drawBlimpRoute() {
     for (const b of state.level.blimpRoute?.blimps || []) {
       const surfaces = b.surfaces.map(surfaceById), first = pose(surfaces[0]), last = pose(surfaces.at(-1)), x = first.x1, right = last.x2, top = Math.min(...surfaces.map((s) => Math.min(s.y1, s.y2))), bottom = Math.max(...surfaces.map((s) => Math.max(s.y1, s.y2))) + (b.damaged ? 154 : 234);
@@ -16889,18 +17039,6 @@
           qualifyingBlimpEntry = value;
         }, "set")
       },
-      blimpSpringContact: {
-        get: /* @__PURE__ */ __name(() => blimpSpringContact, "get"),
-        set: /* @__PURE__ */ __name((value) => {
-          blimpSpringContact = value;
-        }, "set")
-      },
-      blimpTextures: {
-        get: /* @__PURE__ */ __name(() => blimpTextures, "get"),
-        set: /* @__PURE__ */ __name((value) => {
-          blimpTextures = value;
-        }, "set")
-      },
       drawBlimpRoute: {
         get: /* @__PURE__ */ __name(() => drawBlimpRoute, "get"),
         set: /* @__PURE__ */ __name((value) => {
@@ -17006,9 +17144,20 @@
       const previous = q.speed, drag = q.speed * q.drag, drive = p.boosting && q.speed * p.face < 23 ? (p.face * 23 - q.speed) * 0.14 : dir && (Math.abs(q.speed) < 14 || dir !== Math.sign(q.speed)) ? dir * 0.06 * Math.max(0, Math.cos(q.theta)) : 0;
       const tangentY = -Math.sin(q.theta), slopeForce = l.profile === "advanced" ? gravity : groundSlopeForce(p.rolling, q.speed, tangentY) * (gravity / groundSlopeForce(false, 0, 0));
       q.speed += (slopeForce * tangentY - drag + drive) * dt;
+      const oldX = p.x, oldY = p.y, deaths = state.stats.deaths;
       q.theta += (previous + q.speed) * 0.5 / l.r * dt;
       p.x = l.x + Math.sin(q.theta) * l.r;
       p.y = l.y - l.r + Math.cos(q.theta) * l.r - 20;
+      p.vx = Math.cos(q.theta) * q.speed;
+      p.vy = -Math.sin(q.theta) * q.speed;
+      resolveMotionInteractions(oldX, oldY);
+      if (state.stats.deaths !== deaths) return true;
+      if (!p.ground) {
+        p.loop = null;
+        l.used = false;
+        l.entryLocked = true;
+        return true;
+      }
       if (state.jumpBuffer > 0 || surfaceNormalReaction(q.speed, -1 / l.r, -Math.cos(q.theta), gravity) < 0) {
         p.vx = Math.cos(q.theta) * q.speed;
         p.vy = -Math.sin(q.theta) * q.speed;

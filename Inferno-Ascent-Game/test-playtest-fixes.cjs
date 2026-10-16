@@ -7,10 +7,11 @@ test('skill spring decks match the spring foot width, including the moving hoist
   assert.equal(a.run(`surfaceById(level.springs.find(d=>d.id==='${id}').surfaceId).x2-surfaceById(level.springs.find(d=>d.id==='${id}').surfaceId).x1`),58,id);
  }
 });
-test('early spring jumps forgive neutral steering but the third landing needs aiming',()=>{
- const a=boot();a.run("const d=level.springs.find(d=>d.id==='mid-upper-spring');p.x=d.x;p.y=d.y-20;p.surface=surfaceById(d.surfaceId);p.ground=true;launchAirDevice(d);keys.clear();for(let i=0;i<135;i++)update()");
- assert.equal(a.run("visited.has('mid-spring-step-1')"),true);
- assert.equal(a.run("visited.has('mid-spring-step-2')"),true);
+test('early spring caps accept air aiming but the third landing still needs aiming',()=>{
+ const a=boot();a.run("const d=level.springs.find(d=>d.id==='mid-upper-spring');p.x=d.x;p.y=d.y-20;p.surface=surfaceById(d.surfaceId);p.ground=true;{const f=springFace(d);p.x=f.x+f.nx*23;p.y=f.y+f.ny*23-1;}launchAirDevice(d)");
+ a.run(require('./route-test-helpers.cjs').aimHighSource);a.run("for(let i=0;i<135;i++){if(level.springs.find(d=>d.id==='mid-spring-2').firedAt===undefined)aimHigh();else keys.clear();update()}");
+ assert.equal(a.run("level.springs.find(d=>d.id==='mid-spring-1').firedAt!==undefined"),true);
+ assert.equal(a.run("level.springs.find(d=>d.id==='mid-spring-2').firedAt!==undefined"),true);
  assert.equal(a.run("visited.has('mid-spring-aim-step')"),false);
 });
 test('pool collision forms a connected bowl from burned tower to tilted roof',()=>{
@@ -21,12 +22,12 @@ test('pool collision forms a connected bowl from burned tower to tilted roof',()
  const roof=a.run("surfaceById('mid-tilted-glass-roof')");assert.equal(segments.at(-1).x2,roof.x1);assert.equal(segments.at(-1).y2,roof.y1);
 });
 test('a missed aimed spring falls naturally onto the lower roof without death',()=>{
- const a=boot();a.run("const d=level.springs.find(d=>d.id==='mid-spring-2');p.x=d.x;p.y=d.y-20;p.surface=surfaceById(d.surfaceId);p.ground=true;count=20;launchAirDevice(d);keys.clear()");
+ const a=boot();a.run("const d=level.springs.find(d=>d.id==='mid-spring-2');p.x=d.x;p.y=d.y-20;p.surface=surfaceById(d.surfaceId);p.ground=true;count=20;{const f=springFace(d);p.x=f.x+f.nx*23;p.y=f.y+f.ny*23-1;}launchAirDevice(d);keys.clear()");
  for(let f=0;f<160;f++){a.run('update()');if(a.run('p.ground'))break}
  assert.equal(a.run('p.surface?.id'),'mid-tilted-glass-roof');assert.equal(a.run('stats.deaths'),0);
 });
 test('lower spring reaches the curved pool and exits by ground momentum without a midair pull',()=>{
- const a=boot();a.run("const d=level.springs.find(d=>d.id==='mid-low-spring');p.x=d.x;p.y=d.y-20;p.surface=surfaceById(d.surfaceId);p.ground=true;count=20;boost=0;launchAirDevice(d);keys.add('ArrowRight');keys.add('ArrowDown')");
+ const a=boot();a.run("const d=level.springs.find(d=>d.id==='mid-low-spring');p.x=d.x;p.y=d.y-20;p.surface=surfaceById(d.surfaceId);p.ground=true;count=20;boost=0;{const f=springFace(d);p.x=f.x+f.nx*23;p.y=f.y+f.ny*23-1;}launchAirDevice(d);keys.add('ArrowRight');keys.add('ArrowDown')");
  let entered=false,panel=false,exited=false;
  for(let i=0;i<260;i++){
   const before=a.run('p.x');a.run('update()');assert.ok(Math.abs(a.run('p.x')-before)<=24.01,'no scripted position pull');

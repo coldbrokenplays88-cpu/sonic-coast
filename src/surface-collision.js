@@ -3,6 +3,7 @@ import { state as runtimeState } from './state.js';
 import { recordBlimpDeparture } from './blimp-route.js';
 import { FOOT_RADIUS, gameSound, hurt, keys, p, sparks, tuning } from './game.js';
 import { jump, reboundBubbleShield } from './player-movement.js';
+import { resolveMotionInteractions, resolveSpringContact } from './world-interactions.js';
 import { afterStageLanding, beforeStageLanding } from './stage-runtime.js';
 export let staticSurfacePoses;
 
@@ -239,9 +240,77 @@ export function canStand() {
   );
 }
 
+// Segment entry time into an axis-aligned rectangle; null means no contact.
+export function sweptBoxTime(ax, ay, bx, by, left, top, right, bottom) {
+  let enter = 0,
+    exit = 1;
+  for (let axis = 0; axis < 2; axis++) {
+    const a = axis ? ay : ax,
+      d = axis ? by - ay : bx - ax,
+      lo = axis ? top : left,
+      hi = axis ? bottom : right;
+    if (Math.abs(d) < 1e-10) {
+      if (a < lo || a > hi) return null;
+      continue;
+    }
+    const u = (lo - a) / d,
+      v = (hi - a) / d;
+    enter = Math.max(enter, Math.min(u, v));
+    exit = Math.min(exit, Math.max(u, v));
+    if (enter > exit) return null;
+  }
+  return enter;
+}
+
+export function sweptCircleTime(ax, ay, bx, by, cx, cy, radius) {
+  const x = ax - cx,
+    y = ay - cy,
+    dx = bx - ax,
+    dy = by - ay,
+    c = x * x + y * y - radius * radius;
+  if (c <= 0) return 0;
+  const a = dx * dx + dy * dy;
+  if (a < 1e-10) return null;
+  const b = x * dx + y * dy,
+    disc = b * b - a * c;
+  if (disc < 0) return null;
+  const t = (-b - Math.sqrt(disc)) / a;
+  return t >= 0 && t <= 1 ? t : null;
+}
+
+export function spikeContact(h, oldX, oldY) {
+  const direction = h.direction ?? 'up',
+    height = bodyHeight();
+  const nx = direction === 'left' ? -1 : direction === 'right' ? 1 : 0,
+    ny = direction === 'up' ? -1 : direction === 'down' ? 1 : 0;
+  const cx = nx < 0 ? h.x : nx > 0 ? h.x + h.w : h.x + h.w / 2,
+    cy = ny < 0 ? h.y : ny > 0 ? h.y + h.h : h.y + h.h / 2;
+  const half = height / 2,
+    radius = Math.abs(nx) * 13 + Math.abs(ny) * half;
+  const before = (oldX - cx) * nx + (oldY + 20 - half - cy) * ny - radius,
+    after = (p.x - cx) * nx + (p.y + 20 - half - cy) * ny - radius;
+  if (before < -0.01 || after > 0 || after > before) return false;
+  const t = before === after ? 0 : before / (before - after),
+    x = oldX + (p.x - oldX) * t,
+    y = oldY + (p.y - oldY) * t + 20 - half;
+  const along = nx ? y - cy : x - cx,
+    span = nx ? h.h : h.w,
+    extent = nx ? half : 13;
+  // Test the actual visible tooth tips, rather than the harmless casing rectangle.
+  for (let start = 0; start < span; start += 20) {
+    const tip = -span / 2 + start + Math.min(20, span - start) / 2;
+    if (Math.abs(along - tip) <= extent) return true;
+  }
+  return false;
+}
+
 export function resolveHazards(oldX, oldY) {
   for (const h of runtimeState.level.hazards) {
     if (h.broken) continue;
+    if (h.type === 'spikes') {
+      if (spikeContact(h, oldX, oldY)) hurt(h.x + h.w / 2);
+      continue;
+    }
     if (p.x + 13 < h.x || p.x - 13 > h.x + h.w) continue;
     const foot = feet(),
       height = bodyHeight(),
@@ -255,17 +324,16 @@ export function resolveHazards(oldX, oldY) {
       sparks(h.x, h.floor - 40, 18, '#ffcc70');
       continue;
     }
-    if (h.type === 'spikes') {
-      hurt(h.x + h.w / 2);
-      continue;
-    }
     // Gantries remain solid during damage immunity. A correct roll keeps every bit of speed.
     const previousTop = oldY + 20 - height;
     if (oldY + 20 <= h.y && p.vy >= 0) {
-      p.y = h.y - 20;
-      p.vy = 0;
-      p.ground = false;
-      reboundBubbleShield();
+      if (h.spikeMount) land(h, h.y);
+      else {
+        p.y = h.y - 20;
+        p.vy = 0;
+        p.ground = false;
+        reboundBubbleShield();
+      }
     } else if (previousTop >= h.y + h.h && p.vy < 0) {
       p.y = h.y + h.h + height - 20;
       p.vy = 1;
@@ -356,8 +424,14 @@ export function moveAndResolveSurfaces() {
     lastY = p.y,
     deaths = runtimeState.stats.deaths;
   for (let i = 0; i < count; i++) {
+    const oldX = p.x,
+      oldY = p.y,
+      oldSurface = p.ground ? p.surface : null;
     integrateSurfaceStep(dt);
-    if (count > 1) resolveHazards(p.lastX, p.lastY);
+    resolveSpringContact(oldX, oldY, i / count, (i + 1) / count);
+    resolveHazards(oldX, oldY);
+    if (runtimeState.stats.deaths !== deaths) break;
+    resolveMotionInteractions(oldX, oldY, oldSurface);
     if (runtimeState.stats.deaths !== deaths) break;
   }
   p.lastX = lastX;

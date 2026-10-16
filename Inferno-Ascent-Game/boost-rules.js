@@ -22,10 +22,11 @@ function updateBoostState(want) {
     want &&
     !p.ground &&
     !p.airBoostUsed &&
-    boost > 0 &&
+    boost >= BOOST_MAX / 4 &&
     !p.boostLocked &&
     eligible
   ) {
+    boost -= BOOST_MAX / 4;
     p.airBoostUsed = true;
     p.airBoostFrames = 18;
     p.groundBoostHeld = false;
@@ -40,8 +41,7 @@ function updateBoostState(want) {
   p.airBoostRequested = false;
   p.boosting = !!(
     want &&
-    (p.ground || p.groundBoostHeld || p.airBoostFrames > 0) &&
-    (free || (boost > 0 && !p.boostLocked)) &&
+    (p.ground ? free || (boost > 0 && !p.boostLocked) : p.airBoostFrames > 0) &&
     eligible
   );
   if (p.boosting && p.airBoostFrames > 0) {
@@ -49,7 +49,7 @@ function updateBoostState(want) {
     p.airBoostFrames--;
     p.airBoostActive = true;
   } else p.airBoostActive = false;
-  if (p.boosting && !free) {
+  if (p.boosting && p.ground && !free) {
     boost = Math.max(0, boost - 0.5);
     if (!boost) p.boostLocked = true;
   }
@@ -156,11 +156,15 @@ function monitorPose(m) {
   return { ...m, x: m.x + q.x1 - s.x1, y: yOn(s, m.x + q.x1 - s.x1) };
 }
 
-function collectBoostMonitors() {
+function collectBoostMonitors(oldX = p.x, oldY = p.y) {
   for (const m of level.monitors || []) {
     if (m.broken) continue;
     const q = monitorPose(m);
-    if (Math.abs(p.x - q.x) > 34 || feet() < q.y - 58 || feet() - bodyHeight() > q.y) continue;
+    const height = bodyHeight();
+    if (
+      sweptBoxTime(oldX, oldY, p.x, p.y, q.x - 34, q.y - 78, q.x + 34, q.y - 20 + height) === null
+    )
+      continue;
     const attacking =
       p.boosting || (p.rolling && Math.abs(p.vx) > 2) || (!p.ground && p.jumpAttack);
     if (!attacking) continue;

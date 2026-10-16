@@ -2,10 +2,9 @@
 import { state as runtimeState } from './state.js';
 import { cityFlame, citySmoke } from './act2.js';
 import { surfaceById } from './boost-rules.js';
-import { polishDirection } from './city-polish.js';
 import { H, W, ctx, p, tuning } from './game.js';
 import { cityPixelRect } from './pixel-world.js';
-import { bodyHeight, feet, pose, yOn } from './surface-collision.js';
+import { pose, yOn } from './surface-collision.js';
 export let blimpTextures;
 
 // Optional flight above Burning Quarter. Coordinates derive from the existing
@@ -158,28 +157,6 @@ export function onBlimpLanding(s) {
 export function qualifyingBlimpEntry() {
   const r = runtimeState.level.blimpRoute;
   return r && r.entryJumpFrame === p.poseJumpFrame && r.entryJumpSpeed >= 24 && !p.airBoostUsed;
-}
-
-export function blimpSpringContact(d) {
-  // Sweep the player's collision rectangle against the rendered angled cap.
-  // The raster's cap is 40 units above its pivot with a 24-unit half width.
-  const a = (polishDirection(d) * Math.PI) / 8,
-    tx = Math.cos(a),
-    ty = Math.sin(a),
-    nx = ty,
-    ny = -tx;
-  const cx = d.x + nx * 40,
-    cy = d.y + ny * 40,
-    normalRadius = Math.abs(nx) * 13;
-  const before = (p.lastX - cx) * nx + (p.lastY + 20 - cy) * ny - normalRadius,
-    after = (p.x - cx) * nx + (feet() - cy) * ny - normalRadius;
-  if (before < -8 || after > 0 || after >= before) return false;
-  const t = Math.max(0, Math.min(1, before / (before - after))),
-    x = p.lastX + (p.x - p.lastX) * t,
-    y = p.lastY + 20 + (feet() - p.lastY - 20) * t;
-  const halfHeight = bodyHeight() / 2,
-    tangent = (x - cx) * tx + (y - halfHeight - cy) * ty;
-  return Math.abs(tangent) <= 24 + Math.abs(tx) * 13 + Math.abs(ty) * halfHeight;
 }
 
 export function drawBlimpRoute() {
@@ -343,18 +320,6 @@ export function getRuntimeBindings() {
       get: () => qualifyingBlimpEntry,
       set: (value) => {
         qualifyingBlimpEntry = value;
-      },
-    },
-    blimpSpringContact: {
-      get: () => blimpSpringContact,
-      set: (value) => {
-        blimpSpringContact = value;
-      },
-    },
-    blimpTextures: {
-      get: () => blimpTextures,
-      set: (value) => {
-        blimpTextures = value;
       },
     },
     drawBlimpRoute: {

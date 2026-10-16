@@ -1,7 +1,7 @@
 // Canonical runtime module. Classic VM compatibility is generated from this source.
 import { state as runtimeState } from './state.js';
 import { BOOST_MAX, gameSound, p, sparks } from './game.js';
-import { bodyHeight, feet, pose, yOn } from './surface-collision.js';
+import { bodyHeight, pose, yOn, sweptBoxTime } from './surface-collision.js';
 
 export function freeRailBoost() {
   return !!(p.ground && p.surface?.grindable && p.surface.infiniteBoost);
@@ -25,10 +25,11 @@ export function updateBoostState(want) {
     want &&
     !p.ground &&
     !p.airBoostUsed &&
-    runtimeState.boost > 0 &&
+    runtimeState.boost >= BOOST_MAX / 4 &&
     !p.boostLocked &&
     eligible
   ) {
+    runtimeState.boost -= BOOST_MAX / 4;
     p.airBoostUsed = true;
     p.airBoostFrames = 18;
     p.groundBoostHeld = false;
@@ -43,8 +44,7 @@ export function updateBoostState(want) {
   p.airBoostRequested = false;
   p.boosting = !!(
     want &&
-    (p.ground || p.groundBoostHeld || p.airBoostFrames > 0) &&
-    (free || (runtimeState.boost > 0 && !p.boostLocked)) &&
+    (p.ground ? free || (runtimeState.boost > 0 && !p.boostLocked) : p.airBoostFrames > 0) &&
     eligible
   );
   if (p.boosting && p.airBoostFrames > 0) {
@@ -52,7 +52,7 @@ export function updateBoostState(want) {
     p.airBoostFrames--;
     p.airBoostActive = true;
   } else p.airBoostActive = false;
-  if (p.boosting && !free) {
+  if (p.boosting && p.ground && !free) {
     runtimeState.boost = Math.max(0, runtimeState.boost - 0.5);
     if (!runtimeState.boost) p.boostLocked = true;
   }
@@ -159,11 +159,15 @@ export function monitorPose(m) {
   return { ...m, x: m.x + q.x1 - s.x1, y: yOn(s, m.x + q.x1 - s.x1) };
 }
 
-export function collectBoostMonitors() {
+export function collectBoostMonitors(oldX = p.x, oldY = p.y) {
   for (const m of runtimeState.level.monitors || []) {
     if (m.broken) continue;
     const q = monitorPose(m);
-    if (Math.abs(p.x - q.x) > 34 || feet() < q.y - 58 || feet() - bodyHeight() > q.y) continue;
+    const height = bodyHeight();
+    if (
+      sweptBoxTime(oldX, oldY, p.x, p.y, q.x - 34, q.y - 78, q.x + 34, q.y - 20 + height) === null
+    )
+      continue;
     const attacking =
       p.boosting || (p.rolling && Math.abs(p.vx) > 2) || (!p.ground && p.jumpAttack);
     if (!attacking) continue;

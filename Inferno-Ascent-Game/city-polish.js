@@ -513,6 +513,26 @@ function drawPixelEnemy(enemy) {
 
 function drawPixelSpikes(hazard) {
   if (!polishVisible(hazard.x + hazard.w / 2, hazard.y, hazard.w / 2 + 20, hazard.h + 20)) return;
+  ctx.save();
+  const direction = hazard.direction ?? 'up';
+  if (direction !== 'up') {
+    if (direction === 'left') {
+      ctx.translate(hazard.x, hazard.y + hazard.h);
+      ctx.rotate(-Math.PI / 2);
+    } else if (direction === 'right') {
+      ctx.translate(hazard.x + hazard.w, hazard.y);
+      ctx.rotate(Math.PI / 2);
+    } else {
+      ctx.translate(hazard.x + hazard.w, hazard.y + hazard.h);
+      ctx.rotate(Math.PI);
+    }
+    hazard = {
+      x: 0,
+      y: 0,
+      w: direction === 'down' ? hazard.w : hazard.h,
+      h: direction === 'down' ? hazard.h : hazard.w,
+    };
+  }
   const bottom = hazard.y + hazard.h,
     top = hazard.y,
     width = Math.min(20, hazard.w);
@@ -529,6 +549,7 @@ function drawPixelSpikes(hazard) {
     }
     cityPixelRect(x + 2, bottom - 6, w - 4, 2, '#7894a2');
   }
+  ctx.restore();
 }
 
 function drawDebrisWarning(debris) {
