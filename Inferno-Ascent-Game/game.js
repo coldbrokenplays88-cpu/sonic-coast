@@ -1350,15 +1350,7 @@ window.addEventListener('blur', () => {
   keys.clear();
   if (mode === 'playing') pause();
 });
-document.querySelectorAll('[data-key]').forEach((b) => {
-  b.addEventListener('pointerdown', (e) => {
-    e.preventDefault();
-    b.setPointerCapture(e.pointerId);
-    press(b.dataset.key);
-  });
-  for (const name of ['pointerup', 'pointercancel', 'lostpointercapture'])
-    b.addEventListener(name, () => release(b.dataset.key));
-});
+
 // Testing commands use the normal input handlers and fixed physics tick.
 // Freeze between commands so screenshots and model latency cannot advance a run.
 const testInputCodes = {

@@ -119,20 +119,6 @@ canvas {
     sans-serif;
   letter-spacing: 1px;
 }
-.zone {
-  margin-left: auto;
-  text-align: right;
-  font:
-    700 16px 'Barlow Condensed',
-    sans-serif;
-  letter-spacing: 2px;
-}
-.zone b {
-  display: block;
-  font-size: 13px;
-  margin-top: 4px;
-  color: #ffe467;
-}
 .pause {
   position: absolute;
   right: 18px;
@@ -226,36 +212,6 @@ button:focus-visible {
   text-align: center;
   pointer-events: none;
 }
-.touch {
-  position: absolute;
-  bottom: 16px;
-  left: 16px;
-  right: 16px;
-  display: none;
-  justify-content: space-between;
-}
-.touch > div {
-  display: flex;
-  gap: 10px;
-}
-.touch button {
-  touch-action: none;
-  user-select: none;
-  background: #0c39657d;
-  color: white;
-  border: 2px solid #ffffff75;
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  font-weight: 700;
-  font-size: 18px;
-}
-.touch .jump {
-  width: 68px;
-  background: #ffda4bce;
-  color: #112b4c;
-  font-size: 14px;
-}
 footer {
   display: flex;
   align-items: center;
@@ -303,11 +259,6 @@ kbd {
 .under span:last-child {
   letter-spacing: 0;
 }
-@media (pointer: coarse) {
-  .touch {
-    display: flex;
-  }
-}
 @media (max-width: 700px) {
   main {
     width: 96vw;
@@ -344,9 +295,6 @@ kbd {
   }
   .hud strong {
     font-size: 24px;
-  }
-  .zone {
-    display: none;
   }
   .pause {
     top: 12px;
@@ -398,19 +346,9 @@ kbd {
   .under span:first-child {
     display: none;
   }
-  .touch {
-    display: flex;
-  }
   #restart {
     font-size: 12px;
     padding: 8px;
-  }
-  .touch button {
-    width: 48px;
-    height: 48px;
-  }
-  .touch .jump {
-    width: 60px;
   }
 }
 body {
@@ -437,13 +375,6 @@ body {
 .fan {
   display: none;
 }
-.difficulty-label {
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #bfa6d7;
-}
 select {
   font:
     600 14px Barlow,
@@ -465,9 +396,6 @@ select {
 }
 .hud strong {
   font-variant-numeric: tabular-nums;
-}
-.zone {
-  color: #f5a4df;
 }
 .overlay {
   background: linear-gradient(90deg, #110b38ec 0%, #190c38ba 42%, #230a3310 80%);
@@ -498,31 +426,6 @@ h1 em {
   font-weight: 500;
   color: #abcee7;
   margin-left: 9px;
-}
-.meter-track {
-  height: 9px;
-  background: #0c133cc9;
-  border: 1px solid #74e5ff90;
-  margin-top: 6px;
-  overflow: hidden;
-  transform: skew(-16deg);
-}
-.meter-track i {
-  display: block;
-  height: 100%;
-  background: linear-gradient(90deg, #1688f6, #71f7ff);
-  box-shadow: 0 0 10px #3cf1ff;
-  width: 100%;
-}
-.speed-read {
-  display: block;
-  margin-top: 5px;
-  color: #77bedc;
-}
-.speed-read b {
-  color: white !important;
-  font-size: 17px !important;
-  margin: 0 5px 0 0 !important;
 }
 .route-progress {
   height: 3px;
@@ -565,32 +468,15 @@ kbd {
   border: 1px solid #fa8ac3;
   color: #ffe19b;
 }
-.touch button {
-  background: #180d428c;
-  border-color: #bad6f6a0;
-}
-.touch .boost-touch {
-  width: 65px;
-  color: #7aecff;
-  background: #062c51c9;
-  font-size: 12px;
-}
 @media (pointer: coarse) {
   .run-meter {
     bottom: 86px;
     width: 140px;
   }
-  .speed-read {
-    display: none;
-  }
 }
 @media (max-width: 700px) {
   .header-right {
     gap: 7px;
-  }
-  .difficulty-label {
-    font-size: 0;
-    gap: 0;
   }
   select {
     font-size: 12px;
@@ -604,9 +490,6 @@ kbd {
   .hud {
     gap: 15px;
   }
-  .score-stat {
-    display: none;
-  }
   .run-meter {
     left: 16px;
     bottom: 76px;
@@ -615,20 +498,11 @@ kbd {
   .run-meter > span {
     font-size: 10px;
   }
-  .speed-read {
-    display: none;
-  }
   .run-meter > span b {
     font-size: 9px;
   }
   .controls span:last-child {
     display: none;
-  }
-  .touch .boost-touch {
-    width: 55px;
-  }
-  .touch > div {
-    gap: 7px;
   }
   canvas {
     object-fit: cover;
@@ -652,10 +526,6 @@ kbd {
     gap: 10px;
   }
 }
-.zone b {
-  max-width: 230px;
-  line-height: 1.3;
-}
 .toast {
   max-width: min(520px, 80%);
   font-size: 14px;
@@ -666,13 +536,6 @@ kbd {
   font-size: 11px;
   letter-spacing: 0.2px;
 }
-.touch button[data-key='ArrowDown'] {
-  font-size: 0;
-}
-.touch button[data-key='ArrowDown']:after {
-  content: 'ROLL';
-  font-size: 11px;
-}
 .controls {
   flex-wrap: wrap;
 }
@@ -682,9 +545,6 @@ kbd {
 .overlay {
   z-index: 3;
 }
-.touch {
-  z-index: 2;
-}
 #toast {
   z-index: 2;
 }
@@ -692,9 +552,6 @@ kbd {
   z-index: 4;
 }
 @media (max-width: 700px) {
-  .zone {
-    display: none;
-  }
   .toast {
     top: 24%;
     font-size: 12px;
