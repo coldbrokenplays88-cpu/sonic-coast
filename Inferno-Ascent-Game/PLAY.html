@@ -13,7 +13,7 @@
       type="image/svg+xml"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230e43bc'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23ffd54a' stroke-width='4'/%3E%3C/svg%3E"
     />
-    <link rel="stylesheet" href="style-9e1bb099eb3dbb06.css" />
+    <link rel="stylesheet" href="style-400ba41e52c5ccc8.css" />
   </head>
   <body>
     <main>
@@ -27,12 +27,18 @@
             <select id="act-select" aria-label="Choose stage">
               <option value="1">NEON EXPRESS ACT 1</option>
               <option value="2">NEON EXPRESS ACT 2</option>
+              <option value="playtest">PLAYTEST — SCAFFOLD</option>
             </select></label
           ><span class="fan">A FAN-MADE ADVENTURE</span
           ><button id="sound" aria-label="Enable sound">Sound off</button>
         </div>
       </header>
       <section id="game-shell" class="game" aria-label="Sonic Neon Express game">
+        <div class="playtest-panel">
+          <p id="playtest-status" hidden></p>
+          <span>STATE <b id="playtest-mode">READY</b> · TICKS <b id="playtest-frame">0</b></span>
+          <span>INPUT <b id="playtest-input">none</b> (diagnostic only)</span>
+        </div>
         <div
           id="ending-loading"
           hidden
@@ -122,15 +128,19 @@
       </section>
 
       <footer>
-        <div class="controls">
+        <div id="game-controls" class="controls">
           <span><kbd>←</kbd><kbd>→</kbd> MOVE</span><span><kbd>SPACE</kbd> JUMP</span
           ><span><kbd>↓</kbd> ROLL</span><span><kbd>SHIFT</kbd> BOOST</span
           ><span><kbd>P</kbd> PAUSE</span><span><kbd>F</kbd> FULLSCREEN</span>
         </div>
+        <div id="playtest-controls" class="controls" hidden>
+          <span>MOVEMENT DISABLED</span><span><kbd>P</kbd> PAUSE / RESUME</span>
+          <span><kbd>R</kbd> RESET</span><span><kbd>F</kbd> FULLSCREEN</span>
+        </div>
         <button id="restart">↻ Restart</button>
       </footer>
       <div class="under">
-        <span>TAP JUMP: SHORT HOP · HOLD JUMP: HEIGHT · DOWN + JUMP AT REST: SPIN DASH</span
+        <span id="game-hint">TAP JUMP: SHORT HOP · HOLD JUMP: HEIGHT · DOWN + JUMP AT REST: SPIN DASH</span
         ><span>Unofficial fan game. Sonic belongs to SEGA.</span>
       </div>
     </main>
@@ -163,6 +173,7 @@
 
 
 
-  <script src="runtime-444b1ffb1471f667.js"></script>
+
+  <script src="runtime-5fc7bcfb3db8ab30.js"></script>
 </body>
 </html>

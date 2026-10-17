@@ -26,6 +26,7 @@ import * as module23 from './player-movement.js';
 import * as module24 from './world-interactions.js';
 import * as module25 from './stage-runtime.js';
 import * as module26 from './game.js';
+import * as playtestModule from './playtest.js';
 
 // Browser verification uses these established names and controlled overrides.
 const modules = [
@@ -55,6 +56,7 @@ const modules = [
   module23,
   module24,
   module25,
+  playtestModule,
   module26,
 ];
 for (const module of modules) {

@@ -1,5 +1,6 @@
 // Canonical runtime module. Classic VM compatibility is generated from this source.
 import { state as runtimeState } from './state.js';
+import { isPlaytest } from './playtest.js';
 import { drawBlimpRoute } from './blimp-route.js';
 import { airDevicePose, updateBoostState } from './boost-rules.js';
 import { frameBossCamera } from './boss-game.js';
@@ -47,9 +48,17 @@ import { beginTraversalLaunch } from './traversal-animations.js';
 export let cameraTracking, skylineSmokeSprites;
 
 export function selectAct(act) {
-  runtimeState.selectedAct = act === 2 ? 2 : 1;
+  runtimeState.selectedAct = act === 'playtest' ? 'playtest' : act === 2 ? 2 : 1;
   setup();
   runtimeState.mode = 'ready';
+  if (isPlaytest()) {
+    show(
+      'PLAYTEST',
+      'Isolated diagnostic scene.<br>Experimental movement is not implemented yet.',
+      'OPEN PLAYTEST'
+    );
+    return;
+  }
   show(
     runtimeState.selectedAct === 2
       ? 'City on<br><em>the brink.</em>'

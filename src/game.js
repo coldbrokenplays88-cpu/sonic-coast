@@ -1,5 +1,16 @@
 import { updatePixelHud } from './hud.js';
 import { syncGameMusic } from './game-music.js';
+import {
+  isPlaytest,
+  setupPlaytest,
+  exitPlaytest,
+  resetPlaytest,
+  handlePlaytestInput,
+  updatePlaytest,
+  updatePlaytestHud,
+  drawPlaytest,
+  readPlaytestState,
+} from './playtest.js';
 import { setGameSoundEnabled, playGameSound } from './game-audio.js';
 // Canonical runtime module. Classic VM compatibility is generated from this source.
 import { state as runtimeState } from './state.js';
@@ -312,6 +323,11 @@ export function sparks(x, y, n = 8, color = '#ffda56') {
 }
 
 export function setup() {
+  if (isPlaytest()) {
+    setupPlaytest();
+    return;
+  }
+  exitPlaytest();
   loadActArt(runtimeState.selectedAct);
   syncGameMusic?.({
     enabled: runtimeState.sound,
@@ -460,7 +476,7 @@ export function start() {
 export function show(title, text, label) {
   $('#overlay').classList.remove('hidden');
   $('.intro').innerHTML =
-    `<span class="eyebrow">${runtimeState.level.title || 'NEON EXPRESS'} ACT ${runtimeState.selectedAct}</span><h1>${title}</h1><p>${text}</p><button id="play" class="primary">${label} <span>▶</span></button><span class="start-note">Tap / hold Space: jump height · Down: roll · Left click / Shift / X: boost</span>`;
+    `<span class="eyebrow">${isPlaytest() ? 'PLAYTEST' : `${runtimeState.level.title || 'NEON EXPRESS'} ACT ${runtimeState.selectedAct}`}</span><h1>${title}</h1><p>${text}</p><button id="play" class="primary">${label} <span>▶</span></button><span class="start-note">${isPlaytest() ? 'P: pause / resume · R: reset · Movement disabled' : 'Tap / hold Space: jump height · Down: roll · Left click / Shift / X: boost'}</span>`;
   $('#play').onclick = start;
 }
 
@@ -468,7 +484,13 @@ export function pause() {
   if (runtimeState.mode === 'playing') {
     runtimeState.mode = 'paused';
     keys.clear();
-    show('Catch your<br><em>breath.</em>', 'Your run is paused.', 'RESUME');
+    show(
+      isPlaytest() ? 'PLAYTEST<br><em>paused.</em>' : 'Catch your<br><em>breath.</em>',
+      isPlaytest()
+        ? 'Diagnostic scene paused. Movement is not implemented yet.'
+        : 'Your run is paused.',
+      'RESUME'
+    );
     $('#pause').textContent = '▶';
     gameSound('pause');
     updateHud();
@@ -546,6 +568,10 @@ export function hurt(x, gate = false) {
 
 export function press(k, automated = false) {
   if (!automated) runtimeState.testControlled = false;
+  if (isPlaytest()) {
+    handlePlaytestInput(k, true);
+    return;
+  }
   if ((k === 'ArrowDown' || k === 'KeyS') && !keys.has(k) && runtimeState.mode === 'playing') {
     p.rollBuffer = 6;
     p.rollSpent = false;
@@ -605,6 +631,10 @@ export function press(k, automated = false) {
 
 export function release(k, automated = false) {
   if (!automated) runtimeState.testControlled = false;
+  if (isPlaytest()) {
+    handlePlaytestInput(k, false);
+    return;
+  }
   keys.delete(k);
   if (
     ['ShiftLeft', 'ShiftRight', 'KeyX', 'MouseBoost'].includes(k) &&
@@ -624,6 +654,16 @@ export function release(k, automated = false) {
 }
 
 export function restart() {
+  if (isPlaytest()) {
+    resetPlaytest();
+    runtimeState.testControlled = false;
+    runtimeState.mode = 'playing';
+    $('#overlay').classList.add('hidden');
+    $('#pause').textContent = 'Ⅱ';
+    updatePlaytestHud();
+    canvas.focus();
+    return;
+  }
   setup();
   runtimeState.mode = 'playing';
   $('#overlay').classList.add('hidden');
@@ -634,6 +674,10 @@ export function restart() {
 }
 
 export function updateHud() {
+  if (isPlaytest()) {
+    updatePlaytestHud();
+    return;
+  }
   syncGameMusic?.({
     enabled: runtimeState.sound,
     mode: runtimeState.mode,
@@ -657,6 +701,10 @@ export function updateHud() {
 }
 
 export function update() {
+  if (isPlaytest()) {
+    updatePlaytest();
+    return;
+  }
   runtimeState.step++;
   if (runtimeState.mode !== 'playing') return;
   if (runtimeState.ending) {
@@ -1127,6 +1175,10 @@ export function drawRail(s) {
 }
 
 export function draw() {
+  if (isPlaytest()) {
+    drawPlaytest();
+    return;
+  }
   ctx.save();
   ctx.scale(canvas.width / W, canvas.height / H);
   ctx.imageSmoothingEnabled = false;
@@ -1290,6 +1342,7 @@ export function frame(t) {
 }
 
 export function readGameState() {
+  if (isPlaytest()) return readPlaytestState();
   return {
     status: runtimeState.mode,
     act: runtimeState.selectedAct,
@@ -1644,7 +1697,7 @@ export function initializeRuntimeModule() {
   ];
 
   $('#act-select').onchange = (e) => {
-    selectAct(Number(e.target.value));
+    selectAct(e.target.value === 'playtest' ? 'playtest' : Number(e.target.value));
     canvas.focus();
   };
 
@@ -1660,7 +1713,7 @@ export function initializeRuntimeModule() {
     $('#sound').setAttribute('aria-label', runtimeState.sound ? 'Disable sound' : 'Enable sound');
     gameSound('menu');
     syncGameMusic?.({
-      enabled: runtimeState.sound,
+      enabled: runtimeState.sound && !isPlaytest(),
       mode: runtimeState.mode,
       act: runtimeState.selectedAct,
       gesture: true,

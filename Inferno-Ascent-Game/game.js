@@ -193,6 +193,11 @@ function sparks(x, y, n = 8, color = '#ffda56') {
 }
 
 function setup() {
+  if (isPlaytest()) {
+    setupPlaytest();
+    return;
+  }
+  exitPlaytest();
   loadActArt(selectedAct);
   window.syncGameMusic?.({
     enabled: sound,
@@ -341,7 +346,7 @@ function start() {
 function show(title, text, label) {
   $('#overlay').classList.remove('hidden');
   $('.intro').innerHTML =
-    `<span class="eyebrow">${level.title || 'NEON EXPRESS'} ACT ${selectedAct}</span><h1>${title}</h1><p>${text}</p><button id="play" class="primary">${label} <span>▶</span></button><span class="start-note">Tap / hold Space: jump height · Down: roll · Left click / Shift / X: boost</span>`;
+    `<span class="eyebrow">${isPlaytest() ? 'PLAYTEST' : `${level.title || 'NEON EXPRESS'} ACT ${selectedAct}`}</span><h1>${title}</h1><p>${text}</p><button id="play" class="primary">${label} <span>▶</span></button><span class="start-note">${isPlaytest() ? 'P: pause / resume · R: reset · Movement disabled' : 'Tap / hold Space: jump height · Down: roll · Left click / Shift / X: boost'}</span>`;
   $('#play').onclick = start;
 }
 
@@ -349,7 +354,13 @@ function pause() {
   if (mode === 'playing') {
     mode = 'paused';
     keys.clear();
-    show('Catch your<br><em>breath.</em>', 'Your run is paused.', 'RESUME');
+    show(
+      isPlaytest() ? 'PLAYTEST<br><em>paused.</em>' : 'Catch your<br><em>breath.</em>',
+      isPlaytest()
+        ? 'Diagnostic scene paused. Movement is not implemented yet.'
+        : 'Your run is paused.',
+      'RESUME'
+    );
     $('#pause').textContent = '▶';
     gameSound('pause');
     updateHud();
@@ -427,6 +438,10 @@ function hurt(x, gate = false) {
 
 function press(k, automated = false) {
   if (!automated) testControlled = false;
+  if (isPlaytest()) {
+    handlePlaytestInput(k, true);
+    return;
+  }
   if ((k === 'ArrowDown' || k === 'KeyS') && !keys.has(k) && mode === 'playing') {
     p.rollBuffer = 6;
     p.rollSpent = false;
@@ -486,6 +501,10 @@ function press(k, automated = false) {
 
 function release(k, automated = false) {
   if (!automated) testControlled = false;
+  if (isPlaytest()) {
+    handlePlaytestInput(k, false);
+    return;
+  }
   keys.delete(k);
   if (
     ['ShiftLeft', 'ShiftRight', 'KeyX', 'MouseBoost'].includes(k) &&
@@ -505,6 +524,16 @@ function release(k, automated = false) {
 }
 
 function restart() {
+  if (isPlaytest()) {
+    resetPlaytest();
+    testControlled = false;
+    mode = 'playing';
+    $('#overlay').classList.add('hidden');
+    $('#pause').textContent = 'Ⅱ';
+    updatePlaytestHud();
+    canvas.focus();
+    return;
+  }
   setup();
   mode = 'playing';
   $('#overlay').classList.add('hidden');
@@ -515,6 +544,10 @@ function restart() {
 }
 
 function updateHud() {
+  if (isPlaytest()) {
+    updatePlaytestHud();
+    return;
+  }
   window.syncGameMusic?.({
     enabled: sound,
     mode: mode,
@@ -538,6 +571,10 @@ function updateHud() {
 }
 
 function update() {
+  if (isPlaytest()) {
+    updatePlaytest();
+    return;
+  }
   step++;
   if (mode !== 'playing') return;
   if (ending) {
@@ -1006,6 +1043,10 @@ function drawRail(s) {
 }
 
 function draw() {
+  if (isPlaytest()) {
+    drawPlaytest();
+    return;
+  }
   ctx.save();
   ctx.scale(canvas.width / W, canvas.height / H);
   ctx.imageSmoothingEnabled = false;
@@ -1169,6 +1210,7 @@ function frame(t) {
 }
 
 function readGameState() {
+  if (isPlaytest()) return readPlaytestState();
   return {
     status: mode,
     act: selectedAct,
@@ -1457,7 +1499,7 @@ const boostFrames = [
     [1389, 517, 1744, 844],
   ];
 $('#act-select').onchange = (e) => {
-    selectAct(Number(e.target.value));
+    selectAct(e.target.value === 'playtest' ? 'playtest' : Number(e.target.value));
     canvas.focus();
   };
 $('#play').onclick = start;
@@ -1469,7 +1511,7 @@ $('#sound').onclick = () => {
     $('#sound').setAttribute('aria-label', sound ? 'Disable sound' : 'Enable sound');
     gameSound('menu');
     window.syncGameMusic?.({
-      enabled: sound,
+      enabled: sound && !isPlaytest(),
       mode: mode,
       act: selectedAct,
       gesture: true,

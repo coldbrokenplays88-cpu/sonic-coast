@@ -1,9 +1,17 @@
 // Generated from src/act2.js; run npm run build:compat after source edits.
 'use strict';
 function selectAct(act) {
-  selectedAct = act === 2 ? 2 : 1;
+  selectedAct = act === 'playtest' ? 'playtest' : act === 2 ? 2 : 1;
   setup();
   mode = 'ready';
+  if (isPlaytest()) {
+    show(
+      'PLAYTEST',
+      'Isolated diagnostic scene.<br>Experimental movement is not implemented yet.',
+      'OPEN PLAYTEST'
+    );
+    return;
+  }
   show(
     selectedAct === 2
       ? 'City on<br><em>the brink.</em>'

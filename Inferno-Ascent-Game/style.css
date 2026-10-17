@@ -904,3 +904,35 @@ kbd {
     left: 26px;
   }
 }
+/* PLAYTEST has its own diagnostic UI; existing act presentation is retained. */
+.playtest-panel {
+  display: none;
+}
+.playtest .playtest-panel {
+  display: flex;
+  position: absolute;
+  z-index: 2;
+  top: 12px;
+  left: 12px;
+  right: 80px;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px;
+  background: #14152de8;
+  color: #ffffff;
+  font: 13px monospace;
+}
+.playtest-panel p {
+  margin: 0 0 5px;
+  color: #ffd54a;
+}
+.playtest .pixel-hud,
+.playtest .pixel-run-meter,
+.playtest .route-progress,
+.playtest .clear-score {
+  display: none;
+}
+#game-controls[hidden],
+#playtest-controls[hidden] {
+  display: none;
+}

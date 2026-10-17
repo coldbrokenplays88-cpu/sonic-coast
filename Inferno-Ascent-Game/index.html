@@ -27,12 +27,18 @@
             <select id="act-select" aria-label="Choose stage">
               <option value="1">NEON EXPRESS ACT 1</option>
               <option value="2">NEON EXPRESS ACT 2</option>
+              <option value="playtest">PLAYTEST — SCAFFOLD</option>
             </select></label
           ><span class="fan">A FAN-MADE ADVENTURE</span
           ><button id="sound" aria-label="Enable sound">Sound off</button>
         </div>
       </header>
       <section id="game-shell" class="game" aria-label="Sonic Neon Express game">
+        <div class="playtest-panel">
+          <p id="playtest-status" hidden></p>
+          <span>STATE <b id="playtest-mode">READY</b> · TICKS <b id="playtest-frame">0</b></span>
+          <span>INPUT <b id="playtest-input">none</b> (diagnostic only)</span>
+        </div>
         <div
           id="ending-loading"
           hidden
@@ -122,15 +128,19 @@
       </section>
 
       <footer>
-        <div class="controls">
+        <div id="game-controls" class="controls">
           <span><kbd>←</kbd><kbd>→</kbd> MOVE</span><span><kbd>SPACE</kbd> JUMP</span
           ><span><kbd>↓</kbd> ROLL</span><span><kbd>SHIFT</kbd> BOOST</span
           ><span><kbd>P</kbd> PAUSE</span><span><kbd>F</kbd> FULLSCREEN</span>
         </div>
+        <div id="playtest-controls" class="controls" hidden>
+          <span>MOVEMENT DISABLED</span><span><kbd>P</kbd> PAUSE / RESUME</span>
+          <span><kbd>R</kbd> RESET</span><span><kbd>F</kbd> FULLSCREEN</span>
+        </div>
         <button id="restart">↻ Restart</button>
       </footer>
       <div class="under">
-        <span>TAP JUMP: SHORT HOP · HOLD JUMP: HEIGHT · DOWN + JUMP AT REST: SPIN DASH</span
+        <span id="game-hint">TAP JUMP: SHORT HOP · HOLD JUMP: HEIGHT · DOWN + JUMP AT REST: SPIN DASH</span
         ><span>Unofficial fan game. Sonic belongs to SEGA.</span>
       </div>
     </main>
@@ -162,6 +172,7 @@
     <script src="player-movement.js?v=6"></script>
     <script src="world-interactions.js?v=2"></script>
     <script src="stage-runtime.js?v=3"></script>
+    <script src="playtest.js"></script>
     <script src="game.js?v=46"></script>
   </body>
 </html>

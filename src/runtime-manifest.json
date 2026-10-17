@@ -156,6 +156,12 @@
       }
     },
     {
+      "file": "playtest.js",
+      "kinds": {
+        "playtestState": "let"
+      }
+    },
+    {
       "file": "game.js",
       "kinds": {
         "canvas": "const",
