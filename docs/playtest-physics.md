@@ -1,4 +1,4 @@
-# PLAYTEST ground movement — GROUND-1
+# PLAYTEST ground movement — GROUND-2
 
 ## Checkpoint and provenance
 
@@ -8,7 +8,7 @@ The scaffold handoff is `docs/playtest-scaffold.md`. The user approved its
 access/switching checkpoint in this conversation ("yeah it works") before Task 2.
 
 **Exact tested implementation commit:**
-`92fca8ce899d37264b42decff1b7ed2dc50f16b1`.
+`b4329ca0f487a77a5e4fecb1c77f589435c739bf`.
 This document is a subsequent documentation-only commit; no runtime change is
 needed to add these verification records. Node v24.19.0, npm 11.9.0, existing
 installed lockfile dependencies; no dependency changes.
@@ -62,7 +62,8 @@ within that scheduling domain, not across arbitrary multi-second suspension.
 | Released standing resistance | 0.10/tick | Stable flat coast-down |
 | Gravity | 0.35/tick² | Projected onto the actual tangent in either direction |
 | Rolling resistance | 0.025/tick | One quarter of released standing resistance |
-| Rolling opposite-input brake | 0.18/tick | Additional passive resistance, never reverse propulsion |
+| Rolling opposite-input brake | Up to 0.18/tick | Full above speed 2; tapers linearly to zero below it |
+| Rolling brake fade speed | 2 | Kinetic braking cannot become extra static slope friction |
 | Roll entry | Fresh Down/S edge at speed ≥2 | No charge or Spin Dash |
 | Automatic uncurl | Speed <0.08 for 12 eligible ticks | 0.2 s sustained near-rest hysteresis |
 | Numerical safety reset | Speed >80 or non-finite state | Separate from tuning; outside benchmark operation |
@@ -136,7 +137,7 @@ starts use the specified supported course, not a substitute physics model.
 | Valley x=1700, v=6 rolling uphill | 30 ticks / 0.5 s | x=1769.625, v=-0.35988; slowed, stopped and reversed |
 | Valley x=±1700, v=0 standing | 60 ticks / 1 s | x=±1563.046, v=∓5.44476 (released rollback) |
 | Valley x=1400, v=2 rolling uphill | 60 ticks / 1 s | x=1228.996, v=-8.40726, still rolling |
-| Flat x=0, v=1 rolling; hold left+Down | 60 ticks / 1 s | Uncurls at rest, then runs left; final v=-7.04 standing |
+| Flat x=0, v=1 rolling; hold left+Down | 60 ticks / 1 s | Uncurls at rest, then runs left; final v=-5.60 standing |
 
 **No-input valley diagnostic:** start x=-1800, v=0 rolling; 600 ticks / 10 s.
 Energy `v²/2 + 0.35*(650-y)` starts at 273 and finishes at 106.870104.
@@ -165,16 +166,16 @@ to a fresh boot, and confirm no stale experimental state or input remains.
 
 Baseline: 429 gameplay tests, nine build tests, compatibility/player checks all
 passed. Final required commands all passed: `npm run build:player`, `npm test`
-(437 tests), `npm run test:build` (nine), `npm run check:compat` (29 modules),
+(438 tests), `npm run test:build` (nine), `npm run check:compat` (29 modules),
 `npm run check:player`, `npm run package`. Original non-PLAYTEST tests remain
 unchanged. Scaffold tests now expect actual ground movement while retaining
-their isolation, lifecycle and Act 1/2 comparisons. Eight ground-controller
+their isolation, lifecycle and Act 1/2 comparisons. Nine ground-controller
 regressions were added. Source/build manifests and generated compatibility files
 are synchronized; generated JS was not manually edited.
 
-Player ZIP: `dist/Neon-Express-player.zip`, 52,314,567 bytes, 37 files.
-SHA-256: `3b397ce803b8e70daecac09f1da2c61e5e7ebc9eea359dcfa6cb05febb57e4a3`.
-Runtime: `runtime-86723af583267f05.js`; CSS: `style-c9f48a6e01dc8ece.css`.
+Player ZIP: `dist/Neon-Express-player.zip`, 52,314,593 bytes, 37 files.
+SHA-256: `fe75414a4632f1ec67c06639e5cbded6a82177693d160664e8c55a77b5e8f448`.
+Runtime: `runtime-ab1e349e80edf06e.js`; CSS: `style-c9f48a6e01dc8ece.css`.
 Integrity checked; freshly extracted outside the repository. Its index matches
 committed `PLAY.html`, and its runtime matches the committed generated bundle.
 
@@ -212,3 +213,37 @@ PR creation or merge is part of this work.
 
 Stop at this ground-only slice. Wait for explicit feedback/approval on feel
 before adding airborne physics or any other feature; continue this same branch.
+
+
+## GROUND-2 follow-up: held countersteer on a downhill roll
+
+Started from `52a50e6b7638fe941314c57cb02e42436081a7d7` after the user's ground-feel
+feedback. GROUND-1 applied 0.18 braking plus 0.025 friction even at very low
+speed, exceeding the steep grade's 0.190746 gravity component. That produced
+near-stationary stop/start motion under held uphill input. A seven-second
+regression reproduced the problem on both sides before the change.
+
+The extra rolling brake now scales with `min(1, abs(speed)/2)` and is reevaluated
+per integration substep. It remains passive, never adds velocity or uphill
+propulsion, and retains full strength above speed 2. At zero it vanishes,
+leaving ordinary friction and gravity to determine motion. Shallow grades can
+still support rest when base friction balances gravity; flat stopping and
+automatic uncurl remain supported. Low-speed flat rolling braking is gentler
+as a deliberate consequence of the same kinetic-brake rule.
+
+Measured production-controller reproducer: valley x=±1700, speed=∓4, rolling,
+hold uphill for 420 ticks / 7 seconds. GROUND-1 reached near-stationary jitter
+(on the right, v=-0.051713 at tick 420). GROUND-2 reaches x=±913.931585,
+v=∓1.808054, still rolling, with uninterrupted downhill travel through the
+last second. Releasing restores downhill acceleration. Both mirrored tests
+pass; no forward rolling propulsion, running constants or level geometry changed.
+No-input valley energy results above are unchanged because the extra brake is
+inactive without opposite input.
+
+All six required commands pass for this revision: 438 gameplay tests, nine build
+tests, synchronized compatibility/player outputs, regenerated player ZIP.
+The extracted package browser smoke includes the held-countersteer reproducer
+through the actual PLAYTEST scene update, plus both legacy acts and lifecycle
+checks. HTTP passes with no page errors; direct-file access remains blocked by
+this environment's browser policy. No PR creation, merge, deployment, airborne
+feature or change to Act 1/2 physics was made.
