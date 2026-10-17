@@ -121,6 +121,7 @@ function phaseBoot(act=2){
  a.run(`const phaseOriginals={updateWorldPlatforms,collectWorldRings,activateWorldDevices,updateWorldEnemies,updateWorldCheckpoints};
   const calls=[];
   updateWorldPlatforms=()=>calls.push('platforms');updateMovement=()=>{calls.push('movement');return true};
+  updateAct1Movement=()=>{calls.push('movement');return true};
   updateStageWorld=()=>calls.push('stage');updateCityInteriors=()=>calls.push('interiors');
   collectWorldRings=()=>calls.push('rings');activateWorldDevices=()=>calls.push('devices');
   collectBoostMonitors=()=>calls.push('monitors');updateBossEncounter=()=>calls.push('boss');

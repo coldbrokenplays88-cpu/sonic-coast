@@ -199,6 +199,10 @@
       }
     },
     {
+      "file": "act1-motion.js",
+      "kinds": {}
+    },
+    {
       "file": "game.js",
       "kinds": {
         "canvas": "const",

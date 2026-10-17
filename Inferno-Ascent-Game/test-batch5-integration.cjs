@@ -1,6 +1,7 @@
+// Legacy controller unit fixtures; migrated Act 1 is covered in test-act1-motion.cjs.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { boot } = require('./test-support.cjs');
+const { bootLegacy: boot } = require('./test-support.cjs');
 
 test('an airborne burst into the authored pool spring preserves its launch on following ticks', () => {
   const a = boot(2);

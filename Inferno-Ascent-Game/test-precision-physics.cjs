@@ -1,6 +1,7 @@
+// Legacy controller unit fixtures; migrated Act 1 is covered in test-act1-motion.cjs.
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-const {boot}=require('./test-support.cjs');
+const {bootLegacy:boot}=require('./test-support.cjs');
 
 // Controlled floors isolate steering from slopes, hazards, and launch devices.
 // All assertions exercise the game's fixed-step movement and collision code.
@@ -83,7 +84,8 @@ for(const act of [1,2]){
  });
  test(`act ${act}: retry clears propulsion protection and restores ordinary ground control`,()=>{
   const a=fixture(act);a.run('launchAirDevice({x:p.x,y:feet(),power:18,launchX:9});respawn();p.vx=9');
-  close(advance(a,-1),7.975,'respawn restores ground countersteering');
+  // Respawn selects the approved Act 1 owner; Act 2 keeps legacy braking.
+  close(advance(a,-1),act===1?8.5:7.975,'respawn restores the selected controller countersteering');
  });
  test(`act ${act}: rolling, boost exits and grind braking retain strength while full spin dash gains speed`,()=>{
   const roll=fixture(act,{speed:10,rolling:true});roll.run("keys.add('ArrowDown')");

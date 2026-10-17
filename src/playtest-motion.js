@@ -1106,7 +1106,7 @@ export function launchExperimentalSpring(player, face, time) {
   });
 }
 
-export function updateExperimentalDash(player, input) {
+export function updateExperimentalDash(player, input, surface = null, canRoll = null) {
   const t = experimentalDeviceTuning,
     direction = Math.sign(input.direction || 0);
   if (player.mode !== 'grounded' || player.railId) {
@@ -1139,8 +1139,8 @@ export function updateExperimentalDash(player, input) {
     input.down &&
     input.jumpPressed &&
     Math.abs(player.speed) <= t.dashEntrySpeed &&
-    motionSurface(player).ny < -0.7 &&
-    motionPostureClear(player, 'rolling')
+    (surface || motionSurface(player)).ny < -0.7 &&
+    (canRoll ? canRoll() : motionPostureClear(player, 'rolling'))
   ) {
     player.dash = { charge: 1, facing: player.facing };
     player.posture = 'rolling';
@@ -1149,6 +1149,27 @@ export function updateExperimentalDash(player, input) {
     return true;
   }
   return false;
+}
+
+// Shared airborne forces; each scene's movement owner supplies elapsed time.
+export function motionAirForces(player, direction, braking, dt) {
+  const a = player.air;
+  let target = a.vx;
+  if (direction)
+    target = braking
+      ? Math.sign(a.vx) * Math.max(0, Math.abs(a.vx) - motionTuning.airBrake * dt)
+      : a.vx +
+        direction *
+          Math.min(
+            motionTuning.airAcceleration * dt,
+            Math.max(0, motionTuning.airRange - direction * a.vx)
+          );
+  const bursting = player.boost.held && player.boost.remaining > 0;
+  return {
+    ax: bursting ? 0 : (target - a.vx) / dt,
+    ay: bursting ? 0 : groundTuning.gravity,
+    bursting,
+  };
 }
 
 export function stepMotionPlayer(player, input = {}) {
@@ -1393,19 +1414,7 @@ export function stepMotionPlayer(player, input = {}) {
       } else {
         const a = player.air;
         airBraking ??= direction * a.vx < 0;
-        let target = a.vx;
-        if (direction)
-          target = airBraking
-            ? Math.sign(a.vx) * Math.max(0, Math.abs(a.vx) - motionTuning.airBrake * slice)
-            : a.vx +
-              direction *
-                Math.min(
-                  motionTuning.airAcceleration * slice,
-                  Math.max(0, motionTuning.airRange - direction * a.vx)
-                );
-        const bursting = player.boost.held && player.boost.remaining > 0;
-        let ax = bursting ? 0 : (target - a.vx) / slice,
-          ay = bursting ? 0 : groundTuning.gravity;
+        let { ax, ay, bursting } = motionAirForces(player, direction, airBraking, slice);
         if (bursting) {
           burstAdvanced = true;
           player.boost.active = true;

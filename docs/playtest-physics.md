@@ -1,11 +1,126 @@
-# PLAYTEST — RAIL-BOOST-1 / DEVICES-2 / PATH-1 / AIR-2 / GROUND-5
+# PLAYTEST physics — Act 1 integration checkpoint
+
+## Current stage: Act 1 only
+
+The user approved build `8a7e57b` and explicitly authorized Act 1 integration.
+Act 1 now uses approved PLAYTEST forces; PLAYTEST remains the reference scene.
+**Act 1 awaits personal playtest approval. Act 2 has not been migrated.**
+The older benchmark record below describes earlier stages, not current Act 1.
+
+Starting SHA: `8a7e57bd614270ea7b39b7a8fbc951b0c89d0b4c`, clean feature branch
+`codex/playtest-physics`. Node24.19.0/npm11.9.0, existing dependencies/lockfile.
+No matching open PR returned by GitHub; none created or modified. No main,
+hosting, merge, deployment or ready-state changes.
+
+### Movement ownership and compatibility decisions
+
+- `src/act1-motion.js` is Act 1's sole movement owner. It adapts the actual finite,
+  stacked authored surfaces, using approved `beginGroundTick`,
+  `advanceGroundSubstep`, `finishGroundTick`, Spin Dash and Boost state functions.
+  Pure air-force calculation was extracted without changing PLAYTEST behavior.
+- Ground `speed` is signed tangent velocity relative to its support; air `vx/vy`
+  own airborne motion. Legacy `p` is a presentation/interaction projection.
+  Damage, enemy rebound and explicit scripted control changes are adopted at
+  defined handoffs; legacy gravity/integration do not also advance Act 1.
+- Discrete existing platform poses interpolate within their original ticks.
+  Carry is applied once; jump/edge release inherits measured carrier velocity
+  once. Platforms retain their sinusoidal motion, crumble/reset rules and one-way
+  landing behavior. Joins include ramps ending on overlapping lower roofs.
+- Upright floor crest grip remains approved; a rolled body leaves an actual
+  convex lip with its earned tangent vector. No new speed assists or eligibility
+  rules were added. Existing express `entrySpeed:20` remains in world-horizontal
+  units, including its authored monitor placement. Both express routes are
+  reachable with the existing fresh midair Boost burst after ramp takeoff.
+- Act 1 retains its original six-tick coyote and eight-tick jump buffer, plus
+  six-tick roll-input buffer. These are control compatibility, not force changes;
+  PLAYTEST still has no coyote/landing buffer. Landing consumes a queued jump at
+  contact time. A Spin Dash charge cannot leave an ordinary jump buffered.
+- Standing collision remains22×48; rolling is the approved38-unit circle.
+  Rendering uses its actual normal-offset contact anchor; source artwork and
+  animation sequences are unchanged. Hazard queries use the migrated dimensions.
+- **Explicit user-approved geometry exception:** all five Act 1 tunnel ceilings
+  gain7 units of clearance, from33 to40 (`h:177`→`170`). Their tops, widths,
+  positions and floors are unchanged. No other level geometry changed.
+- Act 1 has no authored loops, grindable rails, springs, water, bosses or ending
+  cutscene. Their accepted PLAYTEST regressions and legacy Act 2 tests remain;
+  there is no claim of newly authored Act 1 coverage for absent content. A foreign
+  spring/vent launch and scripted ownership are tested as synthetic adapter seams.
+
+### Verification and measured evidence
+
+Baseline: `npm test` **515/515**, `test:build` **10/10**, `check:compat` and
+`check:player` passed before editing. Final `build:player`, `build`, `npm test`
+(**536/536**), `test:build` (**10/10**), `check:compat`, `check:player`, and
+`package` passed. No disabled tests or dependency changes.
+
+Historical force-value unit fixtures explicitly use `bootLegacy`: they still
+exercise the preserved controller shipped for Act 2, including Act 1 terrain
+fixtures. They are not presented as migrated Act 1 runtime coverage. New
+`test-act1-motion.cjs` has21 focused integration tests. The only old numerical
+expectation updated is Act 1 braking after respawn (9→8.5 in one tick), since
+respawn selects the approved.5 brake rather than the legacy1.025 brake.
+
+Fresh extracted ZIP browser smoke: Chromium151.0.7922.173, zero page errors.
+It checks approved PLAYTEST fixtures, pause/reset/switching, Act 2 run/jump/Boost,
+and actual Act 1 routes using normal input handlers:
+
+| Authored replay | Result |
+| --- | --- |
+| Full Act 1, no Boost | Finish at tick2492 (41.53 simulated seconds),0 hits/deaths, all checkpoints,4 express landings,9 recoveries,32 surfaces |
+| Long Shot Boost express, from its checkpoint | Reaches `rail-28` at tick205,0 hits/deaths |
+| Final Transfer Boost express, from its checkpoint | Reaches `rail-72` at tick190,0 hits/deaths |
+
+These are deterministic input replays, not human playtests or optimal route times.
+The full browser replay, including periodic draws, took1.81 seconds wall time;
+this is a bounded smoke measurement, not a laptop/device performance guarantee.
+A rendered38-unit rolling Sonic was also inspected inside the widened tunnel.
+
+Independent review found a zero-duration wall-contact division bug. Its regression
+failed before the fix, then passed along with the complete suite. Other focused
+checks cover fast/side contacts, uphill/downhill rolling, uncurl/turns, carrier
+reversal and jump, actual rebound drone, monitors, damage/death/checkpoint reset,
+air-burst eligibility/cost, buffered input, map bounds and scripted handoffs.
+No confirmed unresolved defect remains in this bounded pass; personal feel review
+and exhaustive combinations are still outstanding.
+
+### Current package and access
+
+Generated package: `/workspace/sonic-coast-playtest/dist/Neon-Express-player.zip`.
+37 files,52,342,575 bytes. SHA256:
+`958222e6e6b077ab1bd39f4f7002ca0789e92786eaf489f0887020274e17d0c5`.
+Runtime: `runtime-8f1f1bb01cf41897.js`; CSS: `style-c9f48a6e01dc8ece.css`.
+Extracted and browser-tested separately from the checkout.
+
+No ZIP attachment service or isolated public preview is available. Use the
+immutable source archive of the final feature commit as the accessible fallback.
+Its game entry is `Inferno-Ascent-Game/PLAY.html`; the player ZIP entry is
+`index.html`. Direct-file launch was attempted and blocked by the cloud browser's
+`ERR_BLOCKED_BY_ADMINISTRATOR` policy. Verified fallback, from the appropriate
+game directory: `python3 -m http.server 8000 --bind 127.0.0.1`, then open
+`http://127.0.0.1:8000/` (player ZIP), or `/PLAY.html` (source archive).
+This local address is not a public website. Windows launcher needs Python and
+was not executed on Linux. No public preview or Pages deployment is claimed.
+
+### Act 1 manual approval checkpoint — STOP
+
+1. Run, brake and reverse; compare downhill rolling with ordinary running.
+2. Roll through tunnels; jump from ramps into upper/recovery routes. Test moving
+   decks, crumble landings, the rebound drone and both Boost express approaches.
+3. Try short/full jumps, held ground Boost through takeoff, then a fresh air burst.
+   Pause/retry, die at a checkpoint and switch between all three scenes.
+
+Wait for explicit personal Act 1 approval and authorization before Act 2 work.
+
+---
+
+# Earlier approved PLAYTEST benchmark record
 
 ## Approval, branch and build identity
 
 Continue `codex/playtest-physics`; do not recreate from main. Scaffold handoff:
 `docs/playtest-scaffold.md`. The user approved the springs/platforms/Spin Dash
 update and DEVICES-2 jump-through correction with “perfect” before requesting
-this stage. **RAIL-BOOST-1 awaits personal feel approval.**
+this stage. **RAIL-BOOST-1 was personally approved before Act 1 integration.**
 
 Starting SHA: `ef7881abf183e6c5c552c4550bf45681c9fbdd52`, clean working tree.
 Node v24.19.0, npm11.9.0; existing lockfile dependencies reused, no dependency or

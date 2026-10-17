@@ -33,6 +33,7 @@ import * as railModule from './playtest-rails.js';
 import * as boostModule from './playtest-boost.js';
 import * as motionModule from './playtest-motion.js';
 import * as playtestModule from './playtest.js';
+import * as act1MotionModule from './act1-motion.js';
 
 // Browser verification uses these established names and controlled overrides.
 const modules = [
@@ -69,6 +70,7 @@ const modules = [
   boostModule,
   motionModule,
   playtestModule,
+  act1MotionModule,
   module26,
 ];
 for (const module of modules) {

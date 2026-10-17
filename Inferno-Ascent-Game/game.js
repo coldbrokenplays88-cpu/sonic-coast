@@ -193,6 +193,7 @@ function sparks(x, y, n = 8, color = '#ffda56') {
 }
 
 function setup() {
+  p.act1Motion = null;
   if (isPlaytest()) {
     setupPlaytest();
     return;
@@ -324,6 +325,7 @@ function respawn() {
   resetStageRuntime();
   resetCameraTracking();
   resetBossAttempt();
+  resetAct1Motion();
   visited.clear();
   for (const r of rings) if (r.x >= c.x && r.x < c.x + 550) r.taken = false;
 }
@@ -338,7 +340,10 @@ function start() {
   $('#overlay').classList.add('hidden');
   $('#pause').textContent = 'Ⅱ';
   if (isPlaytest()) clearPlaytestInput();
-  else keys.clear();
+  else {
+    keys.clear();
+    clearAct1Input();
+  }
   canvas.focus();
   gameSound('start');
   updateHud();
@@ -355,6 +360,7 @@ function pause() {
   if (mode === 'playing') {
     mode = 'paused';
     keys.clear();
+    clearAct1Input();
     show(
       isPlaytest() ? 'PLAYTEST<br><em>paused.</em>' : 'Catch your<br><em>breath.</em>',
       isPlaytest()
@@ -443,7 +449,12 @@ function press(k, automated = false) {
     handlePlaytestInput(k, true);
     return;
   }
-  if ((k === 'ArrowDown' || k === 'KeyS') && !keys.has(k) && mode === 'playing') {
+  if (
+    !usesAct1Motion() &&
+    (k === 'ArrowDown' || k === 'KeyS') &&
+    !keys.has(k) &&
+    mode === 'playing'
+  ) {
     p.rollBuffer = 6;
     p.rollSpent = false;
   }
@@ -456,6 +467,10 @@ function press(k, automated = false) {
     return;
   }
   if (bossOwnsControls() && mode === 'playing') return;
+  if (usesAct1Motion() && mode === 'playing') {
+    inputAct1Motion(k, true);
+    return;
+  }
   if (
     ['ShiftLeft', 'ShiftRight', 'KeyX', 'MouseBoost'].includes(k) &&
     mode === 'playing' &&
@@ -504,6 +519,10 @@ function release(k, automated = false) {
   if (!automated) testControlled = false;
   if (isPlaytest()) {
     handlePlaytestInput(k, false);
+    return;
+  }
+  if (usesAct1Motion()) {
+    inputAct1Motion(k, false);
     return;
   }
   keys.delete(k);
@@ -599,7 +618,10 @@ function update() {
     updateHud();
     return;
   }
-  if (!updateMovement() || mode !== 'playing') {
+  if (
+    !(usesAct1Motion() ? updateAct1Movement() : updateMovement()) ||
+    mode !== 'playing'
+  ) {
     updateHud();
     return;
   }
@@ -958,7 +980,15 @@ function sonic() {
   if (p.inv > 0 && step % 10 < 4 && mode === 'playing') return;
   const q = sonicPose();
   ctx.save();
-  ctx.translate(p.x, p.y);
+  if (usesAct1Motion()) {
+    const body = act1Body();
+    ctx.translate(body.x, body.y + (p.ground ? body.hh - 20 : -1));
+    if (p.ground) {
+      ctx.translate(0, 20 - body.hh);
+      ctx.rotate(body.angle);
+      ctx.translate(0, body.hh - 20);
+    }
+  } else ctx.translate(p.x, p.y);
   const transform = ctx.getTransform?.();
   if (transform)
     ctx.setTransform(

@@ -1,3 +1,11 @@
+import {
+  usesAct1Motion,
+  resetAct1Motion,
+  clearAct1Input,
+  inputAct1Motion,
+  updateAct1Movement,
+  act1Body,
+} from './act1-motion.js';
 import { updatePixelHud } from './hud.js';
 import { syncGameMusic } from './game-music.js';
 import {
@@ -325,6 +333,7 @@ export function sparks(x, y, n = 8, color = '#ffda56') {
 }
 
 export function setup() {
+  p.act1Motion = null;
   if (isPlaytest()) {
     setupPlaytest();
     return;
@@ -456,6 +465,7 @@ export function respawn() {
   resetStageRuntime();
   resetCameraTracking();
   resetBossAttempt();
+  resetAct1Motion();
   runtimeState.visited.clear();
   for (const r of runtimeState.rings) if (r.x >= c.x && r.x < c.x + 550) r.taken = false;
 }
@@ -470,7 +480,10 @@ export function start() {
   $('#overlay').classList.add('hidden');
   $('#pause').textContent = 'Ⅱ';
   if (isPlaytest()) clearPlaytestInput();
-  else keys.clear();
+  else {
+    keys.clear();
+    clearAct1Input();
+  }
   canvas.focus();
   gameSound('start');
   updateHud();
@@ -487,6 +500,7 @@ export function pause() {
   if (runtimeState.mode === 'playing') {
     runtimeState.mode = 'paused';
     keys.clear();
+    clearAct1Input();
     show(
       isPlaytest() ? 'PLAYTEST<br><em>paused.</em>' : 'Catch your<br><em>breath.</em>',
       isPlaytest()
@@ -575,7 +589,12 @@ export function press(k, automated = false) {
     handlePlaytestInput(k, true);
     return;
   }
-  if ((k === 'ArrowDown' || k === 'KeyS') && !keys.has(k) && runtimeState.mode === 'playing') {
+  if (
+    !usesAct1Motion() &&
+    (k === 'ArrowDown' || k === 'KeyS') &&
+    !keys.has(k) &&
+    runtimeState.mode === 'playing'
+  ) {
     p.rollBuffer = 6;
     p.rollSpent = false;
   }
@@ -588,6 +607,10 @@ export function press(k, automated = false) {
     return;
   }
   if (bossOwnsControls() && runtimeState.mode === 'playing') return;
+  if (usesAct1Motion() && runtimeState.mode === 'playing') {
+    inputAct1Motion(k, true);
+    return;
+  }
   if (
     ['ShiftLeft', 'ShiftRight', 'KeyX', 'MouseBoost'].includes(k) &&
     runtimeState.mode === 'playing' &&
@@ -636,6 +659,10 @@ export function release(k, automated = false) {
   if (!automated) runtimeState.testControlled = false;
   if (isPlaytest()) {
     handlePlaytestInput(k, false);
+    return;
+  }
+  if (usesAct1Motion()) {
+    inputAct1Motion(k, false);
     return;
   }
   keys.delete(k);
@@ -731,7 +758,10 @@ export function update() {
     updateHud();
     return;
   }
-  if (!updateMovement() || runtimeState.mode !== 'playing') {
+  if (
+    !(usesAct1Motion() ? updateAct1Movement() : updateMovement()) ||
+    runtimeState.mode !== 'playing'
+  ) {
     updateHud();
     return;
   }
@@ -1092,7 +1122,15 @@ export function sonic() {
   if (p.inv > 0 && runtimeState.step % 10 < 4 && runtimeState.mode === 'playing') return;
   const q = sonicPose();
   ctx.save();
-  ctx.translate(p.x, p.y);
+  if (usesAct1Motion()) {
+    const body = act1Body();
+    ctx.translate(body.x, body.y + (p.ground ? body.hh - 20 : -1));
+    if (p.ground) {
+      ctx.translate(0, 20 - body.hh);
+      ctx.rotate(body.angle);
+      ctx.translate(0, body.hh - 20);
+    }
+  } else ctx.translate(p.x, p.y);
   const transform = ctx.getTransform?.();
   if (transform)
     ctx.setTransform(

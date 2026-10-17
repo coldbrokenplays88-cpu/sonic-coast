@@ -1,5 +1,12 @@
 // Canonical runtime module. Classic VM compatibility is generated from this source.
 import { state as runtimeState } from './state.js';
+import {
+  usesAct1Motion,
+  updateAct1Movement,
+  releaseAct1,
+  projectAct1Motion,
+  adoptAct1Interaction,
+} from './act1-motion.js';
 import { updateLoop } from './act2.js';
 import { recordBlimpJump } from './blimp-route.js';
 import { surfaceById, updateBoostState } from './boost-rules.js';
@@ -20,6 +27,14 @@ import {
 // Shared player movement. State and the fixed-tick controller remain in game.js.
 
 export function jump() {
+  if (usesAct1Motion()) {
+    adoptAct1Interaction(p.act1Motion);
+    if (p.act1Motion.mode === 'grounded') {
+      releaseAct1(p.act1Motion, 'jump', true, runtimeState.runFrames);
+      projectAct1Motion(p.act1Motion);
+    }
+    return;
+  }
   p.scriptedLaunch = false;
   p.jumpAttack = true;
   if (p.surface?.grindable) p.grindExitFrame = runtimeState.runFrames;
@@ -106,6 +121,7 @@ export function updateRoll(down) {
 }
 
 export function updateMovement() {
+  if (usesAct1Motion()) return updateAct1Movement();
   updateWaterState();
   if (updateStageMotion()) return true;
   if (p.loop) return updateLoop();

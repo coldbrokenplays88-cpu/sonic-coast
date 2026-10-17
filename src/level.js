@@ -45,7 +45,7 @@ export function makeLevel() {
       x: x1,
       y: y - 210,
       w: x2 - x1,
-      h: 177,
+      h: 170, // Approved Act 1 migration: 40-unit tunnel clears the 38-unit roll.
       floor: y,
     });
     label(x1 - 650, y - 76, 'ROLL  ↓', 'roll');

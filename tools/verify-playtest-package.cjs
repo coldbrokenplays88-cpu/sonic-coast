@@ -5,6 +5,7 @@ const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const { spawn } = require('node:child_process');
 const { chromium } = require('playwright');
+const { act1RouteReplay, act1ExpressReplay } = require('./act1-route-replay.cjs');
 
 async function smoke(browser, url) {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
@@ -454,6 +455,18 @@ async function smoke(browser, url) {
       assert.equal(returned.player.speed, 0);
       assert.equal(returned.player.scenario, 'flat');
     }
+    const act1Checks = [await page.evaluate(act1RouteReplay)];
+    assert.equal(act1Checks[0].state.status, 'win');
+    assert.equal(act1Checks[0].state.deaths, 0);
+    assert.equal(act1Checks[0].state.hits, 0);
+    assert.equal(act1Checks[0].state.checkpoint, 5);
+    for (const sector of [2, 5]) {
+      const route = await page.evaluate(act1ExpressReplay, sector);
+      assert.equal(route.state.route, 'express');
+      assert.equal(route.state.deaths, 0);
+      assert.equal(route.state.hits, 0);
+      act1Checks.push(route);
+    }
     assert.deepEqual(errors, []);
     return {
       url,
@@ -462,6 +475,7 @@ async function smoke(browser, url) {
         'selection, rendered Sonic/contact, approved ground/rollback, held/tap jump, crest detachment, gap landing, swept wall, upright landing, ceiling/uncurl, two-axis camera, isolation, pause/resume/reset, flight exit, Act 1/2 running/jump/boost, clean return',
       pathChecks,
       deviceChecks,
+      act1Checks,
       pageErrors: errors,
     };
   } finally {

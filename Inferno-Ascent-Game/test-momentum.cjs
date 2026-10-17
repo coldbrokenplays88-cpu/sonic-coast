@@ -1,4 +1,5 @@
-const {test}=require('node:test');const assert=require('node:assert/strict');const {boot}=require('./test-support.cjs');
+// Legacy controller unit fixtures; migrated Act 1 is covered in test-act1-motion.cjs.
+const {test}=require('node:test');const assert=require('node:assert/strict');const {bootLegacy:boot}=require('./test-support.cjs');
 const near=(a,b,t=1e-7)=>assert.ok(Math.abs(a-b)<t,`${a} != ${b}`);
 function track(act=2,slope=0,speed=0,rolling=false){const a=boot(act);a.run(`level.surfaces=[{id:'track',x1:0,x2:100000,y1:-40000,y2:${-40000+slope*100000},kind:'main'}];level.hazards=[];level.deathZones=[];level.pads=[];level.springs=[];level.loops=[];level.floorAt=()=>1e6;Object.assign(p,{x:2000,y:yOn(level.surfaces[0],2000)-20,vx:${speed}/Math.hypot(1,${slope}),vy:0,ground:true,surface:level.surfaces[0],rolling:${rolling},rollAge:0,lowRollFrames:0});keys.clear();${rolling?"keys.add('ArrowDown');":''}`);return a}
 function advance(a,n=1,key=''){a.run(`keys.delete('ArrowRight');keys.delete('ArrowLeft');${key?`keys.add('${key}');`:''}for(let i=0;i<${n};i++){runFrames++;updateMovement()}`)}

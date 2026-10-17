@@ -1,6 +1,7 @@
+// Legacy controller unit fixtures; migrated Act 1 is covered in test-act1-motion.cjs.
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-const {boot}=require('./test-support.cjs');
+const {bootLegacy:boot}=require('./test-support.cjs');
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-8,`${a} != ${b}`);
 function airborne(act=2){const a=boot(act);a.run(`Object.assign(p,{x:5000,y:-20000,vx:8,vy:-4,ground:false,surface:null,inv:0});level.hazards=[];level.deathZones=[];level.floorAt=()=>1e6;keys.clear()`);return a}
 for(const act of [1,2]){

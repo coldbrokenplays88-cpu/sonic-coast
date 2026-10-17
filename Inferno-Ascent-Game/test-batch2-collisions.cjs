@@ -1,6 +1,7 @@
+// Legacy controller unit fixtures; migrated Act 1 is covered in test-act1-motion.cjs.
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
-  { boot } = require('./test-support.cjs');
+  { bootLegacy: boot } = require('./test-support.cjs');
 function scene(act = 2) {
   const a = boot(act);
   a.run(

@@ -138,6 +138,8 @@ export function topAt(x, below = -Infinity) {
 }
 
 export function bodyHeight() {
+  if (runtimeState.selectedAct === 1 && p.act1Motion)
+    return p.act1Motion.posture === 'rolling' ? 38 : 48;
   return p.ground && p.roll ? 26 : !p.ground ? 38 : 48;
 }
 
@@ -207,6 +209,11 @@ export function land(s, y, contact = null) {
     p.vy = contactSpeed * basis.ty;
   } else p.contactSpeed = null;
   afterStageLanding(s);
+  recordSurfaceLanding(s, changed);
+  if (!reboundBubbleShield() && changed && runtimeState.jumpBuffer > 0) jump();
+}
+
+export function recordSurfaceLanding(s, changed) {
   if (changed && !runtimeState.visited.has(s.id)) {
     runtimeState.visited.add(s.id);
     if (s.kind === 'express') {
@@ -225,7 +232,6 @@ export function land(s, y, contact = null) {
         if (tail) tail.crumbleTimer = group.delay;
       }
     }
-  if (!reboundBubbleShield() && changed && runtimeState.jumpBuffer > 0) jump();
 }
 
 export function canStand() {
@@ -280,13 +286,19 @@ export function sweptCircleTime(ax, ay, bx, by, cx, cy, radius) {
 
 export function spikeContact(h, oldX, oldY) {
   const direction = h.direction ?? 'up',
-    height = bodyHeight();
+    height = bodyHeight(),
+    halfWidth =
+      runtimeState.selectedAct === 1 && p.act1Motion
+        ? p.act1Motion.posture === 'rolling'
+          ? 19
+          : 11
+        : 13;
   const nx = direction === 'left' ? -1 : direction === 'right' ? 1 : 0,
     ny = direction === 'up' ? -1 : direction === 'down' ? 1 : 0;
   const cx = nx < 0 ? h.x : nx > 0 ? h.x + h.w : h.x + h.w / 2,
     cy = ny < 0 ? h.y : ny > 0 ? h.y + h.h : h.y + h.h / 2;
   const half = height / 2,
-    radius = Math.abs(nx) * 13 + Math.abs(ny) * half;
+    radius = Math.abs(nx) * halfWidth + Math.abs(ny) * half;
   const before = (oldX - cx) * nx + (oldY + 20 - half - cy) * ny - radius,
     after = (p.x - cx) * nx + (p.y + 20 - half - cy) * ny - radius;
   if (before < -0.01 || after > 0 || after > before) return false;
@@ -295,7 +307,7 @@ export function spikeContact(h, oldX, oldY) {
     y = oldY + (p.y - oldY) * t + 20 - half;
   const along = nx ? y - cy : x - cx,
     span = nx ? h.h : h.w,
-    extent = nx ? half : 13;
+    extent = nx ? half : halfWidth;
   // Test the actual visible tooth tips, rather than the harmless casing rectangle.
   for (let start = 0; start < span; start += 20) {
     const tip = -span / 2 + start + Math.min(20, span - start) / 2;
