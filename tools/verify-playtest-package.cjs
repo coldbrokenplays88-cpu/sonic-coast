@@ -28,7 +28,7 @@ async function smoke(browser, url) {
     assert.match(await page.locator('#playtest-status').textContent(), /Static-surface/);
     const state = await page.evaluate(() => readGameState());
     assert.equal(state.act, 'playtest');
-    assert.equal(state.tuning, 'AIR-2 / GROUND-4', 'the extracted package must contain the current tuning');
+    assert.equal(state.tuning, 'AIR-2 / GROUND-5', 'the extracted package must contain the current tuning');
     assert.equal(state.movementImplemented, true);
     assert.equal(state.player.x, 0);
     assert.equal(state.contact.height, 48);
@@ -120,6 +120,17 @@ async function smoke(browser, url) {
     const countersteer = await page.evaluate(() => readGameState());
     assert.ok(countersteer.player.speed < -8, 'held countersteer must allow useful downhill acceleration');
     assert.ok(countersteer.contact.vx < -6, 'world-horizontal travel must be substantial, not near zero');
+    const downhill=[];
+    for(const posture of ['standing','rolling']) {
+      await page.click('#playtest-valley');
+      downhill.push(await page.evaluate((posture) => {
+        Object.assign(playtestState.player,{x:1700,speed:-14,posture});
+        keys.add('ArrowLeft');for(let i=0;i<30;i++)update();keys.clear();draw();
+        return {x:playtestState.player.x,speed:playtestState.player.speed};
+      },posture));
+    }
+    assert.ok(downhill[1].speed < downhill[0].speed-5,'downhill roll outpaces powered running');
+    assert.ok(downhill[1].x < downhill[0].x-50,'speed advantage affects actual travel');
     await page.click('#playtest-flat');
     await page.evaluate(() => Object.assign(playtestState.player,{speed:12,posture:'rolling'}));
     await page.keyboard.down('ArrowLeft');

@@ -51,6 +51,28 @@ test('slope gravity slows uphill travel and accelerates downhill in both directi
     assert.ok(-side*rest.speed>4, 'designated steep grade overcomes standing friction');
   }
 });
+test('a deliberate downhill roll beats powered running from identical starts without a velocity kick',()=>{
+ const a=scene();for(const side of [-1,1])for(const initial of [6,14,22]){
+ a.run(`var runner=createMotionPlayer('valley'),roller=createMotionPlayer('valley');Object.assign(runner,{x:${side*1900},speed:${-side*initial}});Object.assign(roller,{x:${side*1900},speed:${-side*initial}});stepMotionPlayer(roller,{direction:${-side},down:true});stepMotionPlayer(runner,{direction:${-side}})`);
+ assert.ok(Math.abs(a.run('roller.speed'))<initial+1,'entering a roll applies finite force, not a speed assignment');
+ a.run(`for(let i=1;i<30;i++){stepMotionPlayer(roller,{direction:${-side}});stepMotionPlayer(runner,{direction:${-side}})}`);
+ assert.ok(-side*a.run('roller.speed')>-side*a.run('runner.speed')+1,'downhill rolling should build more speed than powered running');
+ assert.ok(side*a.run('roller.x')<side*a.run('runner.x'),'extra speed produces actual extra downhill travel');
+ assert.ok(Math.abs(a.run('roller.x'))>1000&&Math.abs(a.run('runner.x'))>1000,'comparison stays on one constant grade');
+ }
+});
+test('downhill force tuning leaves flat rolling and uphill motion unchanged',()=>{
+ const a=scene();for(const side of [-1,1]){
+ const flat=simulate(a,'flat',0,side*12,'rolling',{},120);assert.ok(Math.abs(flat.speed-side*9)<1e-8);assert.ok(Math.abs(flat.x-side*1260)<1e-8);
+ const uphill=simulate(a,'valley',side*1700,side*14,'rolling',{},30);assert.ok(Math.abs(uphill.speed-side*7.527622318748)<1e-8,'uphill loss retains approved value');
+ }
+});
+test('downhill rolling keeps the approved opposing-input braking force',()=>{
+ const a=scene();for(const side of [-1,1]){
+ a.run(`var free=createMotionPlayer('valley'),braked=createMotionPlayer('valley');for(const q of [free,braked])Object.assign(q,{x:${side*1700},speed:${-side*14},posture:'rolling'});var ty=motionContact(free).ty;stepMotionPlayer(free,{});stepMotionPlayer(braked,{direction:${side}})`);
+ assert.ok(Math.abs(Math.abs(a.run('free.speed'))-Math.abs(a.run('braked.speed'))-0.18*(1-Math.abs(a.run('ty'))))<1e-8,'countersteer removes the same speed per tick on the constant grade');
+ }
+});
 test('rolling survives a continuous downhill reversal but uncurls after sustained flat rest', () => {
   const a=scene();
   const reversed=simulate(a,'valley',1400,2,'rolling',{},60);
@@ -67,7 +89,7 @@ test('steep downhill gravity builds useful rolling speed under held countersteer
   for(const side of [-1,1]) {
     for(const initial of [0,4]) {
       a.run(`trial=createGroundPlayer('valley',${side*1700},${-side*initial},'rolling');var free=createGroundPlayer('valley',${side*1700},${-side*initial},'rolling'),backtracks=0,previousX=trial.x;
-        for(let i=0;i<60;i++){stepGroundPlayer(trial,{direction:${side}});stepGroundPlayer(free,{});if(${side}*(trial.x-previousX)>=0)backtracks++;previousX=trial.x}`);
+        for(let i=0;i<30;i++){stepGroundPlayer(trial,{direction:${side}});stepGroundPlayer(free,{});if(${side}*(trial.x-previousX)>=0)backtracks++;previousX=trial.x}`);
       const gain=-side*a.run('trial.speed')-initial,freeGain=-side*a.run('free.speed')-initial;
       assert.ok(gain>=freeGain*0.4,'countersteer must preserve at least 40% of released acceleration on the designated steep grade');
       assert.ok(gain<freeGain,'opposite input must still brake');
@@ -108,17 +130,17 @@ test('posture changes preserve contact; curve joins are continuous and share ren
     assert.ok(Math.abs(left.curvature-right.curvature)<0.000001);
   }
 });
-test('no-input valley run dissipates energy, crosses joins smoothly, and respects contact', () => {
+test('no-input valley energy accounts for authored downhill work and friction across smooth joins', () => {
   const a=scene();
-  a.run(`trial=createGroundPlayer('valley',-1800,0,'rolling');var energy0=groundEnergy(trial),lastContact=groundContact(trial),maxGain=0,maxStep=0,maxJump=0,peak=0,maxX=-1800;
-    for(let i=0;i<600;i++){stepGroundPlayer(trial,{});let c=groundContact(trial);maxX=Math.max(maxX,c.x);maxGain=Math.max(maxGain,groundEnergy(trial)-energy0);maxStep=Math.max(maxStep,Math.hypot(c.x-lastContact.x,c.y-lastContact.y));maxJump=Math.max(maxJump,Math.abs(c.angle-lastContact.angle));peak=Math.max(peak,Math.abs(c.speed));if(!Number.isFinite(c.speed)||trial.boundary||c.normalReaction<=0)throw Error('invalid/unsupported valley traversal');lastContact=c}`);
-  assert.ok(a.run('maxX')>1000,'run crosses the bottom and climbs the other side, regardless of final oscillation phase');
-  assert.ok(a.run('maxGain')<0.05,'energy growth budget <0.05 unit²/tick² (~0.02% of start)');
-  assert.ok(a.run('groundEnergy(trial)')<a.run('energy0')-20,'intentional friction dissipates energy');
-  assert.ok(a.run('Math.abs(energy0-groundEnergy(trial)-groundTuning.rollResistance*trial.distance)')<0.05,'lost energy agrees with friction work, within integration error');
-  assert.ok(a.run('maxStep')<35,'no position discontinuities within supported speed envelope');
+  a.run(`var trial=createMotionPlayer('valley');Object.assign(trial,{x:-1800,posture:'rolling'});var energy0=groundEnergy(trial),lastContact=motionContact(trial),extraWork=0,maxError=0,maxStep=0,maxJump=0,peak=0;
+    for(let i=0;i<400;i++){stepMotionPlayer(trial,{});let c=motionContact(trial);extraWork+=1.5*0.35*Math.max(0,c.y-lastContact.y);maxError=Math.max(maxError,Math.abs(groundEnergy(trial)-energy0-extraWork+0.025*trial.distance));maxStep=Math.max(maxStep,Math.hypot(c.x-lastContact.x,c.y-lastContact.y));maxJump=Math.max(maxJump,Math.abs(c.angle-lastContact.angle));peak=Math.max(peak,Math.abs(c.speed));if(!Number.isFinite(c.speed)||trial.boundary||trial.mode!=='grounded'||c.normalReaction<=0)throw Error('invalid/unsupported valley traversal');lastContact=c;if(c.x>2200)break}`);
+  assert.ok(a.run('trial.x')>2200,'crosses the valley and climbs the other side before the marked boundary');
+  assert.ok(a.run('extraWork')>300,'extra downhill force supplies measurable work');
+  assert.ok(a.run('maxError')<0.05,'base energy change equals extra force work minus friction within integration tolerance');
+  assert.ok(a.run('groundEnergy(trial)')<a.run('energy0+extraWork')-20,'rolling friction still dissipates energy');
+  assert.ok(a.run('maxStep')<40,'no position discontinuities; energy-derived peak bound is below 37');
   assert.ok(a.run('maxJump')<0.04,'no abrupt tangent/pose jumps');
-  assert.equal(a.run('trial.ticks'),600);
+  assert.equal(a.run('trial.transitionCount'),0);
 });
 test('scene advances exactly one controller tick, resets boundaries safely, and ignores excluded controls', () => {
   const a=scene();

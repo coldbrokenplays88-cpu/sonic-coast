@@ -676,7 +676,7 @@ export function stepMotionPlayer(player, input = {}) {
 
 export function initializeRuntimeModule() {
   motionTuning = Object.freeze({
-    revision: 'AIR-2 / GROUND-4',
+    revision: 'AIR-2 / GROUND-5',
     jumpImpulse: 10.5,
     cutRatio: 0.4,
     airAcceleration: 0.08,

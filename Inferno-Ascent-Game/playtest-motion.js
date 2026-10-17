@@ -665,7 +665,7 @@ function stepMotionPlayer(player, input = {}) {
 }
 
 const motionTuning = Object.freeze({
-    revision: 'AIR-2 / GROUND-4',
+    revision: 'AIR-2 / GROUND-5',
     jumpImpulse: 10.5,
     cutRatio: 0.4,
     airAcceleration: 0.08,

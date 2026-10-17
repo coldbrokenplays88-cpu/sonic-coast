@@ -17240,8 +17240,9 @@
     const drive = !rolling && direction && !braking ? direction * Math.min(t.acceleration, Math.max(0, t.runRange - player.speed * direction) / dt) : 0;
     const midpointX = player.x + player.speed * before.tx * dt / 2;
     const midpoint = sampler(player.scenario, midpointX);
+    const slopeFactor = rolling && player.speed * midpoint.ty > 0 ? t.rollDownhillMultiplier : 1;
     const nextSpeed = groundResist(
-      player.speed + (t.gravity * midpoint.ty + drive) * dt,
+      player.speed + (t.gravity * midpoint.ty * slopeFactor + drive) * dt,
       resistance * dt
     );
     player.x += (player.speed + nextSpeed) * 0.5 * midpoint.tx * dt;
@@ -17279,7 +17280,7 @@
   __name(stepGroundPlayer, "stepGroundPlayer");
   function initializeRuntimeModule25() {
     groundTuning = Object.freeze({
-      revision: "GROUND-4",
+      revision: "GROUND-5",
       hz: 60,
       substeps: 4,
       runRange: 14,
@@ -17288,6 +17289,7 @@
       coastResistance: 0.1,
       gravity: 0.35,
       rollResistance: 0.025,
+      rollDownhillMultiplier: 2.5,
       rollBrake: 0.18,
       rollBrakeFadeSpeed: 2,
       rollTurnSpeed: 1,
@@ -17896,7 +17898,7 @@
   __name(stepMotionPlayer, "stepMotionPlayer");
   function initializeRuntimeModule26() {
     motionTuning = Object.freeze({
-      revision: "AIR-2 / GROUND-4",
+      revision: "AIR-2 / GROUND-5",
       jumpImpulse: 10.5,
       cutRatio: 0.4,
       airAcceleration: 0.08,

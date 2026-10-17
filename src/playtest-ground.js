@@ -98,7 +98,7 @@ export function advanceGroundSubstep(player, controls, dt, sampler = sampleGroun
     { direction, rolling, braking } = controls;
   const before = sampler(player.scenario, player.x);
   // Keep flat braking, but continuously relieve countersteer with inclination.
-  // Gravity remains unchanged; this only weakens the opposing control force.
+  // Braking strength is independent of the downhill rolling slope factor.
   // The near-rest fade also prevents extra static friction on gentle grades.
   const rollBrake =
     direction * player.speed < 0
@@ -116,8 +116,11 @@ export function advanceGroundSubstep(player, controls, dt, sampler = sampleGroun
       : 0;
   const midpointX = player.x + (player.speed * before.tx * dt) / 2;
   const midpoint = sampler(player.scenario, midpointX);
+  // Sonic 2 uses 0x50 downhill roll / 0x20 running slope force. Preserve
+  // approved uphill loss: only velocity aligned with downhill gets the ratio.
+  const slopeFactor = rolling && player.speed * midpoint.ty > 0 ? t.rollDownhillMultiplier : 1;
   const nextSpeed = groundResist(
-    player.speed + (t.gravity * midpoint.ty + drive) * dt,
+    player.speed + (t.gravity * midpoint.ty * slopeFactor + drive) * dt,
     resistance * dt
   );
   // Trapezoidal travel plus midpoint tangent; all velocities derive from speed.
@@ -170,7 +173,7 @@ export function stepGroundPlayer(player, input = {}) {
 
 export function initializeRuntimeModule() {
   groundTuning = Object.freeze({
-    revision: 'GROUND-4',
+    revision: 'GROUND-5',
     hz: 60,
     substeps: 4,
     runRange: 14,
@@ -179,6 +182,7 @@ export function initializeRuntimeModule() {
     coastResistance: 0.1,
     gravity: 0.35,
     rollResistance: 0.025,
+    rollDownhillMultiplier: 2.5,
     rollBrake: 0.18,
     rollBrakeFadeSpeed: 2,
     rollTurnSpeed: 1,
