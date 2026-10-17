@@ -55,7 +55,7 @@ export function selectAct(act) {
     updatePlaytestHud();
     show(
       'PLAYTEST',
-      'Isolated ground movement experiment.<br>Flat and valley benchmarks · No jumping, boost or Spin Dash.',
+      'Isolated static-surface experiment.<br>Jumping, air control and six test fixtures · No boost or Spin Dash.',
       'OPEN PLAYTEST'
     );
     return;

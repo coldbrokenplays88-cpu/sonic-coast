@@ -25,10 +25,10 @@ async function smoke(browser, url) {
       draw();
     });
     assert.equal(await page.locator('#playtest-status').isVisible(), true);
-    assert.match(await page.locator('#playtest-status').textContent(), /Ground-only/);
+    assert.match(await page.locator('#playtest-status').textContent(), /Static-surface/);
     const state = await page.evaluate(() => readGameState());
     assert.equal(state.act, 'playtest');
-    assert.equal(state.tuning, 'GROUND-3', 'the extracted package must contain the current tuning');
+    assert.equal(state.tuning, 'AIR-1 / GROUND-3', 'the extracted package must contain the current tuning');
     assert.equal(state.movementImplemented, true);
     assert.equal(state.player.x, 0);
     assert.equal(state.contact.height, 48);
@@ -120,10 +120,67 @@ async function smoke(browser, url) {
     const countersteer = await page.evaluate(() => readGameState());
     assert.ok(countersteer.player.speed < -8, 'held countersteer must allow useful downhill acceleration');
     assert.ok(countersteer.contact.vx < -6, 'world-horizontal travel must be substantial, not near zero');
+    await page.click('#playtest-flat');
+    await page.keyboard.down('Space');
+    await page.evaluate(() => { for(let i=0;i<8;i++)update(); });
+    const heldJump = await page.evaluate(() => readGameState());
+    assert.equal(heldJump.player.mode, 'airborne');
+    await page.keyboard.up('Space');
+    await page.evaluate(() => update());
+    const cutJump = await page.evaluate(() => readGameState());
+    assert.ok(cutJump.player.air.vy > heldJump.player.air.vy + 4, 'release cuts remaining jump lift');
+    await page.evaluate(() => { for(let i=0;i<70;i++)update(); draw(); });
+    assert.equal((await page.evaluate(() => readGameState())).player.mode, 'grounded');
+    await page.click('#playtest-crest');
+    await page.evaluate(() => { playtestState.player.speed=14; });
+    await page.keyboard.down('ArrowRight');
+    await page.evaluate(() => { for(let i=0;i<50;i++)update(); draw(); });
+    await page.keyboard.up('ArrowRight');
+    const crest = await page.evaluate(() => readGameState());
+    assert.equal(crest.player.mode, 'airborne');
+    assert.equal(crest.player.lastTakeoff.reason, 'crest');
+    assert.equal(crest.player.transitionCount, 1);
+    assert.equal(crest.contact.anchor, null);
+    if(process.env.PLAYTEST_CAPTURE)await page.screenshot({path:process.env.PLAYTEST_CAPTURE});
+    await page.click('#playtest-gap');
+    await page.evaluate(() => { playtestState.player.speed=14; for(let i=0;i<20;i++)update(); });
+    await page.keyboard.down('Space');
+    await page.evaluate(() => { for(let i=0;i<30;i++)update(); });
+    await page.keyboard.up('Space');
+    assert.ok((await page.evaluate(() => readGameState())).player.x > 300, 'real jump crosses gap');
+    await page.evaluate(() => { for(let i=0;i<40;i++)update(); draw(); });
+    assert.equal((await page.evaluate(() => readGameState())).player.mode, 'grounded');
+    await page.click('#playtest-wall');
+    await page.evaluate(() => { playtestState.player.speed=35; for(let i=0;i<20;i++)update(); draw(); });
+    const wall = await page.evaluate(() => readGameState());
+    assert.ok(wall.contact.center.x+wall.contact.width/2 <= 350.001, 'fast standing body stops at wall');
+    await page.keyboard.down('Space');
+    await page.evaluate(() => update());
+    await page.keyboard.up('Space');
+    assert.equal((await page.evaluate(() => readGameState())).player.posture, 'standing', 'jump beside wall cannot expand into wider ball');
+    await page.evaluate(() => { for(let i=0;i<65;i++)update(); draw(); });
+    const wallLanded=await page.evaluate(() => readGameState());
+    assert.equal(wallLanded.player.mode,'grounded');
+    assert.ok(Math.abs(wallLanded.player.x-wall.player.x)<0.001,'no sideways landing snap');
+    await page.click('#playtest-ceiling');
+    await page.evaluate(() => {
+      Object.assign(playtestState.player,{x:300,speed:0,posture:'rolling'});
+      for(let i=0;i<30;i++)update(); draw();
+    });
+    assert.equal((await page.evaluate(() => readGameState())).player.posture,'rolling','ceiling blocks uncurl');
+    await page.keyboard.down('Space');
+    await page.evaluate(() => { update(); draw(); });
+    await page.keyboard.up('Space');
+    const ceiling=await page.evaluate(() => readGameState());
+    assert.equal(ceiling.player.air.jumpLift,0,'head impact clears lift budget');
+    assert.ok(ceiling.player.y>=375.999,'ceiling blocks circle body');
     await page.click('#restart');
     for (const act of ['1', '2']) {
+      await page.keyboard.down('Space');
+      await page.evaluate(() => update());
       await page.keyboard.down('ShiftLeft');
       await page.selectOption('#act-select', act);
+      await page.keyboard.up('Space');
       await page.keyboard.up('ShiftLeft');
       await page.click('#play');
       const entry = await page.evaluate(() => ({
@@ -175,7 +232,7 @@ async function smoke(browser, url) {
       url,
       result: 'PASS',
       checks:
-        'selection, rendered Sonic/contact, real ground movement, rolling, valley rollback, two-axis camera, isolation, pause/resume/reset, Act 1/2 running, clean return',
+        'selection, rendered Sonic/contact, approved ground/rollback, held/tap jump, crest detachment, gap landing, swept wall, upright landing, ceiling/uncurl, two-axis camera, isolation, pause/resume/reset, flight exit, Act 1/2 running/jump/boost, clean return',
       pageErrors: errors,
     };
   } finally {

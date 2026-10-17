@@ -162,6 +162,13 @@
       }
     },
     {
+      "file": "playtest-motion.js",
+      "kinds": {
+        "motionTuning": "const",
+        "motionFixtures": "const"
+      }
+    },
+    {
       "file": "playtest.js",
       "kinds": {
         "playtestState": "let"

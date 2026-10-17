@@ -15,15 +15,18 @@ in your browser. Leave its command window open while playing.
 Controls are shown below the game.
 
 EXPERIMENTAL BRANCH: codex/playtest-physics
-Select PLAYTEST — GROUND in the STAGE menu, then choose OPEN PLAYTEST.
-Left/right or A/D runs; opposite input brakes. Tap Down/S while moving to roll.
-Holding forward while rolled adds no propulsion. Rolling automatically ends
-only after sustained rest. Jump, boost, Spin Dash and airborne movement are disabled.
-Use Flat reset / Valley reset to select benchmarks; R or Restart resets to the
-selected course's safe flat spawn. Visible course boundaries also reset.
-P/Escape pauses or resumes, F toggles fullscreen. Contact outlines and debug HUD
-show the experimental body's anchor, speed, velocity, angle and controller ticks.
-Use STAGE to return to Act 1 or Act 2; their movement is unchanged.
+Select PLAYTEST — AIR / STATIC in STAGE, then OPEN PLAYTEST.
+Left/right or A/D runs or steers in air. Tap Down/S while moving to roll.
+Space/Up/W jumps; release early for a short hop. No coyote time or buffered
+landing jumps. Jumping adds a surface-normal impulse to earned momentum.
+Holding forward while curled adds no running propulsion. Boost/Spin Dash
+remain disabled. The accepted GROUND-3 ground tuning is preserved.
+Use Flat, Valley, Crest, Gap, Wall, or Low ceiling to select/reset fixtures.
+R/Restart returns to the selected safe spawn; boundaries and deep falls reset.
+P/Escape pauses/resumes, F toggles fullscreen. The HUD shows grounded/airborne
+state, velocity, contact normal and latest transition. Yellow marks ground
+contact; pink marks airborne body center. Low ceilings prevent uncurling.
+Use STAGE to return to Act 1/2; their physics and camera are unchanged.
 
 LOCAL SERVER FALLBACK (if opening the HTML file directly fails)
 Windows: RUN-GAME-WINDOWS.bat requires Python and serves this folder locally.

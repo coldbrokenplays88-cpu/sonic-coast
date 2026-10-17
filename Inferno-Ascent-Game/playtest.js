@@ -6,7 +6,14 @@ function isPlaytest() {
 
 function clearPlaytestInput() {
   keys.clear();
-  if (playtestState) playtestState.rollPressed = false;
+  if (playtestState) {
+    playtestState.rollPressed = false;
+    playtestState.jumpPressed = false;
+    if (playtestState.player.air) {
+      playtestState.player.air.cutEligible = false;
+      playtestState.player.air.jumpLift = 0;
+    }
+  }
 }
 
 function resetPlaytest(
@@ -17,8 +24,13 @@ function resetPlaytest(
   Object.assign(playtestState, {
     frames: 0,
     rollPressed: false,
-    player: createGroundPlayer(scenario),
-    camera: { x: -W / 2, y: sampleGround(scenario, 0).y - H * 0.66, zoom: 1 },
+    jumpPressed: false,
+    player: createMotionPlayer(scenario),
+    camera: {
+      x: motionFixtures[scenario].spawn - W / 2,
+      y: sampleMotionExtension(scenario, motionFixtures[scenario].spawn).y - H * 0.66,
+      zoom: 1,
+    },
     resetCount: (playtestState.resetCount ?? -1) + 1,
     resetReason: reason,
   });
@@ -55,7 +67,7 @@ function setupPlaytest() {
   $('#game-shell').classList.add('playtest');
   $('#playtest-status').hidden = false;
   $('#playtest-status').textContent =
-    'Ground-only experiment · No jump / boost / Spin Dash. Boundaries reset to the flat spawn.';
+    'Static-surface experiment · Space: jump / release: short hop · No boost or Spin Dash. R resets fixture.';
   $('#game-controls').hidden = true;
   $('#playtest-controls').hidden = false;
   $('#game-hint').hidden = true;
@@ -67,9 +79,9 @@ function setupPlaytest() {
   $('#act-select').value = 'playtest';
   canvas.setAttribute(
     'aria-label',
-    'PLAYTEST ground experiment. Left and right move, Down enters a roll while moving. P pauses or resumes, R resets. Flat reset and Valley reset select benchmarks. Jump, boost and Spin Dash are disabled. Use the stage selector to return to either act.'
+    'PLAYTEST static terrain experiment. Left and right move, Down rolls, Space jumps; release for a short hop. P pauses, R resets. Buttons select flat, valley, crest, gap, wall or low ceiling. Boost and Spin Dash are disabled. STAGE returns to either act.'
   );
-  for (const scenario of ['flat', 'valley'])
+  for (const scenario of Object.keys(motionFixtures))
     $('#playtest-' + scenario).onclick = () => {
       resetPlaytest(scenario);
       canvas.focus();
@@ -108,6 +120,12 @@ function handlePlaytestInput(code, pressed) {
     return;
   }
   if (mode === 'playing') {
+    if (
+      ['Space', 'ArrowUp', 'KeyW'].includes(code) &&
+      !['Space', 'ArrowUp', 'KeyW'].some((k) => keys.has(k)) &&
+      playtestState.player.mode === 'grounded'
+    )
+      playtestState.jumpPressed = true;
     if ((code === 'ArrowDown' || code === 'KeyS') && !keys.has(code))
       playtestState.rollPressed = true;
     keys.add(code);
@@ -121,15 +139,18 @@ function updatePlaytest() {
       Number(keys.has('ArrowRight') || keys.has('KeyD')) -
       Number(keys.has('ArrowLeft') || keys.has('KeyA'));
     const player = playtestState.player;
-    stepGroundPlayer(player, {
+    stepMotionPlayer(player, {
       direction,
       down: playtestState.rollPressed || keys.has('ArrowDown') || keys.has('KeyS'),
+      jumpPressed: playtestState.jumpPressed,
+      jumpHeld: ['Space', 'ArrowUp', 'KeyW'].some((k) => keys.has(k)),
     });
     playtestState.rollPressed = false;
+    playtestState.jumpPressed = false;
     playtestState.frames++;
     if (player.boundary) resetPlaytest(player.scenario, player.boundary);
     else {
-      const contact = groundContact(player),
+      const contact = motionContact(player),
         camera = playtestState.camera;
       // Tick-based following: render schedules cannot alter camera or physics.
       camera.x += (contact.x - W / 2 + contact.vx * 8 - camera.x) * 0.12;
@@ -158,15 +179,19 @@ function framePlaytest(time) {
 
 function updatePlaytestHud() {
   const player = playtestState.player,
-    c = groundContact(player);
+    c = motionContact(player);
   $('#playtest-mode').textContent =
-    String(mode).toUpperCase() + ' / ' + player.posture.toUpperCase();
+    String(mode).toUpperCase() +
+    ' / ' +
+    player.mode.toUpperCase() +
+    ' / ' +
+    player.posture.toUpperCase();
   $('#playtest-frame').textContent = String(playtestState.frames);
   $('#playtest-input').textContent = [...keys].join(', ') || 'none';
   $('#playtest-debug').textContent =
-    `${groundTuning.revision} · ${player.scenario} · speed ${c.speed.toFixed(3)} · v(${c.vx.toFixed(3)}, ${c.vy.toFixed(3)}) · angle ${((c.angle * 180) / Math.PI).toFixed(2)}°\n` +
-    `CONTACT (${c.x.toFixed(2)}, ${c.y.toFixed(2)}) · body ${c.width}×${c.height} · center (${c.center.x.toFixed(2)}, ${c.center.y.toFixed(2)}) · N ${c.normalReaction.toFixed(3)}\n` +
-    `controller ticks ${player.ticks} · reset ${playtestState.resetCount}: ${playtestState.resetReason}`;
+    `${motionTuning.revision} · ${player.scenario} · gsp ${c.grounded ? c.speed.toFixed(3) : '—'} · v(${c.vx.toFixed(3)}, ${c.vy.toFixed(3)}) · angle ${((c.angle * 180) / Math.PI).toFixed(2)}°\n` +
+    `${c.grounded ? 'CONTACT' : 'AIR REF'} (${c.x.toFixed(2)}, ${c.y.toFixed(2)}) · body ${c.width}×${c.height} · center (${c.center.x.toFixed(2)}, ${c.center.y.toFixed(2)}) · normal ${c.grounded ? `(${c.nx.toFixed(3)}, ${c.ny.toFixed(3)})` : 'none'} · N ${c.normalReaction.toFixed(3)}\n` +
+    `${player.latestTransition} · controller ticks ${player.ticks} · reset ${playtestState.resetCount}: ${playtestState.resetReason}`;
 }
 
 function readPlaytestState() {
@@ -175,11 +200,11 @@ function readPlaytestState() {
     act: 'playtest',
     status: mode,
     movementImplemented: true,
-    tuning: groundTuning.revision,
+    tuning: motionTuning.revision,
     frame: playtestState.frames,
     player: { ...player },
-    contact: groundContact(player),
-    energy: groundEnergy(player),
+    contact: motionContact(player),
+    energy: player.mode === 'grounded' ? groundEnergy(player, sampleMotionExtension) : null,
     camera: { ...playtestState.camera },
     inputs: [...keys],
     resetCount: playtestState.resetCount,
@@ -188,7 +213,7 @@ function readPlaytestState() {
 }
 
 function drawGroundPlayer(player) {
-  const c = groundContact(player),
+  const c = motionContact(player),
     rolling = player.posture === 'rolling';
   ctx.save();
   ctx.translate(c.x, c.y);
@@ -226,7 +251,7 @@ function drawGroundPlayer(player) {
     ctx.fillStyle = '#1c52cc';
     ctx.fillRect(-c.width / 2, -c.height, c.width, c.height);
   }
-  // Collision overlay is deliberate: contact is the origin, never legacy p.y.
+  // Ground anchor and airborne body center are deliberately distinct markers.
   ctx.strokeStyle = '#61d9f1';
   ctx.lineWidth = 1;
   if (rolling) {
@@ -234,12 +259,14 @@ function drawGroundPlayer(player) {
     ctx.arc(0, -19, 19, 0, Math.PI * 2);
     ctx.stroke();
   } else ctx.strokeRect(-c.width / 2, -c.height, c.width, c.height);
-  ctx.fillStyle = '#ffd54a';
-  ctx.fillRect(-3, -3, 6, 6);
-  ctx.beginPath();
-  ctx.moveTo(0, 0);
-  ctx.lineTo(0, -65);
-  ctx.stroke();
+  ctx.fillStyle = c.grounded ? '#ffd54a' : '#f48bdf';
+  ctx.fillRect(-3, c.grounded ? -3 : -c.height / 2 - 3, 6, 6);
+  if (c.grounded) {
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(0, -65);
+    ctx.stroke();
+  }
   ctx.restore();
 }
 
@@ -262,33 +289,44 @@ function drawPlaytest() {
     ctx.fillText(String(x), x + 4, camera.y + H - 20);
     ctx.fillStyle = '#242142';
   }
-  ctx.beginPath();
-  ctx.moveTo(left, camera.y + H + 2000);
-  for (let x = left; x <= right; x += 4) ctx.lineTo(x, sampleGround(player.scenario, x).y);
-  ctx.lineTo(right, camera.y + H + 2000);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = '#61d9f1';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  for (let x = left; x <= right; x += 4) {
-    const y = sampleGround(player.scenario, x).y;
-    if (x === left) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
+  for (const span of motionSpans(player.scenario)) {
+    const a = Math.max(left, span[0]),
+      b = Math.min(right, span[1]);
+    if (a > b) continue;
+    ctx.beginPath();
+    ctx.moveTo(a, camera.y + H + 2000);
+    for (let x = a; x < b; x += 4) ctx.lineTo(x, sampleMotionExtension(player.scenario, x).y);
+    ctx.lineTo(b, sampleMotionExtension(player.scenario, b).y);
+    ctx.lineTo(b, camera.y + H + 2000);
+    ctx.closePath();
+    ctx.fillStyle = '#242142';
+    ctx.fill();
+    ctx.strokeStyle = '#61d9f1';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(a, sampleMotionExtension(player.scenario, a).y);
+    for (let x = a + 4; x < b; x += 4) ctx.lineTo(x, sampleMotionExtension(player.scenario, x).y);
+    ctx.lineTo(b, sampleMotionExtension(player.scenario, b).y);
+    ctx.stroke();
   }
-  ctx.stroke();
-  const limit = groundBounds(player.scenario);
+  for (const box of motionFixtures[player.scenario].boxes) {
+    ctx.fillStyle = '#6d396c';
+    ctx.fillRect(box.x1, box.y1, box.x2 - box.x1, box.y2 - box.y1);
+    ctx.strokeStyle = '#ffae44';
+    ctx.strokeRect(box.x1, box.y1, box.x2 - box.x1, box.y2 - box.y1);
+  }
+  const limit = motionBounds(player.scenario);
   ctx.textAlign = 'center';
   ctx.font = '14px monospace';
   for (const x of [-limit, limit]) {
-    const y = sampleGround(player.scenario, x).y;
+    const y = sampleMotionExtension(player.scenario, x).y;
     ctx.fillStyle = '#ffae44';
     ctx.fillRect(x - 2, y - 170, 4, 170);
     ctx.fillText('TEST BOUNDARY → RESET', x - Math.sign(x) * 120, y - 130);
   }
-  const spawn = sampleGround(player.scenario, 0);
+  const spawn = sampleMotionExtension(player.scenario, motionFixtures[player.scenario].spawn);
   ctx.fillStyle = '#b4b9d2';
-  ctx.fillText('SAFE FLAT SPAWN · R RESET', 0, spawn.y + 45);
+  ctx.fillText('SAFE SPAWN · R RESET', spawn.x, spawn.y + 45);
   drawGroundPlayer(player);
   ctx.restore();
 }

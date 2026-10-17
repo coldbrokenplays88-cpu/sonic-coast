@@ -21,7 +21,7 @@ test('PLAYTEST initializes the ground benchmark and draws its contact/player ove
   a.rects.length = 0;
   a.run('draw()');
   assert.ok(a.rects.some(r => r[0] === -11 && r[1] === -48 && r[2] === 22 && r[3] === 48));
-  assert.match(a.c.document.querySelector('#playtest-status').textContent, /Ground-only/i);
+  assert.match(a.c.document.querySelector('#playtest-status').textContent, /Static-surface/i);
 });
 
 test('PLAYTEST input and ticks bypass legacy movement, interactions, water, bosses, and HUD', () => {

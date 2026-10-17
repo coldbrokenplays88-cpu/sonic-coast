@@ -331,8 +331,8 @@
     addMiddleSection: () => addMiddleSection,
     beginWrongRouteDrop: () => beginWrongRouteDrop,
     drawMiddleSection: () => drawMiddleSection,
-    getRuntimeBindings: () => getRuntimeBindings28,
-    initializeRuntimeModule: () => initializeRuntimeModule28,
+    getRuntimeBindings: () => getRuntimeBindings29,
+    initializeRuntimeModule: () => initializeRuntimeModule29,
     updateMiddleMotion: () => updateMiddleMotion,
     updateMiddleSection: () => updateMiddleSection
   });
@@ -352,8 +352,8 @@
     drawClimbCue: () => drawClimbCue,
     drawGrindRail: () => drawGrindRail,
     drawSkylineSmoke: () => drawSkylineSmoke,
-    getRuntimeBindings: () => getRuntimeBindings27,
-    initializeRuntimeModule: () => initializeRuntimeModule27,
+    getRuntimeBindings: () => getRuntimeBindings28,
+    initializeRuntimeModule: () => initializeRuntimeModule28,
     launchAirDevice: () => launchAirDevice,
     predictLanding: () => predictLanding,
     resetAct2: () => resetAct2,
@@ -373,9 +373,9 @@
     drawPlaytest: () => drawPlaytest,
     exitPlaytest: () => exitPlaytest,
     framePlaytest: () => framePlaytest,
-    getRuntimeBindings: () => getRuntimeBindings26,
+    getRuntimeBindings: () => getRuntimeBindings27,
     handlePlaytestInput: () => handlePlaytestInput,
-    initializeRuntimeModule: () => initializeRuntimeModule26,
+    initializeRuntimeModule: () => initializeRuntimeModule27,
     isPlaytest: () => isPlaytest,
     playtestState: () => playtestState,
     readPlaytestState: () => readPlaytestState,
@@ -15555,7 +15555,7 @@
   __name(start, "start");
   function show(title, text, label) {
     $("#overlay").classList.remove("hidden");
-    $(".intro").innerHTML = `<span class="eyebrow">${isPlaytest() ? "PLAYTEST" : `${state.level.title || "NEON EXPRESS"} ACT ${state.selectedAct}`}</span><h1>${title}</h1><p>${text}</p><button id="play" class="primary">${label} <span>\u25B6</span></button><span class="start-note">${isPlaytest() ? "\u2190 \u2192 / A D: move \xB7 Down: roll \xB7 P: pause \xB7 R: reset" : "Tap / hold Space: jump height \xB7 Down: roll \xB7 Left click / Shift / X: boost"}</span>`;
+    $(".intro").innerHTML = `<span class="eyebrow">${isPlaytest() ? "PLAYTEST" : `${state.level.title || "NEON EXPRESS"} ACT ${state.selectedAct}`}</span><h1>${title}</h1><p>${text}</p><button id="play" class="primary">${label} <span>\u25B6</span></button><span class="start-note">${isPlaytest() ? "\u2190 \u2192 / A D: move \xB7 Space: jump \xB7 Down: roll \xB7 P: pause \xB7 R: reset" : "Tap / hold Space: jump height \xB7 Down: roll \xB7 Left click / Shift / X: boost"}</span>`;
     $("#play").onclick = start;
   }
   __name(show, "show");
@@ -15565,7 +15565,7 @@
       keys.clear();
       show(
         isPlaytest() ? "PLAYTEST<br><em>paused.</em>" : "Catch your<br><em>breath.</em>",
-        isPlaytest() ? "Ground experiment paused. Your speed and contact are preserved." : "Your run is paused.",
+        isPlaytest() ? "Static-surface experiment paused. Your movement state is preserved." : "Your run is paused.",
         "RESUME"
       );
       $("#pause").textContent = "\u25B6";
@@ -17138,7 +17138,10 @@
   // src/playtest-ground.js
   var playtest_ground_exports = {};
   __export(playtest_ground_exports, {
+    advanceGroundSubstep: () => advanceGroundSubstep,
+    beginGroundTick: () => beginGroundTick,
     createGroundPlayer: () => createGroundPlayer,
+    finishGroundTick: () => finishGroundTick,
     getRuntimeBindings: () => getRuntimeBindings25,
     groundBounds: () => groundBounds,
     groundContact: () => groundContact,
@@ -17193,8 +17196,8 @@
     };
   }
   __name(createGroundPlayer, "createGroundPlayer");
-  function groundContact(player) {
-    const surface = sampleGround(player.scenario, player.x);
+  function groundContact(player, sampler = sampleGround) {
+    const surface = sampler(player.scenario, player.x);
     const height = player.posture === "rolling" ? groundTuning.rollDiameter : groundTuning.standHeight;
     return {
       ...surface,
@@ -17209,53 +17212,65 @@
     };
   }
   __name(groundContact, "groundContact");
-  function groundEnergy(player) {
-    return player.speed ** 2 / 2 + groundTuning.gravity * (650 - sampleGround(player.scenario, player.x).y);
+  function groundEnergy(player, sampler = sampleGround) {
+    return player.speed ** 2 / 2 + groundTuning.gravity * (650 - sampler(player.scenario, player.x).y);
   }
   __name(groundEnergy, "groundEnergy");
   function groundResist(speed, amount) {
     return Math.sign(speed) * Math.max(0, Math.abs(speed) - amount);
   }
   __name(groundResist, "groundResist");
-  function stepGroundPlayer(player, input = {}) {
+  function beginGroundTick(player, input = {}, allowRoll = true) {
     const t = groundTuning, direction = Math.sign(input.direction || 0), down = !!input.down;
-    if (down && !player.downHeld && Math.abs(player.speed) >= t.rollEntrySpeed) {
+    if (down && !player.downHeld && Math.abs(player.speed) >= t.rollEntrySpeed && allowRoll) {
       player.posture = "rolling";
       player.restTicks = 0;
     }
     player.downHeld = down;
     const rolling = player.posture === "rolling";
     const braking = direction * player.speed < 0;
-    const dt = 1 / t.substeps;
-    for (let i = 0; i < t.substeps; i++) {
-      const before = sampleGround(player.scenario, player.x);
-      const rollBrake = direction * player.speed < 0 ? t.rollBrake * (1 - Math.abs(before.ty)) * Math.min(1, Math.abs(player.speed) / t.rollBrakeFadeSpeed) : 0;
-      const resistance = rolling ? t.rollResistance + rollBrake : (direction ? 0 : t.coastResistance) + (braking ? t.brake : 0);
-      const drive = !rolling && direction && !braking ? direction * Math.min(t.acceleration, Math.max(0, t.runRange - player.speed * direction) / dt) : 0;
-      const midpointX = player.x + player.speed * before.tx * dt / 2;
-      const midpoint = sampleGround(player.scenario, midpointX);
-      const nextSpeed = groundResist(
-        player.speed + (t.gravity * midpoint.ty + drive) * dt,
-        resistance * dt
-      );
-      player.x += (player.speed + nextSpeed) * 0.5 * midpoint.tx * dt;
-      player.distance += Math.abs((player.speed + nextSpeed) * 0.5 * dt);
-      player.speed = nextSpeed;
-    }
+    return { direction, rolling, braking };
+  }
+  __name(beginGroundTick, "beginGroundTick");
+  function advanceGroundSubstep(player, controls, dt, sampler = sampleGround) {
+    const t = groundTuning, { direction, rolling, braking } = controls;
+    const before = sampler(player.scenario, player.x);
+    const rollBrake = direction * player.speed < 0 ? t.rollBrake * (1 - Math.abs(before.ty)) * Math.min(1, Math.abs(player.speed) / t.rollBrakeFadeSpeed) : 0;
+    const resistance = rolling ? t.rollResistance + rollBrake : (direction ? 0 : t.coastResistance) + (braking ? t.brake : 0);
+    const drive = !rolling && direction && !braking ? direction * Math.min(t.acceleration, Math.max(0, t.runRange - player.speed * direction) / dt) : 0;
+    const midpointX = player.x + player.speed * before.tx * dt / 2;
+    const midpoint = sampler(player.scenario, midpointX);
+    const nextSpeed = groundResist(
+      player.speed + (t.gravity * midpoint.ty + drive) * dt,
+      resistance * dt
+    );
+    player.x += (player.speed + nextSpeed) * 0.5 * midpoint.tx * dt;
+    player.distance += Math.abs((player.speed + nextSpeed) * 0.5 * dt);
+    player.speed = nextSpeed;
+  }
+  __name(advanceGroundSubstep, "advanceGroundSubstep");
+  function finishGroundTick(player, controls, sampler = sampleGround, canStand2 = true, bounds = groundBounds) {
+    const t = groundTuning, { rolling } = controls;
     player.ticks++;
     if (Math.abs(player.speed) > 0.02) player.facing = Math.sign(player.speed);
-    const slopeForce = Math.abs(t.gravity * sampleGround(player.scenario, player.x).ty);
+    const slopeForce = Math.abs(t.gravity * sampler(player.scenario, player.x).ty);
     if (rolling && Math.abs(player.speed) < t.restSpeed && slopeForce <= t.rollResistance) {
       player.restTicks++;
-      if (player.restTicks >= t.uncurlTicks) {
+      if (player.restTicks >= t.uncurlTicks && canStand2) {
         player.posture = "standing";
         player.restTicks = 0;
       }
     } else player.restTicks = 0;
     if (!Number.isFinite(player.x) || !Number.isFinite(player.speed) || Math.abs(player.speed) > t.safetySpeed)
       player.boundary = "numerical safety reset (outside benchmark range)";
-    else if (Math.abs(player.x) > groundBounds(player.scenario))
-      player.boundary = "test boundary reset";
+    else if (Math.abs(player.x) > bounds(player.scenario)) player.boundary = "test boundary reset";
+  }
+  __name(finishGroundTick, "finishGroundTick");
+  function stepGroundPlayer(player, input = {}) {
+    const controls = beginGroundTick(player, input);
+    for (let i = 0; i < groundTuning.substeps; i++)
+      advanceGroundSubstep(player, controls, 1 / groundTuning.substeps);
+    finishGroundTick(player, controls);
   }
   __name(stepGroundPlayer, "stepGroundPlayer");
   function initializeRuntimeModule25() {
@@ -17286,6 +17301,627 @@
   }
   __name(getRuntimeBindings25, "getRuntimeBindings");
 
+  // src/playtest-motion.js
+  var playtest_motion_exports = {};
+  __export(playtest_motion_exports, {
+    bodyBoxDistance: () => bodyBoxDistance,
+    createMotionPlayer: () => createMotionPlayer,
+    firstAirImpact: () => firstAirImpact,
+    floorBodyDistance: () => floorBodyDistance,
+    getRuntimeBindings: () => getRuntimeBindings26,
+    initializeRuntimeModule: () => initializeRuntimeModule26,
+    landMotion: () => landMotion,
+    motionBody: () => motionBody,
+    motionBounds: () => motionBounds,
+    motionContact: () => motionContact,
+    motionFixtures: () => motionFixtures,
+    motionPostureClear: () => motionPostureClear,
+    motionReaction: () => motionReaction,
+    motionSpans: () => motionSpans,
+    motionTrajectory: () => motionTrajectory,
+    motionTuning: () => motionTuning,
+    moveAirTime: () => moveAirTime,
+    releaseMotion: () => releaseMotion,
+    sampleMotionExtension: () => sampleMotionExtension,
+    sampleMotionGround: () => sampleMotionGround,
+    stepMotionPlayer: () => stepMotionPlayer,
+    sweepGroundBox: () => sweepGroundBox,
+    sweepMotionDistance: () => sweepMotionDistance
+  });
+  var motionTuning;
+  var motionFixtures;
+  function motionBounds(scenario) {
+    const fixture = motionFixtures[scenario];
+    if (!fixture) throw Error("Unknown PLAYTEST fixture");
+    return fixture.bounds;
+  }
+  __name(motionBounds, "motionBounds");
+  function motionSpans(scenario) {
+    const b = motionBounds(scenario);
+    return scenario === "gap" ? [
+      [-b, 100],
+      [300, b]
+    ] : [[-b, b]];
+  }
+  __name(motionSpans, "motionSpans");
+  function sampleMotionExtension(scenario, x) {
+    let s;
+    if (scenario === "flat" || scenario === "valley") s = sampleGround(scenario, x);
+    else {
+      let y = 400, slope = 0, second = 0;
+      if (scenario === "crest" && Math.abs(x) < 360) {
+        const u = x / 360, w = 1 - u * u;
+        y -= 100 * w * w * w;
+        slope = 600 * x * w * w / (360 * 360);
+        second = 600 / (360 * 360) * w * (1 - 5 * u * u);
+      }
+      const norm = Math.hypot(1, slope);
+      s = {
+        x,
+        y,
+        angle: Math.atan(slope),
+        tx: 1 / norm,
+        ty: slope / norm,
+        nx: slope / norm,
+        ny: -1 / norm,
+        curvature: second / norm ** 3
+      };
+    }
+    return { ...s, id: scenario + "-floor-" + (scenario === "gap" && x >= 300 ? 1 : 0) };
+  }
+  __name(sampleMotionExtension, "sampleMotionExtension");
+  function sampleMotionGround(scenario, x) {
+    if (!motionSpans(scenario).some(([a, b]) => x >= a && x <= b)) return null;
+    return sampleMotionExtension(scenario, x);
+  }
+  __name(sampleMotionGround, "sampleMotionGround");
+  function createMotionPlayer(scenario = "flat") {
+    motionBounds(scenario);
+    const x = motionFixtures[scenario].spawn;
+    return {
+      ...createGroundPlayer(),
+      scenario,
+      x,
+      y: sampleMotionExtension(scenario, x).y,
+      mode: "grounded",
+      air: null,
+      latestTransition: "reset",
+      transitionCount: 0,
+      lastTakeoff: null,
+      lastLanding: null
+    };
+  }
+  __name(createMotionPlayer, "createMotionPlayer");
+  function motionReaction(player, surface) {
+    const radius = player.posture === "rolling" ? 19 : 24;
+    const normalAcceleration = player.speed * player.speed * surface.curvature * (1 + radius * surface.curvature);
+    return -normalAcceleration - groundTuning.gravity * surface.ny;
+  }
+  __name(motionReaction, "motionReaction");
+  function motionContact(player) {
+    if (player.mode === "grounded") {
+      const c = groundContact(player, sampleMotionExtension);
+      return { ...c, grounded: true, normalReaction: motionReaction(player, c) };
+    }
+    const height = player.posture === "rolling" ? 38 : 48, width = player.posture === "rolling" ? 38 : 22;
+    return {
+      x: player.x,
+      y: player.y + height / 2,
+      center: { x: player.x, y: player.y },
+      anchor: null,
+      width,
+      height,
+      angle: 0,
+      tx: 1,
+      ty: 0,
+      nx: 0,
+      ny: 0,
+      curvature: 0,
+      normalReaction: 0,
+      grounded: false,
+      speed: Math.hypot(player.air.vx, player.air.vy),
+      vx: player.air.vx,
+      vy: player.air.vy
+    };
+  }
+  __name(motionContact, "motionContact");
+  function motionBody(player, posture = player.posture) {
+    const height = posture === "rolling" ? 38 : 48, width = posture === "rolling" ? 38 : 22;
+    const s = player.mode === "grounded" ? sampleMotionExtension(player.scenario, player.x) : null;
+    return {
+      x: s ? s.x + s.nx * height / 2 : player.x,
+      y: s ? s.y + s.ny * height / 2 : player.y,
+      hw: width / 2,
+      hh: height / 2,
+      circle: posture === "rolling",
+      angle: s ? s.angle : 0
+    };
+  }
+  __name(motionBody, "motionBody");
+  function bodyBoxDistance(body, box) {
+    if (body.circle) {
+      const px = Math.max(box.x1, Math.min(box.x2, body.x)), py = Math.max(box.y1, Math.min(box.y2, body.y));
+      const dx2 = body.x - px, dy2 = body.y - py, length = Math.hypot(dx2, dy2);
+      if (length > 1e-12)
+        return {
+          distance: length - body.hw,
+          nx: dx2 / length,
+          ny: dy2 / length,
+          curvature: 1 / body.hw
+        };
+      const faces = [
+        { distance: body.x - box.x1, nx: -1, ny: 0 },
+        { distance: box.x2 - body.x, nx: 1, ny: 0 },
+        { distance: body.y - box.y1, nx: 0, ny: -1 },
+        { distance: box.y2 - body.y, nx: 0, ny: 1 }
+      ].sort((a, b) => a.distance - b.distance);
+      return { ...faces[0], distance: -faces[0].distance - body.hw, curvature: 1 / body.hw };
+    }
+    const dx = Math.abs(body.x - (box.x1 + box.x2) / 2) - (box.x2 - box.x1) / 2 - body.hw;
+    const dy = Math.abs(body.y - (box.y1 + box.y2) / 2) - (box.y2 - box.y1) / 2 - body.hh;
+    return dx > dy ? { distance: dx, nx: Math.sign(body.x - (box.x1 + box.x2) / 2), ny: 0, curvature: 0 } : { distance: dy, nx: 0, ny: Math.sign(body.y - (box.y1 + box.y2) / 2), curvature: 0 };
+  }
+  __name(bodyBoxDistance, "bodyBoxDistance");
+  function motionPostureClear(player, posture) {
+    const body = motionBody(player, posture), c = Math.cos(body.angle), s = Math.sin(body.angle);
+    for (const box of motionFixtures[player.scenario].boxes) {
+      if (body.circle) {
+        if (bodyBoxDistance(body, box).distance < -motionTuning.skin) return false;
+        continue;
+      }
+      const dx = body.x - (box.x1 + box.x2) / 2, dy = body.y - (box.y1 + box.y2) / 2, bw = (box.x2 - box.x1) / 2, bh = (box.y2 - box.y1) / 2;
+      const axes = [
+        [1, 0],
+        [0, 1],
+        [c, s],
+        [-s, c]
+      ];
+      if (axes.every(
+        ([x, y]) => Math.abs(dx * x + dy * y) < body.hw * Math.abs(c * x + s * y) + body.hh * Math.abs(-s * x + c * y) + bw * Math.abs(x) + bh * Math.abs(y) - motionTuning.skin
+      ))
+        return false;
+    }
+    return true;
+  }
+  __name(motionPostureClear, "motionPostureClear");
+  function floorBodyDistance(scenario, body, span, index) {
+    const [left, right] = span;
+    if (!body.circle) {
+      const a = Math.max(left, body.x - body.hw), b = Math.min(right, body.x + body.hw);
+      if (a > b) return null;
+      const candidates = [a, b];
+      if (a <= 0 && b >= 0) candidates.push(0);
+      const q2 = candidates.map((x2) => sampleMotionExtension(scenario, x2)).sort((a2, b2) => a2.y - b2.y)[0];
+      return {
+        distance: q2.y - body.y - body.hh,
+        nx: q2.nx,
+        ny: q2.ny,
+        gradient: Math.hypot(1, q2.ty / q2.tx),
+        curvature: 0.02,
+        surface: q2,
+        id: scenario + "-floor-" + index,
+        kind: "floor",
+        canLand: true
+      };
+    }
+    let x = Math.max(left, Math.min(right, body.x));
+    const initial = sampleMotionExtension(scenario, x), vertical = initial.y - body.y;
+    if (body.x >= left && body.x <= right && vertical > 45)
+      return {
+        distance: vertical / Math.hypot(1, 0.65) - body.hw,
+        nx: initial.nx,
+        ny: initial.ny,
+        curvature: 0.02,
+        far: true
+      };
+    const lo = Math.max(left, body.x - body.hw - 2), hi = Math.min(right, body.x + body.hw + 2);
+    if (lo <= hi)
+      for (let i = 0; i < 10; i++) {
+        const q2 = sampleMotionExtension(scenario, x), slope = q2.ty / q2.tx, second = q2.curvature / q2.tx ** 3;
+        const next = Math.max(
+          lo,
+          Math.min(
+            hi,
+            x - (x - body.x + (q2.y - body.y) * slope) / (1 + slope * slope + (q2.y - body.y) * second)
+          )
+        );
+        if (Math.abs(next - x) < 1e-9) {
+          x = next;
+          break;
+        }
+        x = next;
+      }
+    const q = sampleMotionExtension(scenario, x), dx = body.x - q.x, dy = body.y - q.y, len = Math.hypot(dx, dy);
+    const interior = x > left + 1e-6 && x < right - 1e-6;
+    if (!interior && body.y > q.y && (body.x < left || body.x > right)) return null;
+    const outside = dx * q.nx + dy * q.ny >= 0 || !interior;
+    return {
+      distance: (outside ? len : -len) - body.hw,
+      nx: outside && len > 1e-9 ? dx / len : q.nx,
+      ny: outside && len > 1e-9 ? dy / len : q.ny,
+      curvature: 0.02,
+      convex: !interior,
+      surface: q,
+      id: scenario + "-floor-" + index,
+      kind: "floor",
+      canLand: interior
+    };
+  }
+  __name(floorBodyDistance, "floorBodyDistance");
+  function motionTrajectory(body, vx, vy, ax, ay, t) {
+    return { ...body, x: body.x + vx * t + ax * t * t / 2, y: body.y + vy * t + ay * t * t / 2 };
+  }
+  __name(motionTrajectory, "motionTrajectory");
+  function sweepMotionDistance(body, vx, vy, ax, ay, duration, query, convex = false) {
+    let time = 0;
+    for (let i = 0; i < 96; i++) {
+      const at = motionTrajectory(body, vx, vy, ax, ay, time), q = query(at);
+      if (!q) return null;
+      const ux = vx + ax * time, uy = vy + ay * time, remaining = duration - time;
+      const vn = ux * q.nx + uy * q.ny, an = ax * q.nx + ay * q.ny;
+      const convexHere = convex || q.convex;
+      if (q.distance <= motionTuning.skin + 1e-8) {
+        if (vn < -1e-8 || Math.abs(vn) <= 1e-8 && an < -1e-8 || q.distance < -motionTuning.skin)
+          return { time, q };
+        if (convexHere && vn >= -1e-8 && vn + an * remaining / 2 >= -1e-8) return null;
+      }
+      if (remaining <= 1e-10) return null;
+      const speed = Math.hypot(ux, uy) + Math.hypot(ax, ay) * remaining;
+      const gradient = q.gradient || 1;
+      const closing = Math.max(0, -vn) * gradient + (Math.hypot(ax, ay) * gradient + (convexHere ? 0 : q.curvature || 0) * speed * speed) * remaining;
+      const bound = q.far ? speed : Math.min(speed * gradient, closing);
+      if (bound < 1e-12) return null;
+      const advance = Math.max(1e-8, (q.distance - motionTuning.skin) / bound);
+      if (advance > remaining) return null;
+      time += Math.min(remaining, advance);
+    }
+    throw Error("PLAYTEST continuous collision did not converge");
+  }
+  __name(sweepMotionDistance, "sweepMotionDistance");
+  function firstAirImpact(player, ax, ay, duration) {
+    const body = motionBody(player), a = player.air;
+    let hit = null;
+    for (const box of motionFixtures[player.scenario].boxes) {
+      const result = sweepMotionDistance(
+        body,
+        a.vx,
+        a.vy,
+        ax,
+        ay,
+        duration,
+        (b) => ({ ...bodyBoxDistance(b, box), kind: "box", id: box.id }),
+        true
+      );
+      if (result && (!hit || result.time < hit.time)) hit = result;
+    }
+    for (const [index, span] of motionSpans(player.scenario).entries()) {
+      const result = sweepMotionDistance(body, a.vx, a.vy, ax, ay, duration, (b) => {
+        const q = floorBodyDistance(player.scenario, b, span, index);
+        if (q && a.separation && a.separation.id === q.id && !a.separation.cleared && Math.abs(q.distance) <= motionTuning.separation)
+          return null;
+        return q;
+      });
+      if (result && (!hit || result.time < hit.time)) hit = result;
+    }
+    return hit;
+  }
+  __name(firstAirImpact, "firstAirImpact");
+  function sweepGroundBox(before, after, box, duration) {
+    const extentX = /* @__PURE__ */ __name((b) => b.circle ? b.hw : Math.abs(Math.cos(b.angle)) * b.hw + Math.abs(Math.sin(b.angle)) * b.hh, "extentX");
+    const extentY = /* @__PURE__ */ __name((b) => b.circle ? b.hh : Math.abs(Math.sin(b.angle)) * b.hw + Math.abs(Math.cos(b.angle)) * b.hh, "extentY");
+    if (Math.max(before.y + extentY(before), after.y + extentY(after)) <= box.y1 + motionTuning.skin || Math.min(before.y - extentY(before), after.y - extentY(after)) >= box.y2 - motionTuning.skin || Math.max(before.x + extentX(before), after.x + extentX(after)) < box.x1 || Math.min(before.x - extentX(before), after.x - extentX(after)) > box.x2)
+      return null;
+    if (before.circle) {
+      return sweepMotionDistance(
+        before,
+        (after.x - before.x) / duration,
+        (after.y - before.y) / duration,
+        0,
+        0,
+        duration,
+        (b) => bodyBoxDistance(b, box),
+        true
+      );
+    }
+    const c = Math.cos(before.angle), s = Math.sin(before.angle), dx = after.x - before.x, dy = after.y - before.y;
+    let enter = 0, exit = 1, normal = null;
+    for (const [x, y] of [
+      [1, 0],
+      [0, 1],
+      [c, s],
+      [-s, c]
+    ]) {
+      const extent = before.hw * Math.abs(c * x + s * y) + before.hh * Math.abs(-s * x + c * y) + (box.x2 - box.x1) / 2 * Math.abs(x) + (box.y2 - box.y1) / 2 * Math.abs(y);
+      const offset = (before.x - (box.x1 + box.x2) / 2) * x + (before.y - (box.y1 + box.y2) / 2) * y, travel = dx * x + dy * y;
+      if (Math.abs(travel) < 1e-12) {
+        if (Math.abs(offset) >= extent - motionTuning.skin) return null;
+        continue;
+      }
+      let a = (-extent - offset) / travel, b = (extent - offset) / travel;
+      if (a > b) [a, b] = [b, a];
+      if (a >= enter) {
+        enter = a;
+        normal = { nx: -Math.sign(travel) * x, ny: -Math.sign(travel) * y };
+      }
+      exit = Math.min(exit, b);
+      if (enter > exit) return null;
+    }
+    return normal && enter >= 0 && enter <= 1 ? { time: enter * duration, q: normal } : null;
+  }
+  __name(sweepGroundBox, "sweepGroundBox");
+  function releaseMotion(player, reason, jump2 = false) {
+    const c = motionContact(player), previous = player.posture;
+    const before = { vx: c.vx, vy: c.vy };
+    let center = c.center;
+    if (jump2 && motionPostureClear(player, "rolling")) {
+      player.posture = "rolling";
+      center = { x: c.x + c.nx * 19, y: c.y + c.ny * 19 };
+    } else if (!jump2) {
+      const body = { ...motionBody(player), circle: true, hw: 19, hh: 19 };
+      if (motionFixtures[player.scenario].boxes.every(
+        (b) => bodyBoxDistance(body, b).distance >= -motionTuning.skin
+      ))
+        player.posture = "rolling";
+    }
+    const impulse = jump2 ? motionTuning.jumpImpulse : 0;
+    const after = { vx: before.vx + c.nx * impulse, vy: before.vy + c.ny * impulse };
+    player.lastTakeoff = {
+      reason,
+      before,
+      after,
+      normal: { x: c.nx, y: c.ny },
+      anchor: c.anchor,
+      reaction: c.normalReaction
+    };
+    player.x = center.x;
+    player.y = center.y;
+    player.speed = null;
+    player.mode = "airborne";
+    player.air = {
+      ...after,
+      jumpLift: Math.max(0, -c.ny * impulse),
+      cutEligible: jump2,
+      restorePosture: previous,
+      separation: { id: c.id, cleared: false }
+    };
+    player.latestTransition = reason;
+    player.transitionCount++;
+  }
+  __name(releaseMotion, "releaseMotion");
+  function moveAirTime(player, ax, ay, time) {
+    const a = player.air;
+    player.x += a.vx * time + ax * time * time / 2;
+    player.y += a.vy * time + ay * time * time / 2;
+    player.distance += Math.hypot(a.vx, a.vy) * time;
+    a.vx += ax * time;
+    a.vy += ay * time;
+    a.jumpLift = Math.max(0, a.jumpLift - groundTuning.gravity * time);
+    if (a.separation && !a.separation.cleared) {
+      const span = motionSpans(player.scenario).find(
+        (s, i) => player.scenario + "-floor-" + i === a.separation.id
+      );
+      const q = span ? floorBodyDistance(
+        player.scenario,
+        motionBody(player),
+        span,
+        Number(a.separation.id.slice(-1))
+      ) : null;
+      if (!q || q.distance > motionTuning.separation) a.separation.cleared = true;
+    }
+  }
+  __name(moveAirTime, "moveAirTime");
+  function landMotion(player, hit, incoming) {
+    const restore = player.air.restorePosture;
+    let x = hit.surface.x;
+    if (player.posture === "standing") {
+      x = player.x;
+      for (let i = 0; i < 12; i++) {
+        const s2 = sampleMotionExtension(player.scenario, x);
+        const error = x + s2.nx * 24 - player.x;
+        x -= error / (1 + 24 * s2.curvature);
+        if (Math.abs(error) < 1e-9) break;
+      }
+    }
+    const s = sampleMotionGround(player.scenario, x);
+    if (!s) return false;
+    const speed = incoming.vx * s.tx + incoming.vy * s.ty;
+    const candidate = { ...player, mode: "grounded", x, y: s.y, speed, air: null };
+    const posture = [restore, player.posture].find((posture2) => {
+      candidate.posture = posture2;
+      return motionPostureClear(candidate, posture2) && motionReaction(candidate, s) >= -1e-6;
+    });
+    if (!posture) return false;
+    Object.assign(player, { mode: "grounded", x, y: s.y, speed, air: null, posture });
+    player.restTicks = 0;
+    player.latestTransition = "landing";
+    player.transitionCount++;
+    player.lastLanding = {
+      incoming,
+      speed,
+      tx: s.tx,
+      ty: s.ty,
+      normal: { x: s.nx, y: s.ny },
+      anchor: { x: s.x, y: s.y }
+    };
+    return true;
+  }
+  __name(landMotion, "landMotion");
+  function stepMotionPlayer(player, input = {}) {
+    const direction = Math.sign(input.direction || 0);
+    let controls = null, airBraking = null;
+    if (player.mode === "grounded") {
+      controls = beginGroundTick(player, input, motionPostureClear(player, "rolling"));
+      if (input.jumpPressed) releaseMotion(player, "jump", true);
+    } else player.downHeld = !!input.down;
+    if (player.air?.cutEligible && !input.jumpHeld) {
+      if (player.air.vy < 0 && player.air.jumpLift > 0)
+        player.air.vy += player.air.jumpLift * (1 - motionTuning.cutRatio);
+      player.air.jumpLift = 0;
+      player.air.cutEligible = false;
+    }
+    for (let sub = 0; sub < groundTuning.substeps; sub++) {
+      let remaining = 1 / groundTuning.substeps;
+      const blocked = [];
+      for (let iteration = 0; remaining > 1e-9; iteration++) {
+        if (iteration >= 12) throw Error("PLAYTEST transition iteration did not converge");
+        if (player.mode === "grounded") {
+          controls ??= {
+            direction,
+            rolling: player.posture === "rolling",
+            braking: direction * player.speed < 0
+          };
+          const current = sampleMotionGround(player.scenario, player.x);
+          if (!current) {
+            releaseMotion(player, "ledge");
+            continue;
+          }
+          if (motionReaction(player, current) < -1e-6) {
+            releaseMotion(player, "crest");
+            continue;
+          }
+          const candidate = { ...player };
+          advanceGroundSubstep(candidate, controls, remaining, sampleMotionExtension);
+          const span = motionSpans(player.scenario).find(([a, b]) => player.x >= a && player.x <= b);
+          let event = null, time = remaining;
+          const beyond = candidate.x < span[0] || candidate.x > span[1];
+          const reaction = motionReaction(
+            candidate,
+            sampleMotionExtension(player.scenario, candidate.x)
+          );
+          if (beyond || reaction < -1e-6) {
+            let lo = 0, hi = remaining;
+            for (let n = 0; n < 30; n++) {
+              const mid = (lo + hi) / 2, q = { ...player };
+              advanceGroundSubstep(q, controls, mid, sampleMotionExtension);
+              if (q.x < span[0] || q.x > span[1] || motionReaction(q, sampleMotionExtension(q.scenario, q.x)) < -1e-6)
+                hi = mid;
+              else lo = mid;
+            }
+            time = hi;
+            event = beyond ? "ledge" : "crest";
+          }
+          for (const box of motionFixtures[player.scenario].boxes) {
+            const hit = sweepGroundBox(motionBody(player), motionBody(candidate), box, remaining);
+            if (hit && hit.time <= time) {
+              time = hit.time;
+              event = "block";
+            }
+          }
+          if (time > 0) advanceGroundSubstep(player, controls, time, sampleMotionExtension);
+          player.y = sampleMotionExtension(player.scenario, player.x).y;
+          remaining -= time;
+          if (event === "block") {
+            player.speed = 0;
+            player.latestTransition = "wall / clearance block";
+            remaining = 0;
+          } else if (event) releaseMotion(player, event);
+        } else {
+          const a = player.air;
+          airBraking ??= direction * a.vx < 0;
+          let target = a.vx;
+          if (direction)
+            target = airBraking ? Math.sign(a.vx) * Math.max(0, Math.abs(a.vx) - motionTuning.airBrake * remaining) : a.vx + direction * Math.min(
+              motionTuning.airAcceleration * remaining,
+              Math.max(0, motionTuning.airRange - direction * a.vx)
+            );
+          let ax = (target - a.vx) / remaining, ay = groundTuning.gravity;
+          for (const n2 of blocked) {
+            const into2 = ax * n2.nx + ay * n2.ny;
+            if (into2 < 0) {
+              ax -= into2 * n2.nx;
+              ay -= into2 * n2.ny;
+            }
+          }
+          const hit = firstAirImpact(player, ax, ay, remaining);
+          if (!hit) {
+            moveAirTime(player, ax, ay, remaining);
+            remaining = 0;
+            continue;
+          }
+          moveAirTime(player, ax, ay, hit.time);
+          remaining -= hit.time;
+          const n = hit.q, incoming = { vx: a.vx, vy: a.vy }, into = a.vx * n.nx + a.vy * n.ny;
+          if (into < 0) {
+            a.vx -= into * n.nx;
+            a.vy -= into * n.ny;
+          }
+          if (n.kind === "floor" && n.canLand) {
+            const q = { ...player, speed: a.vx * n.surface.tx + a.vy * n.surface.ty };
+            if (motionReaction(q, n.surface) >= -1e-6 && landMotion(player, n, incoming)) {
+              controls = null;
+              continue;
+            }
+            a.separation = { id: n.id, cleared: false };
+            player.latestTransition = "unsupported floor impact";
+          } else {
+            blocked.push(n);
+            player.latestTransition = n.ny > 0.5 ? "ceiling impact" : "wall impact";
+            if (n.ny > 0.5) {
+              a.jumpLift = 0;
+              a.cutEligible = false;
+            }
+          }
+          player.x += n.nx * Math.max(0, motionTuning.skin - n.distance);
+          player.y += n.ny * Math.max(0, motionTuning.skin - n.distance);
+        }
+      }
+    }
+    if (player.mode === "grounded")
+      finishGroundTick(
+        player,
+        controls || { rolling: player.posture === "rolling" },
+        sampleMotionExtension,
+        motionPostureClear(player, "standing"),
+        motionBounds
+      );
+    else {
+      player.ticks++;
+      if (Math.abs(player.air.vx) > 0.02) player.facing = Math.sign(player.air.vx);
+    }
+    const view = motionContact(player);
+    if (!Number.isFinite(view.center.x) || !Number.isFinite(view.center.y) || !Number.isFinite(view.vx) || !Number.isFinite(view.vy) || Math.hypot(view.vx, view.vy) > groundTuning.safetySpeed)
+      player.boundary = "numerical safety reset";
+    else if (Math.abs(view.center.x) > motionBounds(player.scenario) || view.center.y > 1350)
+      player.boundary = "test boundary / fall recovery reset";
+  }
+  __name(stepMotionPlayer, "stepMotionPlayer");
+  function initializeRuntimeModule26() {
+    motionTuning = Object.freeze({
+      revision: "AIR-1 / GROUND-3",
+      jumpImpulse: 10.5,
+      cutRatio: 0.4,
+      airAcceleration: 0.08,
+      airBrake: 0.16,
+      airRange: 14,
+      skin: 1e-5,
+      separation: 2e-3
+    });
+    motionFixtures = Object.freeze({
+      flat: { bounds: 5e3, spawn: 0, boxes: [] },
+      valley: { bounds: 2400, spawn: 0, boxes: [] },
+      crest: { bounds: 1800, spawn: -600, boxes: [] },
+      gap: {
+        bounds: 1800,
+        spawn: -250,
+        boxes: [
+          { id: "gap-left-face", x1: 60, x2: 100, y1: 400, y2: 1500 },
+          { id: "gap-right-face", x1: 300, x2: 340, y1: 400, y2: 1500 }
+        ]
+      },
+      wall: { bounds: 1800, spawn: 0, boxes: [{ id: "wall", x1: 350, x2: 390, y1: 150, y2: 400 }] },
+      ceiling: {
+        bounds: 1800,
+        spawn: 0,
+        boxes: [{ id: "ceiling", x1: 200, x2: 420, y1: 320, y2: 357 }]
+      }
+    });
+  }
+  __name(initializeRuntimeModule26, "initializeRuntimeModule");
+  function getRuntimeBindings26() {
+    return {};
+  }
+  __name(getRuntimeBindings26, "getRuntimeBindings");
+
   // src/playtest.js
   var playtestState;
   function isPlaytest() {
@@ -17294,7 +17930,14 @@
   __name(isPlaytest, "isPlaytest");
   function clearPlaytestInput() {
     keys.clear();
-    if (playtestState) playtestState.rollPressed = false;
+    if (playtestState) {
+      playtestState.rollPressed = false;
+      playtestState.jumpPressed = false;
+      if (playtestState.player.air) {
+        playtestState.player.air.cutEligible = false;
+        playtestState.player.air.jumpLift = 0;
+      }
+    }
   }
   __name(clearPlaytestInput, "clearPlaytestInput");
   function resetPlaytest(scenario = playtestState.player?.scenario || "flat", reason = "manual reset") {
@@ -17302,8 +17945,13 @@
     Object.assign(playtestState, {
       frames: 0,
       rollPressed: false,
-      player: createGroundPlayer(scenario),
-      camera: { x: -W / 2, y: sampleGround(scenario, 0).y - H * 0.66, zoom: 1 },
+      jumpPressed: false,
+      player: createMotionPlayer(scenario),
+      camera: {
+        x: motionFixtures[scenario].spawn - W / 2,
+        y: sampleMotionExtension(scenario, motionFixtures[scenario].spawn).y - H * 0.66,
+        zoom: 1
+      },
       resetCount: (playtestState.resetCount ?? -1) + 1,
       resetReason: reason
     });
@@ -17338,7 +17986,7 @@
     });
     $("#game-shell").classList.add("playtest");
     $("#playtest-status").hidden = false;
-    $("#playtest-status").textContent = "Ground-only experiment \xB7 No jump / boost / Spin Dash. Boundaries reset to the flat spawn.";
+    $("#playtest-status").textContent = "Static-surface experiment \xB7 Space: jump / release: short hop \xB7 No boost or Spin Dash. R resets fixture.";
     $("#game-controls").hidden = true;
     $("#playtest-controls").hidden = false;
     $("#game-hint").hidden = true;
@@ -17350,9 +17998,9 @@
     $("#act-select").value = "playtest";
     canvas.setAttribute(
       "aria-label",
-      "PLAYTEST ground experiment. Left and right move, Down enters a roll while moving. P pauses or resumes, R resets. Flat reset and Valley reset select benchmarks. Jump, boost and Spin Dash are disabled. Use the stage selector to return to either act."
+      "PLAYTEST static terrain experiment. Left and right move, Down rolls, Space jumps; release for a short hop. P pauses, R resets. Buttons select flat, valley, crest, gap, wall or low ceiling. Boost and Spin Dash are disabled. STAGE returns to either act."
     );
-    for (const scenario of ["flat", "valley"])
+    for (const scenario of Object.keys(motionFixtures))
       $("#playtest-" + scenario).onclick = () => {
         resetPlaytest(scenario);
         canvas.focus();
@@ -17391,6 +18039,8 @@
       return;
     }
     if (state.mode === "playing") {
+      if (["Space", "ArrowUp", "KeyW"].includes(code) && !["Space", "ArrowUp", "KeyW"].some((k) => keys.has(k)) && playtestState.player.mode === "grounded")
+        playtestState.jumpPressed = true;
       if ((code === "ArrowDown" || code === "KeyS") && !keys.has(code))
         playtestState.rollPressed = true;
       keys.add(code);
@@ -17402,15 +18052,18 @@
     if (state.mode === "playing") {
       const direction = Number(keys.has("ArrowRight") || keys.has("KeyD")) - Number(keys.has("ArrowLeft") || keys.has("KeyA"));
       const player = playtestState.player;
-      stepGroundPlayer(player, {
+      stepMotionPlayer(player, {
         direction,
-        down: playtestState.rollPressed || keys.has("ArrowDown") || keys.has("KeyS")
+        down: playtestState.rollPressed || keys.has("ArrowDown") || keys.has("KeyS"),
+        jumpPressed: playtestState.jumpPressed,
+        jumpHeld: ["Space", "ArrowUp", "KeyW"].some((k) => keys.has(k))
       });
       playtestState.rollPressed = false;
+      playtestState.jumpPressed = false;
       playtestState.frames++;
       if (player.boundary) resetPlaytest(player.scenario, player.boundary);
       else {
-        const contact = groundContact(player), camera = playtestState.camera;
+        const contact = motionContact(player), camera = playtestState.camera;
         camera.x += (contact.x - W / 2 + contact.vx * 8 - camera.x) * 0.12;
         camera.y += (contact.y - H * 0.66 - camera.y) * 0.12;
       }
@@ -17435,13 +18088,13 @@
   }
   __name(framePlaytest, "framePlaytest");
   function updatePlaytestHud() {
-    const player = playtestState.player, c = groundContact(player);
-    $("#playtest-mode").textContent = String(state.mode).toUpperCase() + " / " + player.posture.toUpperCase();
+    const player = playtestState.player, c = motionContact(player);
+    $("#playtest-mode").textContent = String(state.mode).toUpperCase() + " / " + player.mode.toUpperCase() + " / " + player.posture.toUpperCase();
     $("#playtest-frame").textContent = String(playtestState.frames);
     $("#playtest-input").textContent = [...keys].join(", ") || "none";
-    $("#playtest-debug").textContent = `${groundTuning.revision} \xB7 ${player.scenario} \xB7 speed ${c.speed.toFixed(3)} \xB7 v(${c.vx.toFixed(3)}, ${c.vy.toFixed(3)}) \xB7 angle ${(c.angle * 180 / Math.PI).toFixed(2)}\xB0
-CONTACT (${c.x.toFixed(2)}, ${c.y.toFixed(2)}) \xB7 body ${c.width}\xD7${c.height} \xB7 center (${c.center.x.toFixed(2)}, ${c.center.y.toFixed(2)}) \xB7 N ${c.normalReaction.toFixed(3)}
-controller ticks ${player.ticks} \xB7 reset ${playtestState.resetCount}: ${playtestState.resetReason}`;
+    $("#playtest-debug").textContent = `${motionTuning.revision} \xB7 ${player.scenario} \xB7 gsp ${c.grounded ? c.speed.toFixed(3) : "\u2014"} \xB7 v(${c.vx.toFixed(3)}, ${c.vy.toFixed(3)}) \xB7 angle ${(c.angle * 180 / Math.PI).toFixed(2)}\xB0
+${c.grounded ? "CONTACT" : "AIR REF"} (${c.x.toFixed(2)}, ${c.y.toFixed(2)}) \xB7 body ${c.width}\xD7${c.height} \xB7 center (${c.center.x.toFixed(2)}, ${c.center.y.toFixed(2)}) \xB7 normal ${c.grounded ? `(${c.nx.toFixed(3)}, ${c.ny.toFixed(3)})` : "none"} \xB7 N ${c.normalReaction.toFixed(3)}
+${player.latestTransition} \xB7 controller ticks ${player.ticks} \xB7 reset ${playtestState.resetCount}: ${playtestState.resetReason}`;
   }
   __name(updatePlaytestHud, "updatePlaytestHud");
   function readPlaytestState() {
@@ -17450,11 +18103,11 @@ controller ticks ${player.ticks} \xB7 reset ${playtestState.resetCount}: ${playt
       act: "playtest",
       status: state.mode,
       movementImplemented: true,
-      tuning: groundTuning.revision,
+      tuning: motionTuning.revision,
       frame: playtestState.frames,
       player: { ...player },
-      contact: groundContact(player),
-      energy: groundEnergy(player),
+      contact: motionContact(player),
+      energy: player.mode === "grounded" ? groundEnergy(player, sampleMotionExtension) : null,
       camera: { ...playtestState.camera },
       inputs: [...keys],
       resetCount: playtestState.resetCount,
@@ -17463,7 +18116,7 @@ controller ticks ${player.ticks} \xB7 reset ${playtestState.resetCount}: ${playt
   }
   __name(readPlaytestState, "readPlaytestState");
   function drawGroundPlayer(player) {
-    const c = groundContact(player), rolling = player.posture === "rolling";
+    const c = motionContact(player), rolling = player.posture === "rolling";
     ctx.save();
     ctx.translate(c.x, c.y);
     ctx.rotate(c.angle);
@@ -17499,12 +18152,14 @@ controller ticks ${player.ticks} \xB7 reset ${playtestState.resetCount}: ${playt
       ctx.arc(0, -19, 19, 0, Math.PI * 2);
       ctx.stroke();
     } else ctx.strokeRect(-c.width / 2, -c.height, c.width, c.height);
-    ctx.fillStyle = "#ffd54a";
-    ctx.fillRect(-3, -3, 6, 6);
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(0, -65);
-    ctx.stroke();
+    ctx.fillStyle = c.grounded ? "#ffd54a" : "#f48bdf";
+    ctx.fillRect(-3, c.grounded ? -3 : -c.height / 2 - 3, 6, 6);
+    if (c.grounded) {
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, -65);
+      ctx.stroke();
+    }
     ctx.restore();
   }
   __name(drawGroundPlayer, "drawGroundPlayer");
@@ -17525,42 +18180,52 @@ controller ticks ${player.ticks} \xB7 reset ${playtestState.resetCount}: ${playt
       ctx.fillText(String(x), x + 4, camera.y + H - 20);
       ctx.fillStyle = "#242142";
     }
-    ctx.beginPath();
-    ctx.moveTo(left, camera.y + H + 2e3);
-    for (let x = left; x <= right; x += 4) ctx.lineTo(x, sampleGround(player.scenario, x).y);
-    ctx.lineTo(right, camera.y + H + 2e3);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = "#61d9f1";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    for (let x = left; x <= right; x += 4) {
-      const y = sampleGround(player.scenario, x).y;
-      if (x === left) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
+    for (const span of motionSpans(player.scenario)) {
+      const a = Math.max(left, span[0]), b = Math.min(right, span[1]);
+      if (a > b) continue;
+      ctx.beginPath();
+      ctx.moveTo(a, camera.y + H + 2e3);
+      for (let x = a; x < b; x += 4) ctx.lineTo(x, sampleMotionExtension(player.scenario, x).y);
+      ctx.lineTo(b, sampleMotionExtension(player.scenario, b).y);
+      ctx.lineTo(b, camera.y + H + 2e3);
+      ctx.closePath();
+      ctx.fillStyle = "#242142";
+      ctx.fill();
+      ctx.strokeStyle = "#61d9f1";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(a, sampleMotionExtension(player.scenario, a).y);
+      for (let x = a + 4; x < b; x += 4) ctx.lineTo(x, sampleMotionExtension(player.scenario, x).y);
+      ctx.lineTo(b, sampleMotionExtension(player.scenario, b).y);
+      ctx.stroke();
     }
-    ctx.stroke();
-    const limit = groundBounds(player.scenario);
+    for (const box of motionFixtures[player.scenario].boxes) {
+      ctx.fillStyle = "#6d396c";
+      ctx.fillRect(box.x1, box.y1, box.x2 - box.x1, box.y2 - box.y1);
+      ctx.strokeStyle = "#ffae44";
+      ctx.strokeRect(box.x1, box.y1, box.x2 - box.x1, box.y2 - box.y1);
+    }
+    const limit = motionBounds(player.scenario);
     ctx.textAlign = "center";
     ctx.font = "14px monospace";
     for (const x of [-limit, limit]) {
-      const y = sampleGround(player.scenario, x).y;
+      const y = sampleMotionExtension(player.scenario, x).y;
       ctx.fillStyle = "#ffae44";
       ctx.fillRect(x - 2, y - 170, 4, 170);
       ctx.fillText("TEST BOUNDARY \u2192 RESET", x - Math.sign(x) * 120, y - 130);
     }
-    const spawn = sampleGround(player.scenario, 0);
+    const spawn = sampleMotionExtension(player.scenario, motionFixtures[player.scenario].spawn);
     ctx.fillStyle = "#b4b9d2";
-    ctx.fillText("SAFE FLAT SPAWN \xB7 R RESET", 0, spawn.y + 45);
+    ctx.fillText("SAFE SPAWN \xB7 R RESET", spawn.x, spawn.y + 45);
     drawGroundPlayer(player);
     ctx.restore();
   }
   __name(drawPlaytest, "drawPlaytest");
-  function initializeRuntimeModule26() {
+  function initializeRuntimeModule27() {
     playtestState = null;
   }
-  __name(initializeRuntimeModule26, "initializeRuntimeModule");
-  function getRuntimeBindings26() {
+  __name(initializeRuntimeModule27, "initializeRuntimeModule");
+  function getRuntimeBindings27() {
     return {
       playtestState: {
         get: /* @__PURE__ */ __name(() => playtestState, "get"),
@@ -17570,7 +18235,7 @@ controller ticks ${player.ticks} \xB7 reset ${playtestState.resetCount}: ${playt
       }
     };
   }
-  __name(getRuntimeBindings26, "getRuntimeBindings");
+  __name(getRuntimeBindings27, "getRuntimeBindings");
 
   // src/act2.js
   var cameraTracking;
@@ -17583,7 +18248,7 @@ controller ticks ${player.ticks} \xB7 reset ${playtestState.resetCount}: ${playt
       updatePlaytestHud();
       show(
         "PLAYTEST",
-        "Isolated ground movement experiment.<br>Flat and valley benchmarks \xB7 No jumping, boost or Spin Dash.",
+        "Isolated static-surface experiment.<br>Jumping, air control and six test fixtures \xB7 No boost or Spin Dash.",
         "OPEN PLAYTEST"
       );
       return;
@@ -18084,12 +18749,12 @@ controller ticks ${player.ticks} \xB7 reset ${playtestState.resetCount}: ${playt
     ctx.stroke();
   }
   __name(drawClimbCue, "drawClimbCue");
-  function initializeRuntimeModule27() {
+  function initializeRuntimeModule28() {
     cameraTracking = { anchor: 0.64, lift: 0, prediction: 0, velocity: 0, lastY: null };
     skylineSmokeSprites = /* @__PURE__ */ new Map();
   }
-  __name(initializeRuntimeModule27, "initializeRuntimeModule");
-  function getRuntimeBindings27() {
+  __name(initializeRuntimeModule28, "initializeRuntimeModule");
+  function getRuntimeBindings28() {
     return {
       selectAct: {
         get: /* @__PURE__ */ __name(() => selectAct, "get"),
@@ -18219,7 +18884,7 @@ controller ticks ${player.ticks} \xB7 reset ${playtestState.resetCount}: ${playt
       }
     };
   }
-  __name(getRuntimeBindings27, "getRuntimeBindings");
+  __name(getRuntimeBindings28, "getRuntimeBindings");
 
   // src/midsection.js
   function addMiddleSection(l) {
@@ -18624,10 +19289,10 @@ controller ticks ${player.ticks} \xB7 reset ${playtestState.resetCount}: ${playt
     if (typeof drawPoolBooster === "function") drawPoolBooster(airDevicePose(pool.booster));
   }
   __name(drawMiddleSection, "drawMiddleSection");
-  function initializeRuntimeModule28() {
+  function initializeRuntimeModule29() {
   }
-  __name(initializeRuntimeModule28, "initializeRuntimeModule");
-  function getRuntimeBindings28() {
+  __name(initializeRuntimeModule29, "initializeRuntimeModule");
+  function getRuntimeBindings29() {
     return {
       addMiddleSection: {
         get: /* @__PURE__ */ __name(() => addMiddleSection, "get"),
@@ -18661,22 +19326,22 @@ controller ticks ${player.ticks} \xB7 reset ${playtestState.resetCount}: ${playt
       }
     };
   }
-  __name(getRuntimeBindings28, "getRuntimeBindings");
+  __name(getRuntimeBindings29, "getRuntimeBindings");
 
   // src/ending-polish-frames.js
   var ending_polish_frames_exports = {};
   __export(ending_polish_frames_exports, {
-    getRuntimeBindings: () => getRuntimeBindings29,
-    initializeRuntimeModule: () => initializeRuntimeModule29
+    getRuntimeBindings: () => getRuntimeBindings30,
+    initializeRuntimeModule: () => initializeRuntimeModule30
   });
-  function initializeRuntimeModule29() {
+  function initializeRuntimeModule30() {
     Object.assign(endingFrames, { "sonic-polish": [{ "bounds": [38, 23, 207, 242], "seed": [109, 23], "anchor": [136, 242], "scale": 0.27802690582959644 }, { "bounds": [289, 23, 465, 242], "seed": [359, 23], "anchor": [393.5, 242], "scale": 0.27802690582959644 }, { "bounds": [551, 23, 721, 242], "seed": [620, 23], "anchor": [648.5, 242], "scale": 0.27802690582959644 }, { "bounds": [802, 20, 1016, 242], "seed": [873, 20], "anchor": [904.5, 242], "scale": 0.27802690582959644 }, { "bounds": [1063, 21, 1249, 242], "seed": [1133, 21], "anchor": [1160.5, 242], "scale": 0.27802690582959644 }, { "bounds": [1320, 25, 1491, 243], "seed": [1394, 25], "anchor": [1408, 243], "scale": 0.27802690582959644 }, { "bounds": [38, 267, 212, 492], "seed": [111, 267], "anchor": [137, 492], "scale": 0.27802690582959644 }, { "bounds": [296, 268, 477, 492], "seed": [367, 268], "anchor": [402.5, 492], "scale": 0.27802690582959644 }, { "bounds": [550, 267, 726, 492], "seed": [621, 267], "anchor": [652, 492], "scale": 0.27802690582959644 }, { "bounds": [801, 267, 1007, 492], "seed": [873, 267], "anchor": [907, 492], "scale": 0.27802690582959644 }, { "bounds": [1056, 267, 1272, 493], "seed": [1126, 267], "anchor": [1163.5, 493], "scale": 0.27802690582959644 }, { "bounds": [1312, 280, 1513, 493], "seed": [1388, 280], "anchor": [1411.5, 493], "scale": 0.27802690582959644 }, { "bounds": [37, 523, 217, 749], "seed": [108, 523], "anchor": [143.5, 749], "scale": 0.27802690582959644 }, { "bounds": [293, 520, 474, 749], "seed": [427, 520], "anchor": [400.5, 749], "scale": 0.27802690582959644 }, { "bounds": [556, 514, 737, 749], "seed": [614, 514], "anchor": [662.5, 749], "scale": 0.27802690582959644 }, { "bounds": [804, 523, 984, 749], "seed": [877, 523], "anchor": [910, 749], "scale": 0.27802690582959644 }, { "bounds": [1078, 523, 1253, 749], "seed": [1147, 523], "anchor": [1165.5, 749], "scale": 0.27802690582959644 }, { "bounds": [1320, 523, 1496, 749], "seed": [1389, 523], "anchor": [1422.5, 749], "scale": 0.27802690582959644 }, { "bounds": [36, 777, 214, 1004], "seed": [106, 777], "anchor": [137, 1004], "scale": 0.27802690582959644 }, { "bounds": [291, 777, 477, 1004], "seed": [362, 777], "anchor": [397.5, 1004], "scale": 0.27802690582959644 }, { "bounds": [554, 774, 762, 1004], "seed": [623, 774], "anchor": [657.5, 1004], "scale": 0.27802690582959644 }, { "bounds": [808, 762, 1021, 1001], "seed": [882, 762], "anchor": [878, 1001], "scale": 0.27802690582959644 }, { "bounds": [1075, 763, 1279, 993], "seed": [1138, 763], "anchor": [1150.5, 993], "scale": 0.27802690582959644 }, { "bounds": [1326, 760, 1515, 993], "seed": [1391, 760], "anchor": [1427, 993], "scale": 0.27802690582959644 }], "shadow-polish": [{ "bounds": [33, 23, 206, 234], "seed": [131, 23], "anchor": [96, 234], "scale": 0.26 }, { "bounds": [266, 32, 465, 267], "seed": [354, 32], "anchor": [325.5, 267], "scale": 0.26 }, { "bounds": [483, 22, 745, 260], "seed": [578, 22], "anchor": [551.5, 260], "scale": 0.26 }, { "bounds": [766, 29, 962, 262], "seed": [854, 29], "anchor": [912, 262], "scale": 0.26 }, { "bounds": [980, 35, 1184, 269], "seed": [1073, 35], "anchor": [1133, 269], "scale": 0.26 }, { "bounds": [1239, 70, 1415, 266], "seed": [1319, 70], "anchor": [1332.5, 266], "scale": 0.26 }, { "bounds": [24, 323, 223, 514], "seed": [117, 323], "anchor": [118, 514], "scale": 0.26 }, { "bounds": [266, 294, 448, 519], "seed": [342, 294], "anchor": [357, 519], "scale": 0.26 }, { "bounds": [522, 289, 694, 514], "seed": [580, 289], "anchor": [615, 514], "scale": 0.26 }, { "bounds": [740, 289, 917, 522], "seed": [841, 289], "anchor": [817, 522], "scale": 0.26 }, { "bounds": [966, 289, 1165, 525], "seed": [1089, 289], "anchor": [1069, 525], "scale": 0.26 }, { "bounds": [1244, 289, 1428, 524], "seed": [1352, 289], "anchor": [1329.5, 524], "scale": 0.26, "gem": [1276, 397] }, { "bounds": [28, 543, 216, 779], "seed": [139, 543], "anchor": [113, 779], "scale": 0.26, "gem": [59, 666] }, { "bounds": [265, 541, 454, 777], "seed": [386, 541], "anchor": [352.5, 777], "scale": 0.26, "gem": [295, 690] }, { "bounds": [479, 540, 698, 777], "seed": [621, 540], "anchor": [586.5, 777], "scale": 0.26, "gem": [507, 605] }, { "bounds": [727, 551, 944, 779], "seed": [858, 551], "anchor": [829.5, 779], "scale": 0.26, "gem": [753, 610] }, { "bounds": [977, 547, 1178, 779], "seed": [1102, 547], "anchor": [1073, 779], "scale": 0.26, "gem": [1002, 566] }, { "bounds": [1235, 544, 1429, 780], "seed": [1350, 544], "anchor": [1330, 780], "scale": 0.26, "gem": [1266, 658] }, { "bounds": [21, 796, 217, 1049], "seed": [135, 796], "anchor": [116, 1049], "scale": 0.243, "gem": [53, 925] }, { "bounds": [271, 796, 459, 1049], "seed": [379, 796], "anchor": [361, 1049], "scale": 0.243, "gem": [303, 930] }, { "bounds": [498, 800, 694, 1050], "seed": [604, 800], "anchor": [588.5, 1050], "scale": 0.243, "gem": [532, 932] }, { "bounds": [740, 798, 929, 1050], "seed": [847, 798], "anchor": [831, 1050], "scale": 0.243, "gem": [774, 940] }, { "bounds": [983, 801, 1167, 1050], "seed": [1080, 801], "anchor": [1073.5, 1050], "scale": 0.243, "gem": [1015, 958] }, { "bounds": [1230, 802, 1421, 1050], "seed": [1336, 802], "anchor": [1321.5, 1050], "scale": 0.243, "gem": [1263, 951] }], "eggman-polish": [{ "bounds": [22, 58, 410, 473], "seed": [164, 58], "anchor": [216, 473], "scale": 0.246 }, { "bounds": [443, 59, 826, 473], "seed": [581, 59], "anchor": [634.5, 473], "scale": 0.246 }, { "bounds": [833, 59, 1223, 474], "seed": [973, 59], "anchor": [1028, 474], "scale": 0.246 }, { "bounds": [1246, 59, 1638, 475], "seed": [1387, 59], "anchor": [1442, 475], "scale": 0.246 }, { "bounds": [20, 497, 410, 914], "seed": [164, 497], "anchor": [215, 914], "scale": 0.246 }, { "bounds": [436, 498, 830, 914], "seed": [581, 498], "anchor": [633, 914], "scale": 0.246 }, { "bounds": [843, 499, 1239, 916], "seed": [992, 499], "anchor": [1041, 916], "scale": 0.246 }, { "bounds": [1266, 499, 1656, 914], "seed": [1423, 499], "anchor": [1461, 914], "scale": 0.246 }] });
   }
-  __name(initializeRuntimeModule29, "initializeRuntimeModule");
-  function getRuntimeBindings29() {
+  __name(initializeRuntimeModule30, "initializeRuntimeModule");
+  function getRuntimeBindings30() {
     return {};
   }
-  __name(getRuntimeBindings29, "getRuntimeBindings");
+  __name(getRuntimeBindings30, "getRuntimeBindings");
 
   // src/main.js
   var modules = [
@@ -18707,6 +19372,7 @@ controller ticks ${player.ticks} \xB7 reset ${playtestState.resetCount}: ${playt
     world_interactions_exports,
     stage_runtime_exports,
     playtest_ground_exports,
+    playtest_motion_exports,
     playtest_exports,
     game_exports
   ];

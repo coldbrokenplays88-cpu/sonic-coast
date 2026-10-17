@@ -48,8 +48,8 @@ export function createGroundPlayer(scenario = 'flat', x = 0, speed = 0, posture 
   };
 }
 
-export function groundContact(player) {
-  const surface = sampleGround(player.scenario, player.x);
+export function groundContact(player, sampler = sampleGround) {
+  const surface = sampler(player.scenario, player.x);
   const height =
     player.posture === 'rolling' ? groundTuning.rollDiameter : groundTuning.standHeight;
   return {
@@ -65,10 +65,10 @@ export function groundContact(player) {
   };
 }
 
-export function groundEnergy(player) {
+export function groundEnergy(player, sampler = sampleGround) {
   // Unit mass. Potential zero at the valley bottom; positive y points down.
   return (
-    player.speed ** 2 / 2 + groundTuning.gravity * (650 - sampleGround(player.scenario, player.x).y)
+    player.speed ** 2 / 2 + groundTuning.gravity * (650 - sampler(player.scenario, player.x).y)
   );
 }
 
@@ -76,11 +76,13 @@ export function groundResist(speed, amount) {
   return Math.sign(speed) * Math.max(0, Math.abs(speed) - amount);
 }
 
-export function stepGroundPlayer(player, input = {}) {
+// Shared primitives keep the approved ground integrator unchanged while a single
+// transition controller can partition a tick at an actual takeoff/collision.
+export function beginGroundTick(player, input = {}, allowRoll = true) {
   const t = groundTuning,
     direction = Math.sign(input.direction || 0),
     down = !!input.down;
-  if (down && !player.downHeld && Math.abs(player.speed) >= t.rollEntrySpeed) {
+  if (down && !player.downHeld && Math.abs(player.speed) >= t.rollEntrySpeed && allowRoll) {
     player.posture = 'rolling';
     player.restTicks = 0;
   }
@@ -88,40 +90,57 @@ export function stepGroundPlayer(player, input = {}) {
   const rolling = player.posture === 'rolling';
   // A standing braking tick cannot become reverse propulsion partway through.
   const braking = direction * player.speed < 0;
-  const dt = 1 / t.substeps;
-  for (let i = 0; i < t.substeps; i++) {
-    const before = sampleGround(player.scenario, player.x);
-    // Keep flat braking, but continuously relieve countersteer with inclination.
-    // Gravity remains unchanged; this only weakens the opposing control force.
-    // The near-rest fade also prevents extra static friction on gentle grades.
-    const rollBrake = direction * player.speed < 0
-      ? t.rollBrake * (1 - Math.abs(before.ty)) * Math.min(1, Math.abs(player.speed) / t.rollBrakeFadeSpeed)
+  return { direction, rolling, braking };
+}
+
+export function advanceGroundSubstep(player, controls, dt, sampler = sampleGround) {
+  const t = groundTuning,
+    { direction, rolling, braking } = controls;
+  const before = sampler(player.scenario, player.x);
+  // Keep flat braking, but continuously relieve countersteer with inclination.
+  // Gravity remains unchanged; this only weakens the opposing control force.
+  // The near-rest fade also prevents extra static friction on gentle grades.
+  const rollBrake =
+    direction * player.speed < 0
+      ? t.rollBrake *
+        (1 - Math.abs(before.ty)) *
+        Math.min(1, Math.abs(player.speed) / t.rollBrakeFadeSpeed)
       : 0;
-    const resistance = rolling
-      ? t.rollResistance + rollBrake
-      : (direction ? 0 : t.coastResistance) + (braking ? t.brake : 0);
-    const drive =
-      !rolling && direction && !braking
-        ? direction *
-          Math.min(t.acceleration, Math.max(0, t.runRange - player.speed * direction) / dt)
-        : 0;
-    const midpointX = player.x + (player.speed * before.tx * dt) / 2;
-    const midpoint = sampleGround(player.scenario, midpointX);
-    const nextSpeed = groundResist(
-      player.speed + (t.gravity * midpoint.ty + drive) * dt,
-      resistance * dt
-    );
-    // Trapezoidal travel plus midpoint tangent; all velocities derive from speed.
-    player.x += (player.speed + nextSpeed) * 0.5 * midpoint.tx * dt;
-    player.distance += Math.abs((player.speed + nextSpeed) * 0.5 * dt);
-    player.speed = nextSpeed;
-  }
+  const resistance = rolling
+    ? t.rollResistance + rollBrake
+    : (direction ? 0 : t.coastResistance) + (braking ? t.brake : 0);
+  const drive =
+    !rolling && direction && !braking
+      ? direction *
+        Math.min(t.acceleration, Math.max(0, t.runRange - player.speed * direction) / dt)
+      : 0;
+  const midpointX = player.x + (player.speed * before.tx * dt) / 2;
+  const midpoint = sampler(player.scenario, midpointX);
+  const nextSpeed = groundResist(
+    player.speed + (t.gravity * midpoint.ty + drive) * dt,
+    resistance * dt
+  );
+  // Trapezoidal travel plus midpoint tangent; all velocities derive from speed.
+  player.x += (player.speed + nextSpeed) * 0.5 * midpoint.tx * dt;
+  player.distance += Math.abs((player.speed + nextSpeed) * 0.5 * dt);
+  player.speed = nextSpeed;
+}
+
+export function finishGroundTick(
+  player,
+  controls,
+  sampler = sampleGround,
+  canStand = true,
+  bounds = groundBounds
+) {
+  const t = groundTuning,
+    { rolling } = controls;
   player.ticks++;
   if (Math.abs(player.speed) > 0.02) player.facing = Math.sign(player.speed);
-  const slopeForce = Math.abs(t.gravity * sampleGround(player.scenario, player.x).ty);
+  const slopeForce = Math.abs(t.gravity * sampler(player.scenario, player.x).ty);
   if (rolling && Math.abs(player.speed) < t.restSpeed && slopeForce <= t.rollResistance) {
     player.restTicks++;
-    if (player.restTicks >= t.uncurlTicks) {
+    if (player.restTicks >= t.uncurlTicks && canStand) {
       player.posture = 'standing';
       player.restTicks = 0;
     }
@@ -132,8 +151,14 @@ export function stepGroundPlayer(player, input = {}) {
     Math.abs(player.speed) > t.safetySpeed
   )
     player.boundary = 'numerical safety reset (outside benchmark range)';
-  else if (Math.abs(player.x) > groundBounds(player.scenario))
-    player.boundary = 'test boundary reset';
+  else if (Math.abs(player.x) > bounds(player.scenario)) player.boundary = 'test boundary reset';
+}
+
+export function stepGroundPlayer(player, input = {}) {
+  const controls = beginGroundTick(player, input);
+  for (let i = 0; i < groundTuning.substeps; i++)
+    advanceGroundSubstep(player, controls, 1 / groundTuning.substeps);
+  finishGroundTick(player, controls);
 }
 
 export function initializeRuntimeModule() {

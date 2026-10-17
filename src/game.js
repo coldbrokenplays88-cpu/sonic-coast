@@ -479,7 +479,7 @@ export function start() {
 export function show(title, text, label) {
   $('#overlay').classList.remove('hidden');
   $('.intro').innerHTML =
-    `<span class="eyebrow">${isPlaytest() ? 'PLAYTEST' : `${runtimeState.level.title || 'NEON EXPRESS'} ACT ${runtimeState.selectedAct}`}</span><h1>${title}</h1><p>${text}</p><button id="play" class="primary">${label} <span>▶</span></button><span class="start-note">${isPlaytest() ? '← → / A D: move · Down: roll · P: pause · R: reset' : 'Tap / hold Space: jump height · Down: roll · Left click / Shift / X: boost'}</span>`;
+    `<span class="eyebrow">${isPlaytest() ? 'PLAYTEST' : `${runtimeState.level.title || 'NEON EXPRESS'} ACT ${runtimeState.selectedAct}`}</span><h1>${title}</h1><p>${text}</p><button id="play" class="primary">${label} <span>▶</span></button><span class="start-note">${isPlaytest() ? '← → / A D: move · Space: jump · Down: roll · P: pause · R: reset' : 'Tap / hold Space: jump height · Down: roll · Left click / Shift / X: boost'}</span>`;
   $('#play').onclick = start;
 }
 
@@ -490,7 +490,7 @@ export function pause() {
     show(
       isPlaytest() ? 'PLAYTEST<br><em>paused.</em>' : 'Catch your<br><em>breath.</em>',
       isPlaytest()
-        ? 'Ground experiment paused. Your speed and contact are preserved.'
+        ? 'Static-surface experiment paused. Your movement state is preserved.'
         : 'Your run is paused.',
       'RESUME'
     );
