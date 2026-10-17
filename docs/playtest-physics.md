@@ -12,6 +12,11 @@ Starting SHA: `8a7e57bd614270ea7b39b7a8fbc951b0c89d0b4c`, clean feature branch
 No matching open PR returned by GitHub; none created or modified. No main,
 hosting, merge, deployment or ready-state changes.
 
+**Exact tested implementation commit:** `b59fe32d54e273713b56db42c2a627d76d8cd4d8`.
+This identity record is a subsequent documentation-only change. All37 ZIP
+entries were compared byte-for-byte with that commit (player index maps to
+PLAY.html; hashed CSS maps to style.css). Runtime/package content is unchanged.
+
 ### Movement ownership and compatibility decisions
 
 - `src/act1-motion.js` is Act 1's sole movement owner. It adapts the actual finite,
@@ -113,7 +118,7 @@ Wait for explicit personal Act 1 approval and authorization before Act 2 work.
 
 ---
 
-# Earlier approved PLAYTEST benchmark record
+## Earlier approved PLAYTEST benchmark record
 
 ## Approval, branch and build identity
 
@@ -556,5 +561,5 @@ Those device checks remain regressions; the new approval checkpoint is below.
 4. Recheck springs, jump-through moving platforms, Spin Dash and unboosted loops.
    Test Boost against a wall/casing, pause/reset, and switching to either legacy act.
 
-No rails/Boost act migration, new PR, merge, deployment or later feature work.
-Wait for explicit personal playtest approval.
+This earlier rails/Boost checkpoint was approved. The current Act 1 approval
+checkpoint at the top of this document supersedes it; Act 2 remains gated.
