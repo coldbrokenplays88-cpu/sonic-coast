@@ -1,297 +1,246 @@
-# PLAYTEST ground movement — GROUND-3
+# PLAYTEST — AIR-1 / GROUND-3
 
-## Checkpoint and provenance
+## Approved baseline and exact build
 
-Continue `codex/playtest-physics`; do not recreate it from main. The starting
-commit was `3cfe3550641d96ca39e37f9f9033ed2ca37ee0bf`, matching the fetched branch.
-The scaffold handoff is `docs/playtest-scaffold.md`. The user approved its
-access/switching checkpoint in this conversation ("yeah it works") before Task 2.
+Continue `codex/playtest-physics`; no recreation from main. Scaffold handoff:
+`docs/playtest-scaffold.md`. The user approved scaffold access (“yeah it works”)
+and then explicitly approved GROUND-3 (“fucking perfect”) without outstanding
+conditions before this airborne stage. Ground approval was not inferred from tests.
 
-**Exact tested implementation commit:**
-`805b52e25ea8329827a3f585963d162768844074`.
-This document is a subsequent documentation-only commit; no runtime change is
-needed to add these verification records. Node v24.19.0, npm 11.9.0, existing
-installed lockfile dependencies; no dependency changes.
+Starting SHA: `622c7a7649abe3c3b2fdcde2fa4c410accc82689`.
+**Exact tested implementation: `d0bc375d9ccb4a231f601e939b6347840f5e2c82`.**
+This record is a subsequent documentation-only commit. Ground implementation
+baseline was `805b52e25ea8329827a3f585963d162768844074`.
+Node v24.19.0, npm 11.9.0; installed lockfile dependencies reused unchanged.
 
-## State, ownership and units
+## State model and units
 
-`src/playtest-ground.js` contains the actual experimental controller used by
-PLAYTEST and the regression tests. `src/playtest.js` owns its lifecycle, input,
-camera, renderer and debug HUD. The string scene ID remains `'playtest'`.
+`src/playtest-motion.js` is the sole experimental movement/time owner.
+`src/playtest-ground.js` supplies the accepted ground integration primitives;
+its standalone wrapper remains for regression comparisons. `src/playtest.js`
+owns the `'playtest'` scene, input, reset, camera, renderer and diagnostics.
+Act 1/2 controllers, geometry and cameras are unchanged. The shared edits only
+register the module and update PLAYTEST presentation/routing. Generated
+compatibility/runtime files come from `npm run build:player`.
 
-The player's **only authoritative velocity is signed `speed` along the surface
-tangent**. Position is the contact anchor's world x; surface y and tangent are
-sampled analytically. `groundContact()` derives `vx = speed * tx`, `vy = speed * ty`,
-body center, normal and normal reaction. These velocities describe the contact
-anchor, not a separately simulated center of mass. No mutable experimental vx,
-legacy `p.vx`, `p.contactSpeed` or `p.loop.speed` drives this controller.
+One tick is 1/60 s; speed is world units/tick and acceleration units/tick².
+Positive x is right; positive y is down. The logical viewport is 960×540,
+zoom 1, using existing high-resolution crisp output. No historical Sonic
+accuracy is claimed. Legacy inspection found ordinary speed range 14, feet at
+`p.y + 20`, collision heights 48/26/38 and independent visual scaling; these
+are context, not experimental body assumptions.
 
-Positive x is right, positive y down. A world unit is a logical canvas unit;
-the viewport remains 960×540 at zoom 1 with the existing full-resolution output.
-One controller tick is 1/60 s: speed is units/tick, acceleration units/tick².
-Thus 14 units/tick is 840 units/s; gravity 0.35 is 1260 units/s².
-
-The legacy inspection found a 60 Hz accumulator, a 14-unit ordinary running
-range, ordinary ground feet at `p.y + 20`, foot radius 9, and collision heights
-48 standing / 26 ground-roll / 38 airborne. Its ground rolling artwork is 38
-units; other visuals use independent source-frame scaling. A 120-tick Act 1
-running probe reached vx 5.91390 at x 817.869, y 400; that authored-route sample
-is context, not a measurement of its maximum running speed. The experiment does
-not claim historical Sonic accuracy or reuse legacy collision assumptions.
-
-`stepGroundPlayer()` advances once per experimental tick. It uses four fixed
-quarter-tick integration substeps, a midpoint surface tangent and trapezoidal
-travel; substeps are internal to that single controller. Input handlers queue
-controls rather than move the player. A quick Down edge is buffered until the
-next tick. Reset, scene exit and resume discard stale inputs/edges.
-
-The PLAYTEST frame route has its own 60 Hz accumulator. A 1e-7 ms comparison
-tolerance prevents losing exact tick boundaries to floating-point rounding.
-Physics and camera following advance only on ticks; draw calls never advance
-movement. Paused time is discarded. Per-render elapsed time is limited to
-250 ms to bound catch-up after a stalled/background tab; equivalence is claimed
-within that scheduling domain, not across arbitrary multi-second suspension.
-
-## Tuning and posture rules
-
-| Parameter | Value | Purpose |
-| --- | ---: | --- |
-| Input-driven running range | 14 | Familiar benchmark pace; not a momentum cap |
-| Running acceleration | 0.16/tick | Predictable build-up, about 1.47 s to flat maximum |
-| Standing opposite-input braking | 0.50/tick | Brake to zero before a later tick propels in reverse |
-| Released standing resistance | 0.10/tick | Stable flat coast-down |
-| Gravity | 0.35/tick² | Projected onto the actual tangent in either direction |
-| Rolling resistance | 0.025/tick | One quarter of released standing resistance |
-| Rolling opposite-input brake | Up to 0.18/tick | Flat strength; multiplied by `1-abs(sin(angle))` on slopes |
-| Rolling brake fade speed | 2 | Kinetic braking cannot become extra static slope friction |
-| Roll entry | Fresh Down/S edge at speed ≥2 | No charge or Spin Dash |
-| Automatic uncurl | Speed <0.08 for 12 eligible ticks | 0.2 s sustained near-rest hysteresis |
-| Numerical safety reset | Speed >80 or non-finite state | Separate from tuning; outside benchmark operation |
-
-Standing propulsion only adds speed toward the 14-unit drive range. It does
-not clamp or damp already-earned higher speed. Holding travel direction while
-rolled adds **no propulsion**, even near zero. Gravity acts continuously in both
-postures. Released movement uses sign-preserving Coulomb resistance with a
-zero clamp; no automatic sign flip on flat ground. Standing braking disables
-propulsion for its entire tick, including after the speed reaches zero.
-
-At the designated grade 0.65 (33.02°), tangent gravity is approximately 0.19075,
-greater than both 0.10 standing and 0.025 rolling resistance. Released movement
-therefore starts downhill from rest. On shallow grades, friction may support
-rest. This is an explicit friction balance, not a slope-speed permission gate.
-
-A roll crossing zero on a sufficiently steep slope stays curled: uncurl counting
-requires gravity along the slope to be no greater than rolling resistance.
-Rolling at sustained flat rest uncurls after the near-rest interval; forward
-running propulsion can resume on subsequent ticks. Holding Down cannot
-immediately recurl after that transition; release/repress is required.
-
-The contact anchor is the actual ground point in both postures. Standing body:
-22 wide ×48 high, center 24 units along the outward normal. Rolling body:
-38-diameter circle, center 19 units along that same normal. Changing posture
-does not move the anchor or inject speed. Existing recovered Sonic frames are
-drawn independently of legacy pose/player state: standing source bounds scale
-uniformly to 48 high and end at the anchor; rolling bounds fit 38×38 around the
-circle center. The visible cyan collision overlay, yellow anchor and normal
-line let testers distinguish artwork, body and contact. This is a contact-point
-ground model, not a general finite-body rigid-body solver.
-
-## Benchmark geometry and supported domain
-
-- **Flat:** y=400, x=-5000…5000; reset/spawn at x=0, speed=0.
-- **Valley:** x=-2400…2400, a 400-unit-wide flat bottom at y=650; reset/spawn
-  at x=0, speed=0. Each side transitions over 800 horizontal units into a
-  1400-unit-long inclined approach. Grade never exceeds 0.65.
-- Let u=max(0, |x|-200), t=min(1,u/800). For u<800, height above the bottom is
-  `0.65 * 800 * (t³ - t⁴/2)`; beyond it is `0.65 * (u-400)`.
-  Height, tangent and curvature agree at joins |x|=200 and 1000 (C² continuous).
-  Rendering and contact use this same analytic sampler; the visible line is
-  sampled every four world units. There are no independent collision segments
-  or a sharp V concealed under curved artwork.
-- Both inclined ends stop at visible orange **TEST BOUNDARY → RESET** posts.
-  Crossing resets to the selected course's safe flat spawn and clears input.
-  These are test utilities, not walls, launch assists or evidence of crest handling.
-
-Only flat and concave ground exist here. Normal support reaction is positive
-through the tested range; the valley-run test checks that every tick. No adhesion
-or detachment exception is needed. No convex lip, ledge, jump, loop, wall,
-ceiling, rail, spring, boost, Spin Dash, water, enemy, goal or boss is simulated.
-Airborne detachment and finite-body obstacle collision remain future work and
-must not be inferred from this ground-constrained benchmark.
-
-## Measured controller evidence
-
-Measurements below call the actual production experimental controller at 60 Hz.
-Unless listed, input is released. x is the anchor's horizontal position; all
-starts use the specified supported course, not a substitute physics model.
-
-| Start / held input | Duration | Measured outcome |
+| Mode | Authoritative position and velocity | Derived values |
 | --- | --- | --- |
-| Flat x=0, v=0 standing; right / left | 60 ticks / 1 s | x=±288, v=±9.600 |
-| Flat x=0, v=±12 standing; opposite | 24 ticks / 0.4 s | x=±144, v=0; reverse propulsion occurs later |
-| Flat x=0, v=12 standing; released | 120 ticks / 2 s | x=720, v=0; stays stopped; negative case symmetric |
-| Flat x=0, v=12 rolling; released | 120 ticks / 2 s | x=1260, v=9.000 |
-| Same roll; hold right | 120 ticks / 2 s | Exactly the same state as the released roll |
-| Flat x=0, v=22 standing; hold right | 20 ticks / 0.333 s | x=440, v=22, no clamp to 14 |
-| Valley x=-1700, v=6 rolling downhill | 30 ticks / 0.5 s | x=-1486.544, v=10.9724; right-side mirror matches |
-| Valley x=1700, v=6 rolling uphill | 30 ticks / 0.5 s | x=1769.625, v=-0.35988; slowed, stopped and reversed |
-| Valley x=±1700, v=0 standing | 60 ticks / 1 s | x=±1563.046, v=∓5.44476 (released rollback) |
-| Valley x=1400, v=2 rolling uphill | 60 ticks / 1 s | x=1228.996, v=-8.40726, still rolling |
-| Flat x=0, v=1 rolling; hold left+Down | 60 ticks / 1 s | Uncurls at rest, then runs left; final v=-5.60 standing |
+| Grounded | `x` is contact-anchor x; signed `speed` along tangent; `air=null` | Analytic floor y, tangent/normal; world velocity `speed*T` |
+| Airborne | `x,y` are body center; `air.vx,vy`; `speed=null` | Render reference at body bottom; no ground anchor/contact normal |
 
-**No-input valley diagnostic:** start x=-1800, v=0 rolling; 600 ticks / 10 s.
-Energy `v²/2 + 0.35*(650-y)` starts at 273 and finishes at 106.870104.
-Peak speed 21.464911; furthest right x=1408.8825, then natural reversal.
-Maximum measured growth above initial energy: 0. Travel distance 6645.20173;
-friction work 166.130043 versus energy lost 166.129896, difference 0.00014721.
-Energy is evaluated for the contact-point model; intentional friction explains
-its decline. Final oscillation phase is not used as an arbitrary endpoint target.
+Cached grounded `y` is never a second position integrator. Legacy `p.vx`,
+`contactSpeed`, loop state and legacy input mutations never advance PLAYTEST.
+Four quarter-tick intervals partition at takeoff and time-of-impact events;
+only their unconsumed time advances the new mode. Tick count increments once.
+The 60 Hz accumulator uses a 1e-7 ms boundary tolerance, and caps per-render
+catch-up at 250 ms. Rendering never integrates physics. Scheduling equivalence
+is tested within that domain, not across arbitrary background suspension.
 
-The largest per-tick travel was 21.46438 units and tangent change 0.023049 rad.
-Regression budgets are <35 units per tick and <0.04 rad, covering the supported
-benchmark range while detecting join teleports/jitter. Energy error budget is
-0.05 unit²/tick² (<0.02% of initial energy), comfortably above measured integration
-error but far below a meaningful artificial energy injection. Join probes at
-±1e-5 units require height differences <2e-5, angle/curvature differences <1e-6.
-Directional symmetry uses 1e-8 tolerance for accumulated floating-point error.
+## Transition rules
 
-Two seconds holding right under 30, 60 and 120 Hz renders, and repeating
-7/23/11/39/20 ms intervals, all yield exactly 120 controller ticks and identical
-player state. One `update()` produces one controller tick, including when legacy
-movement/interaction routines are replaced with throwing guards in isolation
-tests. Act-switch tests compare each legacy act's movement after leaving PLAYTEST
-to a fresh boot, and confirm no stale experimental state or input remains.
+| Event | Rule |
+| --- | --- |
+| Fresh grounded jump | Convert `speed*T`, add `10.5*N`; store vertical jump-lift budget; leave ground explicitly |
+| Jump release | Once, while rising, add 60% of the remaining generated upward lift to vy; vx is untouched; clear budget |
+| Ledge | Find the analytic support-span edge; release with the same `speed*T`, no jump impulse |
+| Convex crest | Release when required support reaction becomes negative; locate crossing within substep; preserve `speed*T` |
+| Floor landing | Project incoming velocity onto actual landing tangent; discard inward normal component; choose a fitting posture |
+| Wall / ceiling | Sweep the actual body to first impact; remove inward normal velocity; constrain acceleration for remaining interval; never attach |
+| Ground posture | Keep contact anchor; require actual body clearance before widening/uncurling |
+| Reset / exit | Discard input edges, flight/contact history and experimental state; safe fixture spawn |
+| Pause / resume | Preserve position/vector; discard pending edges and cut eligibility so clearing keys cannot create a synthetic short hop |
 
-## Verification, package and access
+The jump-lift budget begins at `max(0,-10.5*normal.y)` and diminishes by gravity
+0.35 per airborne tick. Early release keeps 40% of what remains; it never clamps
+total vy. Inherited uphill lift survives even after the generated budget expires.
+Ceiling impact and landing clear the budget. Ledge/crest falls have none.
 
-Baseline: 429 gameplay tests, nine build tests, compatibility/player checks all
-passed. Final required commands all passed: `npm run build:player`, `npm test`
-(438 tests), `npm run test:build` (nine), `npm run check:compat` (29 modules),
-`npm run check:player`, `npm run package`. Original non-PLAYTEST tests remain
-unchanged. Scaffold tests now expect actual ground movement while retaining
-their isolation, lifecycle and Act 1/2 comparisons. Nine ground-controller
-regressions were added. Source/build manifests and generated compatibility files
-are synchronized; generated JS was not manually edited.
+There is no coyote time or landing-jump buffer. A physical grounded jump press
+is queued only to the next simulation tick. An airborne press is not queued;
+holding through landing does not jump again. Down's existing fresh-edge roll
+input is preserved. Reset/switching clears all keys and pending edges.
 
-Player ZIP: `dist/Neon-Express-player.zip`, 52,314,603 bytes, 37 files.
-SHA-256: `9715df83a12a26d39a1d4efd92b56fb704960e3d4204ecaec9ef6f44f53ecb3f`.
-Runtime: `runtime-7f4077fc3e1c62d7.js`; CSS: `style-c9f48a6e01dc8ece.css`.
-Integrity checked; freshly extracted outside the repository. Its index matches
-committed `PLAY.html`, and its runtime matches the committed generated bundle.
+### Contact geometry and support convention
 
-Chromium 151.0.7922.173 through a Python 3.12.14 local HTTP server passed the
-bounded extracted-package smoke: actual Sonic art/contact pixels, movement,
-rolling, valley reset/rollback, horizontal+vertical following, live diagnostics,
-pause/resume/reset, input/legacy-state isolation, entry into both existing acts,
-normal running/jumping/fresh midair boost, and clean return to PLAYTEST. No page
-JavaScript errors. The legacy boost probe deliberately presses boost after
-takeoff; simultaneous grounded jump+boost does not count as an air burst.
-This is automation, not a claimed human playtest or exhaustive route replay.
+Standing is a 22×48 box, ground-oriented by the surface tangent. Rolling and
+ordinary curled flight use a diameter-38 circle. Airborne standing remains an
+upright 22×48 box. Ground center is anchor plus `height/2*N`; renderer bounds
+map to these dimensions using existing Sonic frames and palettes. Yellow is
+the ground anchor/normal; pink is airborne center. Cyan outlines show bodies.
+The HUD reports both reference and center so they cannot be mistaken for feet.
 
-Direct file navigation was attempted first and blocked by environment browser
-policy (`ERR_BLOCKED_BY_ADMINISTRATOR`), not verified as a game failure. On Linux
-the extracted build passed via `python3 -m http.server 8000 --bind 127.0.0.1`
-from its directory and `http://127.0.0.1:8000/`. That address is local-only.
-The supplied Windows launcher requires Python; it was not executed on Linux.
+A jump curls around the unchanged ground anchor when the wider circle fits;
+beside a wall it can retain the narrower upright posture. Automatic ledge/crest
+curling preserves the existing center and also checks clearance. Landing
+normally restores preflight posture around the landing anchor. If blocked,
+it retains the actual fitting flight posture; no unchecked fallback expansion.
+Upright floor sweeps report a corner witness: landing solves
+`anchor.x + normal.x*24 = airborneCenter.x`, rather than treating the corner as
+the center. Stationary wall-adjacent jumps therefore do not snap sideways.
 
-No ZIP-attachment upload tool or isolated public-preview service is available.
-The generated player ZIP remains in this workspace. A GitHub source ZIP of this
-branch also includes the ready-built game: extract it and open
-`Inferno-Ascent-Game/PLAY.html` (or serve that folder and open `/PLAY.html`).
-A source ZIP is distinct from the generated player ZIP; a repository branch
-link is not a publicly playable URL. No hosting change, Pages dispatch,
-PR creation or merge is part of this work.
+Terrain is an analytic height field with unit tangent T, upward normal N and
+signed curvature k (negative in the concave valley, positive atop the crest).
+With contact-anchor travel speed v and body offset r, center normal acceleration
+is `-v²*k*(1+r*k)`. Support reaction is that value minus `gravity*N.y`.
+A crossing below -1e-6 releases contact; this tolerance is numerical, not a
+speed gate. Tested curves have regular offsets (`1+r*k > 0`).
 
-## User playtest before expanding
+This remains the approved **kinematic contact-anchor model**, not a rigid-body
+simulation: transition momentum is its reported `v*T`, not the derivative of a
+rotating offset center. No body-rotation speed bonus is introduced at release.
+Posture changes can move the center around a fixed anchor without an impulse.
+Airborne energy is not reported using the ground-only reference formula.
 
-1. On Flat, accelerate both ways, countersteer, then release and compare stopping.
-2. Tap Down while moving; compare rolled coasting with upright coasting. Holding
-   forward should not power the roll. Brake to rest and check automatic uncurl.
-3. Select Valley. Run up each side, release and observe downhill rollback; roll
-   down and up the other side. Watch the anchor and collision outline at joins.
-4. Check pause/resume/reset, both safe spawns, and switching to Act 1/2 and back.
+Circle/floor distance uses bounded closest-point solving on these gentle
+analytic curves; upright floor collision uses its footprint. Static obstacles
+use circle/AABB distance or box separation; continuous conservative advancement
+finds the first impact along constant-acceleration flight. Ground obstacle
+sweeps use the corresponding circle or box sweep. Corner separation and
+acceleration constraints avoid repeated zero-time impacts. No discrete endpoint
+pass-through or silent unchecked advance is used. Iteration bounds fail loudly
+if unsupported geometry fails convergence. Skin=1e-5; separation=0.002, a
+geometric outgoing-contact tolerance, not a time-based adhesion/coyote rule.
 
-Stop at this ground-only slice. Wait for explicit feedback/approval on feel
-before adding airborne physics or any other feature; continue this same branch.
+## Tuning and supported fixtures
 
+Ground constants are unchanged: run range 14, acceleration .16, brake .50,
+released standing resistance .10, gravity .35, rolling resistance .025.
+Opposing rolled input brakes by up to `.18*(1-abs(T.y))*min(1,abs(v)/2)`;
+forward rolled input supplies no running propulsion. Roll entry needs fresh
+Down at speed ≥2. Automatic uncurl requires speed <.08 for 12 eligible ticks,
+low enough slope force for rest, and clearance. Steep-slope reversal stays
+curled. Ordinary input does not clamp earned ground momentum.
 
-## GROUND-2 history: held countersteer on a downhill roll (superseded below)
+Air acceleration .08; opposing brake .16; input-driven horizontal range 14.
+Opposing input stops before reverse propulsion on a later tick. No-input flight
+has zero horizontal friction. Same-direction input above 14 cannot erase earned
+vx. Numerical speed >80 or non-finite state resets, separately from tuning and
+outside normal benchmark travel. Gravity has no separate artificial fall cap.
 
-Started from `52a50e6b7638fe941314c57cb02e42436081a7d7` after the user's ground-feel
-feedback. GROUND-1 applied 0.18 braking plus 0.025 friction even at very low
-speed, exceeding the steep grade's 0.190746 gravity component. That produced
-near-stationary stop/start motion under held uphill input. A seven-second
-regression reproduced the problem on both sides before the change.
+- **Flat:** y400, x±5000; spawn0. Original acceleration/braking area.
+- **Valley:** x±2400, flat bottom |x|≤200 at y650; C² transition to grade .65
+  by |x|1000, then long approaches. Spawn0; original geometry unchanged.
+- **Crest:** y=`400-100*(1-(x/360)²)³` inside |x|360, y400 outside; C² joins.
+  Spawn -600, bounds±1800. Running toward it provides a repeatable release.
+- **Gap:** floor y400 with open interval x100…300; spawn -250, bounds±1800.
+  Visible solid edge columns extend downward; misses fall and reset.
+- **Wall:** floor y400; solid x350…390, y150…400; spawn0, bounds±1800.
+- **Low ceiling:** floor y400; solid x200…420, y320…357, clearance43;
+  spawn0, bounds±1800. Rolling fits; standing does not.
 
-The extra rolling brake now scales with `min(1, abs(speed)/2)` and is reevaluated
-per integration substep. It remains passive, never adds velocity or uphill
-propulsion, and retains full strength above speed 2. At zero it vanishes,
-leaving ordinary friction and gravity to determine motion. Shallow grades can
-still support rest when base friction balances gravity; flat stopping and
-automatic uncurl remain supported. Low-speed flat rolling braking is gentler
-as a deliberate consequence of the same kinetic-brake rule.
+Floor rendering and collision share the same sampler/spans. Buttons reset each
+fixture; R/Restart resets the selected one. Orange boundary posts and falling
+below y1350 reset to safe spawn, clear input and record a reason. Boundaries
+are test utilities, not invisible support or evidence of obstacle handling.
+No loops, walls/ceiling traversal, rails, springs, moving platforms, boost,
+Spin Dash, water, enemies, bosses or goals run in PLAYTEST.
 
-Measured production-controller reproducer: valley x=±1700, speed=∓4, rolling,
-hold uphill for 420 ticks / 7 seconds. GROUND-1 reached near-stationary jitter
-(on the right, v=-0.051713 at tick 420). GROUND-2 reaches x=±913.931585,
-v=∓1.808054, still rolling, with uninterrupted downhill travel through the
-last second. Releasing restores downhill acceleration. Both mirrored tests
-pass; no forward rolling propulsion, running constants or level geometry changed.
-No-input valley energy results above are unchanged because the extra brake is
-inactive without opposite input.
+## Measured production-controller evidence
 
-All six required commands pass for this revision: 438 gameplay tests, nine build
-tests, synchronized compatibility/player outputs, regenerated player ZIP.
-The extracted package browser smoke includes the held-countersteer reproducer
-through the actual PLAYTEST scene update, plus both legacy acts and lifecycle
-checks. HTTP passes with no page errors; direct-file access remains blocked by
-this environment's browser policy. No PR creation, merge, deployment, airborne
-feature or change to Act 1/2 physics was made.
+Measurements use actual generated production functions, not a parallel model.
+Unless stated, controls are released. All durations are simulated 60 Hz ticks.
 
+| Starting state and input | Duration | Measured outcome |
+| --- | --- | --- |
+| Flat x0, v±8, standing; hold jump | 60 | Center rise152.5; land x±480; incoming tangent speed±8 |
+| Same; immediate release | 24 | Rise20.2; land x±192; tangent speed±8 |
+| Valley x-1700, v-8 uphill; hold/tap | 72 / 42 | Rise243.323 / 84.504; right-slope mirror matches |
+| Valley x-1700, v+8 downhill; hold/tap | 72 / 42 | Rise24.002 / 0 from initial center; mirror matches; tap still leaves surface |
+| Valley x±1700, uphill speed22; release after one held tick | 1 more | vy differs from held by exactly .6 of remaining lift, vx identical, upward vy remains >10 in magnitude |
+| Same uphill jump; release after32 held ticks | 1 more | Budget0; no change to inherited lift compared with continued hold |
+| Air, flat center(0,0), vx±30/vy0; none or same-direction | 30 | vx remains exactly±30; opposite input produces±25.2 |
+| Gap anchor x99, v14; right | 1 + 5 | Ledge release vector(14,0); one transition, no immediate reattachment |
+| Crest anchor x∓20, v±4 / ±22; none | 20 | Low stays grounded; high releases once with identical before/after vector |
+| Crest spawn -600, v14; hold right | 50 | Release x-114.766788, reaction≈-1e-6; vector(12.838031,-5.505162), unchanged by release |
+| Valley x±1500, center65 outward, tangent±6 and inward normal8 | ≤20 | Landing tangent magnitudes4.99947/7.00053 depending uphill/downhill; mirrored and no speed amplification |
+| Wall approaches at14,35,70, ground and air | 5 | Whole body blocked: standing center≤339.002; circle center≤331.002 |
+| Stationary wall-adjacent upright jumps x339 and401 | 65 | Land standing at exactly same x; wall penetration0 |
+| Ceiling center(300,380), circle vy-40 | 1 | Center≥375.998; head impact clears lift; no pass-through |
+| Ceiling anchor(300,400), rolling/rest | 60 | Stays rolling at unchanged anchor; clears to standing12 ticks after moving to x500 |
 
-## GROUND-3: useful downhill acceleration under countersteer
+Rise is measured from the pre-jump standing center; curling moves that center
+5 units toward the anchor. Comparisons do not mistake that posture change for
+an extra force. Landing evidence records the original incoming normal velocity,
+before projection; dot-product checks use1e-8 tolerance, far below meaningful
+speed differences. Contact/overlap tolerances of .001–.003 cover skin/TOI
+roundoff, not a visible body width or a tunneling allowance.
 
-Started from `30f54bb0a5321d48ce6f1e109a2097e6ffbb2a4c`. Inspected the entire supplied
-8-second recording (30 fps), including its HUD at 3 seconds: `GROUND-1`, surface
-speed -0.052, world velocity (-0.043, 0.028), angle -33.02°, input KeyD+KeyS.
-This records the original near-stall. GROUND-2 fixed sticking but could still
-converge to a slow downhill crawl, so its nonzero-speed acceptance test was
-insufficient for the intended feel.
+Ground regression compares both flat/valley player x, speed, distance and posture
+exactly with the approved integrator. No-input valley x-1800/v0 rolling,600 ticks:
+energy273→106.870104, maximum273, peak speed21.464911, distance6645.20173,
+zero airborne transitions. Lost energy166.129896 agrees with friction work
+166.130043 (error.00014721). The .05 energy-error budget detects artificial
+growth well below a meaningful gameplay effect; final oscillation phase is not
+an arbitrary endpoint target. Original join, symmetry, braking and useful
+held-countersteer tests remain intact.
 
-Only the **opposing rolling control force** now also multiplies by
-`1 - abs(surface.ty)` (equivalently `1 - abs(sin(angle))`). This is an explicitly
-authored experimental control-strength law, not a claim of Genesis historical
-accuracy. It varies continuously with inclination, preserves flat braking
-exactly, and leaves gravity, passive roll resistance, running, posture rules,
-collision, camera and geometry unchanged. The existing near-rest taper below
-speed 2 remains to avoid extra static friction on gentle grades. No minimum
-speed, forced launch, propulsion or direct world-axis velocity override is added.
+Forty-eight deterministic fixture/speed/jump approaches run100 ticks each,
+including rolling and jump release; no obstacle penetration beyond .003 and
+no collision convergence error. Separate beside-wall landing regressions caught
+and fixed an 11-unit corner-witness snap/invalid fallback body. This grid is
+bounded evidence, not a claim of arbitrary-geometry robustness.
 
-On the designated 33.02° grade, opposing brake at speed ≥2 is 0.0819021 instead
-of 0.18. Gravity is still 0.1907459, passive resistance 0.025, so net downhill
-acceleration remains approximately 0.0838438 even while holding uphill.
+Schedules30/60/120 Hz and7/23/11/39/20 ms over1.5 seconds produce identical
+90-tick flight/player state. Isolation/lifecycle tests cover reset and switching
+during flight, one update per tick, no landing-jump buffer, and both legacy acts
+against fresh-boot behavior. No unsupported later mechanic was added.
 
-Production-controller comparisons, right slope x=1700, rolling, 60 ticks / 1 s:
+## Verification and access
 
-| Initial speed | Input | Final surface speed | Final world vx | Final x |
-| --- | --- | ---: | ---: | ---: |
-| 0 | released | -9.944755 | -8.338117 | 1449.856501 |
-| 0 | hold right/uphill | -5.642489 | -4.730909 | 1545.365108 |
-| -4 | released | -13.944755 | -11.691891 | 1248.630033 |
-| -4 | hold right/uphill | -9.030630 | -7.571674 | 1372.236555 |
+Baseline:438 gameplay tests,9 build tests,29-module compatibility and player
+checks passed before source edits. Final commands all pass:
+`npm run build:player`, `npm test` (**452**), `npm run test:build` (**9**),
+`npm run check:compat` (**30 modules**), `npm run check:player`, `npm run package`.
+Fourteen new AIR tests exercise the actual controller. Existing tests remain;
+only PLAYTEST status expectations changed for the intentionally expanded scene.
+Independent review found the wall-landing defect and verified its correction;
+final source review confirmed no existing-act physics/level changes.
 
-Both mirrored slopes and both initial speeds pass the stronger regression:
-held countersteer retains at least 40% of the released speed gain during the
-same one-second constant-grade interval (measured about 51–57%). Braking still
-reduces acceleration and total energy compared with release; travel does not
-stop/jitter or reverse uphill. Tests stay within |x|>1000 to avoid confusing a
-natural crossing of the valley/reversal with a braking failure. All no-input
-energy, flat coast/uncurl, control-isolation and rendering-schedule tests pass.
+Player ZIP: `dist/Neon-Express-player.zip`, **52,321,389 bytes;37 files**.
+SHA-256: `1e8480e3cdf18f292db3633c322fb78378d97da2faa775a02cae689f3dd659ef`.
+Runtime:`runtime-da41f455d04d1960.js`; CSS:`style-c9f48a6e01dc8ece.css`.
+CRC verified and freshly extracted outside the repository; every entry compared
+byte-for-byte with the built game (ZIP index maps to committed PLAY.html).
 
-All six required commands pass: 438 gameplay tests, nine build tests, generated
-compatibility/player checks and packaging. Freshly extracted ZIP smoke passes
-in Chromium over local HTTP; its test asserts the `GROUND-3` revision, actual
-countersteered surface speed >8 and world-horizontal speed >6 in magnitude
-from initial speed 4 after one second, plus the existing scene/legacy checks.
-Direct-file navigation remains policy-blocked. Runtime/package identity above
-is for GROUND-3. No Act 1/2 physics, PR, merge, deployment or airborne work changed.
+Chromium151.0.7922.173 bounded extracted-package browser smoke passed over
+Python local HTTP: rendered art/contact, ground rollback, held/cut jump, crest,
+gap landing, wall stop/upright landing, ceiling/blocked uncurl, camera/HUD,
+pause/resume/reset, flight exit, Act1/2 running/jumping/fresh air boost, clean
+return; zero page errors. Inspected actual crest raster. This is automated
+inspection, not a human feel approval, exhaustive route replay or device-wide
+performance certification.
+
+Direct-file launch was attempted first and blocked by browser environment
+policy (`ERR_BLOCKED_BY_ADMINISTRATOR`); neither success nor a game defect is
+claimed. Verified fallback from the extracted game directory:
+`python3 -m http.server 8000 --bind 127.0.0.1`, then open
+`http://127.0.0.1:8000/`. Python3.12 is available here; that address is local-only.
+Windows launcher needs Python; it was not executed on Linux.
+
+No ZIP upload/attachment capability or isolated public-preview service is
+available. The generated player ZIP remains at the workspace path above.
+Practical delivery is the feature branch's immutable GitHub **source ZIP**,
+which includes the ready-built `Inferno-Ascent-Game/PLAY.html` and all37 matching
+player files. Extract and open PLAY.html, or serve that directory as above and
+open `/PLAY.html`. Source ZIP, player ZIP, repository link and public playable
+website are different things. No public preview is claimed. No PR created,
+merge, Pages dispatch or deployment performed.
+
+## Manual approval checkpoint
+
+1. Flat: compare tapping/holding jump, release steering, then countersteer in air.
+2. Valley: jump uphill/downhill both ways, including an earned fast downhill roll;
+   check inherited momentum and landing feel against the approved ground slice.
+3. Crest/Gap: run through the crest, compare slow/fast contact, then jump the gap;
+   inspect transition reason, outline and anchor for chatter or snapping.
+4. Wall/Low ceiling: approach running/rolling, jump against them, check no
+   pass-through/blocked expansion; reset or switch to both acts during flight.
+
+Stop here and wait for explicit feel feedback/approval before expansion.
