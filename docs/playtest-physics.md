@@ -10,7 +10,8 @@ approved ground/air tuning remains. **DEVICES-1 awaits personal feel approval.**
 Starting SHA: `07acc6bbfda012584a9f28b8eccae41ec1284cf8`, clean working tree.
 Runtime build: `runtime-e3819878416facf6.js`. Node v24.19.0, npm11.9.0;
 existing lockfile dependencies reused, no new dependencies or asset generation.
-The exact implementation commit is recorded below after the implementation commit.
+**Exact tested implementation commit: `2d329587903bb440563da138e6386b084851fd12`.**
+This build-identity record is a subsequent documentation-only commit.
 
 GitHub API access now succeeds. `gh pr list --head codex/playtest-physics
 --state open` returned an empty list: no matching open PR was available to mark
