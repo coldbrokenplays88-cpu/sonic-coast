@@ -90,10 +90,11 @@ function stepGroundPlayer(player, input = {}) {
   const dt = 1 / t.substeps;
   for (let i = 0; i < t.substeps; i++) {
     const before = sampleGround(player.scenario, player.x);
-    // Rolling countersteer is kinetic braking, not extra static friction.
-    // Fade it near rest so gravity can restart a roll on a steep slope.
+    // Keep flat braking, but continuously relieve countersteer with inclination.
+    // Gravity remains unchanged; this only weakens the opposing control force.
+    // The near-rest fade also prevents extra static friction on gentle grades.
     const rollBrake = direction * player.speed < 0
-      ? t.rollBrake * Math.min(1, Math.abs(player.speed) / t.rollBrakeFadeSpeed)
+      ? t.rollBrake * (1 - Math.abs(before.ty)) * Math.min(1, Math.abs(player.speed) / t.rollBrakeFadeSpeed)
       : 0;
     const resistance = rolling
       ? t.rollResistance + rollBrake
@@ -135,7 +136,7 @@ function stepGroundPlayer(player, input = {}) {
 }
 
 const groundTuning = Object.freeze({
-    revision: 'GROUND-2',
+    revision: 'GROUND-3',
     hz: 60,
     substeps: 4,
     runRange: 14,

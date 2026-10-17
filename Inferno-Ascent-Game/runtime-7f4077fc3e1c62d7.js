@@ -17229,7 +17229,7 @@
     const dt = 1 / t.substeps;
     for (let i = 0; i < t.substeps; i++) {
       const before = sampleGround(player.scenario, player.x);
-      const rollBrake = direction * player.speed < 0 ? t.rollBrake * Math.min(1, Math.abs(player.speed) / t.rollBrakeFadeSpeed) : 0;
+      const rollBrake = direction * player.speed < 0 ? t.rollBrake * (1 - Math.abs(before.ty)) * Math.min(1, Math.abs(player.speed) / t.rollBrakeFadeSpeed) : 0;
       const resistance = rolling ? t.rollResistance + rollBrake : (direction ? 0 : t.coastResistance) + (braking ? t.brake : 0);
       const drive = !rolling && direction && !braking ? direction * Math.min(t.acceleration, Math.max(0, t.runRange - player.speed * direction) / dt) : 0;
       const midpointX = player.x + player.speed * before.tx * dt / 2;
@@ -17260,7 +17260,7 @@
   __name(stepGroundPlayer, "stepGroundPlayer");
   function initializeRuntimeModule25() {
     groundTuning = Object.freeze({
-      revision: "GROUND-2",
+      revision: "GROUND-3",
       hz: 60,
       substeps: 4,
       runRange: 14,
