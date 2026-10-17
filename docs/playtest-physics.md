@@ -1,4 +1,4 @@
-# PLAYTEST — AIR-1 / GROUND-3
+# PLAYTEST — AIR-2 / GROUND-4
 
 ## Approved baseline and exact build
 
@@ -7,11 +7,31 @@ Continue `codex/playtest-physics`; no recreation from main. Scaffold handoff:
 and then explicitly approved GROUND-3 (“fucking perfect”) without outstanding
 conditions before this airborne stage. Ground approval was not inferred from tests.
 
-Starting SHA: `622c7a7649abe3c3b2fdcde2fa4c410accc82689`.
-**Exact tested implementation: `d0bc375d9ccb4a231f601e939b6347840f5e2c82`.**
+Starting SHA for this feedback revision: `7bd93adda60f38c6d4ea62150920269615a49a4c`.
+**Exact tested implementation: `a9b8a5ac45c58dd1dbaf335262910b6403727068`.**
 This record is a subsequent documentation-only commit. Ground implementation
 baseline was `805b52e25ea8329827a3f585963d162768844074`.
 Node v24.19.0, npm 11.9.0; installed lockfile dependencies reused unchanged.
+
+## Feedback revision
+
+The user requested two changes after AIR-1: no unrequested upright crest launch,
+and a quicker roll-to-standing turn. They explicitly chose “Stay grounded until
+roll/jump” when asked whether natural upright detachment should remain.
+This intentionally authorizes **upright crest grip**, superseding the previous
+all-postures support-loss rule. No grip crosses a gap or permits wall/ceiling
+attachment. HUD labels UPRIGHT CREST GRIP when physical support alone would fail.
+
+Opposite input now uncurls at speed ≤1 on rest-supporting ground, with standing
+clearance. Residual speed is retained; normal standing braking reaches zero
+before reverse propulsion. No braking, friction, gravity or acceleration value
+changed. The existing 12-tick passive-rest uncurl and steep-slope rolling reversal
+remain unchanged. This is a feel adjustment, not a historical-accuracy claim.
+
+Flat rolled countersteer, starting speed2/8/12, input opposite:
+uncurl ticks32/61/81 →7/36/56; reverse ticks33/62/82 →10/39/59.
+Both directions match. A .8-speed turn stands after one tick while retaining
+positive residual speed; ceiling-blocked expansion remains rolled.
 
 ## State model and units
 
@@ -50,7 +70,7 @@ is tested within that domain, not across arbitrary background suspension.
 | Fresh grounded jump | Convert `speed*T`, add `10.5*N`; store vertical jump-lift budget; leave ground explicitly |
 | Jump release | Once, while rising, add 60% of the remaining generated upward lift to vy; vx is untouched; clear budget |
 | Ledge | Find the analytic support-span edge; release with the same `speed*T`, no jump impulse |
-| Convex crest | Release when required support reaction becomes negative; locate crossing within substep; preserve `speed*T` |
+| Convex crest | Upright retains explicit grip; rolled releases at negative support reaction, preserving `speed*T`; jumping remains explicit |
 | Floor landing | Project incoming velocity onto actual landing tangent; discard inward normal component; choose a fitting posture |
 | Wall / ceiling | Sweep the actual body to first impact; remove inward normal velocity; constrain acceleration for remaining interval; never attach |
 | Ground posture | Keep contact anchor; require actual body clearance before widening/uncurling |
@@ -77,8 +97,8 @@ the ground anchor/normal; pink is airborne center. Cyan outlines show bodies.
 The HUD reports both reference and center so they cannot be mistaken for feet.
 
 A jump curls around the unchanged ground anchor when the wider circle fits;
-beside a wall it can retain the narrower upright posture. Automatic ledge/crest
-curling preserves the existing center and also checks clearance. Landing
+beside a wall it can retain the narrower upright posture. Ledge/crest release preserves the existing posture and center; no automatic
+curling occurs. Landing
 normally restores preflight posture around the landing anchor. If blocked,
 it retains the actual fitting flight posture; no unchecked fallback expansion.
 Upright floor sweeps report a corner witness: landing solves
@@ -89,8 +109,10 @@ Terrain is an analytic height field with unit tangent T, upward normal N and
 signed curvature k (negative in the concave valley, positive atop the crest).
 With contact-anchor travel speed v and body offset r, center normal acceleration
 is `-v²*k*(1+r*k)`. Support reaction is that value minus `gravity*N.y`.
-A crossing below -1e-6 releases contact; this tolerance is numerical, not a
-speed gate. Tested curves have regular offsets (`1+r*k > 0`).
+A crossing below -1e-6 releases **rolled** contact; this tolerance is numerical,
+not a speed gate. Standing instead uses the explicitly approved crest grip;
+reaction remains visible even when negative. Tested curves have regular offsets
+(`1+r*k > 0`).
 
 This remains the approved **kinematic contact-anchor model**, not a rigid-body
 simulation: transition momentum is its reported `v*T`, not the derivative of a
@@ -114,8 +136,9 @@ Ground constants are unchanged: run range 14, acceleration .16, brake .50,
 released standing resistance .10, gravity .35, rolling resistance .025.
 Opposing rolled input brakes by up to `.18*(1-abs(T.y))*min(1,abs(v)/2)`;
 forward rolled input supplies no running propulsion. Roll entry needs fresh
-Down at speed ≥2. Automatic uncurl requires speed <.08 for 12 eligible ticks,
-low enough slope force for rest, and clearance. Steep-slope reversal stays
+Down at speed ≥2. Deliberate opposite input can uncurl at speed ≤1 with low
+enough slope force for rest and clearance. Otherwise automatic uncurl requires
+speed <.08 for 12 eligible ticks with the same support/clearance checks. Steep-slope reversal stays
 curled. Ordinary input does not clamp earned ground momentum.
 
 Air acceleration .08; opposing brake .16; input-driven horizontal range 14.
@@ -157,8 +180,9 @@ Unless stated, controls are released. All durations are simulated 60 Hz ticks.
 | Same uphill jump; release after32 held ticks | 1 more | Budget0; no change to inherited lift compared with continued hold |
 | Air, flat center(0,0), vx±30/vy0; none or same-direction | 30 | vx remains exactly±30; opposite input produces±25.2 |
 | Gap anchor x99, v14; right | 1 + 5 | Ledge release vector(14,0); one transition, no immediate reattachment |
-| Crest anchor x∓20, v±4 / ±22; none | 20 | Low stays grounded; high releases once with identical before/after vector |
-| Crest spawn -600, v14; hold right | 50 | Release x-114.766788, reaction≈-1e-6; vector(12.838031,-5.505162), unchanged by release |
+| Crest anchor x∓20, rolled v±4 / ±22; none | 20 | Low stays grounded; high releases once with identical before/after vector |
+| Crest spawn -600, rolled v14; hold right | 50 | Release x-77.669218, reaction≈-1e-6; vector(9.896001,-3.234844), unchanged by release |
+| Same crest spawn, standing v14; hold right | 50 | x80.696095, grounded/standing, zero transitions; grip HUD visible |
 | Valley x±1500, center65 outward, tangent±6 and inward normal8 | ≤20 | Landing tangent magnitudes4.99947/7.00053 depending uphill/downhill; mirrored and no speed amplification |
 | Wall approaches at14,35,70, ground and air | 5 | Whole body blocked: standing center≤339.002; circle center≤331.002 |
 | Stationary wall-adjacent upright jumps x339 and401 | 65 | Land standing at exactly same x; wall penetration0 |
@@ -172,8 +196,10 @@ before projection; dot-product checks use1e-8 tolerance, far below meaningful
 speed differences. Contact/overlap tolerances of .001–.003 cover skin/TOI
 roundoff, not a visible body width or a tunneling allowance.
 
-Ground regression compares both flat/valley player x, speed, distance and posture
-exactly with the approved integrator. No-input valley x-1800/v0 rolling,600 ticks:
+Ground regression compares flat/valley player x, speed, distance and posture
+exactly between the transition controller and shared ground primitives. Existing
+GROUND-3 numeric regressions still pass; only deliberate low-speed turn posture
+and crest grip change as requested. No-input valley x-1800/v0 rolling,600 ticks:
 energy273→106.870104, maximum273, peak speed21.464911, distance6645.20173,
 zero airborne transitions. Lost energy166.129896 agrees with friction work
 166.130043 (error.00014721). The .05 energy-error budget detects artificial
@@ -194,23 +220,24 @@ against fresh-boot behavior. No unsupported later mechanic was added.
 
 ## Verification and access
 
-Baseline:438 gameplay tests,9 build tests,29-module compatibility and player
+Feedback baseline:452 gameplay tests,9 build tests,30-module compatibility and player
 checks passed before source edits. Final commands all pass:
-`npm run build:player`, `npm test` (**452**), `npm run test:build` (**9**),
+`npm run build:player`, `npm test` (**454**), `npm run test:build` (**9**),
 `npm run check:compat` (**30 modules**), `npm run check:player`, `npm run package`.
-Fourteen new AIR tests exercise the actual controller. Existing tests remain;
-only PLAYTEST status expectations changed for the intentionally expanded scene.
+Fifteen AIR tests and ten ground tests exercise the actual controller. Two new
+regressions cover manual launch/posture and roll turns; existing crest assertions
+now distinguish upright grip from physical rolled contact as requested.
 Independent review found the wall-landing defect and verified its correction;
 final source review confirmed no existing-act physics/level changes.
 
-Player ZIP: `dist/Neon-Express-player.zip`, **52,321,389 bytes;37 files**.
-SHA-256: `1e8480e3cdf18f292db3633c322fb78378d97da2faa775a02cae689f3dd659ef`.
-Runtime:`runtime-da41f455d04d1960.js`; CSS:`style-c9f48a6e01dc8ece.css`.
+Player ZIP: `dist/Neon-Express-player.zip`, **52,321,442 bytes;37 files**.
+SHA-256: `76bf1e19eb9e196a0aefd9c4281a8878d005506f41be2e7fd1be1318ebe1a14e`.
+Runtime:`runtime-0a590e6528ed9219.js`; CSS:`style-c9f48a6e01dc8ece.css`.
 CRC verified and freshly extracted outside the repository; every entry compared
 byte-for-byte with the built game (ZIP index maps to committed PLAY.html).
 
 Chromium151.0.7922.173 bounded extracted-package browser smoke passed over
-Python local HTTP: rendered art/contact, ground rollback, held/cut jump, crest,
+Python local HTTP: rendered art/contact, ground rollback, quicker roll turn, held/cut jump, upright crest grip/manual roll release,
 gap landing, wall stop/upright landing, ceiling/blocked uncurl, camera/HUD,
 pause/resume/reset, flight exit, Act1/2 running/jumping/fresh air boost, clean
 return; zero page errors. Inspected actual crest raster. This is automated
@@ -238,7 +265,7 @@ merge, Pages dispatch or deployment performed.
 1. Flat: compare tapping/holding jump, release steering, then countersteer in air.
 2. Valley: jump uphill/downhill both ways, including an earned fast downhill roll;
    check inherited momentum and landing feel against the approved ground slice.
-3. Crest/Gap: run through the crest, compare slow/fast contact, then jump the gap;
+3. Crest/Gap: run through the crest, compare upright grip with manual rolling release, then jump the gap;
    inspect transition reason, outline and anchor for chatter or snapping.
 4. Wall/Low ceiling: approach running/rolling, jump against them, check no
    pass-through/blocked expansion; reset or switch to both acts during flight.
