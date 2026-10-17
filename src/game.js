@@ -9,7 +9,6 @@ import {
   drawAct2Structures,
   drawAct2Supports,
   drawAct2World,
-  GAMEPLAY_ZOOM,
   resetCameraTracking,
   selectAct,
   updateCamera,
@@ -434,10 +433,8 @@ export function respawn() {
   resetBoostMonitors();
   runtimeState.coyote = tuning.coyote;
   runtimeState.jumpBuffer = 0;
-  const cinematic = runtimeState.bossCheckpoint && runtimeState.level.act === 2;
-  if (!cinematic) runtimeState.zoom = GAMEPLAY_ZOOM;
-  runtimeState.cam = Math.max(0, p.x - (cinematic ? 230 : (W / runtimeState.zoom) * 0.46));
-  runtimeState.camY = cinematic ? p.y - H * 0.6 : p.y - (H / runtimeState.zoom) * 0.64;
+  runtimeState.cam = Math.max(0, p.x - 230);
+  runtimeState.camY = runtimeState.level.act === 2 ? p.y - H * 0.6 : 0;
   resetStageRuntime();
   resetCameraTracking();
   resetBossAttempt();
@@ -1043,9 +1040,6 @@ export function drawSonicFrame(q) {
 export function sonic() {
   if (p.inv > 0 && runtimeState.step % 10 < 4 && runtimeState.mode === 'playing') return;
   const q = sonicPose();
-  // Cinematic actors keep their authored raster scale; gameplay follows the
-  // fixed camera exactly, with no independent half-step magnification.
-  q.preserveCameraScale = !runtimeState.boss;
   ctx.save();
   ctx.translate(p.x, p.y);
   const transform = ctx.getTransform?.();
