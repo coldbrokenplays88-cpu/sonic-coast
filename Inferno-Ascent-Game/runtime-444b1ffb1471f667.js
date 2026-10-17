@@ -17107,6 +17107,9 @@
   }
   __name(resetAct2, "resetAct2");
   function launchAirDevice(device) {
+    p.airBoostFrames = 0;
+    p.airBoostActive = false;
+    p.boosting = false;
     p.scriptedLaunch = true;
     p.jumpReleaseVy = null;
     p.coyoteLaunchVy = null;

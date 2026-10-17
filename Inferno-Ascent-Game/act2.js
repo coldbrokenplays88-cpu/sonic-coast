@@ -36,6 +36,10 @@ function resetAct2() {
 }
 
 function launchAirDevice(device) {
+  // A spring/vent takes over the trajectory without granting another airborne burst.
+  p.airBoostFrames = 0;
+  p.airBoostActive = false;
+  p.boosting = false;
   // Keep the existing aiming strength for the whole spring/vent flight.
   p.scriptedLaunch = true;
   p.jumpReleaseVy = null;

@@ -16,12 +16,14 @@ const before=baseline?functions.map(([file,name,end])=>{
   const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[],results=[];
   page.on('pageerror',e=>errors.push(e.message));await page.addInitScript(()=>window.requestAnimationFrame=()=>0);
   await page.goto(process.argv[2]||'http://127.0.0.1:8014');await page.waitForFunction(()=>art.recoveredCity&&art.recoveredSpeedster);
-  const after=await page.evaluate(names=>names.map(name=>(0,eval)(name).toString()),functions.map(f=>f[1]));
+  // Keep real module closures: stringifying bundled functions loses their imported state.
+  await page.evaluate(names=>{window.visibilityRenderers=names.map(name=>(0,eval)(name));},functions.map(f=>f[1]));
   const dir=process.env.VISIBILITY_CAPTURE_DIR;if(dir)fs.mkdirSync(dir,{recursive:true});
   for(const viewport of [{width:1440,height:1000},{width:1280,height:800}]){
    await page.setViewportSize(viewport);
    for(const variant of before?['before','after']:['after']){
-    await page.evaluate(sources=>sources.forEach(source=>(0,eval)(source)),variant==='before'?before:after);
+    if(variant==='before')await page.evaluate(sources=>sources.forEach(source=>(0,eval)(source)),before);
+    else await page.evaluate(names=>names.forEach((name,i)=>{window[name]=window.visibilityRenderers[i];}),functions.map(f=>f[1]));
     for(const zoom of [1,.94,.78])for(const kind of ['carrier','lift','wreck','tower']){
      const result=await page.evaluate(({kind,z})=>{
       selectAct(2);start();testControlled=true;zoom=z;step=100;runFrames=210;let render;
