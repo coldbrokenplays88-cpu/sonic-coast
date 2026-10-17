@@ -157,7 +157,7 @@ export function drawRecoveredSonicFrame(q) {
   const transform = ctx.getTransform(),
     worldScale = Math.hypot(transform.a, transform.b),
     integerScale = Math.max(1, Math.round(worldScale)),
-    ratio = q.preserveCameraScale ? 1 : integerScale / worldScale;
+    ratio = integerScale / worldScale;
   const foot = q.pivotY ?? (q.ball ? (p.ground ? 20 - Math.floor(sprite.height / 2) : 1) : 20);
   ctx.save();
   ctx.setTransform(

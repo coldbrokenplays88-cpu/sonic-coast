@@ -58,4 +58,3 @@ test('warm gameplay and boss frames allocate no extra canvases',()=>{
  const r=renderer();r.run("prepareScorpionArt({width:1536,height:1024});drawRecoveredSonicFrame({sheet:'recoveredSpeedster',frame:16});scorpionPart('jaw',400,200,.65)");const count=r.canvases.length;
  r.run("for(let i=0;i<60;i++){drawRecoveredSonicFrame({sheet:'recoveredSpeedster',frame:16});scorpionPart('jaw',400,200,.65)}");assert.equal(r.canvases.length,count);
 });
-test('gameplay sprites follow camera magnification without independently rounding scale',()=>{const r=renderer();r.run("drawRecoveredSonicFrame({sheet:'recoveredSpeedster',frame:16,preserveCameraScale:true})");assert.deepEqual(r.context.transform,[1.6,0,0,1.6,320,233]);assert.deepEqual(r.canvases.map(c=>[c.width,c.height]),[[131,178]]);assert.equal(r.context.imageSmoothingEnabled,false);});
