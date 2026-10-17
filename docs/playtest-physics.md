@@ -18,7 +18,8 @@ rolled crests still require physical separation before upright grip can reattach
 PLAYTEST now draws the existing brake frames for its standing countersteer.
 Act 2 remains on its existing legacy controller pending the separate migration.
 
-Verification: seven new regressions failed before implementation and pass now;
+Verification: seven new regressions cover this correction; the reproduced state
+failures now pass;
 **543/543 gameplay tests,10/10 build tests**, `build:player`, generated checks and
 `package` pass. Earlier rolling-countersteer assertions now explicitly cover the
 remaining rolled case with obstructed standing clearance; unobstructed turns are
@@ -32,6 +33,9 @@ Act 1 completion at tick2117 with0 hits/deaths, both express routes, Act 2 flow 
 scene switching. Zero page errors. This is automated verification, not user feel
 approval. Direct-file loading remains blocked by the browser environment policy;
 the extracted package loads through the verified Python3 HTTP fallback.
+
+Exact tested implementation: `eddc4503325569f141136be104d3d995939cd628`.
+This identity line is a subsequent documentation-only change.
 
 Current ZIP: `dist/Neon-Express-player.zip`,37 files,52,342,802 bytes.
 SHA256: `9bada43b1a6b6ec4ef0549400c2109286775fd6c13db2fa262925fd819194a2b`.
