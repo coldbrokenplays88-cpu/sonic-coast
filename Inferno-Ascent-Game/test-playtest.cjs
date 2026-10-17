@@ -33,7 +33,7 @@ test('PLAYTEST input and ticks bypass legacy movement, interactions, water, boss
   assert.equal(a.run(`JSON.stringify(${protectedState})`), before);
   assert.equal(a.run('readGameState().frame'), 30);
   assert.equal(a.run('playtestState.player.ticks'),30);
-  assert.ok(a.run('playtestState.player.x')>0);
+  assert.ok(a.run('playtestState.player.dash.charge')>0,'Down + Jump now charges only the isolated controller');
 });
 
 test('PLAYTEST entry does not initialize a legacy level, stage runtime, or encounter', () => {

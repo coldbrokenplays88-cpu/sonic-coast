@@ -53,3 +53,25 @@ test('all runtime dependencies resolve through module imports or known browser A
 test('classic compatibility files match their canonical module sources', () => {
   assert.equal(buildCompat({ check: true }), manifest.modules.length);
 });
+test('browser startup initializes every canonical runtime module in manifest order', () => {
+  const ast = acorn.parse(fs.readFileSync(path.join(__dirname, '../src/main.js'), 'utf8'), {
+    ecmaVersion: 2024,
+    sourceType: 'module',
+  });
+  const imports = new Map(
+    ast.body
+      .filter((n) => n.type === 'ImportDeclaration')
+      .flatMap((n) =>
+        n.specifiers
+          .filter((s) => s.type === 'ImportNamespaceSpecifier')
+          .map((s) => [s.local.name, path.basename(n.source.value)])
+      )
+  );
+  const bootstrap = ast.body
+    .flatMap((n) => (n.type === 'VariableDeclaration' ? n.declarations : []))
+    .find((n) => n.id.name === 'modules');
+  assert.deepEqual(
+    bootstrap.init.elements.map((n) => imports.get(n.name)),
+    manifest.modules.map((n) => n.file)
+  );
+});

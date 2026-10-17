@@ -37,7 +37,7 @@
         <div class="playtest-panel">
           <p id="playtest-status" hidden></p>
           <span id="playtest-debug"></span>
-          <span><button id="playtest-flat">Flat reset</button> <button id="playtest-valley">Valley reset</button> <button id="playtest-crest">Crest</button> <button id="playtest-gap">Gap</button> <button id="playtest-wall">Wall</button> <button id="playtest-ceiling">Low ceiling</button> <button id="playtest-loop">Loop →</button> <button id="playtest-loop-reverse">Loop ←</button> <button id="playtest-loop-wide">Wide loop</button> <button id="playtest-wall-ceiling">Walls / ceiling →</button> <button id="playtest-wall-ceiling-reverse">Walls / ceiling ←</button></span>
+          <span><button id="playtest-springs">Springs</button> <button id="playtest-platforms">Moving platforms</button> <button id="playtest-moving-spring">Moving spring</button> <button id="playtest-flat">Flat reset</button> <button id="playtest-valley">Valley reset</button> <button id="playtest-crest">Crest</button> <button id="playtest-gap">Gap</button> <button id="playtest-wall">Wall</button> <button id="playtest-ceiling">Low ceiling</button> <button id="playtest-loop">Loop →</button> <button id="playtest-loop-reverse">Loop ←</button> <button id="playtest-loop-wide">Wide loop</button> <button id="playtest-wall-ceiling">Walls / ceiling →</button> <button id="playtest-wall-ceiling-reverse">Walls / ceiling ←</button></span>
           <span>STATE <b id="playtest-mode">READY</b> · TICKS <b id="playtest-frame">0</b></span>
           <span>INPUT <b id="playtest-input">none</b> (diagnostic only)</span>
         </div>
@@ -136,7 +136,7 @@
           ><span><kbd>P</kbd> PAUSE</span><span><kbd>F</kbd> FULLSCREEN</span>
         </div>
         <div id="playtest-controls" class="controls" hidden>
-          <span>← → / A D MOVE</span><span><kbd>↓</kbd> ROLL</span><span><kbd>SPACE</kbd> JUMP</span><span><kbd>P</kbd> PAUSE / RESUME</span>
+          <span>← → / A D MOVE</span><span>↓ + SPACE: CHARGE · release ↓: SPIN DASH</span><span><kbd>↓</kbd> ROLL</span><span><kbd>SPACE</kbd> JUMP</span><span><kbd>P</kbd> PAUSE / RESUME</span>
           <span><kbd>R</kbd> RESET</span><span><kbd>F</kbd> FULLSCREEN</span>
         </div>
         <button id="restart">↻ Restart</button>
@@ -176,6 +176,7 @@
     <script src="stage-runtime.js?v=3"></script>
     <script src="playtest-ground.js"></script>
     <script src="playtest-path.js"></script>
+    <script src="playtest-devices.js"></script>
     <script src="playtest-motion.js"></script>
     <script src="playtest.js"></script>
     <script src="game.js?v=46"></script>

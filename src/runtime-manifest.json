@@ -168,6 +168,12 @@
       }
     },
     {
+      "file": "playtest-devices.js",
+      "kinds": {
+        "experimentalDeviceTuning": "const"
+      }
+    },
+    {
       "file": "playtest-motion.js",
       "kinds": {
         "motionTuning": "const",

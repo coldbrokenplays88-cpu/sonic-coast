@@ -7,6 +7,7 @@ function isPlaytest() {
 function clearPlaytestInput() {
   keys.clear();
   if (playtestState) {
+    playtestState.player.dash = null;
     playtestState.rollPressed = false;
     playtestState.jumpPressed = false;
     if (playtestState.player.air) {
@@ -68,7 +69,7 @@ function setupPlaytest() {
   $('#game-shell').classList.add('playtest');
   $('#playtest-status').hidden = false;
   $('#playtest-status').textContent =
-    'Static-surface experiment · Space: jump / release: short hop · Down: roll · Hold direction through loops. R resets.';
+    'Static-surface + devices experiment · Space: jump · Down: roll · At rest: hold Down + Space to charge, release Down to Spin Dash. R resets.';
   $('#game-controls').hidden = true;
   $('#playtest-controls').hidden = false;
   $('#game-hint').hidden = true;
@@ -80,7 +81,7 @@ function setupPlaytest() {
   $('#act-select').value = 'playtest';
   canvas.setAttribute(
     'aria-label',
-    'PLAYTEST static terrain experiment. Left and right move, Down rolls, Space jumps; release for a short hop. P pauses, R resets. Buttons select flat, valley, crest, gap, wall or low ceiling. Boost and Spin Dash are disabled. STAGE returns to either act.'
+    'PLAYTEST static terrain experiment. Left and right move, Down rolls, Space jumps; release for a short hop. P pauses, R resets. Buttons select flat, valley, crest, gap, wall or low ceiling. Down + Space charges Spin Dash at rest; release Down to launch. Boost is disabled. STAGE returns to either act.'
   );
   for (const scenario of Object.keys(motionFixtures))
     $('#playtest-' + scenario).onclick = () => {
@@ -198,13 +199,14 @@ function updatePlaytestHud() {
     ' / ' +
     player.mode.toUpperCase() +
     ' / ' +
-    player.posture.toUpperCase();
+    player.posture.toUpperCase() +
+    (player.dash ? ' / CHARGING' : '');
   $('#playtest-frame').textContent = String(playtestState.frames);
   $('#playtest-input').textContent = [...keys].join(', ') || 'none';
   $('#playtest-debug').textContent =
     `${motionTuning.revision} · ${player.scenario} · gsp ${c.grounded ? c.speed.toFixed(3) : '—'} · v(${c.vx.toFixed(3)}, ${c.vy.toFixed(3)}) · angle ${((c.angle * 180) / Math.PI).toFixed(2)}°\n` +
     `${c.grounded ? 'CONTACT' : 'AIR REF'} (${c.x.toFixed(2)}, ${c.y.toFixed(2)}) · body ${c.width}×${c.height} · center (${c.center.x.toFixed(2)}, ${c.center.y.toFixed(2)}) · normal ${c.grounded ? `(${c.nx.toFixed(3)}, ${c.ny.toFixed(3)})` : 'none'} · N ${c.normalReaction.toFixed(3)}${c.uprightGrip ? ' · UPRIGHT CREST GRIP' : ''}${c.steepGrip ? ' · STEEP GRIP ≥2.5' : ''}\n` +
-    `${player.pathS != null ? 'path s ' + player.pathS.toFixed(2) + ' · ' : ''}${player.latestTransition} · controller ticks ${player.ticks} · reset ${playtestState.resetCount}: ${playtestState.resetReason}`;
+    `dash ${player.dash?.charge || 0}/30 · support ${player.supportId || 'terrain / air'} · springs ${player.springLaunches} · ${player.pathS != null ? 'path s ' + player.pathS.toFixed(2) + ' · ' : ''}${player.latestTransition} · controller ticks ${player.ticks} · reset ${playtestState.resetCount}: ${playtestState.resetReason}`;
 }
 
 function readPlaytestState() {
@@ -239,7 +241,7 @@ function drawGroundPlayer(player) {
   ctx.rotate(c.angle);
   const sheet = art.recoveredSpeedster ? 'recoveredSpeedster' : 'recoveredPeelout';
   const index = rolling
-    ? 26 + (Math.floor(player.distance / 10) % 3)
+    ? 26 + (Math.floor(player.dash ? player.ticks / 2 : player.distance / 10) % 3)
     : Math.abs(player.speed) > 0.1
       ? Math.floor(player.distance / 12) % 8
       : 16;
@@ -352,6 +354,36 @@ function drawPlaytest() {
     ctx.fillRect(box.x1, box.y1, box.x2 - box.x1, box.y2 - box.y1);
     ctx.strokeStyle = '#ffae44';
     ctx.strokeRect(box.x1, box.y1, box.x2 - box.x1, box.y2 - box.y1);
+  }
+  const fixture = motionFixtures[player.scenario];
+  for (const platform of fixture.platforms || []) {
+    const box = experimentalPlatformPose(platform, player.ticks);
+    ctx.fillStyle = '#39355f';
+    ctx.fillRect(box.x1, box.y1, box.x2 - box.x1, box.y2 - box.y1);
+    ctx.strokeStyle = '#61d9f1';
+    ctx.strokeRect(box.x1, box.y1, box.x2 - box.x1, box.y2 - box.y1);
+    ctx.fillStyle = '#b4b9d2';
+    ctx.fillText(platform.id, (box.x1 + box.x2) / 2, box.y2 + 18);
+  }
+  for (const spring of fixture.springs || []) {
+    const face = experimentalSpringPose(spring, player.ticks, fixture);
+    ctx.save();
+    ctx.translate(face.x, face.y);
+    ctx.rotate(Math.atan2(face.ty, face.tx));
+    ctx.fillStyle = '#6d396c';
+    ctx.fillRect(-24, 0, 48, 20);
+    ctx.strokeStyle = '#b4b9d2';
+    ctx.beginPath();
+    ctx.moveTo(-10, 18);
+    for (let y = 16; y > 2; y -= 3) ctx.lineTo(y % 2 ? -10 : 10, y);
+    ctx.stroke();
+    ctx.fillStyle = '#ffd54a';
+    ctx.fillRect(-24, 0, 48, 5);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '12px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('↑', 0, -8);
+    ctx.restore();
   }
   const limit = motionBounds(player.scenario);
   ctx.textAlign = 'center';

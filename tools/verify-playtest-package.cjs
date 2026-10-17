@@ -28,7 +28,7 @@ async function smoke(browser, url) {
     assert.match(await page.locator('#playtest-status').textContent(), /Static-surface/);
     const state = await page.evaluate(() => readGameState());
     assert.equal(state.act, 'playtest');
-    assert.equal(state.tuning, 'PATH-1 / AIR-2 / GROUND-5', 'the extracted package must contain the current tuning');
+    assert.equal(state.tuning, 'DEVICES-1 / PATH-1 / AIR-2 / GROUND-5', 'the extracted package must contain the current tuning');
     assert.equal(state.movementImplemented, true);
     assert.equal(state.player.x, 0);
     assert.equal(state.contact.height, 48);
@@ -57,7 +57,7 @@ async function smoke(browser, url) {
       await page.keyboard.up(key);
     assert.equal(await snapshot(), before, 'experimental input cannot mutate legacy gameplay');
     assert.equal(await page.locator('#playtest-frame').textContent(), '30');
-    assert.ok((await page.evaluate(() => readGameState())).player.x > 0);
+    assert.equal((await page.evaluate(() => readGameState())).player.dash.charge,30,'Down + Jump charges only the isolated controller');
     assert.equal((await page.evaluate(() => readGameState())).player.ticks, 30);
     await page.keyboard.press('KeyP');
     await page.evaluate(() => {
@@ -252,6 +252,106 @@ async function smoke(browser, url) {
     await page.click('#play');
     await page.click('#restart');
     assert.equal((await page.evaluate(()=>readGameState())).player.ticks,0);
+    const deviceChecks = [];
+    await page.click('#playtest-springs');
+    await page.evaluate(() => {
+      Object.assign(playtestState.player, {
+        mode: 'airborne',
+        speed: null,
+        x: 120,
+        y: 330,
+        air: { vx: 0, vy: 35, jumpLift: 0, cutEligible: false, restorePosture: 'standing' },
+      });
+      update();
+      draw();
+    });
+    const fired = await page.evaluate(() => readGameState());
+    assert.equal(fired.player.springLaunches, 1);
+    assert.ok(fired.player.air.vy < -17);
+    await page.keyboard.press('Space');
+    await page.evaluate(() => update());
+    const springContinued = await page.evaluate(() => readGameState());
+    assert.ok(
+      Math.abs(springContinued.player.air.vy - fired.player.air.vy - 0.35) < 1e-7,
+      'jump release never cuts spring lift'
+    );
+    deviceChecks.push({
+      fixture: 'springs',
+      launches: fired.player.springLaunches,
+      vy: fired.player.air.vy,
+    });
+    if (process.env.PLAYTEST_DEVICE_CAPTURE)
+      await page.screenshot({ path: process.env.PLAYTEST_DEVICE_CAPTURE });
+    await page.click('#playtest-platforms');
+    await page.evaluate(() => {
+      Object.assign(playtestState.player, {
+        mode: 'airborne',
+        speed: null,
+        x: 0,
+        y: 230,
+        air: { vx: 2, vy: 35, jumpLift: 0, cutEligible: false, restorePosture: 'standing' },
+      });
+      for (let i = 0; i < 125; i++) update();
+      draw();
+    });
+    const rider = await page.evaluate(() => readGameState());
+    assert.equal(rider.player.supportId, 'ferry');
+    assert.ok(Math.abs(rider.player.speed) < 1e-7);
+    assert.equal(rider.player.ticks, 125);
+    await page.keyboard.down('Space');
+    await page.evaluate(() => {
+      update();
+      draw();
+    });
+    await page.keyboard.up('Space');
+    const departed = await page.evaluate(() => readGameState());
+    assert.equal(departed.player.mode, 'airborne');
+    assert.equal(departed.player.supportId, null);
+    assert.ok(
+      Math.abs(departed.player.air.vx + 2) < 1e-7,
+      'reversed carrier velocity inherited once'
+    );
+    deviceChecks.push({
+      fixture: 'platforms',
+      ridingTicks: rider.player.ticks,
+      jumpVx: departed.player.air.vx,
+    });
+    await page.click('#playtest-moving-spring');
+    await page.evaluate(() => {
+      Object.assign(playtestState.player, {
+        mode: 'airborne',
+        speed: null,
+        x: 0,
+        y: 206,
+        posture: 'rolling',
+        air: { vx: 2, vy: 40, jumpLift: 0, cutEligible: false, restorePosture: 'rolling' },
+      });
+      for (let i = 0; i < 3; i++) update();
+      draw();
+    });
+    const movingCap = await page.evaluate(() => readGameState());
+    assert.equal(movingCap.player.springLaunches, 1);
+    assert.ok(Math.abs(movingCap.player.lastSpring.world.vx - 2) < 1e-7);
+    deviceChecks.push({ fixture: 'moving-spring', vx: movingCap.player.lastSpring.world.vx });
+    await page.click('#playtest-flat');
+    await page.keyboard.down('ArrowDown');
+    await page.keyboard.down('Space');
+    await page.evaluate(() => {
+      for (let i = 0; i < 30; i++) update();
+      draw();
+    });
+    assert.equal((await page.evaluate(() => readGameState())).player.dash.charge, 30);
+    await page.keyboard.up('ArrowDown');
+    await page.keyboard.up('Space');
+    await page.evaluate(() => {
+      update();
+      draw();
+    });
+    const dash = await page.evaluate(() => readGameState());
+    assert.equal(dash.player.dash, null);
+    assert.equal(dash.player.posture, 'rolling');
+    assert.ok(dash.player.speed > 18.9);
+    deviceChecks.push({ fixture: 'flat dash', releaseSpeed: dash.player.speed });
     await page.click('#playtest-flat');
     await page.click('#restart');
     for (const act of ['1', '2']) {
@@ -313,6 +413,7 @@ async function smoke(browser, url) {
       checks:
         'selection, rendered Sonic/contact, approved ground/rollback, held/tap jump, crest detachment, gap landing, swept wall, upright landing, ceiling/uncurl, two-axis camera, isolation, pause/resume/reset, flight exit, Act 1/2 running/jump/boost, clean return',
       pathChecks,
+      deviceChecks,
       pageErrors: errors,
     };
   } finally {
