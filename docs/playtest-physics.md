@@ -1,4 +1,4 @@
-# PLAYTEST — AIR-2 / GROUND-4
+# PLAYTEST — AIR-2 / GROUND-5
 
 ## Approved baseline and exact build
 
@@ -7,13 +7,52 @@ Continue `codex/playtest-physics`; no recreation from main. Scaffold handoff:
 and then explicitly approved GROUND-3 (“fucking perfect”) without outstanding
 conditions before this airborne stage. Ground approval was not inferred from tests.
 
-Starting SHA for this feedback revision: `7bd93adda60f38c6d4ea62150920269615a49a4c`.
-**Exact tested implementation: `a9b8a5ac45c58dd1dbaf335262910b6403727068`.**
+Starting SHA for this feedback revision: `064fa858e7e134543274f1b3141812243b99ab60`.
+**Exact tested implementation: `edc260526fe31656217135f52ca1b7fbef6f3291`.**
 This record is a subsequent documentation-only commit. Ground implementation
 baseline was `805b52e25ea8329827a3f585963d162768844074`.
 Node v24.19.0, npm 11.9.0; installed lockfile dependencies reused unchanged.
 
-## Feedback revision
+## Downhill rolling revision
+
+The user approved AIR-2/GROUND-4, then requested only stronger downhill rolling.
+`rollDownhillMultiplier=2.5`: multiply the existing tangent-gravity term .35*T.y
+only when rolled velocity points downhill (`speed*T.y > 0`). Friction .025,
+uphill slope force, flat movement, countersteer strength, unroll, air/jump,
+collision and the approved upright crest grip are unchanged. At zero speed the
+ordinary gravity term initiates movement; enhancement follows once descending.
+No direct velocity assignment, downhill target speed or new cap is introduced.
+
+Reference: [Sonic 2 disassembly, Sonic_SlopeResist / Sonic_RollRepel](https://github.com/sonicretro/s2disasm/blob/4ef457c18fc4902396c43ab06fabc119ac6ecb64/s2.asm#L37754).
+Running uses0x20, downhill rolling0x50: ratio2.5. That code also reduces uphill
+rolling force; we deliberately retain this game's approved uphill loss instead
+of copying that separate behavior. This adopts a documented ratio, not complete
+historical physics or classic absolute speeds.
+
+Controlled 30-tick comparisons use identical valley anchors x±1900, initial
+speeds6/14/22 downhill, and held downhill direction for both postures; the roll
+is entered with an actual Down edge. Both stay on the same grade .65 throughout.
+Final speed magnitudes: running15.382908/19.722378/27.722378 versus
+rolling19.555944/27.555944/35.555944, with symmetric results on both sides.
+The browser repeats speed14 from x1700: running x1275.885316/v-19.722378;
+rolling x1177.365258/v-27.555944. This is actual travel, not only a HUD value.
+
+Energy convention: the original base diagnostic `v²/2 + .35*(650-y)` remains.
+An asymmetric downhill-only multiplier is an authored nonconservative force:
+its extra work is `1.5*.35*positive downhill height traversed`. Repeated descents
+can therefore add energy; this is explained force work, not friction vanishing
+or a hidden speed kick. Tests check base-energy change equals that extra work
+minus friction. They do not mislabel the added energy as conservation.
+
+Exact unchanged checks include flat v±12 after120 ticks →v±9/x±1260;
+uphill rolling v±14 after30 ticks →v±7.527622; the constant-grade countersteer
+removes the same .18*(1-abs(T.y)) speed per tick. The existing steep countersteer
+comparison now uses30 ticks so faster rolls stay on the same grade; the valley
+energy run ends before the marked boundary rather than rejecting its earlier
+arrival. No production geometry or boundary was changed.
+
+## Earlier feedback revision (retained)
+
 
 The user requested two changes after AIR-1: no unrequested upright crest launch,
 and a quicker roll-to-standing turn. They explicitly chose “Stay grounded until
@@ -25,7 +64,7 @@ attachment. HUD labels UPRIGHT CREST GRIP when physical support alone would fail
 Opposite input now uncurls at speed ≤1 on rest-supporting ground, with standing
 clearance. Residual speed is retained; normal standing braking reaches zero
 before reverse propulsion. No braking, friction, gravity or acceleration value
-changed. The existing 12-tick passive-rest uncurl and steep-slope rolling reversal
+changed in that earlier revision. The existing 12-tick passive-rest uncurl and steep-slope rolling reversal
 remain unchanged. This is a feel adjustment, not a historical-accuracy claim.
 
 Flat rolled countersteer, starting speed2/8/12, input opposite:
@@ -133,7 +172,9 @@ geometric outgoing-contact tolerance, not a time-based adhesion/coyote rule.
 ## Tuning and supported fixtures
 
 Ground constants are unchanged: run range 14, acceleration .16, brake .50,
-released standing resistance .10, gravity .35, rolling resistance .025.
+released standing resistance .10, base gravity .35, rolling resistance .025.
+Only downhill rolled tangent gravity is now multiplied by2.5; uphill and flat
+use the original force. Normal support and airborne gravity remain .35.
 Opposing rolled input brakes by up to `.18*(1-abs(T.y))*min(1,abs(v)/2)`;
 forward rolled input supplies no running propulsion. Roll entry needs fresh
 Down at speed ≥2. Deliberate opposite input can uncurl at speed ≤1 with low
@@ -196,16 +237,17 @@ before projection; dot-product checks use1e-8 tolerance, far below meaningful
 speed differences. Contact/overlap tolerances of .001–.003 cover skin/TOI
 roundoff, not a visible body width or a tunneling allowance.
 
-Ground regression compares flat/valley player x, speed, distance and posture
-exactly between the transition controller and shared ground primitives. Existing
-GROUND-3 numeric regressions still pass; only deliberate low-speed turn posture
-and crest grip change as requested. No-input valley x-1800/v0 rolling,600 ticks:
-energy273→106.870104, maximum273, peak speed21.464911, distance6645.20173,
-zero airborne transitions. Lost energy166.129896 agrees with friction work
-166.130043 (error.00014721). The .05 energy-error budget detects artificial
-growth well below a meaningful gameplay effect; final oscillation phase is not
-an arbitrary endpoint target. Original join, symmetry, braking and useful
-held-countersteer tests remain intact.
+Ground regression compares flat/valley x, speed, distance and posture exactly
+between the actual transition controller and shared ground primitives. Running,
+flat and uphill numeric regressions remain unchanged. The new no-input energy
+run uses actual `stepMotionPlayer`: valley x-1800/v0 rolling until x>2200, before
+the marked boundary. At182 ticks, x2207.223108, base energy273→569.716891,
+extra downhill work409.5, friction work112.783588. Maximum work/energy accounting
+error.00416944 stays below the original .05 budget. Peak speed35.744434,
+largest tick travel35.742924 (<40, consistent with the <37 energy bound),
+largest tangent change.038197 (<.04), zero airborne transitions. The old
+600-tick no-energy-gain assertion intentionally no longer applies: stronger
+asymmetric slope force supplies work and reaches the finite course boundary.
 
 Forty-eight deterministic fixture/speed/jump approaches run100 ticks each,
 including rolling and jump release; no obstacle penetration beyond .003 and
@@ -220,24 +262,25 @@ against fresh-boot behavior. No unsupported later mechanic was added.
 
 ## Verification and access
 
-Feedback baseline:452 gameplay tests,9 build tests,30-module compatibility and player
+Feedback baseline:454 gameplay tests,9 build tests,30-module compatibility and player
 checks passed before source edits. Final commands all pass:
-`npm run build:player`, `npm test` (**454**), `npm run test:build` (**9**),
+`npm run build:player`, `npm test` (**457**), `npm run test:build` (**9**),
 `npm run check:compat` (**30 modules**), `npm run check:player`, `npm run package`.
-Fifteen AIR tests and ten ground tests exercise the actual controller. Two new
-regressions cover manual launch/posture and roll turns; existing crest assertions
-now distinguish upright grip from physical rolled contact as requested.
+Fifteen AIR tests and thirteen ground tests exercise the actual controller.
+Three new comparisons cover downhill advantage, unchanged flat/uphill motion,
+and unchanged opposing-input force. The energy test now accounts for added work;
+its integration-error tolerance remains .05.
 Independent review found the wall-landing defect and verified its correction;
 final source review confirmed no existing-act physics/level changes.
 
-Player ZIP: `dist/Neon-Express-player.zip`, **52,321,442 bytes;37 files**.
-SHA-256: `76bf1e19eb9e196a0aefd9c4281a8878d005506f41be2e7fd1be1318ebe1a14e`.
-Runtime:`runtime-0a590e6528ed9219.js`; CSS:`style-c9f48a6e01dc8ece.css`.
+Player ZIP: `dist/Neon-Express-player.zip`, **52,321,489 bytes;37 files**.
+SHA-256: `dedf0a73cb6eb357335726168cb6f32454de94be283225f03c21d76f51263857`.
+Runtime:`runtime-331f04b9ddd7af84.js`; CSS:`style-c9f48a6e01dc8ece.css`.
 CRC verified and freshly extracted outside the repository; every entry compared
 byte-for-byte with the built game (ZIP index maps to committed PLAY.html).
 
 Chromium151.0.7922.173 bounded extracted-package browser smoke passed over
-Python local HTTP: rendered art/contact, ground rollback, quicker roll turn, held/cut jump, upright crest grip/manual roll release,
+Python local HTTP: rendered art/contact, ground rollback, controlled running/rolling downhill comparison, quicker roll turn, held/cut jump, upright crest grip/manual roll release,
 gap landing, wall stop/upright landing, ceiling/blocked uncurl, camera/HUD,
 pause/resume/reset, flight exit, Act1/2 running/jumping/fresh air boost, clean
 return; zero page errors. Inspected actual crest raster. This is automated
@@ -263,7 +306,7 @@ merge, Pages dispatch or deployment performed.
 ## Manual approval checkpoint
 
 1. Flat: compare tapping/holding jump, release steering, then countersteer in air.
-2. Valley: jump uphill/downhill both ways, including an earned fast downhill roll;
+2. Valley: compare running versus a well-timed downhill roll, then jump both ways;
    check inherited momentum and landing feel against the approved ground slice.
 3. Crest/Gap: run through the crest, compare upright grip with manual rolling release, then jump the gap;
    inspect transition reason, outline and anchor for chatter or snapping.
