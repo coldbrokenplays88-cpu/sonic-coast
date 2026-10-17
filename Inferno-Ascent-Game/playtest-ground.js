@@ -97,7 +97,7 @@ function advanceGroundSubstep(
   sampler = sampleGround,
   arcLength = false
 ) {
-  const t = groundTuning,
+  const t = controls.physics || groundTuning,
     { direction, rolling, braking } = controls;
   const position = arcLength ? player.pathS : player.x;
   const before = sampler(player.scenario, position);
@@ -110,11 +110,19 @@ function advanceGroundSubstep(
         (1 - Math.abs(before.ty)) *
         Math.min(1, Math.abs(player.speed) / t.rollBrakeFadeSpeed)
       : 0;
-  const resistance = rolling
-    ? t.rollResistance + rollBrake
-    : (direction ? 0 : t.coastResistance) + (braking ? t.brake : 0);
-  const drive =
-    !rolling && direction && !braking
+  const resistance = controls.boost
+    ? rolling
+      ? t.rollResistance
+      : 0
+    : rolling
+      ? t.rollResistance + rollBrake
+      : (direction ? 0 : t.coastResistance) + (braking ? t.brake : 0);
+  const drive = controls.boost
+    ? (controls.boost.facing *
+        Math.max(0, controls.boost.speed - player.speed * controls.boost.facing) *
+        (1 - (1 - controls.boost.response) ** dt)) /
+      dt
+    : !rolling && direction && !braking
       ? direction *
         Math.min(t.acceleration, Math.max(0, t.runRange - player.speed * direction) / dt)
       : 0;

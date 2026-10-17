@@ -65,6 +65,8 @@ function createMotionPlayer(scenario = 'flat') {
     mode: 'grounded',
     air: null,
     supportId: null,
+    railId: null,
+    boost: createExperimentalBoost(motionFixtures[scenario].meter ?? 90),
     dash: null,
     springLaunches: 0,
     latestTransition: 'reset',
@@ -87,7 +89,13 @@ function motionSupport(player, time = player.ticks) {
   return platform ? experimentalPlatformPose(platform, time) : null;
 }
 
+function motionRail(player) {
+  return motionFixtures[player.scenario].rails?.find((r) => r.id === player.railId);
+}
+
 function motionSurface(player, time = player.ticks) {
+  const rail = motionRail(player);
+  if (rail) return sampleExperimentalRail(rail, player.x, Math.sign(player.speed));
   const support = motionSupport(player, time);
   if (support)
     return {
@@ -113,6 +121,30 @@ function sampleMotionPath(scenario, s) {
 }
 
 function advanceMotionGround(player, controls, dt, time = player.ticks) {
+  if (controls.groundBlocked) {
+    const support = motionSupport(player, time);
+    if (support) {
+      player.x += support.vx * dt;
+      player.y = motionSupport(player, time + dt).y1;
+    }
+    return;
+  }
+  const rail = motionRail(player),
+    surface = motionSurface(player, time);
+  const boosted = experimentalGroundBoost(player, surface || {});
+  if (rail || boosted)
+    controls = {
+      ...controls,
+      ...(rail ? { physics: experimentalRailTuning, rolling: false } : {}),
+      ...(boosted ? { boost: { ...experimentalBoostTuning, facing: player.facing } } : {}),
+    };
+  if (rail) {
+    advanceGroundSubstep(player, controls, dt, (_scenario, x) =>
+      sampleExperimentalRail(rail, x, Math.sign(player.speed))
+    );
+    player.y = sampleExperimentalRail(rail, player.x).y;
+    return;
+  }
   const support = motionSupport(player, time);
   if (support) {
     advanceGroundSubstep(player, controls, dt, (_scenario, x) => ({
@@ -165,6 +197,24 @@ function motionContact(player, time = player.ticks) {
   if (player.mode === 'grounded') {
     const path = playtestPaths[player.scenario];
     const support = motionSupport(player, time);
+    const rail = motionRail(player);
+    if (rail) {
+      const surface = motionSurface(player, time);
+      return {
+        ...surface,
+        surfaceAngle: surface.angle,
+        angle: 0,
+        grounded: true,
+        anchor: { x: player.x, y: player.y },
+        center: { x: player.x, y: player.y - 24 },
+        width: 22,
+        height: 48,
+        speed: player.speed,
+        vx: player.speed * surface.tx,
+        vy: player.speed * surface.ty,
+        normalReaction: motionReaction(player, surface),
+      };
+    }
     if (support) {
       const surface = motionSurface(player, time),
         height = player.posture === 'rolling' ? 38 : 48;
@@ -228,6 +278,15 @@ function motionContact(player, time = player.ticks) {
 }
 
 function motionBody(player, posture = player.posture, time = player.ticks) {
+  if (player.mode === 'grounded' && motionRail(player))
+    return {
+      x: player.x,
+      y: player.y - (posture === 'rolling' ? 19 : 24),
+      hw: posture === 'rolling' ? 19 : 11,
+      hh: posture === 'rolling' ? 19 : 24,
+      circle: posture === 'rolling',
+      angle: 0,
+    };
   if (player.mode === 'grounded' && playtestPaths[player.scenario])
     return pathBody(player, posture);
   const height = posture === 'rolling' ? 38 : 48,
@@ -461,6 +520,20 @@ function firstAirImpact(player, ax, ay, duration, time = player.ticks) {
     );
     if (result && (!hit || result.time < hit.time)) hit = result;
   }
+  for (const rail of motionFixtures[player.scenario].rails || []) {
+    if (a.railDeparture === rail.id && a.separation && !a.separation.cleared) continue;
+    const result = experimentalRailImpact(
+      rail,
+      body,
+      a.vx,
+      a.vy,
+      ax,
+      ay,
+      duration,
+      motionTuning.skin
+    );
+    if (result && (!hit || result.time < hit.time)) hit = result;
+  }
   const deviceHit = firstDeviceImpact(player, body, a.vx, a.vy, ax, ay, duration, time);
   if (deviceHit && (!hit || deviceHit.time < hit.time)) hit = deviceHit;
   for (const [index, span] of motionSpans(player.scenario).entries()) {
@@ -638,11 +711,15 @@ function releaseMotion(player, reason, jump = false, time = player.ticks) {
   player.x = center.x;
   player.y = center.y;
   player.speed = null;
+  if (player.boost.remaining <= 0) player.boost.active = false;
+  const railDeparture = player.railId;
   player.supportId = null;
+  player.railId = null;
   player.dash = null;
   player.mode = 'airborne';
   player.air = {
     ...after,
+    railDeparture,
     departure,
     ...(path ? { pathOrigin, pathReach } : {}),
     jumpLift: Math.max(0, -c.ny * impulse),
@@ -670,6 +747,13 @@ function moveAirTime(player, ax, ay, time, clockTime = player.ticks) {
     );
   }
   if (a.separation && !a.separation.cleared) {
+    if (a.railDeparture) {
+      const rail = motionFixtures[player.scenario].rails.find((r) => r.id === a.railDeparture);
+      const gap = sampleExperimentalRail(rail, player.x).y - player.y - motionBody(player).hh;
+      if (gap > motionTuning.separation || player.x < rail.x1 || player.x > rail.x2)
+        a.separation.cleared = true;
+      return;
+    }
     const platform = motionFixtures[player.scenario].platforms?.find(
       (p) => p.id === a.separation.id
     );
@@ -704,6 +788,38 @@ function moveAirTime(player, ax, ay, time, clockTime = player.ticks) {
 }
 
 function landMotion(player, hit, incoming, time = player.ticks) {
+  if (hit.kind === 'rail') {
+    const rail = motionFixtures[player.scenario].rails.find((r) => r.id === hit.railId),
+      surface = sampleExperimentalRail(rail, player.x);
+    const speed = incoming.vx * surface.tx + incoming.vy * surface.ty;
+    const candidate = {
+      ...player,
+      mode: 'grounded',
+      railId: rail.id,
+      supportId: null,
+      posture: 'standing',
+      x: player.x,
+      y: surface.y,
+      speed,
+      air: null,
+      restTicks: 0,
+      dash: null,
+    };
+    if (!motionPostureClear(candidate, 'standing', time)) return false;
+    Object.assign(player, candidate, {
+      latestTransition: 'rail capture',
+      transitionCount: player.transitionCount + 1,
+    });
+    player.lastLanding = {
+      incoming,
+      speed,
+      tx: surface.tx,
+      ty: surface.ty,
+      anchor: { x: player.x, y: surface.y },
+    };
+    resetExperimentalAirBoost(player);
+    return true;
+  }
   if (hit.kind === 'platform') {
     const support = hit.platform,
       relative = incoming.vx - support.vx;
@@ -733,6 +849,7 @@ function landMotion(player, hit, incoming, time = player.ticks) {
       platformVelocity: { vx: support.vx, vy: support.vy },
       anchor: { x: player.x, y: support.y1 },
     };
+    resetExperimentalAirBoost(player);
     return true;
   }
   const path = playtestPaths[player.scenario];
@@ -782,6 +899,7 @@ function landMotion(player, hit, incoming, time = player.ticks) {
       normal: { x: surface.nx, y: surface.ny },
       anchor: { x: surface.x, y: surface.y },
     };
+    resetExperimentalAirBoost(player);
     return true;
   }
   const restore = player.air.restorePosture;
@@ -819,6 +937,7 @@ function landMotion(player, hit, incoming, time = player.ticks) {
     normal: { x: s.nx, y: s.ny },
     anchor: { x: s.x, y: s.y },
   };
+  resetExperimentalAirBoost(player);
   return true;
 }
 
@@ -929,12 +1048,15 @@ function launchExperimentalSpring(player, face, time) {
     vx: tangent * face.tx + normal * face.nx + face.vx,
     vy: tangent * face.ty + normal * face.ny + face.vy,
   };
+  player.boost.remaining = 0;
+  player.boost.active = false;
   const center = c.center,
     restore = player.air?.restorePosture || player.posture;
   Object.assign(player, {
     mode: 'airborne',
     speed: null,
     supportId: null,
+    railId: null,
     dash: null,
     x: center.x,
     y: center.y,
@@ -949,7 +1071,7 @@ function launchExperimentalSpring(player, face, time) {
 function updateExperimentalDash(player, input) {
   const t = experimentalDeviceTuning,
     direction = Math.sign(input.direction || 0);
-  if (player.mode !== 'grounded') {
+  if (player.mode !== 'grounded' || player.railId) {
     player.dash = null;
     return false;
   }
@@ -993,14 +1115,21 @@ function updateExperimentalDash(player, input) {
 
 function stepMotionPlayer(player, input = {}) {
   const direction = Math.sign(input.direction || 0);
+  const startedGrounded = player.mode === 'grounded';
+  let burstAdvanced = false;
   const dashAction = updateExperimentalDash(player, input);
   let controls = null,
     airBraking = null;
   if (player.mode === 'grounded') {
-    controls = beginGroundTick(player, input, motionPostureClear(player, 'rolling'));
+    controls = beginGroundTick(
+      player,
+      input,
+      !player.railId && motionPostureClear(player, 'rolling')
+    );
     if (player.dash) controls = { direction: 0, rolling: false, braking: true };
     if (input.jumpPressed && !dashAction) releaseMotion(player, 'jump', true);
   } else player.downHeld = !!input.down;
+  beginExperimentalBoost(player, input, startedGrounded);
   if (player.air?.cutEligible && !input.jumpHeld) {
     if (player.air.vy < 0 && player.air.jumpLift > 0)
       player.air.vy += player.air.jumpLift * (1 - motionTuning.cutRatio);
@@ -1026,6 +1155,7 @@ function stepMotionPlayer(player, input = {}) {
           braking: direction * player.speed < 0,
         };
         const path = playtestPaths[player.scenario];
+        const rail = motionRail(player);
         const current = motionSurface(player, clockTime);
         if (!current) {
           releaseMotion(player, 'ledge', false, clockTime);
@@ -1035,23 +1165,33 @@ function stepMotionPlayer(player, input = {}) {
           releaseMotion(player, path ? 'lost support / traction' : 'crest', false, clockTime);
           continue;
         }
+        const groundBoost = experimentalGroundBoost(player, current);
+        const freeBoost = !!(current.grindable && current.infiniteBoost);
+        player.boost.active = groundBoost;
+        const resourceSlice =
+          groundBoost && !freeBoost
+            ? Math.min(slice, player.boost.meter / experimentalBoostTuning.groundCost)
+            : slice;
         const duration = path
           ? Math.min(
-              slice,
+              resourceSlice,
               0.04 / Math.max(1e-9, Math.abs(player.speed) * Math.abs(current.curvature))
             )
-          : slice;
+          : resourceSlice;
         const candidate = { ...player };
         advanceMotionGround(candidate, controls, duration, clockTime);
         const position = (p) => (path ? p.pathS : p.x);
         const carrier = motionSupport(player, clockTime);
-        const span = carrier
-          ? [carrier.x1, carrier.x2]
-          : path
-            ? [0, path.length]
-            : motionSpans(player.scenario).find(([a, b]) => player.x >= a && player.x <= b);
+        const span = rail
+          ? [rail.x1, rail.x2]
+          : carrier
+            ? [carrier.x1, carrier.x2]
+            : path
+              ? [0, path.length]
+              : motionSpans(player.scenario).find(([a, b]) => player.x >= a && player.x <= b);
         let event = null,
           blockNormal = null,
+          blockedBox = null,
           time = duration;
         const beyond =
           position(candidate) - (carrier?.vx || 0) * duration < span[0] ||
@@ -1089,7 +1229,41 @@ function stepMotionPlayer(player, input = {}) {
               ? 'lost support / traction'
               : 'crest';
         }
+        if (rail) {
+          const target = player.speed >= 0 ? current.piece.x2 : current.piece.x1;
+          if (
+            target > rail.x1 &&
+            target < rail.x2 &&
+            (candidate.x - target) * Math.sign(player.speed) >= 0 &&
+            Math.abs(player.x - target) > 1e-8
+          ) {
+            let lo = 0,
+              hi = duration;
+            for (let i = 0; i < 30; i++) {
+              const mid = (lo + hi) / 2,
+                q = { ...player };
+              advanceMotionGround(q, controls, mid, clockTime);
+              if ((q.x - target) * Math.sign(player.speed) >= 0) hi = mid;
+              else lo = mid;
+            }
+            if (hi < time) {
+              time = hi;
+              event = 'rail join';
+            }
+          }
+        }
         for (const box of motionFixtures[player.scenario].boxes) {
+          // Retain the resolved resting contact while its relative normal motion
+          // is separating/tangent. Other obstacles and a carrier reversing into
+          // this contact still sweep normally; no relative drive is re-applied.
+          if (
+            controls.groundBlocked &&
+            controls.blockedBox === box &&
+            (!carrier ||
+              carrier.vx * controls.blockedNormal.nx + carrier.vy * controls.blockedNormal.ny >=
+                -1e-8)
+          )
+            continue;
           const hit = sweepGroundBox(
             motionBody(player, player.posture, clockTime),
             motionBody(candidate, candidate.posture, clockTime + duration),
@@ -1100,6 +1274,7 @@ function stepMotionPlayer(player, input = {}) {
             time = hit.time;
             event = 'block';
             blockNormal = hit.q;
+            blockedBox = box;
           }
         }
         const deviceHit = firstGroundDeviceImpact(
@@ -1119,7 +1294,18 @@ function stepMotionPlayer(player, input = {}) {
             time,
             player.ticks + (sub + 1) / groundTuning.substeps - remaining
           );
+        if (groundBoost && !freeBoost) {
+          player.boost.meter = Math.max(
+            0,
+            player.boost.meter - experimentalBoostTuning.groundCost * time
+          );
+          if (player.boost.meter < 1e-10) {
+            player.boost.meter = 0;
+            player.boost.locked = true;
+          }
+        }
         remaining -= time;
+        if (event === 'rail join') continue;
         if (event && typeof event === 'object') {
           if (event.kind === 'spring' && event.active) {
             launchExperimentalSpring(player, event.face, clockTime + time);
@@ -1131,8 +1317,13 @@ function stepMotionPlayer(player, input = {}) {
               ((carrier?.vx || 0) - (event.velocity?.vx || 0)) * event.nx +
               ((carrier?.vy || 0) - (event.velocity?.vy || 0)) * event.ny;
             if (relativeInto < -1e-8) player.boundary = 'moving device blocked clearance reset';
-            if (carrier && !player.boundary)
-              controls = { direction: 0, rolling: player.posture === 'rolling', braking: false };
+            if (!player.boundary)
+              controls = {
+                direction: 0,
+                rolling: player.posture === 'rolling',
+                braking: false,
+                groundBlocked: true,
+              };
             else remaining = 0;
           }
         } else if (event === 'block') {
@@ -1141,13 +1332,26 @@ function stepMotionPlayer(player, input = {}) {
           if (carrier && carrier.vx * blockNormal.nx + carrier.vy * blockNormal.ny < -1e-8)
             player.boundary = 'moving support blocked clearance reset';
           // A side block stops relative walking, not the carrier's remaining time.
-          if (carrier && !player.boundary)
-            controls = { direction: 0, rolling: player.posture === 'rolling', braking: false };
+          if (!player.boundary)
+            controls = {
+              direction: 0,
+              rolling: player.posture === 'rolling',
+              braking: false,
+              groundBlocked: true,
+              blockedBox,
+              blockedNormal: blockNormal,
+            };
           else remaining = 0;
         } else if (event === 'path boundary') {
           player.boundary = 'test path boundary reset';
           remaining = 0;
-        } else if (event) releaseMotion(player, event, false, clockTime + time);
+        } else if (event)
+          releaseMotion(
+            player,
+            rail && event === 'ledge' ? 'rail end' : event,
+            false,
+            clockTime + time
+          );
       } else {
         const a = player.air;
         airBraking ??= direction * a.vx < 0;
@@ -1161,8 +1365,13 @@ function stepMotionPlayer(player, input = {}) {
                   motionTuning.airAcceleration * slice,
                   Math.max(0, motionTuning.airRange - direction * a.vx)
                 );
-        let ax = (target - a.vx) / slice,
-          ay = groundTuning.gravity;
+        const bursting = player.boost.held && player.boost.remaining > 0;
+        let ax = bursting ? 0 : (target - a.vx) / slice,
+          ay = bursting ? 0 : groundTuning.gravity;
+        if (bursting) {
+          burstAdvanced = true;
+          player.boost.active = true;
+        }
         for (const n of blocked) {
           const into = ax * n.nx + ay * n.ny;
           if (into < 0) {
@@ -1190,7 +1399,7 @@ function stepMotionPlayer(player, input = {}) {
           a.vx -= into * n.nx;
           a.vy -= into * n.ny;
         }
-        if ((n.kind === 'floor' || n.kind === 'platform') && n.canLand) {
+        if (['floor', 'platform', 'rail'].includes(n.kind) && n.canLand) {
           if (landMotion(player, n, incoming, clockTime + hit.time)) {
             controls = null;
             continue;
@@ -1210,6 +1419,7 @@ function stepMotionPlayer(player, input = {}) {
       }
     }
   }
+  if (burstAdvanced && player.boost.remaining > 0) player.boost.remaining--;
   if (player.mode === 'grounded')
     finishGroundTick(
       player,
@@ -1239,7 +1449,7 @@ function stepMotionPlayer(player, input = {}) {
 }
 
 const motionTuning = Object.freeze({
-    revision: 'DEVICES-2 / PATH-1 / AIR-2 / GROUND-5',
+    revision: 'RAIL-BOOST-1 / DEVICES-2 / PATH-1 / AIR-2 / GROUND-5',
     steepGripSpeed: 2.5,
     jumpImpulse: 10.5,
     cutRatio: 0.4,
@@ -1256,6 +1466,37 @@ const motionFixtures = Object.freeze({
         { bounds: 1300, spawn: id.endsWith('reverse') ? path.length - 140 : 140, boxes: [], path },
       ])
     ),
+    rails: {
+      bounds: 2000,
+      spawn: -780,
+      boxes: [],
+      rails: [
+        createExperimentalRail(),
+        {
+          id: 'gap-rail',
+          x1: 1000,
+          x2: 1400,
+          pieces: [
+            {
+              id: 'gap-rail-piece',
+              x1: 1000,
+              x2: 1400,
+              y: 300,
+              c: [300, 0, 0, 0],
+              grindable: true,
+              infiniteBoost: false,
+            },
+          ],
+        },
+      ],
+    },
+    'rails-empty': {
+      bounds: 2000,
+      spawn: -780,
+      boxes: [],
+      meter: 0,
+      rails: [createExperimentalRail()],
+    },
     springs: {
       bounds: 1800,
       spawn: -160,

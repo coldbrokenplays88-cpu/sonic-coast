@@ -174,6 +174,18 @@
       }
     },
     {
+      "file": "playtest-rails.js",
+      "kinds": {
+        "experimentalRailTuning": "const"
+      }
+    },
+    {
+      "file": "playtest-boost.js",
+      "kinds": {
+        "experimentalBoostTuning": "const"
+      }
+    },
+    {
       "file": "playtest-motion.js",
       "kinds": {
         "motionTuning": "const",

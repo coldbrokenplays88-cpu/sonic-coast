@@ -1,18 +1,16 @@
-# PLAYTEST — DEVICES-2 / PATH-1 / AIR-2 / GROUND-5
+# PLAYTEST — RAIL-BOOST-1 / DEVICES-2 / PATH-1 / AIR-2 / GROUND-5
 
 ## Approval, branch and build identity
 
 Continue `codex/playtest-physics`; do not recreate from main. Scaffold handoff:
-`docs/playtest-scaffold.md`. The user approved the PATH-1 loop/wall/ceiling
-update with “ok this is really good” before requesting this stage. All prior
-approved ground/air tuning remains. DEVICES-1 was personally approved (“seems good”) with the requested jump-through
-platform correction. **DEVICES-2 awaits approval of that correction.**
+`docs/playtest-scaffold.md`. The user approved the springs/platforms/Spin Dash
+update and DEVICES-2 jump-through correction with “perfect” before requesting
+this stage. **RAIL-BOOST-1 awaits personal feel approval.**
 
-Starting SHA: `9106f4135c1393cc3c01d77fdfd1ffcb86d9c5fb`, clean working tree.
-Runtime build: `runtime-aec96acc2019fc07.js`. Node v24.19.0, npm11.9.0;
-existing lockfile dependencies reused, no new dependencies or asset generation.
-**Exact tested implementation commit: `c424392cd93c6e4cb63494eced2e8c992598c3e0`.**
-This build-identity record is a subsequent documentation-only commit.
+Starting SHA: `ef7881abf183e6c5c552c4550bf45681c9fbdd52`, clean working tree.
+Node v24.19.0, npm11.9.0; existing lockfile dependencies reused, no dependency or
+asset generation changes. Exact tested source/runtime/package identities are
+recorded in the build and package sections below.
 
 GitHub API access now succeeds. `gh pr list --head codex/playtest-physics
 --state open` returned an empty list: no matching open PR was available to mark
@@ -26,7 +24,9 @@ change, Pages dispatch or deployment. Only the existing feature branch is pushed
 is an optional arc-length coordinate. `src/playtest-path.js` supplies analytic
 geometry, body clearance and collision queries, never a second movement loop.
 `src/playtest-devices.js` supplies pure device poses and swept collision queries;
-it never owns a second update or clock. `src/playtest.js` owns input, scene lifecycle, camera, renderer and diagnostics.
+it never owns a second update or clock. `src/playtest-rails.js` supplies finite rail geometry/capture queries;
+`src/playtest-boost.js` supplies resource/input state. Neither advances time.
+`src/playtest.js` owns input, scene lifecycle, camera, renderer and diagnostics.
 Scene ID remains `'playtest'`. Compatibility JS and browser bundles are generated
 by repository tooling from canonical `src/`; generated JS is never hand edited.
 
@@ -35,6 +35,7 @@ by repository tooling from canonical `src/`; generated JS is never hand edited.
 | Original grounded fixtures | Contact anchor world x | Signed surface `speed` |
 | New path fixtures | `pathS`, distance along the connected path | The same signed surface `speed` |
 | Moving-platform contact | Contact anchor world x/y plus `supportId` | Signed `speed` relative to the platform; world velocity=`speed*T+carrier velocity` |
+| Grinding | Contact anchor world x/y plus `railId` | The same signed tangent `speed`; no second rail velocity |
 | Airborne | Body-center world x/y; `pathS=null` on path departure | `air.vx,vy`; grounded `speed=null` |
 
 For paths, grounded x/y are derived caches, not competing integrators. Tangent
@@ -150,6 +151,66 @@ Existing six-fixture CCD remains unchanged. Landing restores a fitting preflight
 posture, projects incoming velocity, and checks support before attachment.
 Back faces block rather than granting unsupported surface attachment.
 
+## Grind rails and Boost
+
+The new Rails + Boost and Rails (empty meter) fixtures are reachable from safe
+floor spawn(-780,400) by ordinary running and jumping; no Boost/Spin Dash needed.
+Their finite main rail spans x[-600,600], y240..300, using four cubic Hermite
+sections with continuous position/tangent (C1). A second rail spans[1000,1400],
+separated by an actual400-unit gap. Terrain below remains safe floor y400.
+Pieces retain explicit `grindable`, `routeType` and `infiniteBoost` metadata:
+only the two middle sections[-300,300] are gold/free. Blue ends/second rail are
+paid. No one-way direction gate, entry speed replacement or magnetic snap.
+
+Capture solves the actual parabolic feet/rail intersections (polynomial degree≤6),
+checks finite bounds and incoming normal direction, and projects velocity onto T.
+Undersides and missed gaps do not capture. Standing collision remains upright22×48,
+with feet at the rail rather than a normal-offset rotating box; artwork uses the
+existing grind atlas. Standing entry preserves body center within.001. A curled
+entry uncurls at the same foot anchor, as on an ordinary landing (the normal
+38→48 posture height change is explicit). No art redraw or new collision size.
+Smooth joins retain signed speed. Rail friction.025, rail drive.08, opposite
+brake.45, ordinary running drive range14, and gravity.35 act on tangent speed.
+These controls are rail-specific; all approved floor/rolling forces are unchanged.
+Down/Spin Dash cannot turn grinding into an ordinary roll/charge. Jumps add10.5*N;
+ends release v*T once, with no extra impulse. Departed rail contact is excluded
+only until geometric separation; it can be captured again from above.
+
+Meter maximum90. Ground Boost costs.5 per tick of actual paid grounded time,
+including time held against a wall. Full/empty meter reset with the selected
+fixture; no item monitors or meter regeneration were added. Explicit
+`grindable && infiniteBoost` grants free Boost even with zero/locked meter.
+Leaving that metadata region immediately restores paid rules; joins and meter
+exhaustion partition the tick so no free quarter-tick leaks across a boundary.
+The charged ground force approaches target23 with response.14 per60-Hz tick
+(`1-.86^dt` for a partial tick); it never clamps a faster earned speed. Rolling
+friction still applies while curled. Boost is unavailable during Spin Dash charge.
+The existing acts' hurt/wrong-route/bubble-slam restrictions were inspected; those
+states do not exist in this prototype and were not imported as artificial gates.
+
+Shift/X/MouseBoost share a fresh-press group. An air press buys exactly22.5 once
+per airborne period, for up to18 held ticks; release cancels the remaining burst
+without refund. Holding ground Boost through jump/takeoff does not create this
+request, including a ground press and jump in the same update. A second held key
+is not another fresh press. Landing on actual floor/rail/platform contact restores
+the allowance; a spring launch alone does not. Pause clears pending presses and
+remaining burst while preserving spent allowance and meter; reset/exit clears all.
+
+The **deliberate air burst** sets world vx=`face*max(23,vx*face)` and vy=0, clears
+jump-cut lift, then suppresses gravity/steering for its remaining held ticks. This
+matches the existing burst design and preserves faster aligned horizontal speed;
+it is the only qualifying input that replaces an inherited spring/platform vy.
+Routine held Boost in the air does nothing without a burst. Spring contact cancels
+an ongoing burst before applying its own launch, without restoring spent allowance.
+After the burst, existing air gravity/control resume. Ordinary loops still complete
+without Boost. No existing acts' Boost/rail/controller code changed.
+
+A resolved side contact constrains relative movement while the controller continues
+time, carrier travel and meter accounting. Its resting normal contact is retained
+without repeatedly applying zero-time propulsion; other colliders and a carrier
+reversing into that contact still test normally. No second time owner or discarded
+blocked time is used to hide contact or resource bugs.
+
 ## Springs, moving platforms and Spin Dash
 
 Spring caps are 48 units wide with a solid 20-unit casing; the yellow cap is the
@@ -199,7 +260,7 @@ While charging, the existing standing brake/coast resistance braces the low-spee
 player against gravity; no normal movement constants change. Opposite directional
 input cancels charge. Jump release holds the accumulated charge while Down remains
 held; pause/reset/exit, support loss and spring launch cancel pending charge without
-a deferred launch. Boost remains disabled.
+a deferred launch. Boost excludes the charging state.
 
 ## Repeatable fixtures and controls
 
@@ -226,23 +287,48 @@ The wall route was sized so actual earned ordinary running can reach its ceiling
 not only artificially initialized test speeds. Only the new path fixtures limit
 camera lookahead/lag to keep the player visible during rapid turns; the original
 fixtures and both acts retain their existing camera behavior and zoom.
-Only springs, moving platforms and Spin Dash were added. No rails, Boost, enemies,
-bosses or existing-act changes.
+This stage adds only grind rails and Boost to the approved PLAYTEST mechanics.
+No enemies, bosses, existing-act migration or unrelated gameplay changes.
 Supported surface graphs here are the tested ordered analytic chains, not an
 arbitrary branching world or an existing-act migration.
 
 ## Measured evidence and verification
 
-Correction baseline:488 gameplay tests,10 build tests, compatibility/player checks passed.
+Stage baseline:492 gameplay tests,10 build tests, compatibility/player checks passed.
 Final commands pass: `npm run build:player`, `npm run build`, `npm test`
-(**492**), `npm run test:build` (**10**), `npm run check:compat` (**32 modules**),
-`npm run check:player`, `npm run package`. Twenty-three device tests exercise the real
-controller. All accepted ground/air/path tests and Act1/2 regressions are retained.
+(**515**), `npm run test:build` (**10**), `npm run check:compat` (**34 modules**),
+`npm run check:player`, `npm run package`. Twenty-three new rail/Boost regressions
+exercise the real controller, alongside
+all23 device tests and prior ground/air/path and Act1/2 regressions.
 The build test additionally checks every manifest module is registered in browser
-startup order; this catches the missing device initialization discovered by the
-first extracted-package browser run. The old isolation test now expects Down+Jump
+startup order; it was added after the preceding stage's extracted-package test
+caught missing device initialization. The old isolation test now expects Down+Jump
 to charge PLAYTEST instead of advancing forward; protected legacy state is still
 compared unchanged. No tests were disabled or weakened to hide a regression.
+
+Rail/Boost evidence (same real controller; speeds in units/tick):
+
+| Start / input / duration | Verified outcome |
+| --- | --- |
+| Descending standing capture, world vx±12/±45, vy40 | Projected signed speed; center displacement<.001; no entry grant |
+| Rail speed±20 across joins, no input35 ticks | Per-step travel<25; gravity+friction energy-accounting error<.08 |
+| Jump from rail and return; speed±24 at either end | Re-capture allowed; exact single v*T conversion at end; jump adds10.5*N |
+| Free→paid boundary, speed±20, .2 units before it | ~.99 tick paid; meter30→29.505 within.002, both directions |
+| Ground Boost held30 ticks from rest | Meter90→75, signed speed>22; initial35 is not clamped |
+| Real run40 ticks + jump50 ticks, then Boost12 | Both fixtures capture; free section speed20.671267, meter stays90/0 |
+| Air burst initial vx30/vy-12, held18 ticks | vx30 retained, vy0, meter67.5, remaining0; gravity resumes next tick |
+| Insufficient0/1/22.49 versus exact22.5 | No partial burst; exact cost buys one, no repeated purchase until landing |
+| Spring struck by an active burst | Spring applies launch, burst cancels, spent allowance/meter retained |
+| Paid Boost at static wall/elevator/casing10 ticks | Meter85; no zero-time collision loop; carrier time remains correct |
+| Render schedules30/60/120 Hz and uneven,1 second | Identical60 player/controller ticks and resource state |
+
+Independent review found repeated Boost propulsion at a blocked carrier/casing and
+lost meter cost during blocked time. Both failing repros and re-review pass. The
+full prior sweep regression also exposed the need to retain a resolved rolled
+resting contact while consuming time; it now passes without changing tolerances.
+No prior test expectations were changed for this stage. The browser script now
+expects the RAIL-BOOST-1 build and additionally tests earned rail access, zero-meter
+free Boost, paid ground cost, no held takeoff burst, and a fresh18-tick air burst.
 
 Device evidence (units/tick, one simulation owner):
 
@@ -300,18 +386,19 @@ Freshly extracted package smoke passed in Chromium151.0.7922.173 over local HTTP
 all previous fixtures, five loop/wall/ceiling approaches, all three device buttons,
 actual spring launch and uncut continuation, carrier riding/reversal/jump, moving
 spring velocity, empty-deck jump-through on both sides of the spring versus its
-solid footprint, Spin Dash through real DOM inputs, pause/reset, and Act1/2
+solid footprint, Spin Dash, earned rail access, free Boost at0, paid ground cost,
+fresh air burst18 ticks through real DOM inputs, pause/reset, and Act1/2
 running/jumping/boosting/clean switching. Zero page errors. Actual rendered Sonic
-and spring/casing were inspected. Observed worst loop update5.1ms in this bounded
+on the grind rail, spring/casing and empty-meter FREE RAIL HUD were inspected. Observed worst loop update5.1ms in this bounded
 run; not a full render/device performance guarantee or human feel approval.
 
 ## Package and access
 
 Generated ZIP: `/workspace/sonic-coast-playtest/dist/Neon-Express-player.zip`.
-**52,332,863 bytes,37 files**, CRC checked; every extracted entry matches the
+**52,336,594 bytes,37 files**, CRC checked; every extracted entry matches the
 committed build (player index maps to PLAY.html).
-SHA256:`de5216b927fdd8883272df1bbc3f1cd0b2dbc52705490317b18d11f3c45e4ec1`.
-Runtime:`runtime-aec96acc2019fc07.js`; CSS:`style-c9f48a6e01dc8ece.css`.
+SHA256:`be5fd0afc16e629227843a8aa89c596269034c6a9a323e045526e6e3f39caaf8`.
+Runtime:`runtime-6c5ff8f00c0b8113.js`; CSS:`style-c9f48a6e01dc8ece.css`.
 
 No ZIP attachment/upload or isolated public preview service is available here.
 The feature branch's immutable GitHub source archive is the accessible fallback;
@@ -328,7 +415,7 @@ for the player ZIP, or `/PLAY.html` when serving the source archive's game folde
 Windows batch launcher requires Python and was not run on Linux. No public
 preview, deployment, new PR or merge is claimed.
 
-## Manual approval checkpoint — STOP
+## Previous device manual checks (still applicable)
 
 1. Flat/Valley: Down+Jump at rest; charge, release Down, brake, cancel with the
    opposite direction. Compare short/full charge and both slope directions.
@@ -340,5 +427,18 @@ preview, deployment, new PR or merge is claimed.
 4. Recheck approved loop traversal, valley rolling, upright crest grip and quick
    low-speed turns. Pause/reset and switch to each act during a charge or flight.
 
-Wait for explicit personal playtest approval. No rails, Boost, act migration,
-new PR, merge, deployment or later feature work.
+Those device checks remain regressions; the new approval checkpoint is below.
+
+## RAIL-BOOST-1 manual approval checkpoint — STOP
+
+1. Rails + Boost: run/jump onto blue or gold rail sections; grind both directions,
+   brake, jump/reland and ride off either end. Try the gap to the second rail.
+2. Rails (empty meter): reach the gold section with ordinary movement, then hold
+   Shift/X. Boost should work at0 without spending meter; blue sections are paid.
+3. Flat: hold Boost, jump while still holding, then release/repress in the air.
+   Only the fresh air press should level the jump and spend22.5. Try a second press.
+4. Recheck springs, jump-through moving platforms, Spin Dash and unboosted loops.
+   Test Boost against a wall/casing, pause/reset, and switching to either legacy act.
+
+No rails/Boost act migration, new PR, merge, deployment or later feature work.
+Wait for explicit personal playtest approval.

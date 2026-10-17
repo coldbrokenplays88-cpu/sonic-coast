@@ -28,7 +28,7 @@ async function smoke(browser, url) {
     assert.match(await page.locator('#playtest-status').textContent(), /Static-surface/);
     const state = await page.evaluate(() => readGameState());
     assert.equal(state.act, 'playtest');
-    assert.equal(state.tuning, 'DEVICES-2 / PATH-1 / AIR-2 / GROUND-5', 'the extracted package must contain the current tuning');
+    assert.equal(state.tuning, 'RAIL-BOOST-1 / DEVICES-2 / PATH-1 / AIR-2 / GROUND-5', 'the extracted package must contain the current tuning');
     assert.equal(state.movementImplemented, true);
     assert.equal(state.player.x, 0);
     assert.equal(state.contact.height, 48);
@@ -350,6 +350,37 @@ async function smoke(browser, url) {
       assert.equal(pass.launches,0);
       deviceChecks.push({fixture:'jump-through platform',x,...pass});
     }
+    for(const scenario of ['rails','rails-empty']){
+      await page.click('#playtest-'+scenario);
+      await page.keyboard.down('ArrowRight');
+      await page.evaluate(()=>{for(let i=0;i<40;i++)update();});
+      await page.keyboard.down('Space');
+      await page.evaluate(()=>{for(let i=0;i<50;i++)update();draw();});
+      await page.keyboard.up('Space');
+      const entry=await page.evaluate(()=>readGameState());
+      assert.equal(entry.player.railId,'test-rail','ordinary run and jump earns rail access');
+      await page.keyboard.down('ShiftLeft');
+      await page.evaluate(()=>{for(let i=0;i<12;i++)update();draw();});
+      const boosted=await page.evaluate(()=>readGameState());
+      assert.ok(boosted.player.speed>20);assert.equal(boosted.player.boost.meter,scenario==='rails'?90:0);
+      assert.match(await page.locator('#playtest-debug').textContent(),/FREE RAIL/);
+      deviceChecks.push({fixture:scenario,earnedCapture:true,boostSpeed:boosted.player.speed,meter:boosted.player.boost.meter});
+      if(process.env.PLAYTEST_RAIL_CAPTURE && scenario==='rails-empty')await page.screenshot({path:process.env.PLAYTEST_RAIL_CAPTURE});
+      await page.keyboard.up('ShiftLeft');await page.keyboard.up('ArrowRight');
+    }
+    await page.click('#playtest-flat');
+    await page.keyboard.down('ShiftLeft');
+    await page.evaluate(()=>{for(let i=0;i<30;i++)update();});
+    const groundBoost=await page.evaluate(()=>readGameState());assert.equal(groundBoost.player.boost.meter,75);assert.ok(groundBoost.player.speed>22);
+    await page.keyboard.down('Space');await page.evaluate(()=>update());await page.keyboard.up('Space');
+    assert.equal((await page.evaluate(()=>readGameState())).player.boost.airUsed,false,'held ground Boost cannot silently purchase air burst');
+    await page.keyboard.up('ShiftLeft');await page.evaluate(()=>update());
+    await page.keyboard.down('KeyX');await page.evaluate(()=>update());
+    const burst=await page.evaluate(()=>readGameState());assert.equal(burst.player.boost.meter,52.5);assert.equal(burst.player.air.vy,0);
+    await page.evaluate(()=>{for(let i=1;i<18;i++)update();draw();});
+    const endedBurst=await page.evaluate(()=>readGameState());assert.equal(endedBurst.player.boost.remaining,0);assert.equal(endedBurst.player.boost.meter,52.5);
+    await page.keyboard.up('KeyX');
+    deviceChecks.push({fixture:'ground and air Boost',groundMeter:75,burstMeter:52.5,burstTicks:18});
     await page.click('#playtest-flat');
     await page.keyboard.down('ArrowDown');
     await page.keyboard.down('Space');

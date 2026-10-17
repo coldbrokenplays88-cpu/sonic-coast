@@ -331,8 +331,8 @@
     addMiddleSection: () => addMiddleSection,
     beginWrongRouteDrop: () => beginWrongRouteDrop,
     drawMiddleSection: () => drawMiddleSection,
-    getRuntimeBindings: () => getRuntimeBindings31,
-    initializeRuntimeModule: () => initializeRuntimeModule31,
+    getRuntimeBindings: () => getRuntimeBindings33,
+    initializeRuntimeModule: () => initializeRuntimeModule33,
     updateMiddleMotion: () => updateMiddleMotion,
     updateMiddleSection: () => updateMiddleSection
   });
@@ -352,8 +352,8 @@
     drawClimbCue: () => drawClimbCue,
     drawGrindRail: () => drawGrindRail,
     drawSkylineSmoke: () => drawSkylineSmoke,
-    getRuntimeBindings: () => getRuntimeBindings30,
-    initializeRuntimeModule: () => initializeRuntimeModule30,
+    getRuntimeBindings: () => getRuntimeBindings32,
+    initializeRuntimeModule: () => initializeRuntimeModule32,
     launchAirDevice: () => launchAirDevice,
     predictLanding: () => predictLanding,
     resetAct2: () => resetAct2,
@@ -373,9 +373,9 @@
     drawPlaytest: () => drawPlaytest,
     exitPlaytest: () => exitPlaytest,
     framePlaytest: () => framePlaytest,
-    getRuntimeBindings: () => getRuntimeBindings29,
+    getRuntimeBindings: () => getRuntimeBindings31,
     handlePlaytestInput: () => handlePlaytestInput,
-    initializeRuntimeModule: () => initializeRuntimeModule29,
+    initializeRuntimeModule: () => initializeRuntimeModule31,
     isPlaytest: () => isPlaytest,
     playtestState: () => playtestState,
     readPlaytestState: () => readPlaytestState,
@@ -385,24 +385,200 @@
     updatePlaytestHud: () => updatePlaytestHud
   });
 
-  // src/playtest-devices.js
-  var playtest_devices_exports = {};
-  __export(playtest_devices_exports, {
-    experimentalDeviceImpact: () => experimentalDeviceImpact,
-    experimentalDeviceTuning: () => experimentalDeviceTuning,
-    experimentalPlatformImpact: () => experimentalPlatformImpact,
-    experimentalPlatformPose: () => experimentalPlatformPose,
-    experimentalSpringDistance: () => experimentalSpringDistance,
-    experimentalSpringPose: () => experimentalSpringPose,
-    getRuntimeBindings: () => getRuntimeBindings3,
-    initializeRuntimeModule: () => initializeRuntimeModule3
+  // src/playtest-rails.js
+  var playtest_rails_exports = {};
+  __export(playtest_rails_exports, {
+    createExperimentalRail: () => createExperimentalRail,
+    experimentalRailImpact: () => experimentalRailImpact,
+    experimentalRailTuning: () => experimentalRailTuning,
+    getRuntimeBindings: () => getRuntimeBindings4,
+    initializeRuntimeModule: () => initializeRuntimeModule4,
+    multiplyRailPolynomial: () => multiplyRailPolynomial,
+    sampleExperimentalRail: () => sampleExperimentalRail
   });
+
+  // src/playtest-ground.js
+  var playtest_ground_exports = {};
+  __export(playtest_ground_exports, {
+    advanceGroundSubstep: () => advanceGroundSubstep,
+    beginGroundTick: () => beginGroundTick,
+    createGroundPlayer: () => createGroundPlayer,
+    finishGroundTick: () => finishGroundTick,
+    getRuntimeBindings: () => getRuntimeBindings2,
+    groundBounds: () => groundBounds,
+    groundContact: () => groundContact,
+    groundEnergy: () => groundEnergy,
+    groundResist: () => groundResist,
+    groundTuning: () => groundTuning,
+    initializeRuntimeModule: () => initializeRuntimeModule2,
+    sampleGround: () => sampleGround,
+    stepGroundPlayer: () => stepGroundPlayer
+  });
+  var groundTuning;
+  function sampleGround(scenario, x) {
+    if (scenario === "flat")
+      return { x, y: 400, angle: 0, tx: 1, ty: 0, nx: 0, ny: -1, curvature: 0 };
+    if (scenario !== "valley") throw Error("Unknown PLAYTEST ground scenario");
+    const u = Math.max(0, Math.abs(x) - 200), t = Math.min(1, u / 800), grade = 0.65;
+    const height = u < 800 ? grade * 800 * (t ** 3 - 0.5 * t ** 4) : grade * (u - 400);
+    const slope = -Math.sign(x) * grade * (3 * t * t - 2 * t ** 3);
+    const second = u < 800 ? -grade * 6 * t * (1 - t) / 800 : 0;
+    const norm = Math.hypot(1, slope);
+    return {
+      x,
+      y: 650 - height,
+      angle: Math.atan(slope),
+      tx: 1 / norm,
+      ty: slope / norm,
+      nx: slope / norm,
+      ny: -1 / norm,
+      curvature: second / norm ** 3
+    };
+  }
+  __name(sampleGround, "sampleGround");
+  function groundBounds(scenario) {
+    if (scenario === "flat") return 5e3;
+    if (scenario === "valley") return 2400;
+    throw Error("Unknown PLAYTEST ground scenario");
+  }
+  __name(groundBounds, "groundBounds");
+  function createGroundPlayer(scenario = "flat", x = 0, speed = 0, posture = "standing") {
+    groundBounds(scenario);
+    return {
+      scenario,
+      x,
+      speed,
+      posture,
+      facing: Math.sign(speed) || 1,
+      ticks: 0,
+      restTicks: 0,
+      downHeld: false,
+      distance: 0,
+      boundary: null
+    };
+  }
+  __name(createGroundPlayer, "createGroundPlayer");
+  function groundContact(player, sampler = sampleGround) {
+    const surface = sampler(player.scenario, player.x);
+    const height = player.posture === "rolling" ? groundTuning.rollDiameter : groundTuning.standHeight;
+    return {
+      ...surface,
+      speed: player.speed,
+      vx: player.speed * surface.tx,
+      vy: player.speed * surface.ty,
+      anchor: { x: surface.x, y: surface.y },
+      height,
+      width: player.posture === "rolling" ? height : groundTuning.standWidth,
+      center: { x: surface.x + surface.nx * height / 2, y: surface.y + surface.ny * height / 2 },
+      normalReaction: -groundTuning.gravity * surface.ny - player.speed ** 2 * surface.curvature
+    };
+  }
+  __name(groundContact, "groundContact");
+  function groundEnergy(player, sampler = sampleGround) {
+    return player.speed ** 2 / 2 + groundTuning.gravity * (650 - sampler(player.scenario, player.x).y);
+  }
+  __name(groundEnergy, "groundEnergy");
+  function groundResist(speed, amount) {
+    return Math.sign(speed) * Math.max(0, Math.abs(speed) - amount);
+  }
+  __name(groundResist, "groundResist");
+  function beginGroundTick(player, input = {}, allowRoll = true) {
+    const t = groundTuning, direction = Math.sign(input.direction || 0), down = !!input.down;
+    if (down && !player.downHeld && Math.abs(player.speed) >= t.rollEntrySpeed && allowRoll) {
+      player.posture = "rolling";
+      player.restTicks = 0;
+    }
+    player.downHeld = down;
+    const rolling = player.posture === "rolling";
+    const braking = direction * player.speed < 0;
+    return { direction, rolling, braking };
+  }
+  __name(beginGroundTick, "beginGroundTick");
+  function advanceGroundSubstep(player, controls, dt, sampler = sampleGround, arcLength = false) {
+    const t = controls.physics || groundTuning, { direction, rolling, braking } = controls;
+    const position = arcLength ? player.pathS : player.x;
+    const before = sampler(player.scenario, position);
+    const rollBrake = direction * player.speed < 0 ? t.rollBrake * (1 - Math.abs(before.ty)) * Math.min(1, Math.abs(player.speed) / t.rollBrakeFadeSpeed) : 0;
+    const resistance = controls.boost ? rolling ? t.rollResistance : 0 : rolling ? t.rollResistance + rollBrake : (direction ? 0 : t.coastResistance) + (braking ? t.brake : 0);
+    const drive = controls.boost ? controls.boost.facing * Math.max(0, controls.boost.speed - player.speed * controls.boost.facing) * (1 - (1 - controls.boost.response) ** dt) / dt : !rolling && direction && !braking ? direction * Math.min(t.acceleration, Math.max(0, t.runRange - player.speed * direction) / dt) : 0;
+    const midpointX = position + player.speed * (arcLength ? 1 : before.tx) * dt / 2;
+    const midpoint = sampler(player.scenario, midpointX);
+    const slopeFactor = rolling && player.speed * midpoint.ty > 0 ? t.rollDownhillMultiplier : 1;
+    const nextSpeed = groundResist(
+      player.speed + (t.gravity * midpoint.ty * slopeFactor + drive) * dt,
+      resistance * dt
+    );
+    if (arcLength) player.pathS += (player.speed + nextSpeed) * 0.5 * dt;
+    else player.x += (player.speed + nextSpeed) * 0.5 * midpoint.tx * dt;
+    player.distance += Math.abs((player.speed + nextSpeed) * 0.5 * dt);
+    player.speed = nextSpeed;
+  }
+  __name(advanceGroundSubstep, "advanceGroundSubstep");
+  function finishGroundTick(player, controls, sampler = sampleGround, canStand2 = true, bounds = groundBounds, arcLength = false) {
+    const t = groundTuning, { rolling } = controls;
+    player.ticks++;
+    if (Math.abs(player.speed) > 0.02) player.facing = Math.sign(player.speed);
+    const slopeForce = Math.abs(
+      t.gravity * sampler(player.scenario, arcLength ? player.pathS : player.x).ty
+    );
+    const turning = controls.direction * player.facing < 0 && Math.abs(player.speed) <= t.rollTurnSpeed;
+    if (rolling && turning && slopeForce <= t.rollResistance && canStand2) {
+      player.posture = "standing";
+      player.restTicks = 0;
+    } else if (rolling && Math.abs(player.speed) < t.restSpeed && slopeForce <= t.rollResistance) {
+      player.restTicks++;
+      if (player.restTicks >= t.uncurlTicks && canStand2) {
+        player.posture = "standing";
+        player.restTicks = 0;
+      }
+    } else player.restTicks = 0;
+    if (!Number.isFinite(player.x) || !Number.isFinite(player.speed) || Math.abs(player.speed) > t.safetySpeed)
+      player.boundary = "numerical safety reset (outside benchmark range)";
+    else if (Math.abs(player.x) > bounds(player.scenario)) player.boundary = "test boundary reset";
+  }
+  __name(finishGroundTick, "finishGroundTick");
+  function stepGroundPlayer(player, input = {}) {
+    const controls = beginGroundTick(player, input);
+    for (let i = 0; i < groundTuning.substeps; i++)
+      advanceGroundSubstep(player, controls, 1 / groundTuning.substeps);
+    finishGroundTick(player, controls);
+  }
+  __name(stepGroundPlayer, "stepGroundPlayer");
+  function initializeRuntimeModule2() {
+    groundTuning = Object.freeze({
+      revision: "GROUND-5",
+      hz: 60,
+      substeps: 4,
+      runRange: 14,
+      acceleration: 0.16,
+      brake: 0.5,
+      coastResistance: 0.1,
+      gravity: 0.35,
+      rollResistance: 0.025,
+      rollDownhillMultiplier: 2.5,
+      rollBrake: 0.18,
+      rollBrakeFadeSpeed: 2,
+      rollTurnSpeed: 1,
+      rollEntrySpeed: 2,
+      restSpeed: 0.08,
+      uncurlTicks: 12,
+      safetySpeed: 80,
+      standHeight: 48,
+      standWidth: 22,
+      rollDiameter: 38
+    });
+  }
+  __name(initializeRuntimeModule2, "initializeRuntimeModule");
+  function getRuntimeBindings2() {
+    return {};
+  }
+  __name(getRuntimeBindings2, "getRuntimeBindings");
 
   // src/playtest-path.js
   var playtest_path_exports = {};
   __export(playtest_path_exports, {
-    getRuntimeBindings: () => getRuntimeBindings2,
-    initializeRuntimeModule: () => initializeRuntimeModule2,
+    getRuntimeBindings: () => getRuntimeBindings3,
+    initializeRuntimeModule: () => initializeRuntimeModule3,
     makePath: () => makePath,
     pathArcCaps: () => pathArcCaps,
     pathArcDistance: () => pathArcDistance,
@@ -683,7 +859,7 @@
     player.y = s.y;
   }
   __name(syncPathPlayer, "syncPathPlayer");
-  function initializeRuntimeModule2() {
+  function initializeRuntimeModule3() {
     const loop = makePath("loop", 96), wide = makePath("loop-wide", 140), chamber = makePath("wall-ceiling", 120, true);
     playtestPaths = Object.freeze({
       loop,
@@ -693,11 +869,11 @@
       "wall-ceiling-reverse": chamber
     });
   }
-  __name(initializeRuntimeModule2, "initializeRuntimeModule");
-  function getRuntimeBindings2() {
+  __name(initializeRuntimeModule3, "initializeRuntimeModule");
+  function getRuntimeBindings3() {
     return {};
   }
-  __name(getRuntimeBindings2, "getRuntimeBindings");
+  __name(getRuntimeBindings3, "getRuntimeBindings");
   function pathPolynomialRoots(coefficients, lo, hi) {
     const c = [...coefficients];
     while (c.length > 1 && Math.abs(c.at(-1)) < 1e-14) c.pop();
@@ -797,7 +973,109 @@
   }
   __name(pathArcCaps, "pathArcCaps");
 
+  // src/playtest-rails.js
+  var experimentalRailTuning;
+  function createExperimentalRail() {
+    const points = [
+      [-600, 300, 0],
+      [-300, 260, -0.1],
+      [0, 240, 0],
+      [300, 260, 0.1],
+      [600, 300, 0]
+    ];
+    const pieces = points.slice(0, -1).map(([x, y, m], i) => {
+      const [x2, y2, m2] = points[i + 1], w = x2 - x;
+      return {
+        id: "rail-piece-" + i,
+        x1: x,
+        x2,
+        y,
+        c: [y, m, (3 * (y2 - y) / w - 2 * m - m2) / w, (2 * (y - y2) / w + m + m2) / (w * w)],
+        grindable: true,
+        routeType: i === 1 || i === 2 ? "boost" : "skill",
+        infiniteBoost: i === 1 || i === 2
+      };
+    });
+    return { id: "test-rail", pieces, x1: -600, x2: 600 };
+  }
+  __name(createExperimentalRail, "createExperimentalRail");
+  function sampleExperimentalRail(rail, x, direction = 1) {
+    const p2 = rail.pieces.find((p3) => direction < 0 ? x <= p3.x2 + 1e-9 : x < p3.x2 - 1e-9) || rail.pieces.at(-1), u = x - p2.x1;
+    const [a, b, c, d] = p2.c, y = a + b * u + c * u * u + d * u * u * u, slope = b + 2 * c * u + 3 * d * u * u;
+    const n = Math.hypot(1, slope);
+    return {
+      x,
+      y,
+      tx: 1 / n,
+      ty: slope / n,
+      nx: slope / n,
+      ny: -1 / n,
+      angle: Math.atan(slope),
+      curvature: (2 * c + 6 * d * u) / (n * n * n),
+      id: p2.id,
+      railId: rail.id,
+      grindable: p2.grindable,
+      infiniteBoost: p2.infiniteBoost,
+      piece: p2
+    };
+  }
+  __name(sampleExperimentalRail, "sampleExperimentalRail");
+  function multiplyRailPolynomial(a, b) {
+    const out = Array(a.length + b.length - 1).fill(0);
+    for (let i = 0; i < a.length; i++) for (let j = 0; j < b.length; j++) out[i + j] += a[i] * b[j];
+    return out;
+  }
+  __name(multiplyRailPolynomial, "multiplyRailPolynomial");
+  function experimentalRailImpact(rail, body, vx, vy, ax, ay, duration, skin) {
+    const extent = body.hh;
+    let first = null;
+    for (const p2 of rail.pieces) {
+      const u = [body.x - p2.x1, vx, ax / 2], u2 = multiplyRailPolynomial(u, u), u3 = multiplyRailPolynomial(u2, u);
+      const c = [body.y + extent - p2.c[0] + skin, vy, ay / 2, 0, 0, 0, 0];
+      for (const [poly, k] of [
+        [u, p2.c[1]],
+        [u2, p2.c[2]],
+        [u3, p2.c[3]]
+      ])
+        for (let i = 0; i < poly.length; i++) c[i] -= poly[i] * k;
+      for (const time of pathPolynomialRoots(c, 0, duration)) {
+        const x = body.x + vx * time + ax * time * time / 2;
+        if (x < p2.x1 - 1e-7 || x > p2.x2 + 1e-7) continue;
+        const surface = sampleExperimentalRail(rail, x), into = (vx + ax * time) * surface.nx + (vy + ay * time) * surface.ny;
+        if (into >= -1e-8) continue;
+        const hit = { time, q: { ...surface, kind: "rail", surface, canLand: true, distance: skin } };
+        if (!first || time < first.time) first = hit;
+      }
+    }
+    return first;
+  }
+  __name(experimentalRailImpact, "experimentalRailImpact");
+  function initializeRuntimeModule4() {
+    experimentalRailTuning = Object.freeze({
+      ...groundTuning,
+      acceleration: 0.08,
+      brake: 0.45,
+      coastResistance: 0.025
+    });
+  }
+  __name(initializeRuntimeModule4, "initializeRuntimeModule");
+  function getRuntimeBindings4() {
+    return {};
+  }
+  __name(getRuntimeBindings4, "getRuntimeBindings");
+
   // src/playtest-devices.js
+  var playtest_devices_exports = {};
+  __export(playtest_devices_exports, {
+    experimentalDeviceImpact: () => experimentalDeviceImpact,
+    experimentalDeviceTuning: () => experimentalDeviceTuning,
+    experimentalPlatformImpact: () => experimentalPlatformImpact,
+    experimentalPlatformPose: () => experimentalPlatformPose,
+    experimentalSpringDistance: () => experimentalSpringDistance,
+    experimentalSpringPose: () => experimentalSpringPose,
+    getRuntimeBindings: () => getRuntimeBindings5,
+    initializeRuntimeModule: () => initializeRuntimeModule5
+  });
   var experimentalDeviceTuning;
   function experimentalPlatformPose(platform, time) {
     const m = platform.motion;
@@ -964,7 +1242,7 @@
     return null;
   }
   __name(experimentalDeviceImpact, "experimentalDeviceImpact");
-  function initializeRuntimeModule3() {
+  function initializeRuntimeModule5() {
     experimentalDeviceTuning = Object.freeze({
       springSpeed: 18,
       dashEntrySpeed: 0.5,
@@ -973,11 +1251,11 @@
       dashChargeTicks: 30
     });
   }
-  __name(initializeRuntimeModule3, "initializeRuntimeModule");
-  function getRuntimeBindings3() {
+  __name(initializeRuntimeModule5, "initializeRuntimeModule");
+  function getRuntimeBindings5() {
     return {};
   }
-  __name(getRuntimeBindings3, "getRuntimeBindings");
+  __name(getRuntimeBindings5, "getRuntimeBindings");
 
   // src/game.js
   var game_exports = {};
@@ -1014,10 +1292,10 @@
     finishAct: () => finishAct,
     frame: () => frame,
     gameSound: () => gameSound,
-    getRuntimeBindings: () => getRuntimeBindings26,
+    getRuntimeBindings: () => getRuntimeBindings28,
     grindFrames: () => grindFrames,
     hurt: () => hurt,
-    initializeRuntimeModule: () => initializeRuntimeModule26,
+    initializeRuntimeModule: () => initializeRuntimeModule28,
     keys: () => keys,
     legacySonicArt: () => legacySonicArt,
     loadActArt: () => loadActArt,
@@ -1057,15 +1335,15 @@
   var hud_exports = {};
   __export(hud_exports, {
     drawPixelBoostBar: () => drawPixelBoostBar,
-    getRuntimeBindings: () => getRuntimeBindings4,
-    initializeRuntimeModule: () => initializeRuntimeModule4,
+    getRuntimeBindings: () => getRuntimeBindings6,
+    initializeRuntimeModule: () => initializeRuntimeModule6,
     toggleGameFullscreen: () => toggleGameFullscreen,
     updatePixelHud: () => updatePixelHud
   });
   var updatePixelHud;
   var drawPixelBoostBar;
   var toggleGameFullscreen;
-  function initializeRuntimeModule4() {
+  function initializeRuntimeModule6() {
     (function() {
       "use strict";
       const W2 = 320, H2 = 84;
@@ -1430,8 +1708,8 @@
       }
     })();
   }
-  __name(initializeRuntimeModule4, "initializeRuntimeModule");
-  function getRuntimeBindings4() {
+  __name(initializeRuntimeModule6, "initializeRuntimeModule");
+  function getRuntimeBindings6() {
     return {
       updatePixelHud: {
         get: /* @__PURE__ */ __name(() => updatePixelHud, "get"),
@@ -1453,19 +1731,19 @@
       }
     };
   }
-  __name(getRuntimeBindings4, "getRuntimeBindings");
+  __name(getRuntimeBindings6, "getRuntimeBindings");
 
   // src/game-music.js
   var game_music_exports = {};
   __export(game_music_exports, {
-    getRuntimeBindings: () => getRuntimeBindings5,
-    initializeRuntimeModule: () => initializeRuntimeModule5,
+    getRuntimeBindings: () => getRuntimeBindings7,
+    initializeRuntimeModule: () => initializeRuntimeModule7,
     setGameMusicVolume: () => setGameMusicVolume,
     syncGameMusic: () => syncGameMusic
   });
   var syncGameMusic;
   var setGameMusicVolume;
-  function initializeRuntimeModule5() {
+  function initializeRuntimeModule7() {
     (function(root) {
       "use strict";
       const SOURCES = { 1: "assets/neon-express-act1-music.mp3", 2: "assets/city-music.mp3" }, MAX_VOLUME = 0.3;
@@ -1602,8 +1880,8 @@
       root.setGameMusicVolume = setGameMusicVolume2;
     })(window);
   }
-  __name(initializeRuntimeModule5, "initializeRuntimeModule");
-  function getRuntimeBindings5() {
+  __name(initializeRuntimeModule7, "initializeRuntimeModule");
+  function getRuntimeBindings7() {
     return {
       syncGameMusic: {
         get: /* @__PURE__ */ __name(() => syncGameMusic, "get"),
@@ -1619,19 +1897,19 @@
       }
     };
   }
-  __name(getRuntimeBindings5, "getRuntimeBindings");
+  __name(getRuntimeBindings7, "getRuntimeBindings");
 
   // src/game-audio.js
   var game_audio_exports = {};
   __export(game_audio_exports, {
-    getRuntimeBindings: () => getRuntimeBindings6,
-    initializeRuntimeModule: () => initializeRuntimeModule6,
+    getRuntimeBindings: () => getRuntimeBindings8,
+    initializeRuntimeModule: () => initializeRuntimeModule8,
     playGameSound: () => playGameSound,
     setGameSoundEnabled: () => setGameSoundEnabled
   });
   var setGameSoundEnabled;
   var playGameSound;
-  function initializeRuntimeModule6() {
+  function initializeRuntimeModule8() {
     (function(root) {
       "use strict";
       const MAX_VOICES = 18, MAX_EVENTS = 8, MASTER_LEVEL = 0.22;
@@ -2236,8 +2514,8 @@
       root.playGameSound = playGameSound2;
     })(window);
   }
-  __name(initializeRuntimeModule6, "initializeRuntimeModule");
-  function getRuntimeBindings6() {
+  __name(initializeRuntimeModule8, "initializeRuntimeModule");
+  function getRuntimeBindings8() {
     return {
       setGameSoundEnabled: {
         get: /* @__PURE__ */ __name(() => setGameSoundEnabled, "get"),
@@ -2253,7 +2531,7 @@
       }
     };
   }
-  __name(getRuntimeBindings6, "getRuntimeBindings");
+  __name(getRuntimeBindings8, "getRuntimeBindings");
 
   // src/boost-rules.js
   var boost_rules_exports = {};
@@ -2262,8 +2540,8 @@
     collectBoostMonitors: () => collectBoostMonitors,
     configureBoostMonitors: () => configureBoostMonitors,
     freeRailBoost: () => freeRailBoost,
-    getRuntimeBindings: () => getRuntimeBindings23,
-    initializeRuntimeModule: () => initializeRuntimeModule23,
+    getRuntimeBindings: () => getRuntimeBindings25,
+    initializeRuntimeModule: () => initializeRuntimeModule25,
     measurementSpeed: () => measurementSpeed,
     monitorPose: () => monitorPose,
     resetBoostMonitors: () => resetBoostMonitors,
@@ -2277,8 +2555,8 @@
     addBlimpRoute: () => addBlimpRoute,
     blimpTextures: () => blimpTextures,
     drawBlimpRoute: () => drawBlimpRoute,
-    getRuntimeBindings: () => getRuntimeBindings22,
-    initializeRuntimeModule: () => initializeRuntimeModule22,
+    getRuntimeBindings: () => getRuntimeBindings24,
+    initializeRuntimeModule: () => initializeRuntimeModule24,
     invalidateBlimpEntry: () => invalidateBlimpEntry,
     onBlimpLanding: () => onBlimpLanding,
     qualifyingBlimpEntry: () => qualifyingBlimpEntry,
@@ -2307,8 +2585,8 @@
     drawPixelCityLoop: () => drawPixelCityLoop,
     drawPixelCityStructures: () => drawPixelCityStructures,
     drawPixelRing: () => drawPixelRing,
-    getRuntimeBindings: () => getRuntimeBindings21,
-    initializeRuntimeModule: () => initializeRuntimeModule21,
+    getRuntimeBindings: () => getRuntimeBindings23,
+    initializeRuntimeModule: () => initializeRuntimeModule23,
     paintCityFacade: () => paintCityFacade,
     paintCityPillar: () => paintCityPillar,
     paintPixelCityDeck: () => paintPixelCityDeck,
@@ -2327,9 +2605,9 @@
     bodyHeight: () => bodyHeight,
     canStand: () => canStand,
     feet: () => feet,
-    getRuntimeBindings: () => getRuntimeBindings20,
+    getRuntimeBindings: () => getRuntimeBindings22,
     groundSlopeForce: () => groundSlopeForce,
-    initializeRuntimeModule: () => initializeRuntimeModule20,
+    initializeRuntimeModule: () => initializeRuntimeModule22,
     integrateSurfaceStep: () => integrateSurfaceStep,
     land: () => land,
     leaveSurface: () => leaveSurface,
@@ -2357,8 +2635,8 @@
   var player_movement_exports = {};
   __export(player_movement_exports, {
     beginBubbleSlam: () => beginBubbleSlam,
-    getRuntimeBindings: () => getRuntimeBindings18,
-    initializeRuntimeModule: () => initializeRuntimeModule18,
+    getRuntimeBindings: () => getRuntimeBindings20,
+    initializeRuntimeModule: () => initializeRuntimeModule20,
     jump: () => jump,
     reboundBubbleShield: () => reboundBubbleShield,
     resetPlayerAbilities: () => resetPlayerAbilities,
@@ -2376,9 +2654,9 @@
   __export(stage_runtime_exports, {
     afterStageLanding: () => afterStageLanding,
     beforeStageLanding: () => beforeStageLanding,
-    getRuntimeBindings: () => getRuntimeBindings17,
+    getRuntimeBindings: () => getRuntimeBindings19,
     handleStageEnemyDamage: () => handleStageEnemyDamage,
-    initializeRuntimeModule: () => initializeRuntimeModule17,
+    initializeRuntimeModule: () => initializeRuntimeModule19,
     neonExpressAct1Runtime: () => neonExpressAct1Runtime,
     neonExpressAct2Runtime: () => neonExpressAct2Runtime,
     resetStageRuntime: () => resetStageRuntime,
@@ -2396,8 +2674,8 @@
     bossOwnsControls: () => bossOwnsControls,
     drawBossEncounter: () => drawBossEncounter,
     frameBossCamera: () => frameBossCamera,
-    getRuntimeBindings: () => getRuntimeBindings16,
-    initializeRuntimeModule: () => initializeRuntimeModule16,
+    getRuntimeBindings: () => getRuntimeBindings18,
+    initializeRuntimeModule: () => initializeRuntimeModule18,
     resetBossAttempt: () => resetBossAttempt,
     setupBossEncounter: () => setupBossEncounter,
     updateBossEncounter: () => updateBossEncounter,
@@ -2410,15 +2688,15 @@
     ENDING_BEATS: () => ENDING_BEATS,
     createEndingScene: () => createEndingScene,
     endingPose: () => endingPose,
-    getRuntimeBindings: () => getRuntimeBindings7,
-    initializeRuntimeModule: () => initializeRuntimeModule7,
+    getRuntimeBindings: () => getRuntimeBindings9,
+    initializeRuntimeModule: () => initializeRuntimeModule9,
     tickEndingScene: () => tickEndingScene
   });
   var ENDING_BEATS;
   var createEndingScene;
   var tickEndingScene;
   var endingPose;
-  function initializeRuntimeModule7() {
+  function initializeRuntimeModule9() {
     (function(root) {
       "use strict";
       const ENDING_BEATS2 = Object.freeze(
@@ -3015,8 +3293,8 @@
       else Object.assign(root, api);
     })(typeof window !== "undefined" ? window : globalThis);
   }
-  __name(initializeRuntimeModule7, "initializeRuntimeModule");
-  function getRuntimeBindings7() {
+  __name(initializeRuntimeModule9, "initializeRuntimeModule");
+  function getRuntimeBindings9() {
     return {
       ENDING_BEATS: {
         get: /* @__PURE__ */ __name(() => ENDING_BEATS, "get"),
@@ -3044,15 +3322,15 @@
       }
     };
   }
-  __name(getRuntimeBindings7, "getRuntimeBindings");
+  __name(getRuntimeBindings9, "getRuntimeBindings");
 
   // src/egg-scorpion.js
   var egg_scorpion_exports = {};
   __export(egg_scorpion_exports, {
     createEggScorpion: () => createEggScorpion,
     damageEggScorpion: () => damageEggScorpion,
-    getRuntimeBindings: () => getRuntimeBindings8,
-    initializeRuntimeModule: () => initializeRuntimeModule8,
+    getRuntimeBindings: () => getRuntimeBindings10,
+    initializeRuntimeModule: () => initializeRuntimeModule10,
     scorpionDanger: () => scorpionDanger,
     scorpionGeometry: () => scorpionGeometry,
     tickEggScorpion: () => tickEggScorpion
@@ -3062,7 +3340,7 @@
   var scorpionGeometry;
   var damageEggScorpion;
   var scorpionDanger;
-  function initializeRuntimeModule8() {
+  function initializeRuntimeModule10() {
     (function(root) {
       "use strict";
       const clamp = /* @__PURE__ */ __name((v, a, z) => Math.max(a, Math.min(z, v)), "clamp"), ease = /* @__PURE__ */ __name((t) => {
@@ -3251,8 +3529,8 @@
       else Object.assign(root, api);
     })(typeof window !== "undefined" ? window : globalThis);
   }
-  __name(initializeRuntimeModule8, "initializeRuntimeModule");
-  function getRuntimeBindings8() {
+  __name(initializeRuntimeModule10, "initializeRuntimeModule");
+  function getRuntimeBindings10() {
     return {
       createEggScorpion: {
         get: /* @__PURE__ */ __name(() => createEggScorpion, "get"),
@@ -3286,14 +3564,14 @@
       }
     };
   }
-  __name(getRuntimeBindings8, "getRuntimeBindings");
+  __name(getRuntimeBindings10, "getRuntimeBindings");
 
   // src/boss-art.js
   var boss_art_exports = {};
   __export(boss_art_exports, {
     drawScorpionLink: () => drawScorpionLink,
-    getRuntimeBindings: () => getRuntimeBindings9,
-    initializeRuntimeModule: () => initializeRuntimeModule9,
+    getRuntimeBindings: () => getRuntimeBindings11,
+    initializeRuntimeModule: () => initializeRuntimeModule11,
     prepareScorpionArt: () => prepareScorpionArt,
     renderEggScorpion: () => renderEggScorpion,
     scorpionBounds: () => scorpionBounds,
@@ -3462,7 +3740,7 @@
     ctx.restore();
   }
   __name(renderEggScorpion, "renderEggScorpion");
-  function initializeRuntimeModule9() {
+  function initializeRuntimeModule11() {
     scorpionParts = /* @__PURE__ */ new Map();
     scorpionStamps = /* @__PURE__ */ new Map();
     scorpionBounds = {
@@ -3476,8 +3754,8 @@
       eyes: [1176, 674, 1535, 991, 74]
     };
   }
-  __name(initializeRuntimeModule9, "initializeRuntimeModule");
-  function getRuntimeBindings9() {
+  __name(initializeRuntimeModule11, "initializeRuntimeModule");
+  function getRuntimeBindings11() {
     return {
       scorpionParts: {
         get: /* @__PURE__ */ __name(() => scorpionParts, "get"),
@@ -3529,7 +3807,7 @@
       }
     };
   }
-  __name(getRuntimeBindings9, "getRuntimeBindings");
+  __name(getRuntimeBindings11, "getRuntimeBindings");
 
   // src/city-polish.js
   var city_polish_exports = {};
@@ -3546,8 +3824,8 @@
     drawPolishedSpring: () => drawPolishedSpring,
     drawPolishedVent: () => drawPolishedVent,
     drawPoolBooster: () => drawPoolBooster,
-    getRuntimeBindings: () => getRuntimeBindings10,
-    initializeRuntimeModule: () => initializeRuntimeModule10,
+    getRuntimeBindings: () => getRuntimeBindings12,
+    initializeRuntimeModule: () => initializeRuntimeModule12,
     polishCached: () => polishCached,
     polishCompile: () => polishCompile,
     polishDirection: () => polishDirection,
@@ -4278,7 +4556,7 @@
     }
   }
   __name(drawPlayerAbilities, "drawPlayerAbilities");
-  function initializeRuntimeModule10() {
+  function initializeRuntimeModule12() {
     polishSpriteCache = /* @__PURE__ */ new Map();
     polishFont = {
       A: ["01110", "10001", "10001", "11111", "10001", "10001", "10001"],
@@ -4326,8 +4604,8 @@
       ":": ["00000", "00100", "00100", "00000", "00100", "00100", "00000"]
     };
   }
-  __name(initializeRuntimeModule10, "initializeRuntimeModule");
-  function getRuntimeBindings10() {
+  __name(initializeRuntimeModule12, "initializeRuntimeModule");
+  function getRuntimeBindings12() {
     return {
       polishSpriteCache: {
         get: /* @__PURE__ */ __name(() => polishSpriteCache, "get"),
@@ -4463,7 +4741,7 @@
       }
     };
   }
-  __name(getRuntimeBindings10, "getRuntimeBindings");
+  __name(getRuntimeBindings12, "getRuntimeBindings");
 
   // src/ending-art.js
   var ending_art_exports = {};
@@ -4478,8 +4756,8 @@
     endingSheets: () => endingSheets,
     endingSprites: () => endingSprites,
     endingStar: () => endingStar,
-    getRuntimeBindings: () => getRuntimeBindings15,
-    initializeRuntimeModule: () => initializeRuntimeModule15,
+    getRuntimeBindings: () => getRuntimeBindings17,
+    initializeRuntimeModule: () => initializeRuntimeModule17,
     loadEndingArt: () => loadEndingArt,
     prepareEndingArt: () => prepareEndingArt,
     prepareEndingEmerald: () => prepareEndingEmerald,
@@ -4490,29 +4768,29 @@
   var ending_frames_exports = {};
   __export(ending_frames_exports, {
     endingFrames: () => endingFrames,
-    getRuntimeBindings: () => getRuntimeBindings11,
-    initializeRuntimeModule: () => initializeRuntimeModule11
+    getRuntimeBindings: () => getRuntimeBindings13,
+    initializeRuntimeModule: () => initializeRuntimeModule13
   });
   var endingFrames;
-  function initializeRuntimeModule11() {
+  function initializeRuntimeModule13() {
     endingFrames = { "shadow": [{ "bounds": [24, 32, 178, 218], "seed": [119, 32], "anchor": [41, 218], "scale": 0.2857142857142857 }, { "bounds": [209, 35, 361, 236], "seed": [273, 35], "anchor": [236, 236], "scale": 0.2857142857142857 }, { "bounds": [393, 31, 546, 253], "seed": [451, 31], "anchor": [455.5, 253], "scale": 0.2857142857142857 }, { "bounds": [568, 34, 751, 244], "seed": [627, 34], "anchor": [620.5, 244], "scale": 0.2857142857142857 }, { "bounds": [742, 25, 927, 250], "seed": [798, 25], "anchor": [785, 250], "scale": 0.2857142857142857 }, { "bounds": [932, 35, 1090, 234], "seed": [999, 35], "anchor": [1050, 234], "scale": 0.2857142857142857 }, { "bounds": [1109, 32, 1264, 246], "seed": [1186, 32], "anchor": [1152, 246], "scale": 0.2857142857142857 }, { "bounds": [1286, 49, 1445, 253], "seed": [1339, 49], "anchor": [1359.5, 253], "scale": 0.2857142857142857 }, { "bounds": [19, 300, 184, 487], "seed": [85, 300], "anchor": [111.5, 487], "scale": 0.2857142857142857 }, { "bounds": [195, 302, 373, 487], "seed": [316, 302], "anchor": [288, 487], "scale": 0.2857142857142857 }, { "bounds": [390, 291, 554, 493], "seed": [457, 291], "anchor": [428, 493], "scale": 0.2857142857142857 }, { "bounds": [579, 282, 733, 493], "seed": [618, 282], "anchor": [659.5, 493], "scale": 0.2857142857142857 }, { "bounds": [746, 288, 902, 493], "seed": [789, 288], "anchor": [827.5, 493], "scale": 0.2857142857142857 }, { "bounds": [923, 288, 1078, 499], "seed": [975, 288], "anchor": [1015.5, 499], "scale": 0.2857142857142857 }, { "bounds": [1113, 290, 1254, 496], "seed": [1184, 290], "anchor": [1174, 496], "scale": 0.2857142857142857 }, { "bounds": [1286, 284, 1429, 499], "seed": [1358, 284], "anchor": [1348.5, 499], "scale": 0.2857142857142857 }, { "bounds": [23, 538, 169, 755], "seed": [96, 538], "anchor": [84, 755], "scale": 0.2857142857142857 }, { "bounds": [190, 533, 364, 752], "seed": [296, 533], "anchor": [270, 752], "scale": 0.2857142857142857 }, { "bounds": [363, 536, 544, 750], "seed": [471, 536], "anchor": [457, 750], "scale": 0.2857142857142857 }, { "bounds": [553, 536, 731, 750], "seed": [660, 536], "anchor": [648.5, 750], "scale": 0.2857142857142857, "gem": [579, 622] }, { "bounds": [736, 536, 902, 751], "seed": [831, 536], "anchor": [812, 751], "scale": 0.2857142857142857, "gem": [765, 641] }, { "bounds": [905, 538, 1068, 752], "seed": [994, 538], "anchor": [987, 752], "scale": 0.2857142857142857, "gem": [941, 641] }, { "bounds": [1080, 538, 1246, 752], "seed": [1177, 538], "anchor": [1166.5, 752], "scale": 0.2857142857142857, "gem": [1110, 641] }, { "bounds": [1257, 538, 1425, 752], "seed": [1355, 538], "anchor": [1345.5, 752], "scale": 0.2857142857142857, "gem": [1288, 639] }, { "bounds": [16, 803, 189, 1027], "seed": [112, 803], "anchor": [92.5, 1027], "scale": 0.2857142857142857, "gem": [41, 938] }, { "bounds": [213, 814, 394, 1026], "seed": [271, 814], "anchor": [291.5, 1026], "scale": 0.2857142857142857, "gem": [372, 867] }, { "bounds": [387, 770, 551, 1031], "seed": [408, 770], "anchor": [476.5, 1031], "scale": 0.2857142857142857, "gem": [416, 792] }, { "bounds": [575, 780, 726, 1031], "seed": [601, 780], "anchor": [654.5, 1031], "scale": 0.2857142857142857, "gem": [611, 804] }, { "bounds": [745, 804, 899, 1030], "seed": [809, 804], "anchor": [828, 1030], "scale": 0.2857142857142857, "gem": [768, 924] }, { "bounds": [921, 814, 1079, 1031], "seed": [980, 814], "anchor": [1009, 1031], "scale": 0.2857142857142857, "gem": [947, 923] }, { "bounds": [1100, 801, 1256, 1031], "seed": [1181, 801], "anchor": [1186, 1031], "scale": 0.2857142857142857, "gem": [1128, 921] }, { "bounds": [1279, 812, 1434, 1032], "seed": [1339, 812], "anchor": [1364, 1032], "scale": 0.2857142857142857 }], "sonic": [{ "bounds": [37, 21, 205, 241], "seed": [105, 21], "anchor": [135.5, 241], "scale": 0.27802690582959644 }, { "bounds": [288, 21, 505, 241], "seed": [355, 21], "anchor": [393.5, 241], "scale": 0.27802690582959644 }, { "bounds": [549, 23, 761, 241], "seed": [610, 23], "anchor": [649.5, 241], "scale": 0.27802690582959644 }, { "bounds": [803, 25, 1022, 241], "seed": [864, 25], "anchor": [907, 241], "scale": 0.27802690582959644 }, { "bounds": [1059, 25, 1278, 241], "seed": [1119, 25], "anchor": [1163, 241], "scale": 0.27802690582959644 }, { "bounds": [1317, 18, 1526, 241], "seed": [1448, 18], "anchor": [1423.5, 241], "scale": 0.27802690582959644 }, { "bounds": [42, 268, 213, 493], "seed": [104, 268], "anchor": [138.5, 493], "scale": 0.27802690582959644 }, { "bounds": [295, 268, 478, 491], "seed": [362, 268], "anchor": [406.5, 491], "scale": 0.27802690582959644 }, { "bounds": [553, 268, 726, 491], "seed": [621, 268], "anchor": [653.5, 491], "scale": 0.27802690582959644 }, { "bounds": [805, 272, 990, 491], "seed": [871, 272], "anchor": [914.5, 491], "scale": 0.27802690582959644 }, { "bounds": [1056, 272, 1279, 492], "seed": [1120, 272], "anchor": [1169.5, 492], "scale": 0.27802690582959644 }, { "bounds": [1317, 272, 1531, 492], "seed": [1381, 272], "anchor": [1425, 492], "scale": 0.27802690582959644 }, { "bounds": [34, 524, 253, 748], "seed": [99, 524], "anchor": [143, 748], "scale": 0.27802690582959644 }, { "bounds": [292, 523, 474, 747], "seed": [428, 523], "anchor": [401.5, 747], "scale": 0.27802690582959644 }, { "bounds": [555, 516, 737, 749], "seed": [616, 516], "anchor": [663.5, 749], "scale": 0.27802690582959644 }, { "bounds": [808, 524, 1018, 748], "seed": [876, 524], "anchor": [909, 748], "scale": 0.27802690582959644 }, { "bounds": [1067, 525, 1276, 747], "seed": [1134, 525], "anchor": [1166.5, 747], "scale": 0.27802690582959644 }, { "bounds": [1322, 524, 1525, 748], "seed": [1389, 524], "anchor": [1420, 748], "scale": 0.27802690582959644 }, { "bounds": [37, 776, 240, 1004], "seed": [105, 776], "anchor": [138.5, 1004], "scale": 0.27802690582959644 }, { "bounds": [291, 778, 478, 1004], "seed": [360, 778], "anchor": [397, 1004], "scale": 0.27802690582959644 }, { "bounds": [551, 776, 761, 1004], "seed": [620, 776], "anchor": [654.5, 1004], "scale": 0.27802690582959644 }, { "bounds": [806, 776, 1029, 1004], "seed": [881, 776], "anchor": [912.5, 1004], "scale": 0.27802690582959644 }, { "bounds": [1081, 763, 1282, 994], "seed": [1142, 763], "anchor": [1115.5, 994], "scale": 0.27802690582959644 }, { "bounds": [1333, 768, 1518, 992], "seed": [1388, 768], "anchor": [1432.5, 992], "scale": 0.27802690582959644 }], "eggman": [{ "bounds": [23, 50, 341, 402], "seed": [144, 50], "anchor": [182, 402], "scale": 0.29 }, { "bounds": [374, 53, 697, 404], "seed": [488, 53], "anchor": [535.5, 404], "scale": 0.29 }, { "bounds": [745, 78, 1071, 402], "seed": [944, 78], "anchor": [908, 402], "scale": 0.29 }, { "bounds": [1109, 50, 1428, 402], "seed": [1230, 50], "anchor": [1268.5, 402], "scale": 0.29 }, { "bounds": [17, 446, 355, 785], "seed": [104, 446], "anchor": [186, 785], "scale": 0.29 }, { "bounds": [400, 454, 694, 726], "seed": [629, 454], "anchor": [547, 726], "scale": 0.29 }, { "bounds": [770, 453, 1046, 753], "seed": [863, 453], "anchor": [908, 753], "scale": 0.29 }, { "bounds": [1153, 443, 1397, 756], "seed": [1281, 443], "anchor": [1275, 756], "scale": 0.29 }, { "bounds": [23, 844, 307, 1002], "seed": [198, 844], "anchor": [165, 1002], "scale": 0.17 }, { "bounds": [346, 844, 712, 1002], "seed": [519, 844], "anchor": [529, 1002], "scale": 0.17 }, { "bounds": [749, 764, 1083, 1074], "seed": [852, 764], "anchor": [916, 1074], "scale": 0.29 }, { "bounds": [1130, 805, 1435, 1035], "anchor": [1282.5, 1035], "scale": 0.29, "islands": true }] };
   }
-  __name(initializeRuntimeModule11, "initializeRuntimeModule");
-  function getRuntimeBindings11() {
+  __name(initializeRuntimeModule13, "initializeRuntimeModule");
+  function getRuntimeBindings13() {
     return {
       "endingFrames": { get: /* @__PURE__ */ __name(() => endingFrames, "get"), set: /* @__PURE__ */ __name((value) => {
         endingFrames = value;
       }, "set") }
     };
   }
-  __name(getRuntimeBindings11, "getRuntimeBindings");
+  __name(getRuntimeBindings13, "getRuntimeBindings");
 
   // src/recovered-art.js
   var recovered_art_exports = {};
   __export(recovered_art_exports, {
     drawRecoveredSonicFrame: () => drawRecoveredSonicFrame,
-    getRuntimeBindings: () => getRuntimeBindings14,
-    initializeRuntimeModule: () => initializeRuntimeModule14,
+    getRuntimeBindings: () => getRuntimeBindings16,
+    initializeRuntimeModule: () => initializeRuntimeModule16,
     recoveredSonicPose: () => recoveredSonicPose,
     recoveredSpriteFrames: () => recoveredSpriteFrames,
     recoveredSpriteTextures: () => recoveredSpriteTextures
@@ -4521,44 +4799,44 @@
   // src/supplemental-frames.js
   var supplemental_frames_exports = {};
   __export(supplemental_frames_exports, {
-    getRuntimeBindings: () => getRuntimeBindings12,
-    initializeRuntimeModule: () => initializeRuntimeModule12,
+    getRuntimeBindings: () => getRuntimeBindings14,
+    initializeRuntimeModule: () => initializeRuntimeModule14,
     supplementalSpriteFrames: () => supplementalSpriteFrames
   });
   var supplementalSpriteFrames;
-  function initializeRuntimeModule12() {
+  function initializeRuntimeModule14() {
     supplementalSpriteFrames = { "supplemental": [{ "bounds": [22, 32, 215, 219], "anchor": [109, 196], "scale": 0.2720781661029688 }, { "bounds": [237, 32, 435, 227], "anchor": [113, 196], "scale": 0.2720781661029688 }, { "bounds": [459, 32, 665, 230], "anchor": [117, 196], "scale": 0.2720781661029688 }, { "bounds": [680, 32, 879, 230], "anchor": [113, 196], "scale": 0.2720781661029688 }, { "bounds": [900, 32, 1099, 227], "anchor": [114, 196], "scale": 0.2720781661029688 }, { "bounds": [1120, 30, 1339, 227], "anchor": [116, 198], "scale": 0.2720781661029688 }, { "bounds": [1351, 30, 1546, 226], "anchor": [113, 198], "scale": 0.2720781661029688 }, { "bounds": [1561, 30, 1760, 229], "anchor": [118, 198], "scale": 0.2720781661029688 }, { "bounds": [22, 245, 226, 422], "anchor": [118, 186], "scale": 0.2720781661029688 }, { "bounds": [238, 247, 445, 417], "anchor": [123, 184], "scale": 0.2720781661029688 }, { "bounds": [458, 247, 664, 426], "anchor": [121, 184], "scale": 0.2720781661029688 }, { "bounds": [687, 248, 880, 431], "anchor": [107, 183], "scale": 0.2720781661029688 }, { "bounds": [902, 248, 1110, 426], "anchor": [124, 183], "scale": 0.2720781661029688 }, { "bounds": [1121, 247, 1335, 433], "anchor": [128, 184], "scale": 0.2720781661029688 }, { "bounds": [1342, 247, 1550, 431], "anchor": [123, 184], "scale": 0.2720781661029688 }, { "bounds": [1564, 246, 1760, 431], "anchor": [112, 185], "scale": 0.2720781661029688 }, { "bounds": [18, 447, 215, 633], "anchor": [106, 186], "scale": 0.2720781661029688 }, { "bounds": [233, 448, 429, 633], "anchor": [106, 185], "scale": 0.2720781661029688 }, { "bounds": [456, 448, 659, 633], "anchor": [113, 185], "scale": 0.2720781661029688 }, { "bounds": [685, 451, 881, 633], "anchor": [107, 182], "scale": 0.2720781661029688 }, { "bounds": [904, 449, 1104, 633], "anchor": [103, 184], "scale": 0.2720781661029688 }, { "bounds": [1125, 447, 1328, 633], "anchor": [111, 186], "scale": 0.2720781661029688 }, { "bounds": [1349, 449, 1548, 635], "anchor": [108, 184], "scale": 0.2720781661029688 }, { "bounds": [1563, 449, 1759, 633], "anchor": [104, 184], "scale": 0.2720781661029688 }, { "bounds": [16, 647, 214, 864], "anchor": [112, 223], "scale": 0.2720781661029688 }, { "bounds": [236, 653, 430, 867], "anchor": [104, 217], "scale": 0.2720781661029688 }, { "bounds": [461, 647, 677, 864], "anchor": [107, 223], "scale": 0.2720781661029688 }, { "bounds": [688, 658, 886, 872], "anchor": [94, 212], "scale": 0.2720781661029688 }, { "bounds": [927, 683, 1104, 872], "anchor": [87, 187], "scale": 0.2720781661029688 }, { "bounds": [1147, 658, 1318, 872], "anchor": [81, 212], "scale": 0.2720781661029688 }, { "bounds": [1360, 702, 1547, 872], "anchor": [84, 168], "scale": 0.2720781661029688 }, { "bounds": [1580, 702, 1754, 872], "anchor": [71, 168], "scale": 0.2720781661029688 }], "peeloutCycle": [{ "bounds": [42, 103, 406, 441], "anchor": [207, 344], "scale": 0.1360390830514844 }, { "bounds": [483, 103, 848, 447], "anchor": [208, 344], "scale": 0.1360390830514844 }, { "bounds": [925, 103, 1291, 449], "anchor": [209, 344], "scale": 0.1360390830514844 }, { "bounds": [1370, 103, 1732, 449], "anchor": [205, 344], "scale": 0.1360390830514844 }, { "bounds": [34, 489, 399, 825], "anchor": [210, 334], "scale": 0.1360390830514844 }, { "bounds": [482, 486, 848, 825], "anchor": [209, 337], "scale": 0.1360390830514844 }, { "bounds": [925, 485, 1291, 821], "anchor": [208, 338], "scale": 0.1360390830514844 }, { "bounds": [1370, 485, 1733, 825], "anchor": [206, 338], "scale": 0.1360390830514844 }] };
   }
-  __name(initializeRuntimeModule12, "initializeRuntimeModule");
-  function getRuntimeBindings12() {
+  __name(initializeRuntimeModule14, "initializeRuntimeModule");
+  function getRuntimeBindings14() {
     return {
       "supplementalSpriteFrames": { get: /* @__PURE__ */ __name(() => supplementalSpriteFrames, "get"), set: /* @__PURE__ */ __name((value) => {
         supplementalSpriteFrames = value;
       }, "set") }
     };
   }
-  __name(getRuntimeBindings12, "getRuntimeBindings");
+  __name(getRuntimeBindings14, "getRuntimeBindings");
 
   // src/traversal-frames.js
   var traversal_frames_exports = {};
   __export(traversal_frames_exports, {
-    getRuntimeBindings: () => getRuntimeBindings13,
-    initializeRuntimeModule: () => initializeRuntimeModule13,
+    getRuntimeBindings: () => getRuntimeBindings15,
+    initializeRuntimeModule: () => initializeRuntimeModule15,
     traversalSpriteFrames: () => traversalSpriteFrames
   });
   var traversalSpriteFrames;
-  function initializeRuntimeModule13() {
+  function initializeRuntimeModule15() {
     traversalSpriteFrames = { "traversalActing": [{ "bounds": [38, 47, 235, 272], "anchor": [70, 225], "scale": 0.2608695652173913 }, { "bounds": [276, 44, 515, 272], "anchor": [103, 228], "scale": 0.2608695652173913 }, { "bounds": [527, 47, 781, 272], "anchor": [123, 225], "scale": 0.2608695652173913, "trim": [[249, 93, 5, 25]] }, { "bounds": [776, 38, 1032, 272], "anchor": [154, 234], "scale": 0.2608695652173913, "trim": [[0, 170, 5, 19]] }, { "bounds": [1037, 34, 1263, 272], "anchor": [134, 238], "scale": 0.2608695652173913 }, { "bounds": [1299, 44, 1530, 272], "anchor": [96, 228], "scale": 0.2608695652173913 }, { "bounds": [1553, 42, 1764, 272], "anchor": [85, 230], "scale": 0.2608695652173913 }, { "bounds": [1810, 45, 2029, 272], "anchor": [94, 227], "scale": 0.2608695652173913 }, { "bounds": [28, 290, 235, 522], "anchor": [78, 232], "scale": 0.2608695652173913 }, { "bounds": [279, 290, 516, 522], "anchor": [108, 232], "scale": 0.2608695652173913 }, { "bounds": [532, 293, 772, 522], "anchor": [121, 229], "scale": 0.2608695652173913 }, { "bounds": [777, 282, 1034, 522], "anchor": [167, 240], "scale": 0.2608695652173913, "trim": [[248, 42, 9, 70]] }, { "bounds": [1025, 282, 1286, 522], "anchor": [167, 240], "scale": 0.2608695652173913, "trim": [[0, 179, 9, 25]] }, { "bounds": [1314, 297, 1536, 522], "anchor": [107, 225], "scale": 0.2608695652173913 }, { "bounds": [1573, 290, 1785, 522], "anchor": [99, 232], "scale": 0.2608695652173913 }, { "bounds": [1817, 292, 2026, 522], "anchor": [89, 230], "scale": 0.2608695652173913 }, { "bounds": [39, 544, 254, 757], "anchor": [161, 213], "scale": 0.2608695652173913 }, { "bounds": [275, 539, 518, 757], "anchor": [189, 218], "scale": 0.2608695652173913 }, { "bounds": [522, 542, 780, 757], "anchor": [204, 215], "scale": 0.2608695652173913 }, { "bounds": [782, 545, 1021, 757], "anchor": [185, 212], "scale": 0.2608695652173913 }, { "bounds": [1050, 545, 1289, 757], "anchor": [185, 212], "scale": 0.2608695652173913 }, { "bounds": [1305, 539, 1532, 757], "anchor": [173, 218], "scale": 0.2608695652173913 }, { "bounds": [1546, 539, 1788, 757], "anchor": [188, 218], "scale": 0.2608695652173913 }, { "bounds": [1819, 541, 2037, 756], "anchor": [164, 215], "scale": 0.2608695652173913 }], "traversalLaunch": [{ "bounds": [23, 22, 200, 258], "anchor": [88, 236], "scale": 0.2510460251046025 }, { "bounds": [246, 19, 424, 257], "anchor": [79, 238], "scale": 0.2510460251046025 }, { "bounds": [460, 18, 652, 253], "anchor": [100, 235], "scale": 0.2510460251046025 }, { "bounds": [692, 19, 869, 257], "anchor": [92, 238], "scale": 0.2510460251046025 }, { "bounds": [917, 19, 1091, 258], "anchor": [84, 239], "scale": 0.2510460251046025 }, { "bounds": [1127, 19, 1310, 257], "anchor": [72, 238], "scale": 0.2510460251046025 }, { "bounds": [1338, 18, 1541, 256], "anchor": [102, 238], "scale": 0.2510460251046025 }, { "bounds": [1574, 19, 1761, 257], "anchor": [112, 238], "scale": 0.2510460251046025 }, { "bounds": [14, 287, 214, 422], "anchor": [100, 68], "scale": 0.2510460251046025 }, { "bounds": [219, 292, 432, 428], "anchor": [106, 68], "scale": 0.2510460251046025 }, { "bounds": [438, 293, 662, 424], "anchor": [112, 66], "scale": 0.2510460251046025 }, { "bounds": [676, 291, 887, 424], "anchor": [106, 66], "scale": 0.2510460251046025 }, { "bounds": [902, 292, 1116, 422], "anchor": [107, 65], "scale": 0.2510460251046025 }, { "bounds": [1125, 292, 1328, 424], "anchor": [102, 66], "scale": 0.2510460251046025 }, { "bounds": [1346, 295, 1546, 421], "anchor": [100, 63], "scale": 0.2510460251046025 }, { "bounds": [1560, 289, 1758, 426], "anchor": [99, 68], "scale": 0.2510460251046025 }, { "bounds": [17, 456, 209, 640], "anchor": [96, 92], "scale": 0.2510460251046025 }, { "bounds": [231, 456, 424, 642], "anchor": [96, 93], "scale": 0.2510460251046025 }, { "bounds": [448, 458, 643, 643], "anchor": [98, 92], "scale": 0.2510460251046025 }, { "bounds": [678, 461, 863, 641], "anchor": [92, 90], "scale": 0.2510460251046025 }, { "bounds": [886, 467, 1098, 642], "anchor": [106, 88], "scale": 0.2510460251046025 }, { "bounds": [1117, 462, 1326, 644], "anchor": [104, 91], "scale": 0.2510460251046025 }, { "bounds": [1345, 465, 1549, 647], "anchor": [102, 91], "scale": 0.2510460251046025 }, { "bounds": [1560, 462, 1747, 648], "anchor": [94, 93], "scale": 0.2510460251046025 }, { "bounds": [18, 677, 216, 864], "anchor": [99, 94], "scale": 0.2510460251046025 }, { "bounds": [252, 680, 428, 858], "anchor": [88, 89], "scale": 0.2510460251046025 }, { "bounds": [450, 673, 653, 860], "anchor": [102, 94], "scale": 0.2510460251046025 }, { "bounds": [676, 676, 876, 861], "anchor": [100, 92], "scale": 0.2510460251046025 }, { "bounds": [896, 676, 1102, 862], "anchor": [103, 93], "scale": 0.2510460251046025 }, { "bounds": [1128, 674, 1325, 856], "anchor": [98, 91], "scale": 0.2510460251046025 }, { "bounds": [1344, 672, 1542, 860], "anchor": [99, 94], "scale": 0.2510460251046025 }, { "bounds": [1563, 674, 1757, 860], "anchor": [97, 93], "scale": 0.2510460251046025 }] };
   }
-  __name(initializeRuntimeModule13, "initializeRuntimeModule");
-  function getRuntimeBindings13() {
+  __name(initializeRuntimeModule15, "initializeRuntimeModule");
+  function getRuntimeBindings15() {
     return {
       "traversalSpriteFrames": { get: /* @__PURE__ */ __name(() => traversalSpriteFrames, "get"), set: /* @__PURE__ */ __name((value) => {
         traversalSpriteFrames = value;
       }, "set") }
     };
   }
-  __name(getRuntimeBindings13, "getRuntimeBindings");
+  __name(getRuntimeBindings15, "getRuntimeBindings");
 
   // src/recovered-art.js
   var recoveredSpriteTextures;
@@ -4711,13 +4989,13 @@
     ctx.restore();
   }
   __name(drawRecoveredSonicFrame, "drawRecoveredSonicFrame");
-  function initializeRuntimeModule14() {
+  function initializeRuntimeModule16() {
     recoveredSpriteTextures = /* @__PURE__ */ new Map();
     recoveredSpriteFrames = { "recoveredSpeedster": [{ "bounds": [20, 30, 168, 175], "anchor": [79, 153] }, { "bounds": [197, 29, 346, 183], "anchor": [83, 154] }, { "bounds": [382, 29, 536, 185], "anchor": [84, 154] }, { "bounds": [560, 28, 710, 183], "anchor": [90, 155] }, { "bounds": [737, 30, 891, 183], "anchor": [92, 153] }, { "bounds": [916, 26, 1082, 183], "anchor": [92, 157] }, { "bounds": [1107, 28, 1254, 180], "anchor": [88, 155] }, { "bounds": [1282, 24, 1434, 183], "anchor": [96, 159] }, { "bounds": [22, 200, 179, 344], "anchor": [81, 149] }, { "bounds": [198, 203, 356, 338], "anchor": [87, 146] }, { "bounds": [376, 202, 538, 347], "anchor": [89, 147] }, { "bounds": [562, 205, 716, 347], "anchor": [88, 144] }, { "bounds": [740, 206, 903, 350], "anchor": [89, 143] }, { "bounds": [914, 205, 1078, 350], "anchor": [95, 144] }, { "bounds": [1100, 203, 1256, 350], "anchor": [94, 146] }, { "bounds": [1281, 203, 1431, 351], "anchor": [89, 146] }, { "bounds": [20, 362, 151, 540], "anchor": [74, 177] }, { "bounds": [202, 360, 344, 540], "anchor": [76, 179] }, { "bounds": [385, 364, 527, 541], "anchor": [78, 175] }, { "bounds": [558, 364, 709, 541], "anchor": [89, 175] }, { "bounds": [737, 363, 913, 540], "anchor": [89, 176] }, { "bounds": [919, 364, 1090, 540], "anchor": [90, 175] }, { "bounds": [1103, 360, 1251, 540], "anchor": [85, 179] }, { "bounds": [1284, 370, 1427, 540], "anchor": [91, 169] }, { "bounds": [21, 594, 163, 721], "anchor": [84, 125] }, { "bounds": [185, 555, 356, 721], "anchor": [92, 164] }, { "bounds": [406, 607, 525, 721], "anchor": [59, 112] }, { "bounds": [585, 606, 706, 722], "anchor": [65, 113] }, { "bounds": [762, 605, 883, 721], "anchor": [67, 114] }, { "bounds": [905, 547, 1086, 713], "anchor": [98, 172] }, { "bounds": [1104, 567, 1258, 718], "anchor": [96, 152] }, { "bounds": [1279, 596, 1434, 721], "anchor": [91, 123] }, { "bounds": [20, 734, 171, 880], "anchor": [80, 147] }, { "bounds": [190, 732, 365, 882], "anchor": [92, 149] }, { "bounds": [372, 734, 547, 882], "anchor": [94, 147] }, { "bounds": [551, 747, 744, 882], "anchor": [94, 134] }, { "bounds": [744, 735, 921, 877], "anchor": [81, 146] }, { "bounds": [914, 745, 1097, 882], "anchor": [93, 136] }, { "bounds": [1112, 732, 1251, 883], "anchor": [68, 149] }, { "bounds": [1271, 743, 1440, 878], "anchor": [89, 138] }, { "bounds": [21, 892, 193, 1073], "anchor": [74, 181] }, { "bounds": [208, 889, 342, 1072], "anchor": [75, 184] }, { "bounds": [379, 894, 531, 1072], "anchor": [88, 179] }, { "bounds": [555, 901, 722, 1073], "anchor": [93, 172] }, { "bounds": [741, 892, 895, 1073], "anchor": [86, 181] }, { "bounds": [929, 890, 1067, 1075], "anchor": [79, 183] }, { "bounds": [1114, 897, 1243, 1075], "anchor": [71, 176] }, { "bounds": [1273, 899, 1432, 1075], "anchor": [102, 174] }], "recoveredPeelout": [{ "bounds": [18, 29, 174, 177], "anchor": [81, 154] }, { "bounds": [193, 27, 354, 184], "anchor": [87, 156] }, { "bounds": [375, 27, 541, 187], "anchor": [91, 156] }, { "bounds": [555, 28, 713, 187], "anchor": [95, 155] }, { "bounds": [732, 29, 895, 184], "anchor": [97, 154] }, { "bounds": [911, 26, 1088, 185], "anchor": [97, 157] }, { "bounds": [1099, 27, 1260, 184], "anchor": [96, 156] }, { "bounds": [1270, 25, 1436, 187], "anchor": [108, 158] }, { "bounds": [20, 200, 182, 346], "anchor": [83, 149] }, { "bounds": [197, 202, 360, 341], "anchor": [88, 147] }, { "bounds": [375, 202, 542, 349], "anchor": [90, 147] }, { "bounds": [563, 204, 718, 350], "anchor": [87, 145] }, { "bounds": [740, 206, 905, 354], "anchor": [89, 143] }, { "bounds": [917, 203, 1084, 354], "anchor": [92, 146] }, { "bounds": [1101, 201, 1261, 352], "anchor": [93, 148] }, { "bounds": [1278, 202, 1432, 356], "anchor": [92, 147] }, { "bounds": [19, 362, 156, 541], "anchor": [75, 177] }, { "bounds": [199, 360, 350, 542], "anchor": [79, 179] }, { "bounds": [386, 364, 531, 543], "anchor": [77, 175] }, { "bounds": [557, 364, 713, 543], "anchor": [90, 175] }, { "bounds": [739, 363, 915, 542], "anchor": [87, 176] }, { "bounds": [923, 364, 1095, 543], "anchor": [86, 175] }, { "bounds": [1107, 363, 1255, 542], "anchor": [81, 176] }, { "bounds": [1282, 371, 1429, 541], "anchor": [93, 168] }, { "bounds": [19, 592, 164, 723], "anchor": [86, 127] }, { "bounds": [185, 553, 362, 723], "anchor": [92, 166] }, { "bounds": [404, 605, 532, 727], "anchor": [61, 114] }, { "bounds": [583, 605, 711, 726], "anchor": [67, 114] }, { "bounds": [758, 605, 888, 728], "anchor": [71, 114] }, { "bounds": [906, 548, 1091, 715], "anchor": [97, 171] }, { "bounds": [1104, 566, 1261, 720], "anchor": [96, 153] }, { "bounds": [1279, 594, 1436, 722], "anchor": [91, 125] }, { "bounds": [18, 733, 174, 880], "anchor": [82, 148] }, { "bounds": [188, 733, 370, 885], "anchor": [94, 148] }, { "bounds": [372, 735, 551, 885], "anchor": [94, 146] }, { "bounds": [550, 746, 750, 884], "anchor": [95, 135] }, { "bounds": [746, 735, 925, 879], "anchor": [79, 146] }, { "bounds": [915, 744, 1099, 884], "anchor": [92, 137] }, { "bounds": [1115, 732, 1255, 885], "anchor": [65, 149] }, { "bounds": [1273, 740, 1443, 879], "anchor": [87, 141] }, { "bounds": [20, 891, 193, 1074], "anchor": [75, 182] }, { "bounds": [207, 889, 348, 1074], "anchor": [76, 184] }, { "bounds": [376, 895, 535, 1074], "anchor": [91, 178] }, { "bounds": [555, 899, 725, 1074], "anchor": [93, 174] }, { "bounds": [742, 891, 897, 1074], "anchor": [85, 182] }, { "bounds": [928, 891, 1072, 1076], "anchor": [80, 182] }, { "bounds": [1114, 895, 1246, 1076], "anchor": [71, 178] }, { "bounds": [1275, 898, 1435, 1076], "anchor": [100, 175] }] };
     Object.assign(recoveredSpriteFrames, supplementalSpriteFrames, traversalSpriteFrames);
   }
-  __name(initializeRuntimeModule14, "initializeRuntimeModule");
-  function getRuntimeBindings14() {
+  __name(initializeRuntimeModule16, "initializeRuntimeModule");
+  function getRuntimeBindings16() {
     return {
       recoveredSonicPose: {
         get: /* @__PURE__ */ __name(() => recoveredSonicPose, "get"),
@@ -4745,7 +5023,7 @@
       }
     };
   }
-  __name(getRuntimeBindings14, "getRuntimeBindings");
+  __name(getRuntimeBindings16, "getRuntimeBindings");
 
   // src/ending-art.js
   var endingSprites;
@@ -5023,14 +5301,14 @@
     }
   }
   __name(drawEndingScene, "drawEndingScene");
-  function initializeRuntimeModule15() {
+  function initializeRuntimeModule17() {
     endingSprites = /* @__PURE__ */ new Map();
     endingLoadErrors = /* @__PURE__ */ new Set();
     endingSheets = ["sonic", "shadow", "eggman", "sonic-polish", "shadow-polish", "eggman-polish"];
     for (const name of endingSheets) loadEndingArt(name);
   }
-  __name(initializeRuntimeModule15, "initializeRuntimeModule");
-  function getRuntimeBindings15() {
+  __name(initializeRuntimeModule17, "initializeRuntimeModule");
+  function getRuntimeBindings17() {
     return {
       endingSprites: {
         get: /* @__PURE__ */ __name(() => endingSprites, "get"),
@@ -5118,7 +5396,7 @@
       }
     };
   }
-  __name(getRuntimeBindings15, "getRuntimeBindings");
+  __name(getRuntimeBindings17, "getRuntimeBindings");
 
   // src/boss-game.js
   function setupBossEncounter() {
@@ -5321,13 +5599,13 @@
     }
   }
   __name(drawBossEncounter, "drawBossEncounter");
-  function initializeRuntimeModule16() {
+  function initializeRuntimeModule18() {
     state.boss = null;
     state.bossCheckpoint = false;
     state.ending = null;
   }
-  __name(initializeRuntimeModule16, "initializeRuntimeModule");
-  function getRuntimeBindings16() {
+  __name(initializeRuntimeModule18, "initializeRuntimeModule");
+  function getRuntimeBindings18() {
     return {
       setupBossEncounter: {
         get: /* @__PURE__ */ __name(() => setupBossEncounter, "get"),
@@ -5379,7 +5657,7 @@
       }
     };
   }
-  __name(getRuntimeBindings16, "getRuntimeBindings");
+  __name(getRuntimeBindings18, "getRuntimeBindings");
 
   // src/stage-runtime.js
   var neonExpressAct1Runtime;
@@ -5423,7 +5701,7 @@
     state.stageRuntime.completion();
   }
   __name(updateStageCompletion, "updateStageCompletion");
-  function initializeRuntimeModule17() {
+  function initializeRuntimeModule19() {
     state.stageRuntime = null;
     neonExpressAct1Runtime = {
       reset() {
@@ -5487,8 +5765,8 @@
       }
     };
   }
-  __name(initializeRuntimeModule17, "initializeRuntimeModule");
-  function getRuntimeBindings17() {
+  __name(initializeRuntimeModule19, "initializeRuntimeModule");
+  function getRuntimeBindings19() {
     return {
       neonExpressAct1Runtime: {
         get: /* @__PURE__ */ __name(() => neonExpressAct1Runtime, "get"),
@@ -5558,7 +5836,7 @@
       }
     };
   }
-  __name(getRuntimeBindings17, "getRuntimeBindings");
+  __name(getRuntimeBindings19, "getRuntimeBindings");
 
   // src/player-movement.js
   function jump() {
@@ -5924,10 +6202,10 @@
     return true;
   }
   __name(reboundBubbleShield, "reboundBubbleShield");
-  function initializeRuntimeModule18() {
+  function initializeRuntimeModule20() {
   }
-  __name(initializeRuntimeModule18, "initializeRuntimeModule");
-  function getRuntimeBindings18() {
+  __name(initializeRuntimeModule20, "initializeRuntimeModule");
+  function getRuntimeBindings20() {
     return {
       jump: {
         get: /* @__PURE__ */ __name(() => jump, "get"),
@@ -5991,7 +6269,7 @@
       }
     };
   }
-  __name(getRuntimeBindings18, "getRuntimeBindings");
+  __name(getRuntimeBindings20, "getRuntimeBindings");
 
   // src/world-interactions.js
   var world_interactions_exports = {};
@@ -5999,8 +6277,8 @@
     activateWorldDevices: () => activateWorldDevices,
     collectWorldRings: () => collectWorldRings,
     configureDirectionalSpikes: () => configureDirectionalSpikes,
-    getRuntimeBindings: () => getRuntimeBindings19,
-    initializeRuntimeModule: () => initializeRuntimeModule19,
+    getRuntimeBindings: () => getRuntimeBindings21,
+    initializeRuntimeModule: () => initializeRuntimeModule21,
     resolveMotionInteractions: () => resolveMotionInteractions,
     resolveSpringContact: () => resolveSpringContact,
     springFace: () => springFace,
@@ -6181,10 +6459,10 @@
     );
   }
   __name(updateWorldCheckpoints, "updateWorldCheckpoints");
-  function initializeRuntimeModule19() {
+  function initializeRuntimeModule21() {
   }
-  __name(initializeRuntimeModule19, "initializeRuntimeModule");
-  function getRuntimeBindings19() {
+  __name(initializeRuntimeModule21, "initializeRuntimeModule");
+  function getRuntimeBindings21() {
     return {
       updateWorldPlatforms: {
         get: /* @__PURE__ */ __name(() => updateWorldPlatforms, "get"),
@@ -6218,7 +6496,7 @@
       }
     };
   }
-  __name(getRuntimeBindings19, "getRuntimeBindings");
+  __name(getRuntimeBindings21, "getRuntimeBindings");
 
   // src/surface-collision.js
   var staticSurfacePoses;
@@ -6761,11 +7039,11 @@
     p.roll = p.rolling || state.charge > 0 || !p.ground;
   }
   __name(integrateSurfaceStep, "integrateSurfaceStep");
-  function initializeRuntimeModule20() {
+  function initializeRuntimeModule22() {
     staticSurfacePoses = /* @__PURE__ */ new WeakMap();
   }
-  __name(initializeRuntimeModule20, "initializeRuntimeModule");
-  function getRuntimeBindings20() {
+  __name(initializeRuntimeModule22, "initializeRuntimeModule");
+  function getRuntimeBindings22() {
     return {
       staticSurfacePoses: {
         get: /* @__PURE__ */ __name(() => staticSurfacePoses, "get"),
@@ -6871,7 +7149,7 @@
       }
     };
   }
-  __name(getRuntimeBindings20, "getRuntimeBindings");
+  __name(getRuntimeBindings22, "getRuntimeBindings");
 
   // src/pixel-world.js
   var cityMaterials;
@@ -7449,7 +7727,7 @@
     }
   }
   __name(drawCityBreakable, "drawCityBreakable");
-  function initializeRuntimeModule21() {
+  function initializeRuntimeModule23() {
     state.cityRasterContext = null;
     cityMaterials = [
       {
@@ -7516,8 +7794,8 @@
     ringPalette = { g: "#efa900", y: "#f4ef00", w: "#f4f1ec", s: "#954100" };
     pixelRingTextures = /* @__PURE__ */ new Map();
   }
-  __name(initializeRuntimeModule21, "initializeRuntimeModule");
-  function getRuntimeBindings21() {
+  __name(initializeRuntimeModule23, "initializeRuntimeModule");
+  function getRuntimeBindings23() {
     return {
       cityPixelRect: {
         get: /* @__PURE__ */ __name(() => cityPixelRect, "get"),
@@ -7671,7 +7949,7 @@
       }
     };
   }
-  __name(getRuntimeBindings21, "getRuntimeBindings");
+  __name(getRuntimeBindings23, "getRuntimeBindings");
 
   // src/blimp-route.js
   var blimpTextures;
@@ -7912,11 +8190,11 @@
     }
   }
   __name(drawBlimpRoute, "drawBlimpRoute");
-  function initializeRuntimeModule22() {
+  function initializeRuntimeModule24() {
     blimpTextures = /* @__PURE__ */ new Map();
   }
-  __name(initializeRuntimeModule22, "initializeRuntimeModule");
-  function getRuntimeBindings22() {
+  __name(initializeRuntimeModule24, "initializeRuntimeModule");
+  function getRuntimeBindings24() {
     return {
       addBlimpRoute: {
         get: /* @__PURE__ */ __name(() => addBlimpRoute, "get"),
@@ -7962,7 +8240,7 @@
       }
     };
   }
-  __name(getRuntimeBindings22, "getRuntimeBindings");
+  __name(getRuntimeBindings24, "getRuntimeBindings");
 
   // src/boost-rules.js
   function freeRailBoost() {
@@ -8121,10 +8399,10 @@
     return { ...d, x: d.x + q.x1 - s.x1, y: q.y1 + (d.x - s.x1) * q.slope };
   }
   __name(airDevicePose, "airDevicePose");
-  function initializeRuntimeModule23() {
+  function initializeRuntimeModule25() {
   }
-  __name(initializeRuntimeModule23, "initializeRuntimeModule");
-  function getRuntimeBindings23() {
+  __name(initializeRuntimeModule25, "initializeRuntimeModule");
+  function getRuntimeBindings25() {
     return {
       freeRailBoost: {
         get: /* @__PURE__ */ __name(() => freeRailBoost, "get"),
@@ -8182,14 +8460,14 @@
       }
     };
   }
-  __name(getRuntimeBindings23, "getRuntimeBindings");
+  __name(getRuntimeBindings25, "getRuntimeBindings");
 
   // src/level2.js
   var level2_exports = {};
   __export(level2_exports, {
     act2LevelTemplate: () => act2LevelTemplate,
-    getRuntimeBindings: () => getRuntimeBindings24,
-    initializeRuntimeModule: () => initializeRuntimeModule24,
+    getRuntimeBindings: () => getRuntimeBindings26,
+    initializeRuntimeModule: () => initializeRuntimeModule26,
     makeLevel2: () => makeLevel2
   });
   var act2LevelTemplate;
@@ -8208,7 +8486,7 @@
     return level;
   }
   __name(makeLevel2, "makeLevel2");
-  function initializeRuntimeModule24() {
+  function initializeRuntimeModule26() {
     act2LevelTemplate = {
       blimpRoute: {
         entered: false,
@@ -15610,8 +15888,8 @@
       ]
     };
   }
-  __name(initializeRuntimeModule24, "initializeRuntimeModule");
-  function getRuntimeBindings24() {
+  __name(initializeRuntimeModule26, "initializeRuntimeModule");
+  function getRuntimeBindings26() {
     return {
       act2LevelTemplate: {
         get: /* @__PURE__ */ __name(() => act2LevelTemplate, "get"),
@@ -15627,14 +15905,14 @@
       }
     };
   }
-  __name(getRuntimeBindings24, "getRuntimeBindings");
+  __name(getRuntimeBindings26, "getRuntimeBindings");
 
   // src/traversal-animations.js
   var traversal_animations_exports = {};
   __export(traversal_animations_exports, {
     beginTraversalLaunch: () => beginTraversalLaunch,
-    getRuntimeBindings: () => getRuntimeBindings25,
-    initializeRuntimeModule: () => initializeRuntimeModule25,
+    getRuntimeBindings: () => getRuntimeBindings27,
+    initializeRuntimeModule: () => initializeRuntimeModule27,
     resetTraversalAnimation: () => resetTraversalAnimation,
     traversalAnimation: () => traversalAnimation,
     traversalGroundState: () => traversalGroundState,
@@ -15740,11 +16018,11 @@
     );
   }
   __name(traversalSonicPose, "traversalSonicPose");
-  function initializeRuntimeModule25() {
+  function initializeRuntimeModule27() {
     traversalAnimation = { state: null, since: 0, launch: null };
   }
-  __name(initializeRuntimeModule25, "initializeRuntimeModule");
-  function getRuntimeBindings25() {
+  __name(initializeRuntimeModule27, "initializeRuntimeModule");
+  function getRuntimeBindings27() {
     return {
       traversalAnimation: {
         get: /* @__PURE__ */ __name(() => traversalAnimation, "get"),
@@ -15790,7 +16068,7 @@
       }
     };
   }
-  __name(getRuntimeBindings25, "getRuntimeBindings");
+  __name(getRuntimeBindings27, "getRuntimeBindings");
 
   // src/game.js
   var canvas;
@@ -16994,7 +17272,7 @@
     return { ...readGameState(), framesAdvanced };
   }
   __name(stepGameFrames, "stepGameFrames");
-  function initializeRuntimeModule26() {
+  function initializeRuntimeModule28() {
     canvas = document.querySelector("#game");
     ctx = canvas.getContext("2d");
     $ = /* @__PURE__ */ __name((s) => document.querySelector(s), "$");
@@ -17320,8 +17598,8 @@
     if (state.selectedAct === 2) selectAct(2);
     requestAnimationFrame(frame);
   }
-  __name(initializeRuntimeModule26, "initializeRuntimeModule");
-  function getRuntimeBindings26() {
+  __name(initializeRuntimeModule28, "initializeRuntimeModule");
+  function getRuntimeBindings28() {
     return {
       canvas: {
         get: /* @__PURE__ */ __name(() => canvas, "get"),
@@ -17727,184 +18005,7 @@
       }
     };
   }
-  __name(getRuntimeBindings26, "getRuntimeBindings");
-
-  // src/playtest-ground.js
-  var playtest_ground_exports = {};
-  __export(playtest_ground_exports, {
-    advanceGroundSubstep: () => advanceGroundSubstep,
-    beginGroundTick: () => beginGroundTick,
-    createGroundPlayer: () => createGroundPlayer,
-    finishGroundTick: () => finishGroundTick,
-    getRuntimeBindings: () => getRuntimeBindings27,
-    groundBounds: () => groundBounds,
-    groundContact: () => groundContact,
-    groundEnergy: () => groundEnergy,
-    groundResist: () => groundResist,
-    groundTuning: () => groundTuning,
-    initializeRuntimeModule: () => initializeRuntimeModule27,
-    sampleGround: () => sampleGround,
-    stepGroundPlayer: () => stepGroundPlayer
-  });
-  var groundTuning;
-  function sampleGround(scenario, x) {
-    if (scenario === "flat")
-      return { x, y: 400, angle: 0, tx: 1, ty: 0, nx: 0, ny: -1, curvature: 0 };
-    if (scenario !== "valley") throw Error("Unknown PLAYTEST ground scenario");
-    const u = Math.max(0, Math.abs(x) - 200), t = Math.min(1, u / 800), grade = 0.65;
-    const height = u < 800 ? grade * 800 * (t ** 3 - 0.5 * t ** 4) : grade * (u - 400);
-    const slope = -Math.sign(x) * grade * (3 * t * t - 2 * t ** 3);
-    const second = u < 800 ? -grade * 6 * t * (1 - t) / 800 : 0;
-    const norm = Math.hypot(1, slope);
-    return {
-      x,
-      y: 650 - height,
-      angle: Math.atan(slope),
-      tx: 1 / norm,
-      ty: slope / norm,
-      nx: slope / norm,
-      ny: -1 / norm,
-      curvature: second / norm ** 3
-    };
-  }
-  __name(sampleGround, "sampleGround");
-  function groundBounds(scenario) {
-    if (scenario === "flat") return 5e3;
-    if (scenario === "valley") return 2400;
-    throw Error("Unknown PLAYTEST ground scenario");
-  }
-  __name(groundBounds, "groundBounds");
-  function createGroundPlayer(scenario = "flat", x = 0, speed = 0, posture = "standing") {
-    groundBounds(scenario);
-    return {
-      scenario,
-      x,
-      speed,
-      posture,
-      facing: Math.sign(speed) || 1,
-      ticks: 0,
-      restTicks: 0,
-      downHeld: false,
-      distance: 0,
-      boundary: null
-    };
-  }
-  __name(createGroundPlayer, "createGroundPlayer");
-  function groundContact(player, sampler = sampleGround) {
-    const surface = sampler(player.scenario, player.x);
-    const height = player.posture === "rolling" ? groundTuning.rollDiameter : groundTuning.standHeight;
-    return {
-      ...surface,
-      speed: player.speed,
-      vx: player.speed * surface.tx,
-      vy: player.speed * surface.ty,
-      anchor: { x: surface.x, y: surface.y },
-      height,
-      width: player.posture === "rolling" ? height : groundTuning.standWidth,
-      center: { x: surface.x + surface.nx * height / 2, y: surface.y + surface.ny * height / 2 },
-      normalReaction: -groundTuning.gravity * surface.ny - player.speed ** 2 * surface.curvature
-    };
-  }
-  __name(groundContact, "groundContact");
-  function groundEnergy(player, sampler = sampleGround) {
-    return player.speed ** 2 / 2 + groundTuning.gravity * (650 - sampler(player.scenario, player.x).y);
-  }
-  __name(groundEnergy, "groundEnergy");
-  function groundResist(speed, amount) {
-    return Math.sign(speed) * Math.max(0, Math.abs(speed) - amount);
-  }
-  __name(groundResist, "groundResist");
-  function beginGroundTick(player, input = {}, allowRoll = true) {
-    const t = groundTuning, direction = Math.sign(input.direction || 0), down = !!input.down;
-    if (down && !player.downHeld && Math.abs(player.speed) >= t.rollEntrySpeed && allowRoll) {
-      player.posture = "rolling";
-      player.restTicks = 0;
-    }
-    player.downHeld = down;
-    const rolling = player.posture === "rolling";
-    const braking = direction * player.speed < 0;
-    return { direction, rolling, braking };
-  }
-  __name(beginGroundTick, "beginGroundTick");
-  function advanceGroundSubstep(player, controls, dt, sampler = sampleGround, arcLength = false) {
-    const t = groundTuning, { direction, rolling, braking } = controls;
-    const position = arcLength ? player.pathS : player.x;
-    const before = sampler(player.scenario, position);
-    const rollBrake = direction * player.speed < 0 ? t.rollBrake * (1 - Math.abs(before.ty)) * Math.min(1, Math.abs(player.speed) / t.rollBrakeFadeSpeed) : 0;
-    const resistance = rolling ? t.rollResistance + rollBrake : (direction ? 0 : t.coastResistance) + (braking ? t.brake : 0);
-    const drive = !rolling && direction && !braking ? direction * Math.min(t.acceleration, Math.max(0, t.runRange - player.speed * direction) / dt) : 0;
-    const midpointX = position + player.speed * (arcLength ? 1 : before.tx) * dt / 2;
-    const midpoint = sampler(player.scenario, midpointX);
-    const slopeFactor = rolling && player.speed * midpoint.ty > 0 ? t.rollDownhillMultiplier : 1;
-    const nextSpeed = groundResist(
-      player.speed + (t.gravity * midpoint.ty * slopeFactor + drive) * dt,
-      resistance * dt
-    );
-    if (arcLength) player.pathS += (player.speed + nextSpeed) * 0.5 * dt;
-    else player.x += (player.speed + nextSpeed) * 0.5 * midpoint.tx * dt;
-    player.distance += Math.abs((player.speed + nextSpeed) * 0.5 * dt);
-    player.speed = nextSpeed;
-  }
-  __name(advanceGroundSubstep, "advanceGroundSubstep");
-  function finishGroundTick(player, controls, sampler = sampleGround, canStand2 = true, bounds = groundBounds, arcLength = false) {
-    const t = groundTuning, { rolling } = controls;
-    player.ticks++;
-    if (Math.abs(player.speed) > 0.02) player.facing = Math.sign(player.speed);
-    const slopeForce = Math.abs(
-      t.gravity * sampler(player.scenario, arcLength ? player.pathS : player.x).ty
-    );
-    const turning = controls.direction * player.facing < 0 && Math.abs(player.speed) <= t.rollTurnSpeed;
-    if (rolling && turning && slopeForce <= t.rollResistance && canStand2) {
-      player.posture = "standing";
-      player.restTicks = 0;
-    } else if (rolling && Math.abs(player.speed) < t.restSpeed && slopeForce <= t.rollResistance) {
-      player.restTicks++;
-      if (player.restTicks >= t.uncurlTicks && canStand2) {
-        player.posture = "standing";
-        player.restTicks = 0;
-      }
-    } else player.restTicks = 0;
-    if (!Number.isFinite(player.x) || !Number.isFinite(player.speed) || Math.abs(player.speed) > t.safetySpeed)
-      player.boundary = "numerical safety reset (outside benchmark range)";
-    else if (Math.abs(player.x) > bounds(player.scenario)) player.boundary = "test boundary reset";
-  }
-  __name(finishGroundTick, "finishGroundTick");
-  function stepGroundPlayer(player, input = {}) {
-    const controls = beginGroundTick(player, input);
-    for (let i = 0; i < groundTuning.substeps; i++)
-      advanceGroundSubstep(player, controls, 1 / groundTuning.substeps);
-    finishGroundTick(player, controls);
-  }
-  __name(stepGroundPlayer, "stepGroundPlayer");
-  function initializeRuntimeModule27() {
-    groundTuning = Object.freeze({
-      revision: "GROUND-5",
-      hz: 60,
-      substeps: 4,
-      runRange: 14,
-      acceleration: 0.16,
-      brake: 0.5,
-      coastResistance: 0.1,
-      gravity: 0.35,
-      rollResistance: 0.025,
-      rollDownhillMultiplier: 2.5,
-      rollBrake: 0.18,
-      rollBrakeFadeSpeed: 2,
-      rollTurnSpeed: 1,
-      rollEntrySpeed: 2,
-      restSpeed: 0.08,
-      uncurlTicks: 12,
-      safetySpeed: 80,
-      standHeight: 48,
-      standWidth: 22,
-      rollDiameter: 38
-    });
-  }
-  __name(initializeRuntimeModule27, "initializeRuntimeModule");
-  function getRuntimeBindings27() {
-    return {};
-  }
-  __name(getRuntimeBindings27, "getRuntimeBindings");
+  __name(getRuntimeBindings28, "getRuntimeBindings");
 
   // src/playtest-motion.js
   var playtest_motion_exports = {};
@@ -17916,8 +18017,8 @@
     firstDeviceImpact: () => firstDeviceImpact,
     firstGroundDeviceImpact: () => firstGroundDeviceImpact,
     floorBodyDistance: () => floorBodyDistance,
-    getRuntimeBindings: () => getRuntimeBindings28,
-    initializeRuntimeModule: () => initializeRuntimeModule28,
+    getRuntimeBindings: () => getRuntimeBindings30,
+    initializeRuntimeModule: () => initializeRuntimeModule30,
     landMotion: () => landMotion,
     launchExperimentalSpring: () => launchExperimentalSpring,
     motionBody: () => motionBody,
@@ -17925,6 +18026,7 @@
     motionContact: () => motionContact,
     motionFixtures: () => motionFixtures,
     motionPostureClear: () => motionPostureClear,
+    motionRail: () => motionRail,
     motionReaction: () => motionReaction,
     motionSpans: () => motionSpans,
     motionSpawn: () => motionSpawn,
@@ -17943,6 +18045,85 @@
     sweepMotionDistance: () => sweepMotionDistance,
     updateExperimentalDash: () => updateExperimentalDash
   });
+
+  // src/playtest-boost.js
+  var playtest_boost_exports = {};
+  __export(playtest_boost_exports, {
+    beginExperimentalBoost: () => beginExperimentalBoost,
+    createExperimentalBoost: () => createExperimentalBoost,
+    experimentalBoostTuning: () => experimentalBoostTuning,
+    experimentalGroundBoost: () => experimentalGroundBoost,
+    getRuntimeBindings: () => getRuntimeBindings29,
+    initializeRuntimeModule: () => initializeRuntimeModule29,
+    resetExperimentalAirBoost: () => resetExperimentalAirBoost
+  });
+  var experimentalBoostTuning;
+  function createExperimentalBoost(meter = 90) {
+    return {
+      meter,
+      locked: false,
+      held: false,
+      airUsed: false,
+      remaining: 0,
+      active: false,
+      bursts: 0
+    };
+  }
+  __name(createExperimentalBoost, "createExperimentalBoost");
+  function beginExperimentalBoost(player, input, startedGrounded) {
+    const b = player.boost, t = experimentalBoostTuning;
+    b.held = !!input.boostHeld;
+    b.active = false;
+    if (!b.held) {
+      b.locked = false;
+      b.remaining = 0;
+    }
+    if (player.mode === "grounded") {
+      b.airUsed = false;
+      b.remaining = 0;
+      return;
+    }
+    const freshAir = input.boostPressed && (input.boostPressAirborne ?? !startedGrounded);
+    if (freshAir && b.held && !b.airUsed && !b.locked && !player.dash && b.meter >= t.maximum / 4) {
+      b.meter -= t.maximum / 4;
+      b.airUsed = true;
+      b.remaining = t.airTicks;
+      b.bursts++;
+      player.air.vx = player.facing * Math.max(t.speed, player.air.vx * player.facing);
+      player.air.vy = 0;
+      player.air.cutEligible = false;
+      player.air.jumpLift = 0;
+      player.latestTransition = "air Boost burst";
+    }
+  }
+  __name(beginExperimentalBoost, "beginExperimentalBoost");
+  function resetExperimentalAirBoost(player) {
+    player.boost.airUsed = false;
+    player.boost.remaining = 0;
+    player.boost.active = false;
+  }
+  __name(resetExperimentalAirBoost, "resetExperimentalAirBoost");
+  function experimentalGroundBoost(player, surface) {
+    const b = player.boost;
+    return b.held && !player.dash && (surface.grindable && surface.infiniteBoost || b.meter > 0 && !b.locked);
+  }
+  __name(experimentalGroundBoost, "experimentalGroundBoost");
+  function initializeRuntimeModule29() {
+    experimentalBoostTuning = Object.freeze({
+      maximum: 90,
+      groundCost: 0.5,
+      speed: 23,
+      response: 0.14,
+      airTicks: 18
+    });
+  }
+  __name(initializeRuntimeModule29, "initializeRuntimeModule");
+  function getRuntimeBindings29() {
+    return {};
+  }
+  __name(getRuntimeBindings29, "getRuntimeBindings");
+
+  // src/playtest-motion.js
   var motionTuning;
   var motionFixtures;
   function motionBounds(scenario) {
@@ -18005,6 +18186,8 @@
       mode: "grounded",
       air: null,
       supportId: null,
+      railId: null,
+      boost: createExperimentalBoost(motionFixtures[scenario].meter ?? 90),
       dash: null,
       springLaunches: 0,
       latestTransition: "reset",
@@ -18025,7 +18208,13 @@
     return platform ? experimentalPlatformPose(platform, time) : null;
   }
   __name(motionSupport, "motionSupport");
+  function motionRail(player) {
+    return motionFixtures[player.scenario].rails?.find((r) => r.id === player.railId);
+  }
+  __name(motionRail, "motionRail");
   function motionSurface(player, time = player.ticks) {
+    const rail = motionRail(player);
+    if (rail) return sampleExperimentalRail(rail, player.x, Math.sign(player.speed));
     const support = motionSupport(player, time);
     if (support)
       return {
@@ -18049,6 +18238,32 @@
   }
   __name(sampleMotionPath, "sampleMotionPath");
   function advanceMotionGround(player, controls, dt, time = player.ticks) {
+    if (controls.groundBlocked) {
+      const support2 = motionSupport(player, time);
+      if (support2) {
+        player.x += support2.vx * dt;
+        player.y = motionSupport(player, time + dt).y1;
+      }
+      return;
+    }
+    const rail = motionRail(player), surface = motionSurface(player, time);
+    const boosted = experimentalGroundBoost(player, surface || {});
+    if (rail || boosted)
+      controls = {
+        ...controls,
+        ...rail ? { physics: experimentalRailTuning, rolling: false } : {},
+        ...boosted ? { boost: { ...experimentalBoostTuning, facing: player.facing } } : {}
+      };
+    if (rail) {
+      advanceGroundSubstep(
+        player,
+        controls,
+        dt,
+        (_scenario, x) => sampleExperimentalRail(rail, x, Math.sign(player.speed))
+      );
+      player.y = sampleExperimentalRail(rail, player.x).y;
+      return;
+    }
     const support = motionSupport(player, time);
     if (support) {
       advanceGroundSubstep(player, controls, dt, (_scenario, x) => ({
@@ -18092,6 +18307,24 @@
     if (player.mode === "grounded") {
       const path = playtestPaths[player.scenario];
       const support = motionSupport(player, time);
+      const rail = motionRail(player);
+      if (rail) {
+        const surface2 = motionSurface(player, time);
+        return {
+          ...surface2,
+          surfaceAngle: surface2.angle,
+          angle: 0,
+          grounded: true,
+          anchor: { x: player.x, y: player.y },
+          center: { x: player.x, y: player.y - 24 },
+          width: 22,
+          height: 48,
+          speed: player.speed,
+          vx: player.speed * surface2.tx,
+          vy: player.speed * surface2.ty,
+          normalReaction: motionReaction(player, surface2)
+        };
+      }
       if (support) {
         const surface2 = motionSurface(player, time), height2 = player.posture === "rolling" ? 38 : 48;
         return {
@@ -18151,6 +18384,15 @@
   }
   __name(motionContact, "motionContact");
   function motionBody(player, posture = player.posture, time = player.ticks) {
+    if (player.mode === "grounded" && motionRail(player))
+      return {
+        x: player.x,
+        y: player.y - (posture === "rolling" ? 19 : 24),
+        hw: posture === "rolling" ? 19 : 11,
+        hh: posture === "rolling" ? 19 : 24,
+        circle: posture === "rolling",
+        angle: 0
+      };
     if (player.mode === "grounded" && playtestPaths[player.scenario])
       return pathBody(player, posture);
     const height = posture === "rolling" ? 38 : 48, width = posture === "rolling" ? 38 : 22;
@@ -18333,6 +18575,20 @@
       );
       if (result && (!hit || result.time < hit.time)) hit = result;
     }
+    for (const rail of motionFixtures[player.scenario].rails || []) {
+      if (a.railDeparture === rail.id && a.separation && !a.separation.cleared) continue;
+      const result = experimentalRailImpact(
+        rail,
+        body,
+        a.vx,
+        a.vy,
+        ax,
+        ay,
+        duration,
+        motionTuning.skin
+      );
+      if (result && (!hit || result.time < hit.time)) hit = result;
+    }
     const deviceHit = firstDeviceImpact(player, body, a.vx, a.vy, ax, ay, duration, time);
     if (deviceHit && (!hit || deviceHit.time < hit.time)) hit = deviceHit;
     for (const [index, span] of motionSpans(player.scenario).entries()) {
@@ -18477,11 +18733,15 @@
     player.x = center.x;
     player.y = center.y;
     player.speed = null;
+    if (player.boost.remaining <= 0) player.boost.active = false;
+    const railDeparture = player.railId;
     player.supportId = null;
+    player.railId = null;
     player.dash = null;
     player.mode = "airborne";
     player.air = {
       ...after,
+      railDeparture,
       departure,
       ...path ? { pathOrigin, pathReach } : {},
       jumpLift: Math.max(0, -c.ny * impulse),
@@ -18509,6 +18769,13 @@
       );
     }
     if (a.separation && !a.separation.cleared) {
+      if (a.railDeparture) {
+        const rail = motionFixtures[player.scenario].rails.find((r) => r.id === a.railDeparture);
+        const gap = sampleExperimentalRail(rail, player.x).y - player.y - motionBody(player).hh;
+        if (gap > motionTuning.separation || player.x < rail.x1 || player.x > rail.x2)
+          a.separation.cleared = true;
+        return;
+      }
       const platform = motionFixtures[player.scenario].platforms?.find(
         (p2) => p2.id === a.separation.id
       );
@@ -18541,6 +18808,37 @@
   }
   __name(moveAirTime, "moveAirTime");
   function landMotion(player, hit, incoming, time = player.ticks) {
+    if (hit.kind === "rail") {
+      const rail = motionFixtures[player.scenario].rails.find((r) => r.id === hit.railId), surface = sampleExperimentalRail(rail, player.x);
+      const speed2 = incoming.vx * surface.tx + incoming.vy * surface.ty;
+      const candidate2 = {
+        ...player,
+        mode: "grounded",
+        railId: rail.id,
+        supportId: null,
+        posture: "standing",
+        x: player.x,
+        y: surface.y,
+        speed: speed2,
+        air: null,
+        restTicks: 0,
+        dash: null
+      };
+      if (!motionPostureClear(candidate2, "standing", time)) return false;
+      Object.assign(player, candidate2, {
+        latestTransition: "rail capture",
+        transitionCount: player.transitionCount + 1
+      });
+      player.lastLanding = {
+        incoming,
+        speed: speed2,
+        tx: surface.tx,
+        ty: surface.ty,
+        anchor: { x: player.x, y: surface.y }
+      };
+      resetExperimentalAirBoost(player);
+      return true;
+    }
     if (hit.kind === "platform") {
       const support = hit.platform, relative = incoming.vx - support.vx;
       const candidate2 = {
@@ -18569,6 +18867,7 @@
         platformVelocity: { vx: support.vx, vy: support.vy },
         anchor: { x: player.x, y: support.y1 }
       };
+      resetExperimentalAirBoost(player);
       return true;
     }
     const path = playtestPaths[player.scenario];
@@ -18615,6 +18914,7 @@
         normal: { x: surface.nx, y: surface.ny },
         anchor: { x: surface.x, y: surface.y }
       };
+      resetExperimentalAirBoost(player);
       return true;
     }
     const restore = player.air.restorePosture;
@@ -18649,6 +18949,7 @@
       normal: { x: s.nx, y: s.ny },
       anchor: { x: s.x, y: s.y }
     };
+    resetExperimentalAirBoost(player);
     return true;
   }
   __name(landMotion, "landMotion");
@@ -18741,11 +19042,14 @@
       vx: tangent * face.tx + normal * face.nx + face.vx,
       vy: tangent * face.ty + normal * face.ny + face.vy
     };
+    player.boost.remaining = 0;
+    player.boost.active = false;
     const center = c.center, restore = player.air?.restorePosture || player.posture;
     Object.assign(player, {
       mode: "airborne",
       speed: null,
       supportId: null,
+      railId: null,
       dash: null,
       x: center.x,
       y: center.y,
@@ -18759,7 +19063,7 @@
   __name(launchExperimentalSpring, "launchExperimentalSpring");
   function updateExperimentalDash(player, input) {
     const t = experimentalDeviceTuning, direction = Math.sign(input.direction || 0);
-    if (player.mode !== "grounded") {
+    if (player.mode !== "grounded" || player.railId) {
       player.dash = null;
       return false;
     }
@@ -18794,13 +19098,20 @@
   __name(updateExperimentalDash, "updateExperimentalDash");
   function stepMotionPlayer(player, input = {}) {
     const direction = Math.sign(input.direction || 0);
+    const startedGrounded = player.mode === "grounded";
+    let burstAdvanced = false;
     const dashAction = updateExperimentalDash(player, input);
     let controls = null, airBraking = null;
     if (player.mode === "grounded") {
-      controls = beginGroundTick(player, input, motionPostureClear(player, "rolling"));
+      controls = beginGroundTick(
+        player,
+        input,
+        !player.railId && motionPostureClear(player, "rolling")
+      );
       if (player.dash) controls = { direction: 0, rolling: false, braking: true };
       if (input.jumpPressed && !dashAction) releaseMotion(player, "jump", true);
     } else player.downHeld = !!input.down;
+    beginExperimentalBoost(player, input, startedGrounded);
     if (player.air?.cutEligible && !input.jumpHeld) {
       if (player.air.vy < 0 && player.air.jumpLift > 0)
         player.air.vy += player.air.jumpLift * (1 - motionTuning.cutRatio);
@@ -18826,6 +19137,7 @@
             braking: direction * player.speed < 0
           };
           const path = playtestPaths[player.scenario];
+          const rail = motionRail(player);
           const current = motionSurface(player, clockTime);
           if (!current) {
             releaseMotion(player, "ledge", false, clockTime);
@@ -18835,16 +19147,20 @@
             releaseMotion(player, path ? "lost support / traction" : "crest", false, clockTime);
             continue;
           }
+          const groundBoost = experimentalGroundBoost(player, current);
+          const freeBoost = !!(current.grindable && current.infiniteBoost);
+          player.boost.active = groundBoost;
+          const resourceSlice = groundBoost && !freeBoost ? Math.min(slice, player.boost.meter / experimentalBoostTuning.groundCost) : slice;
           const duration = path ? Math.min(
-            slice,
+            resourceSlice,
             0.04 / Math.max(1e-9, Math.abs(player.speed) * Math.abs(current.curvature))
-          ) : slice;
+          ) : resourceSlice;
           const candidate = { ...player };
           advanceMotionGround(candidate, controls, duration, clockTime);
           const position = /* @__PURE__ */ __name((p2) => path ? p2.pathS : p2.x, "position");
           const carrier = motionSupport(player, clockTime);
-          const span = carrier ? [carrier.x1, carrier.x2] : path ? [0, path.length] : motionSpans(player.scenario).find(([a, b]) => player.x >= a && player.x <= b);
-          let event = null, blockNormal = null, time = duration;
+          const span = rail ? [rail.x1, rail.x2] : carrier ? [carrier.x1, carrier.x2] : path ? [0, path.length] : motionSpans(player.scenario).find(([a, b]) => player.x >= a && player.x <= b);
+          let event = null, blockNormal = null, blockedBox = null, time = duration;
           const beyond = position(candidate) - (carrier?.vx || 0) * duration < span[0] || position(candidate) - (carrier?.vx || 0) * duration > span[1];
           const supported = motionSupported(
             candidate,
@@ -18865,7 +19181,25 @@
             time = hi;
             event = beyond ? path ? "path boundary" : "ledge" : path ? "lost support / traction" : "crest";
           }
+          if (rail) {
+            const target = player.speed >= 0 ? current.piece.x2 : current.piece.x1;
+            if (target > rail.x1 && target < rail.x2 && (candidate.x - target) * Math.sign(player.speed) >= 0 && Math.abs(player.x - target) > 1e-8) {
+              let lo = 0, hi = duration;
+              for (let i = 0; i < 30; i++) {
+                const mid = (lo + hi) / 2, q = { ...player };
+                advanceMotionGround(q, controls, mid, clockTime);
+                if ((q.x - target) * Math.sign(player.speed) >= 0) hi = mid;
+                else lo = mid;
+              }
+              if (hi < time) {
+                time = hi;
+                event = "rail join";
+              }
+            }
+          }
           for (const box of motionFixtures[player.scenario].boxes) {
+            if (controls.groundBlocked && controls.blockedBox === box && (!carrier || carrier.vx * controls.blockedNormal.nx + carrier.vy * controls.blockedNormal.ny >= -1e-8))
+              continue;
             const hit = sweepGroundBox(
               motionBody(player, player.posture, clockTime),
               motionBody(candidate, candidate.posture, clockTime + duration),
@@ -18876,6 +19210,7 @@
               time = hit.time;
               event = "block";
               blockNormal = hit.q;
+              blockedBox = box;
             }
           }
           const deviceHit = firstGroundDeviceImpact(
@@ -18895,7 +19230,18 @@
               time,
               player.ticks + (sub + 1) / groundTuning.substeps - remaining
             );
+          if (groundBoost && !freeBoost) {
+            player.boost.meter = Math.max(
+              0,
+              player.boost.meter - experimentalBoostTuning.groundCost * time
+            );
+            if (player.boost.meter < 1e-10) {
+              player.boost.meter = 0;
+              player.boost.locked = true;
+            }
+          }
           remaining -= time;
+          if (event === "rail join") continue;
           if (event && typeof event === "object") {
             if (event.kind === "spring" && event.active) {
               launchExperimentalSpring(player, event.face, clockTime + time);
@@ -18905,8 +19251,13 @@
               player.latestTransition = "device casing block";
               const relativeInto = ((carrier?.vx || 0) - (event.velocity?.vx || 0)) * event.nx + ((carrier?.vy || 0) - (event.velocity?.vy || 0)) * event.ny;
               if (relativeInto < -1e-8) player.boundary = "moving device blocked clearance reset";
-              if (carrier && !player.boundary)
-                controls = { direction: 0, rolling: player.posture === "rolling", braking: false };
+              if (!player.boundary)
+                controls = {
+                  direction: 0,
+                  rolling: player.posture === "rolling",
+                  braking: false,
+                  groundBlocked: true
+                };
               else remaining = 0;
             }
           } else if (event === "block") {
@@ -18914,13 +19265,26 @@
             player.latestTransition = "wall / clearance block";
             if (carrier && carrier.vx * blockNormal.nx + carrier.vy * blockNormal.ny < -1e-8)
               player.boundary = "moving support blocked clearance reset";
-            if (carrier && !player.boundary)
-              controls = { direction: 0, rolling: player.posture === "rolling", braking: false };
+            if (!player.boundary)
+              controls = {
+                direction: 0,
+                rolling: player.posture === "rolling",
+                braking: false,
+                groundBlocked: true,
+                blockedBox,
+                blockedNormal: blockNormal
+              };
             else remaining = 0;
           } else if (event === "path boundary") {
             player.boundary = "test path boundary reset";
             remaining = 0;
-          } else if (event) releaseMotion(player, event, false, clockTime + time);
+          } else if (event)
+            releaseMotion(
+              player,
+              rail && event === "ledge" ? "rail end" : event,
+              false,
+              clockTime + time
+            );
         } else {
           const a = player.air;
           airBraking ??= direction * a.vx < 0;
@@ -18930,7 +19294,12 @@
               motionTuning.airAcceleration * slice,
               Math.max(0, motionTuning.airRange - direction * a.vx)
             );
-          let ax = (target - a.vx) / slice, ay = groundTuning.gravity;
+          const bursting = player.boost.held && player.boost.remaining > 0;
+          let ax = bursting ? 0 : (target - a.vx) / slice, ay = bursting ? 0 : groundTuning.gravity;
+          if (bursting) {
+            burstAdvanced = true;
+            player.boost.active = true;
+          }
           for (const n2 of blocked) {
             const into2 = ax * n2.nx + ay * n2.ny;
             if (into2 < 0) {
@@ -18956,7 +19325,7 @@
             a.vx -= into * n.nx;
             a.vy -= into * n.ny;
           }
-          if ((n.kind === "floor" || n.kind === "platform") && n.canLand) {
+          if (["floor", "platform", "rail"].includes(n.kind) && n.canLand) {
             if (landMotion(player, n, incoming, clockTime + hit.time)) {
               controls = null;
               continue;
@@ -18976,6 +19345,7 @@
         }
       }
     }
+    if (burstAdvanced && player.boost.remaining > 0) player.boost.remaining--;
     if (player.mode === "grounded")
       finishGroundTick(
         player,
@@ -18996,9 +19366,9 @@
       player.boundary = "test boundary / fall recovery reset";
   }
   __name(stepMotionPlayer, "stepMotionPlayer");
-  function initializeRuntimeModule28() {
+  function initializeRuntimeModule30() {
     motionTuning = Object.freeze({
-      revision: "DEVICES-2 / PATH-1 / AIR-2 / GROUND-5",
+      revision: "RAIL-BOOST-1 / DEVICES-2 / PATH-1 / AIR-2 / GROUND-5",
       steepGripSpeed: 2.5,
       jumpImpulse: 10.5,
       cutRatio: 0.4,
@@ -19015,6 +19385,37 @@
           { bounds: 1300, spawn: id.endsWith("reverse") ? path.length - 140 : 140, boxes: [], path }
         ])
       ),
+      rails: {
+        bounds: 2e3,
+        spawn: -780,
+        boxes: [],
+        rails: [
+          createExperimentalRail(),
+          {
+            id: "gap-rail",
+            x1: 1e3,
+            x2: 1400,
+            pieces: [
+              {
+                id: "gap-rail-piece",
+                x1: 1e3,
+                x2: 1400,
+                y: 300,
+                c: [300, 0, 0, 0],
+                grindable: true,
+                infiniteBoost: false
+              }
+            ]
+          }
+        ]
+      },
+      "rails-empty": {
+        bounds: 2e3,
+        spawn: -780,
+        boxes: [],
+        meter: 0,
+        rails: [createExperimentalRail()]
+      },
       springs: {
         bounds: 1800,
         spawn: -160,
@@ -19084,11 +19485,11 @@
       }
     });
   }
-  __name(initializeRuntimeModule28, "initializeRuntimeModule");
-  function getRuntimeBindings28() {
+  __name(initializeRuntimeModule30, "initializeRuntimeModule");
+  function getRuntimeBindings30() {
     return {};
   }
-  __name(getRuntimeBindings28, "getRuntimeBindings");
+  __name(getRuntimeBindings30, "getRuntimeBindings");
 
   // src/playtest.js
   var playtestState;
@@ -19100,6 +19501,9 @@
     keys.clear();
     if (playtestState) {
       playtestState.player.dash = null;
+      Object.assign(playtestState.player.boost, { held: false, active: false, remaining: 0 });
+      playtestState.boostPressed = false;
+      playtestState.boostPressAirborne = false;
       playtestState.rollPressed = false;
       playtestState.jumpPressed = false;
       if (playtestState.player.air) {
@@ -19116,6 +19520,8 @@
       frames: 0,
       rollPressed: false,
       jumpPressed: false,
+      boostPressed: false,
+      boostPressAirborne: false,
       player: createMotionPlayer(scenario),
       camera: {
         x: spawn.x - W / 2,
@@ -19156,7 +19562,7 @@
     });
     $("#game-shell").classList.add("playtest");
     $("#playtest-status").hidden = false;
-    $("#playtest-status").textContent = "Static-surface + devices experiment \xB7 Space: jump \xB7 Down: roll \xB7 At rest: hold Down + Space to charge, release Down to Spin Dash. R resets.";
+    $("#playtest-status").textContent = "Static-surface + devices experiment \xB7 Space: jump \xB7 Down: roll \xB7 At rest: hold Down + Space to charge, release Down to Spin Dash \xB7 Shift/X: Boost \xB7 gold rail = free Boost. R resets.";
     $("#game-controls").hidden = true;
     $("#playtest-controls").hidden = false;
     $("#game-hint").hidden = true;
@@ -19168,7 +19574,7 @@
     $("#act-select").value = "playtest";
     canvas.setAttribute(
       "aria-label",
-      "PLAYTEST static terrain experiment. Left and right move, Down rolls, Space jumps; release for a short hop. P pauses, R resets. Buttons select flat, valley, crest, gap, wall or low ceiling. Down + Space charges Spin Dash at rest; release Down to launch. Boost is disabled. STAGE returns to either act."
+      "PLAYTEST static terrain experiment. Left and right move, Down rolls, Space jumps; release for a short hop. P pauses, R resets. Buttons select flat, valley, crest, gap, wall or low ceiling. Down + Space charges Spin Dash at rest; release Down to launch. Shift or X uses Boost; gold rail sections have free Boost. STAGE returns to either act."
     );
     for (const scenario of Object.keys(motionFixtures))
       $("#playtest-" + scenario).onclick = () => {
@@ -19209,6 +19615,10 @@
       return;
     }
     if (state.mode === "playing") {
+      if (["ShiftLeft", "ShiftRight", "KeyX", "MouseBoost"].includes(code) && !["ShiftLeft", "ShiftRight", "KeyX", "MouseBoost"].some((k) => keys.has(k))) {
+        playtestState.boostPressed = true;
+        playtestState.boostPressAirborne = playtestState.player.mode === "airborne";
+      }
       if (["Space", "ArrowUp", "KeyW"].includes(code) && !["Space", "ArrowUp", "KeyW"].some((k) => keys.has(k)) && playtestState.player.mode === "grounded")
         playtestState.jumpPressed = true;
       if ((code === "ArrowDown" || code === "KeyS") && !keys.has(code))
@@ -19226,10 +19636,15 @@
         direction,
         down: playtestState.rollPressed || keys.has("ArrowDown") || keys.has("KeyS"),
         jumpPressed: playtestState.jumpPressed,
-        jumpHeld: ["Space", "ArrowUp", "KeyW"].some((k) => keys.has(k))
+        jumpHeld: ["Space", "ArrowUp", "KeyW"].some((k) => keys.has(k)),
+        boostHeld: ["ShiftLeft", "ShiftRight", "KeyX", "MouseBoost"].some((k) => keys.has(k)),
+        boostPressed: playtestState.boostPressed,
+        boostPressAirborne: playtestState.boostPressAirborne
       });
       playtestState.rollPressed = false;
       playtestState.jumpPressed = false;
+      playtestState.boostPressed = false;
+      playtestState.boostPressAirborne = false;
       playtestState.frames++;
       if (player.boundary) resetPlaytest(player.scenario, player.boundary);
       else {
@@ -19271,12 +19686,12 @@
   __name(framePlaytest, "framePlaytest");
   function updatePlaytestHud() {
     const player = playtestState.player, c = motionContact(player);
-    $("#playtest-mode").textContent = String(state.mode).toUpperCase() + " / " + player.mode.toUpperCase() + " / " + player.posture.toUpperCase() + (player.dash ? " / CHARGING" : "");
+    $("#playtest-mode").textContent = String(state.mode).toUpperCase() + " / " + player.mode.toUpperCase() + " / " + (player.railId ? "GRINDING" : player.posture.toUpperCase()) + (player.dash ? " / CHARGING" : "");
     $("#playtest-frame").textContent = String(playtestState.frames);
     $("#playtest-input").textContent = [...keys].join(", ") || "none";
-    $("#playtest-debug").textContent = `${motionTuning.revision} \xB7 ${player.scenario} \xB7 gsp ${c.grounded ? c.speed.toFixed(3) : "\u2014"} \xB7 v(${c.vx.toFixed(3)}, ${c.vy.toFixed(3)}) \xB7 angle ${(c.angle * 180 / Math.PI).toFixed(2)}\xB0
+    $("#playtest-debug").textContent = `${motionTuning.revision} \xB7 ${player.scenario} \xB7 gsp ${c.grounded ? c.speed.toFixed(3) : "\u2014"} \xB7 v(${c.vx.toFixed(3)}, ${c.vy.toFixed(3)}) \xB7 angle ${((c.surfaceAngle ?? c.angle) * 180 / Math.PI).toFixed(2)}\xB0
 ${c.grounded ? "CONTACT" : "AIR REF"} (${c.x.toFixed(2)}, ${c.y.toFixed(2)}) \xB7 body ${c.width}\xD7${c.height} \xB7 center (${c.center.x.toFixed(2)}, ${c.center.y.toFixed(2)}) \xB7 normal ${c.grounded ? `(${c.nx.toFixed(3)}, ${c.ny.toFixed(3)})` : "none"} \xB7 N ${c.normalReaction.toFixed(3)}${c.uprightGrip ? " \xB7 UPRIGHT CREST GRIP" : ""}${c.steepGrip ? " \xB7 STEEP GRIP \u22652.5" : ""}
-dash ${player.dash?.charge || 0}/30 \xB7 support ${player.supportId || "terrain / air"} \xB7 springs ${player.springLaunches} \xB7 ${player.pathS != null ? "path s " + player.pathS.toFixed(2) + " \xB7 " : ""}${player.latestTransition} \xB7 controller ticks ${player.ticks} \xB7 reset ${playtestState.resetCount}: ${playtestState.resetReason}`;
+Boost ${player.boost.meter.toFixed(2)}/90${c.infiniteBoost && player.railId ? " FREE RAIL" : ""} \xB7 burst ${player.boost.remaining}/18 \xB7 air ${player.boost.airUsed ? "used" : "ready"} \xB7 rail ${player.railId || "none"} \xB7 dash ${player.dash?.charge || 0}/30 \xB7 support ${player.supportId || "terrain / air"} \xB7 springs ${player.springLaunches} \xB7 ${player.pathS != null ? "path s " + player.pathS.toFixed(2) + " \xB7 " : ""}${player.latestTransition} \xB7 controller ticks ${player.ticks} \xB7 reset ${playtestState.resetCount}: ${playtestState.resetReason}`;
   }
   __name(updatePlaytestHud, "updatePlaytestHud");
   function readPlaytestState() {
@@ -19303,8 +19718,8 @@ dash ${player.dash?.charge || 0}/30 \xB7 support ${player.supportId || "terrain 
     const footShift = c.grounded ? Math.hypot(c.center.x - c.x, c.center.y - c.y) - c.height / 2 : 0;
     ctx.translate(c.x + c.nx * footShift, c.y + c.ny * footShift);
     ctx.rotate(c.angle);
-    const sheet = art.recoveredSpeedster ? "recoveredSpeedster" : "recoveredPeelout";
-    const index = rolling ? 26 + Math.floor(player.dash ? player.ticks / 2 : player.distance / 10) % 3 : Math.abs(player.speed) > 0.1 ? Math.floor(player.distance / 12) % 8 : 16;
+    const sheet = (player.railId || player.boost.active) && art.supplemental ? "supplemental" : art.recoveredSpeedster ? "recoveredSpeedster" : "recoveredPeelout";
+    const index = sheet === "supplemental" ? (player.railId ? 16 : 8) + Math.floor(player.ticks / 3) % 8 : rolling ? 26 + Math.floor(player.dash ? player.ticks / 2 : player.distance / 10) % 3 : Math.abs(player.speed) > 0.1 ? Math.floor(player.distance / 12) % 8 : 16;
     const im = art[sheet], descriptor = recoveredSpriteFrames[sheet]?.[index];
     if (im && descriptor) {
       const [left, top, right, bottom] = descriptor.bounds, sw = right - left, sh = bottom - top;
@@ -19408,6 +19823,24 @@ dash ${player.dash?.charge || 0}/30 \xB7 support ${player.supportId || "terrain 
       ctx.strokeRect(box.x1, box.y1, box.x2 - box.x1, box.y2 - box.y1);
     }
     const fixture = motionFixtures[player.scenario];
+    for (const rail of fixture.rails || [])
+      for (const piece of rail.pieces) {
+        ctx.beginPath();
+        ctx.moveTo(piece.x1, sampleExperimentalRail(rail, piece.x1).y);
+        for (let x = piece.x1 + 4; x < piece.x2; x += 4)
+          ctx.lineTo(x, sampleExperimentalRail(rail, x).y);
+        ctx.lineTo(piece.x2, sampleExperimentalRail(rail, piece.x2).y);
+        ctx.strokeStyle = piece.infiniteBoost ? "#ffd54a" : "#61d9f1";
+        ctx.lineWidth = 5;
+        ctx.stroke();
+        ctx.fillStyle = piece.infiniteBoost ? "#ffd54a" : "#b4b9d2";
+        ctx.font = "12px monospace";
+        ctx.fillText(
+          piece.infiniteBoost ? "FREE BOOST" : "GRIND RAIL",
+          (piece.x1 + piece.x2) / 2,
+          sampleExperimentalRail(rail, (piece.x1 + piece.x2) / 2).y + 30
+        );
+      }
     for (const platform of fixture.platforms || []) {
       const box = experimentalPlatformPose(platform, player.ticks);
       ctx.fillStyle = "#39355f";
@@ -19454,11 +19887,11 @@ dash ${player.dash?.charge || 0}/30 \xB7 support ${player.supportId || "terrain 
     ctx.restore();
   }
   __name(drawPlaytest, "drawPlaytest");
-  function initializeRuntimeModule29() {
+  function initializeRuntimeModule31() {
     playtestState = null;
   }
-  __name(initializeRuntimeModule29, "initializeRuntimeModule");
-  function getRuntimeBindings29() {
+  __name(initializeRuntimeModule31, "initializeRuntimeModule");
+  function getRuntimeBindings31() {
     return {
       playtestState: {
         get: /* @__PURE__ */ __name(() => playtestState, "get"),
@@ -19468,7 +19901,7 @@ dash ${player.dash?.charge || 0}/30 \xB7 support ${player.supportId || "terrain 
       }
     };
   }
-  __name(getRuntimeBindings29, "getRuntimeBindings");
+  __name(getRuntimeBindings31, "getRuntimeBindings");
 
   // src/act2.js
   var cameraTracking;
@@ -19982,12 +20415,12 @@ dash ${player.dash?.charge || 0}/30 \xB7 support ${player.supportId || "terrain 
     ctx.stroke();
   }
   __name(drawClimbCue, "drawClimbCue");
-  function initializeRuntimeModule30() {
+  function initializeRuntimeModule32() {
     cameraTracking = { anchor: 0.64, lift: 0, prediction: 0, velocity: 0, lastY: null };
     skylineSmokeSprites = /* @__PURE__ */ new Map();
   }
-  __name(initializeRuntimeModule30, "initializeRuntimeModule");
-  function getRuntimeBindings30() {
+  __name(initializeRuntimeModule32, "initializeRuntimeModule");
+  function getRuntimeBindings32() {
     return {
       selectAct: {
         get: /* @__PURE__ */ __name(() => selectAct, "get"),
@@ -20117,7 +20550,7 @@ dash ${player.dash?.charge || 0}/30 \xB7 support ${player.supportId || "terrain 
       }
     };
   }
-  __name(getRuntimeBindings30, "getRuntimeBindings");
+  __name(getRuntimeBindings32, "getRuntimeBindings");
 
   // src/midsection.js
   function addMiddleSection(l) {
@@ -20522,10 +20955,10 @@ dash ${player.dash?.charge || 0}/30 \xB7 support ${player.supportId || "terrain 
     if (typeof drawPoolBooster === "function") drawPoolBooster(airDevicePose(pool.booster));
   }
   __name(drawMiddleSection, "drawMiddleSection");
-  function initializeRuntimeModule31() {
+  function initializeRuntimeModule33() {
   }
-  __name(initializeRuntimeModule31, "initializeRuntimeModule");
-  function getRuntimeBindings31() {
+  __name(initializeRuntimeModule33, "initializeRuntimeModule");
+  function getRuntimeBindings33() {
     return {
       addMiddleSection: {
         get: /* @__PURE__ */ __name(() => addMiddleSection, "get"),
@@ -20559,22 +20992,22 @@ dash ${player.dash?.charge || 0}/30 \xB7 support ${player.supportId || "terrain 
       }
     };
   }
-  __name(getRuntimeBindings31, "getRuntimeBindings");
+  __name(getRuntimeBindings33, "getRuntimeBindings");
 
   // src/ending-polish-frames.js
   var ending_polish_frames_exports = {};
   __export(ending_polish_frames_exports, {
-    getRuntimeBindings: () => getRuntimeBindings32,
-    initializeRuntimeModule: () => initializeRuntimeModule32
+    getRuntimeBindings: () => getRuntimeBindings34,
+    initializeRuntimeModule: () => initializeRuntimeModule34
   });
-  function initializeRuntimeModule32() {
+  function initializeRuntimeModule34() {
     Object.assign(endingFrames, { "sonic-polish": [{ "bounds": [38, 23, 207, 242], "seed": [109, 23], "anchor": [136, 242], "scale": 0.27802690582959644 }, { "bounds": [289, 23, 465, 242], "seed": [359, 23], "anchor": [393.5, 242], "scale": 0.27802690582959644 }, { "bounds": [551, 23, 721, 242], "seed": [620, 23], "anchor": [648.5, 242], "scale": 0.27802690582959644 }, { "bounds": [802, 20, 1016, 242], "seed": [873, 20], "anchor": [904.5, 242], "scale": 0.27802690582959644 }, { "bounds": [1063, 21, 1249, 242], "seed": [1133, 21], "anchor": [1160.5, 242], "scale": 0.27802690582959644 }, { "bounds": [1320, 25, 1491, 243], "seed": [1394, 25], "anchor": [1408, 243], "scale": 0.27802690582959644 }, { "bounds": [38, 267, 212, 492], "seed": [111, 267], "anchor": [137, 492], "scale": 0.27802690582959644 }, { "bounds": [296, 268, 477, 492], "seed": [367, 268], "anchor": [402.5, 492], "scale": 0.27802690582959644 }, { "bounds": [550, 267, 726, 492], "seed": [621, 267], "anchor": [652, 492], "scale": 0.27802690582959644 }, { "bounds": [801, 267, 1007, 492], "seed": [873, 267], "anchor": [907, 492], "scale": 0.27802690582959644 }, { "bounds": [1056, 267, 1272, 493], "seed": [1126, 267], "anchor": [1163.5, 493], "scale": 0.27802690582959644 }, { "bounds": [1312, 280, 1513, 493], "seed": [1388, 280], "anchor": [1411.5, 493], "scale": 0.27802690582959644 }, { "bounds": [37, 523, 217, 749], "seed": [108, 523], "anchor": [143.5, 749], "scale": 0.27802690582959644 }, { "bounds": [293, 520, 474, 749], "seed": [427, 520], "anchor": [400.5, 749], "scale": 0.27802690582959644 }, { "bounds": [556, 514, 737, 749], "seed": [614, 514], "anchor": [662.5, 749], "scale": 0.27802690582959644 }, { "bounds": [804, 523, 984, 749], "seed": [877, 523], "anchor": [910, 749], "scale": 0.27802690582959644 }, { "bounds": [1078, 523, 1253, 749], "seed": [1147, 523], "anchor": [1165.5, 749], "scale": 0.27802690582959644 }, { "bounds": [1320, 523, 1496, 749], "seed": [1389, 523], "anchor": [1422.5, 749], "scale": 0.27802690582959644 }, { "bounds": [36, 777, 214, 1004], "seed": [106, 777], "anchor": [137, 1004], "scale": 0.27802690582959644 }, { "bounds": [291, 777, 477, 1004], "seed": [362, 777], "anchor": [397.5, 1004], "scale": 0.27802690582959644 }, { "bounds": [554, 774, 762, 1004], "seed": [623, 774], "anchor": [657.5, 1004], "scale": 0.27802690582959644 }, { "bounds": [808, 762, 1021, 1001], "seed": [882, 762], "anchor": [878, 1001], "scale": 0.27802690582959644 }, { "bounds": [1075, 763, 1279, 993], "seed": [1138, 763], "anchor": [1150.5, 993], "scale": 0.27802690582959644 }, { "bounds": [1326, 760, 1515, 993], "seed": [1391, 760], "anchor": [1427, 993], "scale": 0.27802690582959644 }], "shadow-polish": [{ "bounds": [33, 23, 206, 234], "seed": [131, 23], "anchor": [96, 234], "scale": 0.26 }, { "bounds": [266, 32, 465, 267], "seed": [354, 32], "anchor": [325.5, 267], "scale": 0.26 }, { "bounds": [483, 22, 745, 260], "seed": [578, 22], "anchor": [551.5, 260], "scale": 0.26 }, { "bounds": [766, 29, 962, 262], "seed": [854, 29], "anchor": [912, 262], "scale": 0.26 }, { "bounds": [980, 35, 1184, 269], "seed": [1073, 35], "anchor": [1133, 269], "scale": 0.26 }, { "bounds": [1239, 70, 1415, 266], "seed": [1319, 70], "anchor": [1332.5, 266], "scale": 0.26 }, { "bounds": [24, 323, 223, 514], "seed": [117, 323], "anchor": [118, 514], "scale": 0.26 }, { "bounds": [266, 294, 448, 519], "seed": [342, 294], "anchor": [357, 519], "scale": 0.26 }, { "bounds": [522, 289, 694, 514], "seed": [580, 289], "anchor": [615, 514], "scale": 0.26 }, { "bounds": [740, 289, 917, 522], "seed": [841, 289], "anchor": [817, 522], "scale": 0.26 }, { "bounds": [966, 289, 1165, 525], "seed": [1089, 289], "anchor": [1069, 525], "scale": 0.26 }, { "bounds": [1244, 289, 1428, 524], "seed": [1352, 289], "anchor": [1329.5, 524], "scale": 0.26, "gem": [1276, 397] }, { "bounds": [28, 543, 216, 779], "seed": [139, 543], "anchor": [113, 779], "scale": 0.26, "gem": [59, 666] }, { "bounds": [265, 541, 454, 777], "seed": [386, 541], "anchor": [352.5, 777], "scale": 0.26, "gem": [295, 690] }, { "bounds": [479, 540, 698, 777], "seed": [621, 540], "anchor": [586.5, 777], "scale": 0.26, "gem": [507, 605] }, { "bounds": [727, 551, 944, 779], "seed": [858, 551], "anchor": [829.5, 779], "scale": 0.26, "gem": [753, 610] }, { "bounds": [977, 547, 1178, 779], "seed": [1102, 547], "anchor": [1073, 779], "scale": 0.26, "gem": [1002, 566] }, { "bounds": [1235, 544, 1429, 780], "seed": [1350, 544], "anchor": [1330, 780], "scale": 0.26, "gem": [1266, 658] }, { "bounds": [21, 796, 217, 1049], "seed": [135, 796], "anchor": [116, 1049], "scale": 0.243, "gem": [53, 925] }, { "bounds": [271, 796, 459, 1049], "seed": [379, 796], "anchor": [361, 1049], "scale": 0.243, "gem": [303, 930] }, { "bounds": [498, 800, 694, 1050], "seed": [604, 800], "anchor": [588.5, 1050], "scale": 0.243, "gem": [532, 932] }, { "bounds": [740, 798, 929, 1050], "seed": [847, 798], "anchor": [831, 1050], "scale": 0.243, "gem": [774, 940] }, { "bounds": [983, 801, 1167, 1050], "seed": [1080, 801], "anchor": [1073.5, 1050], "scale": 0.243, "gem": [1015, 958] }, { "bounds": [1230, 802, 1421, 1050], "seed": [1336, 802], "anchor": [1321.5, 1050], "scale": 0.243, "gem": [1263, 951] }], "eggman-polish": [{ "bounds": [22, 58, 410, 473], "seed": [164, 58], "anchor": [216, 473], "scale": 0.246 }, { "bounds": [443, 59, 826, 473], "seed": [581, 59], "anchor": [634.5, 473], "scale": 0.246 }, { "bounds": [833, 59, 1223, 474], "seed": [973, 59], "anchor": [1028, 474], "scale": 0.246 }, { "bounds": [1246, 59, 1638, 475], "seed": [1387, 59], "anchor": [1442, 475], "scale": 0.246 }, { "bounds": [20, 497, 410, 914], "seed": [164, 497], "anchor": [215, 914], "scale": 0.246 }, { "bounds": [436, 498, 830, 914], "seed": [581, 498], "anchor": [633, 914], "scale": 0.246 }, { "bounds": [843, 499, 1239, 916], "seed": [992, 499], "anchor": [1041, 916], "scale": 0.246 }, { "bounds": [1266, 499, 1656, 914], "seed": [1423, 499], "anchor": [1461, 914], "scale": 0.246 }] });
   }
-  __name(initializeRuntimeModule32, "initializeRuntimeModule");
-  function getRuntimeBindings32() {
+  __name(initializeRuntimeModule34, "initializeRuntimeModule");
+  function getRuntimeBindings34() {
     return {};
   }
-  __name(getRuntimeBindings32, "getRuntimeBindings");
+  __name(getRuntimeBindings34, "getRuntimeBindings");
 
   // src/main.js
   var modules = [
@@ -20607,6 +21040,8 @@ dash ${player.dash?.charge || 0}/30 \xB7 support ${player.supportId || "terrain 
     playtest_ground_exports,
     playtest_path_exports,
     playtest_devices_exports,
+    playtest_rails_exports,
+    playtest_boost_exports,
     playtest_motion_exports,
     playtest_exports,
     game_exports

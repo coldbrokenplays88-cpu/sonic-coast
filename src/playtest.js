@@ -1,3 +1,4 @@
+import { sampleExperimentalRail } from './playtest-rails.js';
 import { experimentalPlatformPose, experimentalSpringPose } from './playtest-devices.js';
 import { samplePath } from './playtest-path.js';
 // Isolated static-surface experiment. Legacy player state is never advanced here.
@@ -27,6 +28,9 @@ export function clearPlaytestInput() {
   keys.clear();
   if (playtestState) {
     playtestState.player.dash = null;
+    Object.assign(playtestState.player.boost, { held: false, active: false, remaining: 0 });
+    playtestState.boostPressed = false;
+    playtestState.boostPressAirborne = false;
     playtestState.rollPressed = false;
     playtestState.jumpPressed = false;
     if (playtestState.player.air) {
@@ -46,6 +50,8 @@ export function resetPlaytest(
     frames: 0,
     rollPressed: false,
     jumpPressed: false,
+    boostPressed: false,
+    boostPressAirborne: false,
     player: createMotionPlayer(scenario),
     camera: {
       x: spawn.x - W / 2,
@@ -88,7 +94,7 @@ export function setupPlaytest() {
   $('#game-shell').classList.add('playtest');
   $('#playtest-status').hidden = false;
   $('#playtest-status').textContent =
-    'Static-surface + devices experiment · Space: jump · Down: roll · At rest: hold Down + Space to charge, release Down to Spin Dash. R resets.';
+    'Static-surface + devices experiment · Space: jump · Down: roll · At rest: hold Down + Space to charge, release Down to Spin Dash · Shift/X: Boost · gold rail = free Boost. R resets.';
   $('#game-controls').hidden = true;
   $('#playtest-controls').hidden = false;
   $('#game-hint').hidden = true;
@@ -100,7 +106,7 @@ export function setupPlaytest() {
   $('#act-select').value = 'playtest';
   canvas.setAttribute(
     'aria-label',
-    'PLAYTEST static terrain experiment. Left and right move, Down rolls, Space jumps; release for a short hop. P pauses, R resets. Buttons select flat, valley, crest, gap, wall or low ceiling. Down + Space charges Spin Dash at rest; release Down to launch. Boost is disabled. STAGE returns to either act.'
+    'PLAYTEST static terrain experiment. Left and right move, Down rolls, Space jumps; release for a short hop. P pauses, R resets. Buttons select flat, valley, crest, gap, wall or low ceiling. Down + Space charges Spin Dash at rest; release Down to launch. Shift or X uses Boost; gold rail sections have free Boost. STAGE returns to either act.'
   );
   for (const scenario of Object.keys(motionFixtures))
     $('#playtest-' + scenario).onclick = () => {
@@ -142,6 +148,13 @@ export function handlePlaytestInput(code, pressed) {
   }
   if (runtimeState.mode === 'playing') {
     if (
+      ['ShiftLeft', 'ShiftRight', 'KeyX', 'MouseBoost'].includes(code) &&
+      !['ShiftLeft', 'ShiftRight', 'KeyX', 'MouseBoost'].some((k) => keys.has(k))
+    ) {
+      playtestState.boostPressed = true;
+      playtestState.boostPressAirborne = playtestState.player.mode === 'airborne';
+    }
+    if (
       ['Space', 'ArrowUp', 'KeyW'].includes(code) &&
       !['Space', 'ArrowUp', 'KeyW'].some((k) => keys.has(k)) &&
       playtestState.player.mode === 'grounded'
@@ -165,9 +178,14 @@ export function updatePlaytest() {
       down: playtestState.rollPressed || keys.has('ArrowDown') || keys.has('KeyS'),
       jumpPressed: playtestState.jumpPressed,
       jumpHeld: ['Space', 'ArrowUp', 'KeyW'].some((k) => keys.has(k)),
+      boostHeld: ['ShiftLeft', 'ShiftRight', 'KeyX', 'MouseBoost'].some((k) => keys.has(k)),
+      boostPressed: playtestState.boostPressed,
+      boostPressAirborne: playtestState.boostPressAirborne,
     });
     playtestState.rollPressed = false;
     playtestState.jumpPressed = false;
+    playtestState.boostPressed = false;
+    playtestState.boostPressAirborne = false;
     playtestState.frames++;
     if (player.boundary) resetPlaytest(player.scenario, player.boundary);
     else {
@@ -218,14 +236,14 @@ export function updatePlaytestHud() {
     ' / ' +
     player.mode.toUpperCase() +
     ' / ' +
-    player.posture.toUpperCase() +
+    (player.railId ? 'GRINDING' : player.posture.toUpperCase()) +
     (player.dash ? ' / CHARGING' : '');
   $('#playtest-frame').textContent = String(playtestState.frames);
   $('#playtest-input').textContent = [...keys].join(', ') || 'none';
   $('#playtest-debug').textContent =
-    `${motionTuning.revision} · ${player.scenario} · gsp ${c.grounded ? c.speed.toFixed(3) : '—'} · v(${c.vx.toFixed(3)}, ${c.vy.toFixed(3)}) · angle ${((c.angle * 180) / Math.PI).toFixed(2)}°\n` +
+    `${motionTuning.revision} · ${player.scenario} · gsp ${c.grounded ? c.speed.toFixed(3) : '—'} · v(${c.vx.toFixed(3)}, ${c.vy.toFixed(3)}) · angle ${(((c.surfaceAngle ?? c.angle) * 180) / Math.PI).toFixed(2)}°\n` +
     `${c.grounded ? 'CONTACT' : 'AIR REF'} (${c.x.toFixed(2)}, ${c.y.toFixed(2)}) · body ${c.width}×${c.height} · center (${c.center.x.toFixed(2)}, ${c.center.y.toFixed(2)}) · normal ${c.grounded ? `(${c.nx.toFixed(3)}, ${c.ny.toFixed(3)})` : 'none'} · N ${c.normalReaction.toFixed(3)}${c.uprightGrip ? ' · UPRIGHT CREST GRIP' : ''}${c.steepGrip ? ' · STEEP GRIP ≥2.5' : ''}\n` +
-    `dash ${player.dash?.charge || 0}/30 · support ${player.supportId || 'terrain / air'} · springs ${player.springLaunches} · ${player.pathS != null ? 'path s ' + player.pathS.toFixed(2) + ' · ' : ''}${player.latestTransition} · controller ticks ${player.ticks} · reset ${playtestState.resetCount}: ${playtestState.resetReason}`;
+    `Boost ${player.boost.meter.toFixed(2)}/90${c.infiniteBoost && player.railId ? ' FREE RAIL' : ''} · burst ${player.boost.remaining}/18 · air ${player.boost.airUsed ? 'used' : 'ready'} · rail ${player.railId || 'none'} · dash ${player.dash?.charge || 0}/30 · support ${player.supportId || 'terrain / air'} · springs ${player.springLaunches} · ${player.pathS != null ? 'path s ' + player.pathS.toFixed(2) + ' · ' : ''}${player.latestTransition} · controller ticks ${player.ticks} · reset ${playtestState.resetCount}: ${playtestState.resetReason}`;
 }
 
 export function readPlaytestState() {
@@ -258,12 +276,20 @@ export function drawGroundPlayer(player) {
   const footShift = c.grounded ? Math.hypot(c.center.x - c.x, c.center.y - c.y) - c.height / 2 : 0;
   ctx.translate(c.x + c.nx * footShift, c.y + c.ny * footShift);
   ctx.rotate(c.angle);
-  const sheet = art.recoveredSpeedster ? 'recoveredSpeedster' : 'recoveredPeelout';
-  const index = rolling
-    ? 26 + (Math.floor(player.dash ? player.ticks / 2 : player.distance / 10) % 3)
-    : Math.abs(player.speed) > 0.1
-      ? Math.floor(player.distance / 12) % 8
-      : 16;
+  const sheet =
+    (player.railId || player.boost.active) && art.supplemental
+      ? 'supplemental'
+      : art.recoveredSpeedster
+        ? 'recoveredSpeedster'
+        : 'recoveredPeelout';
+  const index =
+    sheet === 'supplemental'
+      ? (player.railId ? 16 : 8) + (Math.floor(player.ticks / 3) % 8)
+      : rolling
+        ? 26 + (Math.floor(player.dash ? player.ticks / 2 : player.distance / 10) % 3)
+        : Math.abs(player.speed) > 0.1
+          ? Math.floor(player.distance / 12) % 8
+          : 16;
   const im = art[sheet],
     descriptor = recoveredSpriteFrames[sheet]?.[index];
   if (im && descriptor) {
@@ -375,6 +401,24 @@ export function drawPlaytest() {
     ctx.strokeRect(box.x1, box.y1, box.x2 - box.x1, box.y2 - box.y1);
   }
   const fixture = motionFixtures[player.scenario];
+  for (const rail of fixture.rails || [])
+    for (const piece of rail.pieces) {
+      ctx.beginPath();
+      ctx.moveTo(piece.x1, sampleExperimentalRail(rail, piece.x1).y);
+      for (let x = piece.x1 + 4; x < piece.x2; x += 4)
+        ctx.lineTo(x, sampleExperimentalRail(rail, x).y);
+      ctx.lineTo(piece.x2, sampleExperimentalRail(rail, piece.x2).y);
+      ctx.strokeStyle = piece.infiniteBoost ? '#ffd54a' : '#61d9f1';
+      ctx.lineWidth = 5;
+      ctx.stroke();
+      ctx.fillStyle = piece.infiniteBoost ? '#ffd54a' : '#b4b9d2';
+      ctx.font = '12px monospace';
+      ctx.fillText(
+        piece.infiniteBoost ? 'FREE BOOST' : 'GRIND RAIL',
+        (piece.x1 + piece.x2) / 2,
+        sampleExperimentalRail(rail, (piece.x1 + piece.x2) / 2).y + 30
+      );
+    }
   for (const platform of fixture.platforms || []) {
     const box = experimentalPlatformPose(platform, player.ticks);
     ctx.fillStyle = '#39355f';

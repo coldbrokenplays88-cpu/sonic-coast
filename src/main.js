@@ -29,6 +29,8 @@ import * as module26 from './game.js';
 import * as groundModule from './playtest-ground.js';
 import * as pathModule from './playtest-path.js';
 import * as deviceModule from './playtest-devices.js';
+import * as railModule from './playtest-rails.js';
+import * as boostModule from './playtest-boost.js';
 import * as motionModule from './playtest-motion.js';
 import * as playtestModule from './playtest.js';
 
@@ -63,6 +65,8 @@ const modules = [
   groundModule,
   pathModule,
   deviceModule,
+  railModule,
+  boostModule,
   motionModule,
   playtestModule,
   module26,
