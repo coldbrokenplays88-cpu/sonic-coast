@@ -2,6 +2,7 @@ import { updatePixelHud } from './hud.js';
 import { syncGameMusic } from './game-music.js';
 import {
   isPlaytest,
+  clearPlaytestInput,
   setupPlaytest,
   exitPlaytest,
   resetPlaytest,
@@ -9,6 +10,7 @@ import {
   updatePlaytest,
   updatePlaytestHud,
   drawPlaytest,
+  framePlaytest,
   readPlaytestState,
 } from './playtest.js';
 import { setGameSoundEnabled, playGameSound } from './game-audio.js';
@@ -467,7 +469,8 @@ export function start() {
   runtimeState.mode = 'playing';
   $('#overlay').classList.add('hidden');
   $('#pause').textContent = 'Ⅱ';
-  keys.clear();
+  if (isPlaytest()) clearPlaytestInput();
+  else keys.clear();
   canvas.focus();
   gameSound('start');
   updateHud();
@@ -476,7 +479,7 @@ export function start() {
 export function show(title, text, label) {
   $('#overlay').classList.remove('hidden');
   $('.intro').innerHTML =
-    `<span class="eyebrow">${isPlaytest() ? 'PLAYTEST' : `${runtimeState.level.title || 'NEON EXPRESS'} ACT ${runtimeState.selectedAct}`}</span><h1>${title}</h1><p>${text}</p><button id="play" class="primary">${label} <span>▶</span></button><span class="start-note">${isPlaytest() ? 'P: pause / resume · R: reset · Movement disabled' : 'Tap / hold Space: jump height · Down: roll · Left click / Shift / X: boost'}</span>`;
+    `<span class="eyebrow">${isPlaytest() ? 'PLAYTEST' : `${runtimeState.level.title || 'NEON EXPRESS'} ACT ${runtimeState.selectedAct}`}</span><h1>${title}</h1><p>${text}</p><button id="play" class="primary">${label} <span>▶</span></button><span class="start-note">${isPlaytest() ? '← → / A D: move · Down: roll · P: pause · R: reset' : 'Tap / hold Space: jump height · Down: roll · Left click / Shift / X: boost'}</span>`;
   $('#play').onclick = start;
 }
 
@@ -487,7 +490,7 @@ export function pause() {
     show(
       isPlaytest() ? 'PLAYTEST<br><em>paused.</em>' : 'Catch your<br><em>breath.</em>',
       isPlaytest()
-        ? 'Diagnostic scene paused. Movement is not implemented yet.'
+        ? 'Ground experiment paused. Your speed and contact are preserved.'
         : 'Your run is paused.',
       'RESUME'
     );
@@ -1326,6 +1329,10 @@ export function draw() {
 }
 
 export function frame(t) {
+  if (isPlaytest()) {
+    framePlaytest(t);
+    return;
+  }
   if (!runtimeState.last) runtimeState.last = t;
   runtimeState.acc += Math.min(100, t - runtimeState.last);
   runtimeState.last = t;

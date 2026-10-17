@@ -936,3 +936,6 @@ kbd {
 #playtest-controls[hidden] {
   display: none;
 }
+
+#playtest-debug { white-space: pre-line; font-size: 11px; line-height: 1.45; }
+.playtest-panel button { padding: 4px 10px; font: inherit; }

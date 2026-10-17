@@ -5,9 +5,10 @@ function selectAct(act) {
   setup();
   mode = 'ready';
   if (isPlaytest()) {
+    updatePlaytestHud();
     show(
       'PLAYTEST',
-      'Isolated diagnostic scene.<br>Experimental movement is not implemented yet.',
+      'Isolated ground movement experiment.<br>Flat and valley benchmarks · No jumping, boost or Spin Dash.',
       'OPEN PLAYTEST'
     );
     return;

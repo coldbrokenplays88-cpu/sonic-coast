@@ -15,11 +15,15 @@ in your browser. Leave its command window open while playing.
 Controls are shown below the game.
 
 EXPERIMENTAL BRANCH: codex/playtest-physics
-Select PLAYTEST — SCAFFOLD in the STAGE menu, then choose OPEN PLAYTEST.
-This diagnostic scene has a stationary player marker. Experimental movement
-is not implemented yet. P/Escape pauses or resumes, R or Restart resets,
-and F toggles fullscreen. Use STAGE to return to either existing act.
-Act 1 and Act 2 retain their existing gameplay.
+Select PLAYTEST — GROUND in the STAGE menu, then choose OPEN PLAYTEST.
+Left/right or A/D runs; opposite input brakes. Tap Down/S while moving to roll.
+Holding forward while rolled adds no propulsion. Rolling automatically ends
+only after sustained rest. Jump, boost, Spin Dash and airborne movement are disabled.
+Use Flat reset / Valley reset to select benchmarks; R or Restart resets to the
+selected course's safe flat spawn. Visible course boundaries also reset.
+P/Escape pauses or resumes, F toggles fullscreen. Contact outlines and debug HUD
+show the experimental body's anchor, speed, velocity, angle and controller ticks.
+Use STAGE to return to Act 1 or Act 2; their movement is unchanged.
 
 LOCAL SERVER FALLBACK (if opening the HTML file directly fails)
 Windows: RUN-GAME-WINDOWS.bat requires Python and serves this folder locally.

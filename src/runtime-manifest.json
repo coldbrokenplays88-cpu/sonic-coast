@@ -156,6 +156,12 @@
       }
     },
     {
+      "file": "playtest-ground.js",
+      "kinds": {
+        "groundTuning": "const"
+      }
+    },
+    {
       "file": "playtest.js",
       "kinds": {
         "playtestState": "let"

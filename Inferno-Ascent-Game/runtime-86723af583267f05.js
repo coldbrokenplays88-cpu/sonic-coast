@@ -331,8 +331,8 @@
     addMiddleSection: () => addMiddleSection,
     beginWrongRouteDrop: () => beginWrongRouteDrop,
     drawMiddleSection: () => drawMiddleSection,
-    getRuntimeBindings: () => getRuntimeBindings27,
-    initializeRuntimeModule: () => initializeRuntimeModule27,
+    getRuntimeBindings: () => getRuntimeBindings28,
+    initializeRuntimeModule: () => initializeRuntimeModule28,
     updateMiddleMotion: () => updateMiddleMotion,
     updateMiddleSection: () => updateMiddleSection
   });
@@ -352,8 +352,8 @@
     drawClimbCue: () => drawClimbCue,
     drawGrindRail: () => drawGrindRail,
     drawSkylineSmoke: () => drawSkylineSmoke,
-    getRuntimeBindings: () => getRuntimeBindings26,
-    initializeRuntimeModule: () => initializeRuntimeModule26,
+    getRuntimeBindings: () => getRuntimeBindings27,
+    initializeRuntimeModule: () => initializeRuntimeModule27,
     launchAirDevice: () => launchAirDevice,
     predictLanding: () => predictLanding,
     resetAct2: () => resetAct2,
@@ -368,11 +368,14 @@
   // src/playtest.js
   var playtest_exports = {};
   __export(playtest_exports, {
+    clearPlaytestInput: () => clearPlaytestInput,
+    drawGroundPlayer: () => drawGroundPlayer,
     drawPlaytest: () => drawPlaytest,
     exitPlaytest: () => exitPlaytest,
-    getRuntimeBindings: () => getRuntimeBindings25,
+    framePlaytest: () => framePlaytest,
+    getRuntimeBindings: () => getRuntimeBindings26,
     handlePlaytestInput: () => handlePlaytestInput,
-    initializeRuntimeModule: () => initializeRuntimeModule25,
+    initializeRuntimeModule: () => initializeRuntimeModule26,
     isPlaytest: () => isPlaytest,
     playtestState: () => playtestState,
     readPlaytestState: () => readPlaytestState,
@@ -15543,7 +15546,8 @@
     state.mode = "playing";
     $("#overlay").classList.add("hidden");
     $("#pause").textContent = "\u2161";
-    keys.clear();
+    if (isPlaytest()) clearPlaytestInput();
+    else keys.clear();
     canvas.focus();
     gameSound("start");
     updateHud();
@@ -15551,7 +15555,7 @@
   __name(start, "start");
   function show(title, text, label) {
     $("#overlay").classList.remove("hidden");
-    $(".intro").innerHTML = `<span class="eyebrow">${isPlaytest() ? "PLAYTEST" : `${state.level.title || "NEON EXPRESS"} ACT ${state.selectedAct}`}</span><h1>${title}</h1><p>${text}</p><button id="play" class="primary">${label} <span>\u25B6</span></button><span class="start-note">${isPlaytest() ? "P: pause / resume \xB7 R: reset \xB7 Movement disabled" : "Tap / hold Space: jump height \xB7 Down: roll \xB7 Left click / Shift / X: boost"}</span>`;
+    $(".intro").innerHTML = `<span class="eyebrow">${isPlaytest() ? "PLAYTEST" : `${state.level.title || "NEON EXPRESS"} ACT ${state.selectedAct}`}</span><h1>${title}</h1><p>${text}</p><button id="play" class="primary">${label} <span>\u25B6</span></button><span class="start-note">${isPlaytest() ? "\u2190 \u2192 / A D: move \xB7 Down: roll \xB7 P: pause \xB7 R: reset" : "Tap / hold Space: jump height \xB7 Down: roll \xB7 Left click / Shift / X: boost"}</span>`;
     $("#play").onclick = start;
   }
   __name(show, "show");
@@ -15561,7 +15565,7 @@
       keys.clear();
       show(
         isPlaytest() ? "PLAYTEST<br><em>paused.</em>" : "Catch your<br><em>breath.</em>",
-        isPlaytest() ? "Diagnostic scene paused. Movement is not implemented yet." : "Your run is paused.",
+        isPlaytest() ? "Ground experiment paused. Your speed and contact are preserved." : "Your run is paused.",
         "RESUME"
       );
       $("#pause").textContent = "\u25B6";
@@ -16310,6 +16314,10 @@
   }
   __name(draw, "draw");
   function frame(t) {
+    if (isPlaytest()) {
+      framePlaytest(t);
+      return;
+    }
     if (!state.last) state.last = t;
     state.acc += Math.min(100, t - state.last);
     state.last = t;
@@ -17127,18 +17135,175 @@
   }
   __name(getRuntimeBindings24, "getRuntimeBindings");
 
+  // src/playtest-ground.js
+  var playtest_ground_exports = {};
+  __export(playtest_ground_exports, {
+    createGroundPlayer: () => createGroundPlayer,
+    getRuntimeBindings: () => getRuntimeBindings25,
+    groundBounds: () => groundBounds,
+    groundContact: () => groundContact,
+    groundEnergy: () => groundEnergy,
+    groundResist: () => groundResist,
+    groundTuning: () => groundTuning,
+    initializeRuntimeModule: () => initializeRuntimeModule25,
+    sampleGround: () => sampleGround,
+    stepGroundPlayer: () => stepGroundPlayer
+  });
+  var groundTuning;
+  function sampleGround(scenario, x) {
+    if (scenario === "flat")
+      return { x, y: 400, angle: 0, tx: 1, ty: 0, nx: 0, ny: -1, curvature: 0 };
+    if (scenario !== "valley") throw Error("Unknown PLAYTEST ground scenario");
+    const u = Math.max(0, Math.abs(x) - 200), t = Math.min(1, u / 800), grade = 0.65;
+    const height = u < 800 ? grade * 800 * (t ** 3 - 0.5 * t ** 4) : grade * (u - 400);
+    const slope = -Math.sign(x) * grade * (3 * t * t - 2 * t ** 3);
+    const second = u < 800 ? -grade * 6 * t * (1 - t) / 800 : 0;
+    const norm = Math.hypot(1, slope);
+    return {
+      x,
+      y: 650 - height,
+      angle: Math.atan(slope),
+      tx: 1 / norm,
+      ty: slope / norm,
+      nx: slope / norm,
+      ny: -1 / norm,
+      curvature: second / norm ** 3
+    };
+  }
+  __name(sampleGround, "sampleGround");
+  function groundBounds(scenario) {
+    if (scenario === "flat") return 5e3;
+    if (scenario === "valley") return 2400;
+    throw Error("Unknown PLAYTEST ground scenario");
+  }
+  __name(groundBounds, "groundBounds");
+  function createGroundPlayer(scenario = "flat", x = 0, speed = 0, posture = "standing") {
+    groundBounds(scenario);
+    return {
+      scenario,
+      x,
+      speed,
+      posture,
+      facing: Math.sign(speed) || 1,
+      ticks: 0,
+      restTicks: 0,
+      downHeld: false,
+      distance: 0,
+      boundary: null
+    };
+  }
+  __name(createGroundPlayer, "createGroundPlayer");
+  function groundContact(player) {
+    const surface = sampleGround(player.scenario, player.x);
+    const height = player.posture === "rolling" ? groundTuning.rollDiameter : groundTuning.standHeight;
+    return {
+      ...surface,
+      speed: player.speed,
+      vx: player.speed * surface.tx,
+      vy: player.speed * surface.ty,
+      anchor: { x: surface.x, y: surface.y },
+      height,
+      width: player.posture === "rolling" ? height : groundTuning.standWidth,
+      center: { x: surface.x + surface.nx * height / 2, y: surface.y + surface.ny * height / 2 },
+      normalReaction: -groundTuning.gravity * surface.ny - player.speed ** 2 * surface.curvature
+    };
+  }
+  __name(groundContact, "groundContact");
+  function groundEnergy(player) {
+    return player.speed ** 2 / 2 + groundTuning.gravity * (650 - sampleGround(player.scenario, player.x).y);
+  }
+  __name(groundEnergy, "groundEnergy");
+  function groundResist(speed, amount) {
+    return Math.sign(speed) * Math.max(0, Math.abs(speed) - amount);
+  }
+  __name(groundResist, "groundResist");
+  function stepGroundPlayer(player, input = {}) {
+    const t = groundTuning, direction = Math.sign(input.direction || 0), down = !!input.down;
+    if (down && !player.downHeld && Math.abs(player.speed) >= t.rollEntrySpeed) {
+      player.posture = "rolling";
+      player.restTicks = 0;
+    }
+    player.downHeld = down;
+    const rolling = player.posture === "rolling";
+    const braking = direction * player.speed < 0;
+    const resistance = (rolling ? t.rollResistance : direction ? 0 : t.coastResistance) + (braking ? rolling ? t.rollBrake : t.brake : 0);
+    const dt = 1 / t.substeps;
+    for (let i = 0; i < t.substeps; i++) {
+      const before = sampleGround(player.scenario, player.x);
+      const drive = !rolling && direction && !braking ? direction * Math.min(t.acceleration, Math.max(0, t.runRange - player.speed * direction) / dt) : 0;
+      const midpointX = player.x + player.speed * before.tx * dt / 2;
+      const midpoint = sampleGround(player.scenario, midpointX);
+      const nextSpeed = groundResist(
+        player.speed + (t.gravity * midpoint.ty + drive) * dt,
+        resistance * dt
+      );
+      player.x += (player.speed + nextSpeed) * 0.5 * midpoint.tx * dt;
+      player.distance += Math.abs((player.speed + nextSpeed) * 0.5 * dt);
+      player.speed = nextSpeed;
+    }
+    player.ticks++;
+    if (Math.abs(player.speed) > 0.02) player.facing = Math.sign(player.speed);
+    const slopeForce = Math.abs(t.gravity * sampleGround(player.scenario, player.x).ty);
+    if (rolling && Math.abs(player.speed) < t.restSpeed && slopeForce <= t.rollResistance) {
+      player.restTicks++;
+      if (player.restTicks >= t.uncurlTicks) {
+        player.posture = "standing";
+        player.restTicks = 0;
+      }
+    } else player.restTicks = 0;
+    if (!Number.isFinite(player.x) || !Number.isFinite(player.speed) || Math.abs(player.speed) > t.safetySpeed)
+      player.boundary = "numerical safety reset (outside benchmark range)";
+    else if (Math.abs(player.x) > groundBounds(player.scenario))
+      player.boundary = "test boundary reset";
+  }
+  __name(stepGroundPlayer, "stepGroundPlayer");
+  function initializeRuntimeModule25() {
+    groundTuning = Object.freeze({
+      revision: "GROUND-1",
+      hz: 60,
+      substeps: 4,
+      runRange: 14,
+      acceleration: 0.16,
+      brake: 0.5,
+      coastResistance: 0.1,
+      gravity: 0.35,
+      rollResistance: 0.025,
+      rollBrake: 0.18,
+      rollEntrySpeed: 2,
+      restSpeed: 0.08,
+      uncurlTicks: 12,
+      safetySpeed: 80,
+      standHeight: 48,
+      standWidth: 22,
+      rollDiameter: 38
+    });
+  }
+  __name(initializeRuntimeModule25, "initializeRuntimeModule");
+  function getRuntimeBindings25() {
+    return {};
+  }
+  __name(getRuntimeBindings25, "getRuntimeBindings");
+
   // src/playtest.js
   var playtestState;
   function isPlaytest() {
     return state.selectedAct === "playtest";
   }
   __name(isPlaytest, "isPlaytest");
-  function resetPlaytest() {
+  function clearPlaytestInput() {
+    keys.clear();
+    if (playtestState) playtestState.rollPressed = false;
+  }
+  __name(clearPlaytestInput, "clearPlaytestInput");
+  function resetPlaytest(scenario = playtestState.player?.scenario || "flat", reason = "manual reset") {
     keys.clear();
     Object.assign(playtestState, {
       frames: 0,
-      marker: { x: 480, y: 340 },
-      camera: { x: 0, y: 0, zoom: 1 }
+      rollPressed: false,
+      player: createGroundPlayer(scenario),
+      camera: { x: -W / 2, y: sampleGround(scenario, 0).y - H * 0.66, zoom: 1 },
+      resetCount: (playtestState.resetCount ?? -1) + 1,
+      resetReason: reason
     });
     state.last = 0;
     state.acc = 0;
@@ -17171,7 +17336,7 @@
     });
     $("#game-shell").classList.add("playtest");
     $("#playtest-status").hidden = false;
-    $("#playtest-status").textContent = "Experimental movement is not implemented yet. The player marker is stationary.";
+    $("#playtest-status").textContent = "Ground-only experiment \xB7 No jump / boost / Spin Dash. Boundaries reset to the flat spawn.";
     $("#game-controls").hidden = true;
     $("#playtest-controls").hidden = false;
     $("#game-hint").hidden = true;
@@ -17183,8 +17348,13 @@
     $("#act-select").value = "playtest";
     canvas.setAttribute(
       "aria-label",
-      "PLAYTEST diagnostic scene. Stationary player marker; movement is not implemented. P pauses or resumes, R resets, F toggles fullscreen. Use the stage selector to return to either act."
+      "PLAYTEST ground experiment. Left and right move, Down enters a roll while moving. P pauses or resumes, R resets. Flat reset and Valley reset select benchmarks. Jump, boost and Spin Dash are disabled. Use the stage selector to return to either act."
     );
+    for (const scenario of ["flat", "valley"])
+      $("#playtest-" + scenario).onclick = () => {
+        resetPlaytest(scenario);
+        canvas.focus();
+      };
     syncGameMusic?.({ enabled: false, mode: "ready" });
     resetPlaytest();
   }
@@ -17218,73 +17388,177 @@
       restart();
       return;
     }
-    if (state.mode === "playing") keys.add(code);
+    if (state.mode === "playing") {
+      if ((code === "ArrowDown" || code === "KeyS") && !keys.has(code))
+        playtestState.rollPressed = true;
+      keys.add(code);
+    }
     updatePlaytestHud();
   }
   __name(handlePlaytestInput, "handlePlaytestInput");
   function updatePlaytest() {
-    if (state.mode === "playing") playtestState.frames++;
+    if (state.mode === "playing") {
+      const direction = Number(keys.has("ArrowRight") || keys.has("KeyD")) - Number(keys.has("ArrowLeft") || keys.has("KeyA"));
+      const player = playtestState.player;
+      stepGroundPlayer(player, {
+        direction,
+        down: playtestState.rollPressed || keys.has("ArrowDown") || keys.has("KeyS")
+      });
+      playtestState.rollPressed = false;
+      playtestState.frames++;
+      if (player.boundary) resetPlaytest(player.scenario, player.boundary);
+      else {
+        const contact = groundContact(player), camera = playtestState.camera;
+        camera.x += (contact.x - W / 2 + contact.vx * 8 - camera.x) * 0.12;
+        camera.y += (contact.y - H * 0.66 - camera.y) * 0.12;
+      }
+    }
     updatePlaytestHud();
   }
   __name(updatePlaytest, "updatePlaytest");
+  function framePlaytest(time) {
+    if (!state.last) state.last = time;
+    const elapsed = Math.min(250, Math.max(0, time - state.last));
+    state.last = time;
+    if (state.mode === "playing" && !state.testControlled) {
+      state.acc += elapsed;
+      const tick = 1e3 / groundTuning.hz;
+      while (state.acc + 1e-7 >= tick) {
+        state.acc = Math.max(0, state.acc - tick);
+        updatePlaytest();
+      }
+    } else state.acc = 0;
+    drawPlaytest();
+    requestAnimationFrame(frame);
+  }
+  __name(framePlaytest, "framePlaytest");
   function updatePlaytestHud() {
-    $("#playtest-mode").textContent = String(state.mode).toUpperCase();
+    const player = playtestState.player, c = groundContact(player);
+    $("#playtest-mode").textContent = String(state.mode).toUpperCase() + " / " + player.posture.toUpperCase();
     $("#playtest-frame").textContent = String(playtestState.frames);
     $("#playtest-input").textContent = [...keys].join(", ") || "none";
+    $("#playtest-debug").textContent = `${groundTuning.revision} \xB7 ${player.scenario} \xB7 speed ${c.speed.toFixed(3)} \xB7 v(${c.vx.toFixed(3)}, ${c.vy.toFixed(3)}) \xB7 angle ${(c.angle * 180 / Math.PI).toFixed(2)}\xB0
+CONTACT (${c.x.toFixed(2)}, ${c.y.toFixed(2)}) \xB7 body ${c.width}\xD7${c.height} \xB7 center (${c.center.x.toFixed(2)}, ${c.center.y.toFixed(2)}) \xB7 N ${c.normalReaction.toFixed(3)}
+controller ticks ${player.ticks} \xB7 reset ${playtestState.resetCount}: ${playtestState.resetReason}`;
   }
   __name(updatePlaytestHud, "updatePlaytestHud");
   function readPlaytestState() {
+    const player = playtestState.player;
     return {
       act: "playtest",
       status: state.mode,
-      movementImplemented: false,
+      movementImplemented: true,
+      tuning: groundTuning.revision,
       frame: playtestState.frames,
-      marker: { ...playtestState.marker },
+      player: { ...player },
+      contact: groundContact(player),
+      energy: groundEnergy(player),
       camera: { ...playtestState.camera },
-      inputs: [...keys]
+      inputs: [...keys],
+      resetCount: playtestState.resetCount,
+      resetReason: playtestState.resetReason
     };
   }
   __name(readPlaytestState, "readPlaytestState");
+  function drawGroundPlayer(player) {
+    const c = groundContact(player), rolling = player.posture === "rolling";
+    ctx.save();
+    ctx.translate(c.x, c.y);
+    ctx.rotate(c.angle);
+    const sheet = art.recoveredSpeedster ? "recoveredSpeedster" : "recoveredPeelout";
+    const index = rolling ? 26 + Math.floor(player.distance / 10) % 3 : Math.abs(player.speed) > 0.1 ? Math.floor(player.distance / 12) % 8 : 16;
+    const im = art[sheet], descriptor = recoveredSpriteFrames[sheet]?.[index];
+    if (im && descriptor) {
+      const [left, top, right, bottom] = descriptor.bounds, sw = right - left, sh = bottom - top;
+      const scale = rolling ? 38 / Math.max(sw, sh) : 48 / sh;
+      const width = sw * scale, height = sh * scale;
+      ctx.save();
+      ctx.scale(player.facing, 1);
+      ctx.drawImage(
+        im,
+        left,
+        top,
+        sw,
+        sh,
+        -width / 2,
+        rolling ? -19 - height / 2 : -48,
+        width,
+        height
+      );
+      ctx.restore();
+    } else {
+      ctx.fillStyle = "#1c52cc";
+      ctx.fillRect(-c.width / 2, -c.height, c.width, c.height);
+    }
+    ctx.strokeStyle = "#61d9f1";
+    ctx.lineWidth = 1;
+    if (rolling) {
+      ctx.beginPath();
+      ctx.arc(0, -19, 19, 0, Math.PI * 2);
+      ctx.stroke();
+    } else ctx.strokeRect(-c.width / 2, -c.height, c.width, c.height);
+    ctx.fillStyle = "#ffd54a";
+    ctx.fillRect(-3, -3, 6, 6);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(0, -65);
+    ctx.stroke();
+    ctx.restore();
+  }
+  __name(drawGroundPlayer, "drawGroundPlayer");
   function drawPlaytest() {
     ctx.save();
     ctx.scale(canvas.width / W, canvas.height / H);
     ctx.imageSmoothingEnabled = false;
     ctx.fillStyle = "#0d082d";
     ctx.fillRect(0, 0, W, H);
-    const camera = playtestState.camera;
-    ctx.scale(camera.zoom, camera.zoom);
+    const camera = playtestState.camera, player = playtestState.player;
     ctx.translate(-camera.x, -camera.y);
+    const left = Math.floor(camera.x / 4) * 4, right = camera.x + W + 4;
     ctx.fillStyle = "#242142";
-    for (let x2 = 0; x2 < W; x2 += 32) ctx.fillRect(x2, 130, 1, H - 130);
-    for (let y2 = 140; y2 < H; y2 += 32) ctx.fillRect(0, y2, W, 1);
+    for (let x = Math.floor(left / 100) * 100; x <= right; x += 100) {
+      ctx.fillRect(x, camera.y, 1, H);
+      ctx.fillStyle = "#b4b9d2";
+      ctx.font = "12px monospace";
+      ctx.fillText(String(x), x + 4, camera.y + H - 20);
+      ctx.fillStyle = "#242142";
+    }
+    ctx.beginPath();
+    ctx.moveTo(left, camera.y + H + 2e3);
+    for (let x = left; x <= right; x += 4) ctx.lineTo(x, sampleGround(player.scenario, x).y);
+    ctx.lineTo(right, camera.y + H + 2e3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#61d9f1";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    for (let x = left; x <= right; x += 4) {
+      const y = sampleGround(player.scenario, x).y;
+      if (x === left) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    const limit = groundBounds(player.scenario);
     ctx.textAlign = "center";
-    ctx.fillStyle = "#ffd54a";
-    ctx.font = "bold 32px monospace";
-    ctx.fillText("PLAYTEST", W / 2, 190);
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "16px monospace";
-    ctx.fillText("Isolated momentum prototype scaffold", W / 2, 222);
-    const { x, y } = playtestState.marker;
-    ctx.fillStyle = "#61d9f1";
-    ctx.fillRect(x - 18, y - 30, 36, 60);
-    ctx.fillStyle = "#1c52cc";
-    ctx.fillRect(x - 12, y - 24, 24, 48);
-    ctx.fillStyle = "#ffd54a";
-    ctx.fillRect(x - 4, y - 4, 8, 8);
-    ctx.fillStyle = "#ffffff";
-    ctx.fillText("PLAYER MARKER \xB7 STATIONARY", x, y + 65);
-    ctx.fillStyle = "#b4b9d2";
     ctx.font = "14px monospace";
-    ctx.fillText("Fixed camera (0, 0) \xB7 Zoom 1.0 \xB7 No movement controller", W / 2, H - 65);
-    ctx.fillText("Use STAGE above to return to Act 1 or Act 2", W / 2, H - 35);
+    for (const x of [-limit, limit]) {
+      const y = sampleGround(player.scenario, x).y;
+      ctx.fillStyle = "#ffae44";
+      ctx.fillRect(x - 2, y - 170, 4, 170);
+      ctx.fillText("TEST BOUNDARY \u2192 RESET", x - Math.sign(x) * 120, y - 130);
+    }
+    const spawn = sampleGround(player.scenario, 0);
+    ctx.fillStyle = "#b4b9d2";
+    ctx.fillText("SAFE FLAT SPAWN \xB7 R RESET", 0, spawn.y + 45);
+    drawGroundPlayer(player);
     ctx.restore();
   }
   __name(drawPlaytest, "drawPlaytest");
-  function initializeRuntimeModule25() {
+  function initializeRuntimeModule26() {
     playtestState = null;
   }
-  __name(initializeRuntimeModule25, "initializeRuntimeModule");
-  function getRuntimeBindings25() {
+  __name(initializeRuntimeModule26, "initializeRuntimeModule");
+  function getRuntimeBindings26() {
     return {
       playtestState: {
         get: /* @__PURE__ */ __name(() => playtestState, "get"),
@@ -17294,7 +17568,7 @@
       }
     };
   }
-  __name(getRuntimeBindings25, "getRuntimeBindings");
+  __name(getRuntimeBindings26, "getRuntimeBindings");
 
   // src/act2.js
   var cameraTracking;
@@ -17304,9 +17578,10 @@
     setup();
     state.mode = "ready";
     if (isPlaytest()) {
+      updatePlaytestHud();
       show(
         "PLAYTEST",
-        "Isolated diagnostic scene.<br>Experimental movement is not implemented yet.",
+        "Isolated ground movement experiment.<br>Flat and valley benchmarks \xB7 No jumping, boost or Spin Dash.",
         "OPEN PLAYTEST"
       );
       return;
@@ -17807,12 +18082,12 @@
     ctx.stroke();
   }
   __name(drawClimbCue, "drawClimbCue");
-  function initializeRuntimeModule26() {
+  function initializeRuntimeModule27() {
     cameraTracking = { anchor: 0.64, lift: 0, prediction: 0, velocity: 0, lastY: null };
     skylineSmokeSprites = /* @__PURE__ */ new Map();
   }
-  __name(initializeRuntimeModule26, "initializeRuntimeModule");
-  function getRuntimeBindings26() {
+  __name(initializeRuntimeModule27, "initializeRuntimeModule");
+  function getRuntimeBindings27() {
     return {
       selectAct: {
         get: /* @__PURE__ */ __name(() => selectAct, "get"),
@@ -17942,7 +18217,7 @@
       }
     };
   }
-  __name(getRuntimeBindings26, "getRuntimeBindings");
+  __name(getRuntimeBindings27, "getRuntimeBindings");
 
   // src/midsection.js
   function addMiddleSection(l) {
@@ -18347,10 +18622,10 @@
     if (typeof drawPoolBooster === "function") drawPoolBooster(airDevicePose(pool.booster));
   }
   __name(drawMiddleSection, "drawMiddleSection");
-  function initializeRuntimeModule27() {
+  function initializeRuntimeModule28() {
   }
-  __name(initializeRuntimeModule27, "initializeRuntimeModule");
-  function getRuntimeBindings27() {
+  __name(initializeRuntimeModule28, "initializeRuntimeModule");
+  function getRuntimeBindings28() {
     return {
       addMiddleSection: {
         get: /* @__PURE__ */ __name(() => addMiddleSection, "get"),
@@ -18384,22 +18659,22 @@
       }
     };
   }
-  __name(getRuntimeBindings27, "getRuntimeBindings");
+  __name(getRuntimeBindings28, "getRuntimeBindings");
 
   // src/ending-polish-frames.js
   var ending_polish_frames_exports = {};
   __export(ending_polish_frames_exports, {
-    getRuntimeBindings: () => getRuntimeBindings28,
-    initializeRuntimeModule: () => initializeRuntimeModule28
+    getRuntimeBindings: () => getRuntimeBindings29,
+    initializeRuntimeModule: () => initializeRuntimeModule29
   });
-  function initializeRuntimeModule28() {
+  function initializeRuntimeModule29() {
     Object.assign(endingFrames, { "sonic-polish": [{ "bounds": [38, 23, 207, 242], "seed": [109, 23], "anchor": [136, 242], "scale": 0.27802690582959644 }, { "bounds": [289, 23, 465, 242], "seed": [359, 23], "anchor": [393.5, 242], "scale": 0.27802690582959644 }, { "bounds": [551, 23, 721, 242], "seed": [620, 23], "anchor": [648.5, 242], "scale": 0.27802690582959644 }, { "bounds": [802, 20, 1016, 242], "seed": [873, 20], "anchor": [904.5, 242], "scale": 0.27802690582959644 }, { "bounds": [1063, 21, 1249, 242], "seed": [1133, 21], "anchor": [1160.5, 242], "scale": 0.27802690582959644 }, { "bounds": [1320, 25, 1491, 243], "seed": [1394, 25], "anchor": [1408, 243], "scale": 0.27802690582959644 }, { "bounds": [38, 267, 212, 492], "seed": [111, 267], "anchor": [137, 492], "scale": 0.27802690582959644 }, { "bounds": [296, 268, 477, 492], "seed": [367, 268], "anchor": [402.5, 492], "scale": 0.27802690582959644 }, { "bounds": [550, 267, 726, 492], "seed": [621, 267], "anchor": [652, 492], "scale": 0.27802690582959644 }, { "bounds": [801, 267, 1007, 492], "seed": [873, 267], "anchor": [907, 492], "scale": 0.27802690582959644 }, { "bounds": [1056, 267, 1272, 493], "seed": [1126, 267], "anchor": [1163.5, 493], "scale": 0.27802690582959644 }, { "bounds": [1312, 280, 1513, 493], "seed": [1388, 280], "anchor": [1411.5, 493], "scale": 0.27802690582959644 }, { "bounds": [37, 523, 217, 749], "seed": [108, 523], "anchor": [143.5, 749], "scale": 0.27802690582959644 }, { "bounds": [293, 520, 474, 749], "seed": [427, 520], "anchor": [400.5, 749], "scale": 0.27802690582959644 }, { "bounds": [556, 514, 737, 749], "seed": [614, 514], "anchor": [662.5, 749], "scale": 0.27802690582959644 }, { "bounds": [804, 523, 984, 749], "seed": [877, 523], "anchor": [910, 749], "scale": 0.27802690582959644 }, { "bounds": [1078, 523, 1253, 749], "seed": [1147, 523], "anchor": [1165.5, 749], "scale": 0.27802690582959644 }, { "bounds": [1320, 523, 1496, 749], "seed": [1389, 523], "anchor": [1422.5, 749], "scale": 0.27802690582959644 }, { "bounds": [36, 777, 214, 1004], "seed": [106, 777], "anchor": [137, 1004], "scale": 0.27802690582959644 }, { "bounds": [291, 777, 477, 1004], "seed": [362, 777], "anchor": [397.5, 1004], "scale": 0.27802690582959644 }, { "bounds": [554, 774, 762, 1004], "seed": [623, 774], "anchor": [657.5, 1004], "scale": 0.27802690582959644 }, { "bounds": [808, 762, 1021, 1001], "seed": [882, 762], "anchor": [878, 1001], "scale": 0.27802690582959644 }, { "bounds": [1075, 763, 1279, 993], "seed": [1138, 763], "anchor": [1150.5, 993], "scale": 0.27802690582959644 }, { "bounds": [1326, 760, 1515, 993], "seed": [1391, 760], "anchor": [1427, 993], "scale": 0.27802690582959644 }], "shadow-polish": [{ "bounds": [33, 23, 206, 234], "seed": [131, 23], "anchor": [96, 234], "scale": 0.26 }, { "bounds": [266, 32, 465, 267], "seed": [354, 32], "anchor": [325.5, 267], "scale": 0.26 }, { "bounds": [483, 22, 745, 260], "seed": [578, 22], "anchor": [551.5, 260], "scale": 0.26 }, { "bounds": [766, 29, 962, 262], "seed": [854, 29], "anchor": [912, 262], "scale": 0.26 }, { "bounds": [980, 35, 1184, 269], "seed": [1073, 35], "anchor": [1133, 269], "scale": 0.26 }, { "bounds": [1239, 70, 1415, 266], "seed": [1319, 70], "anchor": [1332.5, 266], "scale": 0.26 }, { "bounds": [24, 323, 223, 514], "seed": [117, 323], "anchor": [118, 514], "scale": 0.26 }, { "bounds": [266, 294, 448, 519], "seed": [342, 294], "anchor": [357, 519], "scale": 0.26 }, { "bounds": [522, 289, 694, 514], "seed": [580, 289], "anchor": [615, 514], "scale": 0.26 }, { "bounds": [740, 289, 917, 522], "seed": [841, 289], "anchor": [817, 522], "scale": 0.26 }, { "bounds": [966, 289, 1165, 525], "seed": [1089, 289], "anchor": [1069, 525], "scale": 0.26 }, { "bounds": [1244, 289, 1428, 524], "seed": [1352, 289], "anchor": [1329.5, 524], "scale": 0.26, "gem": [1276, 397] }, { "bounds": [28, 543, 216, 779], "seed": [139, 543], "anchor": [113, 779], "scale": 0.26, "gem": [59, 666] }, { "bounds": [265, 541, 454, 777], "seed": [386, 541], "anchor": [352.5, 777], "scale": 0.26, "gem": [295, 690] }, { "bounds": [479, 540, 698, 777], "seed": [621, 540], "anchor": [586.5, 777], "scale": 0.26, "gem": [507, 605] }, { "bounds": [727, 551, 944, 779], "seed": [858, 551], "anchor": [829.5, 779], "scale": 0.26, "gem": [753, 610] }, { "bounds": [977, 547, 1178, 779], "seed": [1102, 547], "anchor": [1073, 779], "scale": 0.26, "gem": [1002, 566] }, { "bounds": [1235, 544, 1429, 780], "seed": [1350, 544], "anchor": [1330, 780], "scale": 0.26, "gem": [1266, 658] }, { "bounds": [21, 796, 217, 1049], "seed": [135, 796], "anchor": [116, 1049], "scale": 0.243, "gem": [53, 925] }, { "bounds": [271, 796, 459, 1049], "seed": [379, 796], "anchor": [361, 1049], "scale": 0.243, "gem": [303, 930] }, { "bounds": [498, 800, 694, 1050], "seed": [604, 800], "anchor": [588.5, 1050], "scale": 0.243, "gem": [532, 932] }, { "bounds": [740, 798, 929, 1050], "seed": [847, 798], "anchor": [831, 1050], "scale": 0.243, "gem": [774, 940] }, { "bounds": [983, 801, 1167, 1050], "seed": [1080, 801], "anchor": [1073.5, 1050], "scale": 0.243, "gem": [1015, 958] }, { "bounds": [1230, 802, 1421, 1050], "seed": [1336, 802], "anchor": [1321.5, 1050], "scale": 0.243, "gem": [1263, 951] }], "eggman-polish": [{ "bounds": [22, 58, 410, 473], "seed": [164, 58], "anchor": [216, 473], "scale": 0.246 }, { "bounds": [443, 59, 826, 473], "seed": [581, 59], "anchor": [634.5, 473], "scale": 0.246 }, { "bounds": [833, 59, 1223, 474], "seed": [973, 59], "anchor": [1028, 474], "scale": 0.246 }, { "bounds": [1246, 59, 1638, 475], "seed": [1387, 59], "anchor": [1442, 475], "scale": 0.246 }, { "bounds": [20, 497, 410, 914], "seed": [164, 497], "anchor": [215, 914], "scale": 0.246 }, { "bounds": [436, 498, 830, 914], "seed": [581, 498], "anchor": [633, 914], "scale": 0.246 }, { "bounds": [843, 499, 1239, 916], "seed": [992, 499], "anchor": [1041, 916], "scale": 0.246 }, { "bounds": [1266, 499, 1656, 914], "seed": [1423, 499], "anchor": [1461, 914], "scale": 0.246 }] });
   }
-  __name(initializeRuntimeModule28, "initializeRuntimeModule");
-  function getRuntimeBindings28() {
+  __name(initializeRuntimeModule29, "initializeRuntimeModule");
+  function getRuntimeBindings29() {
     return {};
   }
-  __name(getRuntimeBindings28, "getRuntimeBindings");
+  __name(getRuntimeBindings29, "getRuntimeBindings");
 
   // src/main.js
   var modules = [
@@ -18429,6 +18704,7 @@
     player_movement_exports,
     world_interactions_exports,
     stage_runtime_exports,
+    playtest_ground_exports,
     playtest_exports,
     game_exports
   ];

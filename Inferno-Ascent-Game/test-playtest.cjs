@@ -9,16 +9,19 @@ function enter() {
 }
 const json = (a, source) => JSON.parse(a.run(`JSON.stringify(${source})`));
 
-test('PLAYTEST initializes a stationary diagnostic scene and draws its player marker', () => {
+test('PLAYTEST initializes the ground benchmark and draws its contact/player overlay', () => {
   const a = enter(), state = json(a, 'readGameState()');
   assert.equal(state.act, 'playtest');
-  assert.equal(state.movementImplemented, false);
-  assert.deepEqual(state.marker, { x: 480, y: 340 });
-  assert.deepEqual(state.camera, { x: 0, y: 0, zoom: 1 });
+  assert.equal(state.movementImplemented, true);
+  assert.equal(state.player.x, 0);
+  assert.equal(state.player.speed, 0);
+  assert.deepEqual(state.contact.anchor, {x:0,y:400});
+  assert.equal(state.camera.zoom, 1);
+  assert.equal(state.camera.x,-480);
   a.rects.length = 0;
   a.run('draw()');
-  assert.ok(a.rects.some(r => r[0] === 468 && r[1] === 316 && r[2] === 24 && r[3] === 48));
-  assert.match(a.c.document.querySelector('#playtest-status').textContent, /not implemented/i);
+  assert.ok(a.rects.some(r => r[0] === -11 && r[1] === -48 && r[2] === 22 && r[3] === 48));
+  assert.match(a.c.document.querySelector('#playtest-status').textContent, /Ground-only/i);
 });
 
 test('PLAYTEST input and ticks bypass legacy movement, interactions, water, bosses, and HUD', () => {
@@ -29,6 +32,8 @@ test('PLAYTEST input and ticks bypass legacy movement, interactions, water, boss
     for(let i=0;i<30;i++)update();release('Space',true);release('ShiftLeft',true);draw();`);
   assert.equal(a.run(`JSON.stringify(${protectedState})`), before);
   assert.equal(a.run('readGameState().frame'), 30);
+  assert.equal(a.run('playtestState.player.ticks'),30);
+  assert.ok(a.run('playtestState.player.x')>0);
 });
 
 test('PLAYTEST entry does not initialize a legacy level, stage runtime, or encounter', () => {
@@ -81,6 +86,6 @@ test('frame-stepping PLAYTEST reports its own state without running a legacy con
   a.run(`stepGameFrames({keys:['down','jump','boost','right'],frames:10})`);
   assert.equal(a.run('readGameState().act'), 'playtest');
   assert.equal(a.run('readGameState().frame'), 10);
-  assert.equal(a.run('readGameState().movementImplemented'), false);
+  assert.equal(a.run('readGameState().movementImplemented'), true);
   assert.equal(a.run('charge'), 0);
 });
