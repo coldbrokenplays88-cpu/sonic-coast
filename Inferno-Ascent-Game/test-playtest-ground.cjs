@@ -62,6 +62,19 @@ test('rolling survives a continuous downhill reversal but uncurls after sustaine
   a.run(`trial=createGroundPlayer('flat',0,0,'rolling');for(let i=0;i<60;i++)stepGroundPlayer(trial,{down:true})`);
   assert.equal(a.run('trial.posture'),'standing','held down cannot repeatedly recurl at rest');
 });
+test('opposite input slows a downhill roll without becoming a static slope lock', () => {
+  const a=scene();
+  for(const side of [-1,1]) {
+    a.run(`trial=createGroundPlayer('valley',${side*1700},${-side*4},'rolling');var minDownhill=Infinity,backtracks=0,previousX=trial.x;
+      for(let i=0;i<420;i++){stepGroundPlayer(trial,{direction:${side}});if(i>=360){minDownhill=Math.min(minDownhill,${-side}*trial.speed);if(${side}*(trial.x-previousX)>=0)backtracks++}previousX=trial.x}`);
+    assert.ok(a.run('minDownhill')>0.1,'gravity must keep the rolled player moving downhill under held countersteer');
+    assert.equal(a.run('backtracks'),0,'no stop/start jitter or input-driven uphill propulsion');
+    assert.equal(a.run('trial.posture'),'rolling');
+    const braked=a.run('trial.speed');
+    a.run(`for(let i=0;i<30;i++)stepGroundPlayer(trial,{})`);
+    assert.ok(-side*a.run('trial.speed')>-side*braked+2,'releasing the brake restores downhill acceleration');
+  }
+});
 test('posture changes preserve contact; curve joins are continuous and share render/collision sampling', () => {
   const a=scene();
   a.run(`trial=createGroundPlayer('flat',0,6);var before=groundContact(trial);stepGroundPlayer(trial,{down:true});var after=groundContact(trial)`);

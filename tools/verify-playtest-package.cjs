@@ -111,6 +111,13 @@ async function smoke(browser, url) {
     );
     await page.click('#restart');
     assert.deepEqual((await page.evaluate(() => readGameState())).contact.anchor, { x: 0, y: 650 });
+    // Reproduce held uphill countersteering on supported ground, through the real scene update.
+    await page.evaluate(() => Object.assign(playtestState.player, { x: 1700, speed: -4, posture: 'rolling' }));
+    await page.keyboard.down('ArrowRight');
+    await page.evaluate(() => { for(let i=0;i<420;i++)update(); draw(); });
+    await page.keyboard.up('ArrowRight');
+    assert.ok((await page.evaluate(() => readGameState())).player.speed < -0.1, 'countersteer must not pin a downhill roll');
+    await page.click('#restart');
     for (const act of ['1', '2']) {
       await page.keyboard.down('ShiftLeft');
       await page.selectOption('#act-select', act);

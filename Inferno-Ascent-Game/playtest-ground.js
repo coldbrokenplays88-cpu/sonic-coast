@@ -87,12 +87,17 @@ function stepGroundPlayer(player, input = {}) {
   const rolling = player.posture === 'rolling';
   // A standing braking tick cannot become reverse propulsion partway through.
   const braking = direction * player.speed < 0;
-  const resistance =
-    (rolling ? t.rollResistance : direction ? 0 : t.coastResistance) +
-    (braking ? (rolling ? t.rollBrake : t.brake) : 0);
   const dt = 1 / t.substeps;
   for (let i = 0; i < t.substeps; i++) {
     const before = sampleGround(player.scenario, player.x);
+    // Rolling countersteer is kinetic braking, not extra static friction.
+    // Fade it near rest so gravity can restart a roll on a steep slope.
+    const rollBrake = direction * player.speed < 0
+      ? t.rollBrake * Math.min(1, Math.abs(player.speed) / t.rollBrakeFadeSpeed)
+      : 0;
+    const resistance = rolling
+      ? t.rollResistance + rollBrake
+      : (direction ? 0 : t.coastResistance) + (braking ? t.brake : 0);
     const drive =
       !rolling && direction && !braking
         ? direction *
@@ -130,7 +135,7 @@ function stepGroundPlayer(player, input = {}) {
 }
 
 const groundTuning = Object.freeze({
-    revision: 'GROUND-1',
+    revision: 'GROUND-2',
     hz: 60,
     substeps: 4,
     runRange: 14,
@@ -140,6 +145,7 @@ const groundTuning = Object.freeze({
     gravity: 0.35,
     rollResistance: 0.025,
     rollBrake: 0.18,
+    rollBrakeFadeSpeed: 2,
     rollEntrySpeed: 2,
     restSpeed: 0.08,
     uncurlTicks: 12,
