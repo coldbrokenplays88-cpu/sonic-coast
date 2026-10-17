@@ -28,7 +28,7 @@ async function smoke(browser, url) {
     assert.match(await page.locator('#playtest-status').textContent(), /Static-surface/);
     const state = await page.evaluate(() => readGameState());
     assert.equal(state.act, 'playtest');
-    assert.equal(state.tuning, 'DEVICES-1 / PATH-1 / AIR-2 / GROUND-5', 'the extracted package must contain the current tuning');
+    assert.equal(state.tuning, 'DEVICES-2 / PATH-1 / AIR-2 / GROUND-5', 'the extracted package must contain the current tuning');
     assert.equal(state.movementImplemented, true);
     assert.equal(state.player.x, 0);
     assert.equal(state.contact.height, 48);
@@ -333,6 +333,23 @@ async function smoke(browser, url) {
     assert.equal(movingCap.player.springLaunches, 1);
     assert.ok(Math.abs(movingCap.player.lastSpring.world.vx - 2) < 1e-7);
     deviceChecks.push({ fixture: 'moving-spring', vx: movingCap.player.lastSpring.world.vx });
+    for(const x of [-65,0,65]){
+      await page.click('#playtest-moving-spring');
+      const pass=await page.evaluate((x)=>{
+        Object.assign(playtestState.player,{mode:'airborne',speed:null,x,y:330,posture:'rolling',air:{vx:2,vy:-12,jumpLift:0,cutEligible:false,restorePosture:'rolling'}});
+        let above=false,landed=false;
+        for(let i=0;i<90;i++){
+          update();const p=readGameState().player;
+          if(p.mode==='airborne'&&p.y<240&&p.air.vy<0)above=true;
+          if(p.supportId){landed=true;break;}
+        }
+        draw();return {above,landed,launches:readGameState().player.springLaunches};
+      },x);
+      assert.equal(pass.above,x!==0,'only the mounted spring footprint blocks the ascent');
+      assert.equal(pass.landed,x!==0,'both unobstructed deck sections are landable');
+      assert.equal(pass.launches,0);
+      deviceChecks.push({fixture:'jump-through platform',x,...pass});
+    }
     await page.click('#playtest-flat');
     await page.keyboard.down('ArrowDown');
     await page.keyboard.down('Space');

@@ -1,17 +1,18 @@
-# PLAYTEST — DEVICES-1 / PATH-1 / AIR-2 / GROUND-5
+# PLAYTEST — DEVICES-2 / PATH-1 / AIR-2 / GROUND-5
 
 ## Approval, branch and build identity
 
 Continue `codex/playtest-physics`; do not recreate from main. Scaffold handoff:
 `docs/playtest-scaffold.md`. The user approved the PATH-1 loop/wall/ceiling
 update with “ok this is really good” before requesting this stage. All prior
-approved ground/air tuning remains. **DEVICES-1 awaits personal feel approval.**
+approved ground/air tuning remains. DEVICES-1 was personally approved (“seems good”) with the requested jump-through
+platform correction. **DEVICES-2 awaits approval of that correction.**
 
-Starting SHA: `07acc6bbfda012584a9f28b8eccae41ec1284cf8`, clean working tree.
-Runtime build: `runtime-e3819878416facf6.js`. Node v24.19.0, npm11.9.0;
+Starting SHA: `9106f4135c1393cc3c01d77fdfd1ffcb86d9c5fb`, clean working tree.
+Runtime build: `runtime-aec96acc2019fc07.js`. Node v24.19.0, npm11.9.0;
 existing lockfile dependencies reused, no new dependencies or asset generation.
-**Exact tested implementation commit: `2d329587903bb440563da138e6386b084851fd12`.**
-This build-identity record is a subsequent documentation-only commit.
+The current tested build is identified by its runtime and package hashes; the
+source commit is recorded in the delivery note below.
 
 GitHub API access now succeeds. `gh pr list --head codex/playtest-physics
 --state open` returned an empty list: no matching open PR was available to mark
@@ -166,8 +167,15 @@ held/released Jump cannot cut it. The diagnostic records spring ID, fractional
 time, launch vector and launch count. Platform-mounted springs use the same pose
 and fractional clock as their supporting platform, including reversals.
 
-Moving platforms are solid horizontal rectangles with top-only attachment; sides
-and undersides block. Landing stores incoming horizontal speed minus carrier vx.
+Moving platforms are **one-way top surfaces**: jump through from below or the
+side, then land when descending feet cross the top plane relative to the platform.
+Crossing time is solved continuously, including high speed and vertical platform
+reversals. A partial jump that never lifts the feet above the top cannot attach
+from inside the deck. A platform alone does not block posture expansion below it.
+Spring casings and other solid object colliders remain independent: the spring's
+occupied footprint blocks ascent, while clear deck sections on either side remain
+jump-through and landable. No item-monitor system was added in PLAYTEST.
+Landing stores incoming horizontal speed minus carrier vx.
 Riding adds carrier travel once; jumping/walking off converts relative speed to
 world velocity once, then clears `supportId`. No repeated velocity accumulation.
 The ferry moves ±120 units at2 units/tick (period240); the elevator ±70 at1.55556
@@ -225,10 +233,10 @@ arbitrary branching world or an existing-act migration.
 
 ## Measured evidence and verification
 
-Baseline:469 gameplay tests,9 build tests, compatibility/player checks passed.
+Correction baseline:488 gameplay tests,10 build tests, compatibility/player checks passed.
 Final commands pass: `npm run build:player`, `npm run build`, `npm test`
-(**488**), `npm run test:build` (**10**), `npm run check:compat` (**32 modules**),
-`npm run check:player`, `npm run package`. Nineteen device tests exercise the real
+(**492**), `npm run test:build` (**10**), `npm run check:compat` (**32 modules**),
+`npm run check:player`, `npm run package`. Twenty-three device tests exercise the real
 controller. All accepted ground/air/path tests and Act1/2 regressions are retained.
 The build test additionally checks every manifest module is registered in browser
 startup order; this catches the missing device initialization discovered by the
@@ -253,7 +261,8 @@ Device evidence (units/tick, one simulation owner):
 
 Cap tests cover upright/rolled approaches at20/45/70 units, inactive casing sides
 and back, coplanar active-face crossing, diagonal tangent preservation, moving
-spring launch, both carrier directions, underside blocking, slopes, cancellation,
+spring launch, both carrier directions, jump-through/descending catch, partial ascents, solid
+mounted-spring obstruction and clear-deck access, slopes, cancellation,
 reset/pause/scene switching and dash/loop integration. Exact launch-vector checks
 use1e-7..1e-6 tolerances; contact/swept-body checks use.001 rather than arbitrary
 endpoint assertions. Independent review found the own-casing reset and discarded
@@ -290,18 +299,19 @@ possible future surface graph or a substitute for user feel approval.
 Freshly extracted package smoke passed in Chromium151.0.7922.173 over local HTTP:
 all previous fixtures, five loop/wall/ceiling approaches, all three device buttons,
 actual spring launch and uncut continuation, carrier riding/reversal/jump, moving
-spring velocity, Spin Dash through real DOM inputs, pause/reset, and Act1/2
+spring velocity, empty-deck jump-through on both sides of the spring versus its
+solid footprint, Spin Dash through real DOM inputs, pause/reset, and Act1/2
 running/jumping/boosting/clean switching. Zero page errors. Actual rendered Sonic
-and spring/casing were inspected. Observed worst loop update3.8ms in this bounded
+and spring/casing were inspected. Observed worst loop update5.1ms in this bounded
 run; not a full render/device performance guarantee or human feel approval.
 
 ## Package and access
 
 Generated ZIP: `/workspace/sonic-coast-playtest/dist/Neon-Express-player.zip`.
-**52,332,768 bytes,37 files**, CRC checked; every extracted entry matches the
+**52,332,863 bytes,37 files**, CRC checked; every extracted entry matches the
 committed build (player index maps to PLAY.html).
-SHA256:`1d87851d49f7032aafc822d823bac915187b73e2d41aa26c3446fe3492b88d99`.
-Runtime:`runtime-e3819878416facf6.js`; CSS:`style-c9f48a6e01dc8ece.css`.
+SHA256:`de5216b927fdd8883272df1bbc3f1cd0b2dbc52705490317b18d11f3c45e4ec1`.
+Runtime:`runtime-aec96acc2019fc07.js`; CSS:`style-c9f48a6e01dc8ece.css`.
 
 No ZIP attachment/upload or isolated public preview service is available here.
 The feature branch's immutable GitHub source archive is the accessible fallback;
@@ -325,7 +335,8 @@ preview, deployment, new PR or merge is claimed.
 2. Springs: jump onto the yellow cap repeatedly; run into casing sides. Check
    jump release leaves spring height intact, then try horizontal/diagonal caps.
 3. Moving platforms / Moving spring: jump aboard, ride through a reversal,
-   walk off either edge, jump while moving, and bounce from the moving cap.
+   walk off either edge, jump while moving, and bounce from the moving cap. Jump
+   up through clear deck sections; the spring casing should obstruct only its footprint.
 4. Recheck approved loop traversal, valley rolling, upright crest grip and quick
    low-speed turns. Pause/reset and switch to each act during a charge or flight.
 

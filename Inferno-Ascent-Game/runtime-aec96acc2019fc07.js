@@ -390,6 +390,7 @@
   __export(playtest_devices_exports, {
     experimentalDeviceImpact: () => experimentalDeviceImpact,
     experimentalDeviceTuning: () => experimentalDeviceTuning,
+    experimentalPlatformImpact: () => experimentalPlatformImpact,
     experimentalPlatformPose: () => experimentalPlatformPose,
     experimentalSpringDistance: () => experimentalSpringDistance,
     experimentalSpringPose: () => experimentalSpringPose,
@@ -820,6 +821,33 @@
     };
   }
   __name(experimentalPlatformPose, "experimentalPlatformPose");
+  function experimentalPlatformImpact(body, vx, vy, ax, ay, duration, pose2, skin) {
+    const extentY = body.circle ? body.hh : Math.abs(Math.sin(body.angle)) * body.hw + Math.abs(Math.cos(body.angle)) * body.hh;
+    const roots = pathPolynomialRoots(
+      [body.y + extentY - pose2.y1 + skin, vy - pose2.vy, ay / 2],
+      0,
+      duration
+    );
+    for (const time of roots) {
+      if (vy - pose2.vy + ay * time <= 1e-8) continue;
+      const x = body.x + (vx - pose2.vx) * time + ax * time * time / 2;
+      if (x < pose2.x1 || x > pose2.x2) continue;
+      return {
+        time,
+        q: {
+          distance: skin,
+          nx: 0,
+          ny: -1,
+          kind: "platform",
+          id: pose2.id,
+          canLand: true,
+          velocity: { vx: pose2.vx, vy: pose2.vy }
+        }
+      };
+    }
+    return null;
+  }
+  __name(experimentalPlatformImpact, "experimentalPlatformImpact");
   function experimentalSpringPose(spring, time, fixture = {}) {
     const carrier = fixture.platforms?.find((p2) => p2.id === spring.platform);
     const pose2 = carrier ? experimentalPlatformPose(carrier, time) : null;
@@ -18163,12 +18191,7 @@
   __name(bodyBoxDistance, "bodyBoxDistance");
   function motionPostureClear(player, posture, time = player.ticks) {
     const body = motionBody(player, posture, time), c = Math.cos(body.angle), s = Math.sin(body.angle);
-    for (const box of [
-      ...motionFixtures[player.scenario].boxes,
-      ...(motionFixtures[player.scenario].platforms || []).map(
-        (p2) => experimentalPlatformPose(p2, time)
-      )
-    ]) {
+    for (const box of motionFixtures[player.scenario].boxes) {
       if (body.circle) {
         if (bodyBoxDistance(body, box).distance < -motionTuning.skin) return false;
         continue;
@@ -18636,32 +18659,16 @@
       if (platform.id === player.supportId || player.air?.separation?.id === platform.id && !player.air.separation.cleared)
         continue;
       const pose2 = experimentalPlatformPose(platform, time);
-      const shape = {
-        x: (pose2.x1 + pose2.x2) / 2,
-        y: pose2.y1,
-        nx: 0,
-        ny: -1,
-        tx: 1,
-        ty: 0,
-        half: (pose2.x2 - pose2.x1) / 2,
-        depth: pose2.y2 - pose2.y1
-      };
-      const result = experimentalDeviceImpact(
+      const result = experimentalPlatformImpact(
         body,
-        vx - pose2.vx,
-        vy - pose2.vy,
+        vx,
+        vy,
         ax,
         ay,
         duration,
-        shape,
+        pose2,
         motionTuning.skin
       );
-      if (result)
-        Object.assign(result.q, {
-          kind: "platform",
-          id: platform.id,
-          velocity: { vx: pose2.vx, vy: pose2.vy }
-        });
       if (result && (!hit || result.time < hit.time)) {
         result.q.platform = experimentalPlatformPose(platform, time + result.time);
         result.q.canLand = result.q.ny < -0.999;
@@ -18991,7 +18998,7 @@
   __name(stepMotionPlayer, "stepMotionPlayer");
   function initializeRuntimeModule28() {
     motionTuning = Object.freeze({
-      revision: "DEVICES-1 / PATH-1 / AIR-2 / GROUND-5",
+      revision: "DEVICES-2 / PATH-1 / AIR-2 / GROUND-5",
       steepGripSpeed: 2.5,
       jumpImpulse: 10.5,
       cutRatio: 0.4,

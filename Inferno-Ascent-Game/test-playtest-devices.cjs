@@ -35,8 +35,11 @@ test('platform jump and walkoff inherit instantaneous velocity exactly once in b
  assert.equal(a.run('q.mode'),'airborne');assert.ok(Math.abs(a.run('q.lastTakeoff.before.vx-vx0'))<.01,'coast drag before the edge is bounded');assert.ok(Math.abs(a.run('q.air.vx-q.lastTakeoff.before.vx'))<1e-6,'air inherits the actual takeoff vector once');assert.equal(a.run('q.supportId'),null);
  }
 });
-test('platform underside blocks ascending body and never attaches it to the top',()=>{
- const a=scene();air(a,'platforms',0,330,0,-65,'rolling');a.run(`stepMotionPlayer(q,{jumpHeld:true})`);assert.equal(a.run('q.mode'),'airborne');assert.equal(a.run('q.supportId'),null);assert.ok(a.run('q.y')>=319);assert.ok(a.run('q.air.vy')>=0);
+test('moving platforms pass ascending bodies through and catch their descending feet',()=>{
+ const a=scene();for(const posture of ['standing','rolling']){
+ air(a,'platforms',0,330,2,-12,posture);a.run(`var rising=false,landed=false;for(let i=0;i<90;i++){stepMotionPlayer(q,{jumpHeld:true});if(q.mode==='airborne'&&q.y<240&&q.air.vy<0)rising=true;if(q.supportId==='ferry'){landed=true;break;}}`);
+ assert.equal(a.run('rising'),true);assert.equal(a.run('landed'),true);assert.ok(Math.abs(a.run('q.lastLanding.incoming.vx-2'))<1e-7);
+ }
 });
 test('moving spring inherits carrier velocity once; carrier and cap share one clock',()=>{
  const a=scene();a.run(`var q=createMotionPlayer('moving-spring');q.ticks=10;var cap=experimentalSpringPose(motionFixtures['moving-spring'].springs[0],10,motionFixtures['moving-spring']);Object.assign(q,{mode:'airborne',speed:null,x:cap.x,y:cap.y-50,posture:'rolling',air:{vx:cap.vx,vy:40,restorePosture:'rolling'}});stepMotionPlayer(q,{})`);
@@ -98,4 +101,26 @@ test('a rider meets its own moving spring casing as a solid block without a fals
 });
 test('sidewall contact blocks relative walking while vertical carrier time continues',()=>{
  const a=scene();a.run(`var q=createMotionPlayer('platforms');Object.assign(q,{supportId:'elevator',x:499,y:280,speed:0});motionFixtures.platforms.boxes.push({id:'elevator-sidewall',x1:510,x2:530,y1:150,y2:400});var error=0;for(let i=0;i<10;i++){stepMotionPlayer(q,{direction:1});var s=experimentalPlatformPose(motionFixtures.platforms.platforms[1],q.ticks);error=Math.max(error,Math.abs(q.y-s.y1));}`);assert.equal(a.run('q.boundary'),null);assert.ok(a.run('error')<1e-6);assert.equal(a.run('q.supportId'),'elevator');
+});
+
+test('ascending through an unobstructed section beside a mounted spring remains possible',()=>{
+ const a=scene();for(const side of [-1,1])for(const posture of ['standing','rolling']){
+ air(a,'moving-spring',side*65,330,2,-12,posture);
+ a.run(`var above=false,landed=false;for(let i=0;i<90;i++){stepMotionPlayer(q,{jumpHeld:true});if(q.mode==='airborne'&&q.y<240&&q.air.vy<0)above=true;if(q.supportId==='spring-ferry'){landed=true;break;}}`);
+ assert.equal(a.run('above'),true);assert.equal(a.run('landed'),true);assert.equal(a.run('q.springLaunches'),0);
+ }
+});
+test('the spring casing still obstructs its occupied part of a jump-through platform',()=>{
+ const a=scene();air(a,'moving-spring',0,330,2,-12,'rolling');a.run(`for(let i=0;i<5;i++)stepMotionPlayer(q,{jumpHeld:true});`);assert.equal(a.run('q.supportId'),null);assert.equal(a.run('q.springLaunches'),0);assert.ok(a.run('q.y')>=271,'spring underside remains solid');assert.ok(a.run('q.air.vy')>=0);
+});
+test('platform sides, partial-height jumps and posture expansion below the deck do not snag',()=>{
+ const a=scene();air(a,'platforms',-130,290,60,0,'rolling');a.run(`stepMotionPlayer(q,{})`);assert.ok(a.run('q.x')>-71);assert.equal(a.run('q.supportId'),null);
+ air(a,'platforms',0,320,2,-3,'standing');a.run(`var attached=false;for(let i=0;i<22;i++){stepMotionPlayer(q,{});if(q.supportId)attached=true;}`);assert.equal(a.run('attached'),false,'feet never reached the top, so no catch from inside the deck');
+ air(a,'platforms',0,310,0,-4,'rolling');assert.equal(a.run("motionPostureClear(q,'standing')"),true);
+});
+test('fast descending feet land on vertically moving decks across both reversal directions',()=>{
+ const a=scene();for(const tick of [10,44.9,45.1,100])for(const posture of ['standing','rolling']){
+ a.run(`var q=createMotionPlayer('platforms');q.ticks=${tick};var deck=experimentalPlatformPose(motionFixtures.platforms.platforms[1],q.ticks);Object.assign(q,{mode:'airborne',speed:null,posture:'${posture}',x:500,y:deck.y1-60,air:{vx:0,vy:70,jumpLift:0,cutEligible:false,restorePosture:'${posture}'}});stepMotionPlayer(q,{})`);
+ assert.equal(a.run('q.supportId'),'elevator');assert.ok(Math.abs(a.run('q.y-experimentalPlatformPose(motionFixtures.platforms.platforms[1],q.ticks).y1'))<1e-6);
+ }
 });

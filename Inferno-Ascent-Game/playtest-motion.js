@@ -279,12 +279,7 @@ function motionPostureClear(player, posture, time = player.ticks) {
   const body = motionBody(player, posture, time),
     c = Math.cos(body.angle),
     s = Math.sin(body.angle);
-  for (const box of [
-    ...motionFixtures[player.scenario].boxes,
-    ...(motionFixtures[player.scenario].platforms || []).map((p) =>
-      experimentalPlatformPose(p, time)
-    ),
-  ]) {
+  for (const box of motionFixtures[player.scenario].boxes) {
     if (body.circle) {
       if (bodyBoxDistance(body, box).distance < -motionTuning.skin) return false;
       continue;
@@ -837,32 +832,16 @@ function firstDeviceImpact(player, body, vx, vy, ax, ay, duration, time) {
     )
       continue;
     const pose = experimentalPlatformPose(platform, time);
-    const shape = {
-      x: (pose.x1 + pose.x2) / 2,
-      y: pose.y1,
-      nx: 0,
-      ny: -1,
-      tx: 1,
-      ty: 0,
-      half: (pose.x2 - pose.x1) / 2,
-      depth: pose.y2 - pose.y1,
-    };
-    const result = experimentalDeviceImpact(
+    const result = experimentalPlatformImpact(
       body,
-      vx - pose.vx,
-      vy - pose.vy,
+      vx,
+      vy,
       ax,
       ay,
       duration,
-      shape,
+      pose,
       motionTuning.skin
     );
-    if (result)
-      Object.assign(result.q, {
-        kind: 'platform',
-        id: platform.id,
-        velocity: { vx: pose.vx, vy: pose.vy },
-      });
     if (result && (!hit || result.time < hit.time)) {
       result.q.platform = experimentalPlatformPose(platform, time + result.time);
       result.q.canLand = result.q.ny < -0.999;
@@ -1260,7 +1239,7 @@ function stepMotionPlayer(player, input = {}) {
 }
 
 const motionTuning = Object.freeze({
-    revision: 'DEVICES-1 / PATH-1 / AIR-2 / GROUND-5',
+    revision: 'DEVICES-2 / PATH-1 / AIR-2 / GROUND-5',
     steepGripSpeed: 2.5,
     jumpImpulse: 10.5,
     cutRatio: 0.4,

@@ -25,6 +25,35 @@ function experimentalPlatformPose(platform, time) {
   };
 }
 
+function experimentalPlatformImpact(body, vx, vy, ax, ay, duration, pose, skin) {
+  const extentY = body.circle
+    ? body.hh
+    : Math.abs(Math.sin(body.angle)) * body.hw + Math.abs(Math.cos(body.angle)) * body.hh;
+  const roots = pathPolynomialRoots(
+    [body.y + extentY - pose.y1 + skin, vy - pose.vy, ay / 2],
+    0,
+    duration
+  );
+  for (const time of roots) {
+    if (vy - pose.vy + ay * time <= 1e-8) continue;
+    const x = body.x + (vx - pose.vx) * time + (ax * time * time) / 2;
+    if (x < pose.x1 || x > pose.x2) continue;
+    return {
+      time,
+      q: {
+        distance: skin,
+        nx: 0,
+        ny: -1,
+        kind: 'platform',
+        id: pose.id,
+        canLand: true,
+        velocity: { vx: pose.vx, vy: pose.vy },
+      },
+    };
+  }
+  return null;
+}
+
 function experimentalSpringPose(spring, time, fixture = {}) {
   const carrier = fixture.platforms?.find((p) => p.id === spring.platform);
   const pose = carrier ? experimentalPlatformPose(carrier, time) : null;
