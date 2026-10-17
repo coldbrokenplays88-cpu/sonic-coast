@@ -206,7 +206,7 @@ export function updatePlaytestHud() {
   $('#playtest-input').textContent = [...keys].join(', ') || 'none';
   $('#playtest-debug').textContent =
     `${motionTuning.revision} · ${player.scenario} · gsp ${c.grounded ? c.speed.toFixed(3) : '—'} · v(${c.vx.toFixed(3)}, ${c.vy.toFixed(3)}) · angle ${((c.angle * 180) / Math.PI).toFixed(2)}°\n` +
-    `${c.grounded ? 'CONTACT' : 'AIR REF'} (${c.x.toFixed(2)}, ${c.y.toFixed(2)}) · body ${c.width}×${c.height} · center (${c.center.x.toFixed(2)}, ${c.center.y.toFixed(2)}) · normal ${c.grounded ? `(${c.nx.toFixed(3)}, ${c.ny.toFixed(3)})` : 'none'} · N ${c.normalReaction.toFixed(3)}\n` +
+    `${c.grounded ? 'CONTACT' : 'AIR REF'} (${c.x.toFixed(2)}, ${c.y.toFixed(2)}) · body ${c.width}×${c.height} · center (${c.center.x.toFixed(2)}, ${c.center.y.toFixed(2)}) · normal ${c.grounded ? `(${c.nx.toFixed(3)}, ${c.ny.toFixed(3)})` : 'none'} · N ${c.normalReaction.toFixed(3)}${c.uprightGrip ? ' · UPRIGHT CREST GRIP' : ''}\n` +
     `${player.latestTransition} · controller ticks ${player.ticks} · reset ${playtestState.resetCount}: ${playtestState.resetReason}`;
 }
 

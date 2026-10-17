@@ -17254,7 +17254,11 @@
     player.ticks++;
     if (Math.abs(player.speed) > 0.02) player.facing = Math.sign(player.speed);
     const slopeForce = Math.abs(t.gravity * sampler(player.scenario, player.x).ty);
-    if (rolling && Math.abs(player.speed) < t.restSpeed && slopeForce <= t.rollResistance) {
+    const turning = controls.direction * player.facing < 0 && Math.abs(player.speed) <= t.rollTurnSpeed;
+    if (rolling && turning && slopeForce <= t.rollResistance && canStand2) {
+      player.posture = "standing";
+      player.restTicks = 0;
+    } else if (rolling && Math.abs(player.speed) < t.restSpeed && slopeForce <= t.rollResistance) {
       player.restTicks++;
       if (player.restTicks >= t.uncurlTicks && canStand2) {
         player.posture = "standing";
@@ -17275,7 +17279,7 @@
   __name(stepGroundPlayer, "stepGroundPlayer");
   function initializeRuntimeModule25() {
     groundTuning = Object.freeze({
-      revision: "GROUND-3",
+      revision: "GROUND-4",
       hz: 60,
       substeps: 4,
       runRange: 14,
@@ -17286,6 +17290,7 @@
       rollResistance: 0.025,
       rollBrake: 0.18,
       rollBrakeFadeSpeed: 2,
+      rollTurnSpeed: 1,
       rollEntrySpeed: 2,
       restSpeed: 0.08,
       uncurlTicks: 12,
@@ -17318,6 +17323,7 @@
     motionPostureClear: () => motionPostureClear,
     motionReaction: () => motionReaction,
     motionSpans: () => motionSpans,
+    motionSupported: () => motionSupported,
     motionTrajectory: () => motionTrajectory,
     motionTuning: () => motionTuning,
     moveAirTime: () => moveAirTime,
@@ -17398,10 +17404,20 @@
     return -normalAcceleration - groundTuning.gravity * surface.ny;
   }
   __name(motionReaction, "motionReaction");
+  function motionSupported(player, surface) {
+    return player.posture === "standing" || motionReaction(player, surface) >= -1e-6;
+  }
+  __name(motionSupported, "motionSupported");
   function motionContact(player) {
     if (player.mode === "grounded") {
       const c = groundContact(player, sampleMotionExtension);
-      return { ...c, grounded: true, normalReaction: motionReaction(player, c) };
+      const reaction = motionReaction(player, c);
+      return {
+        ...c,
+        grounded: true,
+        normalReaction: reaction,
+        uprightGrip: player.posture === "standing" && reaction < -1e-6
+      };
     }
     const height = player.posture === "rolling" ? 38 : 48, width = player.posture === "rolling" ? 38 : 22;
     return {
@@ -17656,12 +17672,6 @@
     if (jump2 && motionPostureClear(player, "rolling")) {
       player.posture = "rolling";
       center = { x: c.x + c.nx * 19, y: c.y + c.ny * 19 };
-    } else if (!jump2) {
-      const body = { ...motionBody(player), circle: true, hw: 19, hh: 19 };
-      if (motionFixtures[player.scenario].boxes.every(
-        (b) => bodyBoxDistance(body, b).distance >= -motionTuning.skin
-      ))
-        player.posture = "rolling";
     }
     const impulse = jump2 ? motionTuning.jumpImpulse : 0;
     const after = { vx: before.vx + c.nx * impulse, vy: before.vy + c.ny * impulse };
@@ -17728,7 +17738,7 @@
     const candidate = { ...player, mode: "grounded", x, y: s.y, speed, air: null };
     const posture = [restore, player.posture].find((posture2) => {
       candidate.posture = posture2;
-      return motionPostureClear(candidate, posture2) && motionReaction(candidate, s) >= -1e-6;
+      return motionPostureClear(candidate, posture2) && motionSupported(candidate, s);
     });
     if (!posture) return false;
     Object.assign(player, { mode: "grounded", x, y: s.y, speed, air: null, posture });
@@ -17775,7 +17785,7 @@
             releaseMotion(player, "ledge");
             continue;
           }
-          if (motionReaction(player, current) < -1e-6) {
+          if (!motionSupported(player, current)) {
             releaseMotion(player, "crest");
             continue;
           }
@@ -17784,16 +17794,16 @@
           const span = motionSpans(player.scenario).find(([a, b]) => player.x >= a && player.x <= b);
           let event = null, time = remaining;
           const beyond = candidate.x < span[0] || candidate.x > span[1];
-          const reaction = motionReaction(
+          const supported = motionSupported(
             candidate,
             sampleMotionExtension(player.scenario, candidate.x)
           );
-          if (beyond || reaction < -1e-6) {
+          if (beyond || !supported) {
             let lo = 0, hi = remaining;
             for (let n = 0; n < 30; n++) {
               const mid = (lo + hi) / 2, q = { ...player };
               advanceGroundSubstep(q, controls, mid, sampleMotionExtension);
-              if (q.x < span[0] || q.x > span[1] || motionReaction(q, sampleMotionExtension(q.scenario, q.x)) < -1e-6)
+              if (q.x < span[0] || q.x > span[1] || !motionSupported(q, sampleMotionExtension(q.scenario, q.x)))
                 hi = mid;
               else lo = mid;
             }
@@ -17846,8 +17856,7 @@
             a.vy -= into * n.ny;
           }
           if (n.kind === "floor" && n.canLand) {
-            const q = { ...player, speed: a.vx * n.surface.tx + a.vy * n.surface.ty };
-            if (motionReaction(q, n.surface) >= -1e-6 && landMotion(player, n, incoming)) {
+            if (landMotion(player, n, incoming)) {
               controls = null;
               continue;
             }
@@ -17887,7 +17896,7 @@
   __name(stepMotionPlayer, "stepMotionPlayer");
   function initializeRuntimeModule26() {
     motionTuning = Object.freeze({
-      revision: "AIR-1 / GROUND-3",
+      revision: "AIR-2 / GROUND-4",
       jumpImpulse: 10.5,
       cutRatio: 0.4,
       airAcceleration: 0.08,
@@ -18093,7 +18102,7 @@
     $("#playtest-frame").textContent = String(playtestState.frames);
     $("#playtest-input").textContent = [...keys].join(", ") || "none";
     $("#playtest-debug").textContent = `${motionTuning.revision} \xB7 ${player.scenario} \xB7 gsp ${c.grounded ? c.speed.toFixed(3) : "\u2014"} \xB7 v(${c.vx.toFixed(3)}, ${c.vy.toFixed(3)}) \xB7 angle ${(c.angle * 180 / Math.PI).toFixed(2)}\xB0
-${c.grounded ? "CONTACT" : "AIR REF"} (${c.x.toFixed(2)}, ${c.y.toFixed(2)}) \xB7 body ${c.width}\xD7${c.height} \xB7 center (${c.center.x.toFixed(2)}, ${c.center.y.toFixed(2)}) \xB7 normal ${c.grounded ? `(${c.nx.toFixed(3)}, ${c.ny.toFixed(3)})` : "none"} \xB7 N ${c.normalReaction.toFixed(3)}
+${c.grounded ? "CONTACT" : "AIR REF"} (${c.x.toFixed(2)}, ${c.y.toFixed(2)}) \xB7 body ${c.width}\xD7${c.height} \xB7 center (${c.center.x.toFixed(2)}, ${c.center.y.toFixed(2)}) \xB7 normal ${c.grounded ? `(${c.nx.toFixed(3)}, ${c.ny.toFixed(3)})` : "none"} \xB7 N ${c.normalReaction.toFixed(3)}${c.uprightGrip ? " \xB7 UPRIGHT CREST GRIP" : ""}
 ${player.latestTransition} \xB7 controller ticks ${player.ticks} \xB7 reset ${playtestState.resetCount}: ${playtestState.resetReason}`;
   }
   __name(updatePlaytestHud, "updatePlaytestHud");

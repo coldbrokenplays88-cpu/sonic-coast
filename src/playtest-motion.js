@@ -87,10 +87,22 @@ export function motionReaction(player, surface) {
   return -normalAcceleration - groundTuning.gravity * surface.ny;
 }
 
+export function motionSupported(player, surface) {
+  // Explicit upright crest grip requested for this experiment. Rolling still
+  // requires nonnegative physical support; no grip extends across open ledges.
+  return player.posture === 'standing' || motionReaction(player, surface) >= -1e-6;
+}
+
 export function motionContact(player) {
   if (player.mode === 'grounded') {
     const c = groundContact(player, sampleMotionExtension);
-    return { ...c, grounded: true, normalReaction: motionReaction(player, c) };
+    const reaction = motionReaction(player, c);
+    return {
+      ...c,
+      grounded: true,
+      normalReaction: reaction,
+      uprightGrip: player.posture === 'standing' && reaction < -1e-6,
+    };
   }
   const height = player.posture === 'rolling' ? 38 : 48,
     width = player.posture === 'rolling' ? 38 : 22;
@@ -414,14 +426,6 @@ export function releaseMotion(player, reason, jump = false) {
   if (jump && motionPostureClear(player, 'rolling')) {
     player.posture = 'rolling';
     center = { x: c.x + c.nx * 19, y: c.y + c.ny * 19 };
-  } else if (!jump) {
-    const body = { ...motionBody(player), circle: true, hw: 19, hh: 19 };
-    if (
-      motionFixtures[player.scenario].boxes.every(
-        (b) => bodyBoxDistance(body, b).distance >= -motionTuning.skin
-      )
-    )
-      player.posture = 'rolling';
   }
   const impulse = jump ? motionTuning.jumpImpulse : 0;
   const after = { vx: before.vx + c.nx * impulse, vy: before.vy + c.ny * impulse };
@@ -493,7 +497,7 @@ export function landMotion(player, hit, incoming) {
   const candidate = { ...player, mode: 'grounded', x, y: s.y, speed, air: null };
   const posture = [restore, player.posture].find((posture) => {
     candidate.posture = posture;
-    return motionPostureClear(candidate, posture) && motionReaction(candidate, s) >= -1e-6;
+    return motionPostureClear(candidate, posture) && motionSupported(candidate, s);
   });
   if (!posture) return false;
   Object.assign(player, { mode: 'grounded', x, y: s.y, speed, air: null, posture });
@@ -541,7 +545,7 @@ export function stepMotionPlayer(player, input = {}) {
           releaseMotion(player, 'ledge');
           continue;
         }
-        if (motionReaction(player, current) < -1e-6) {
+        if (!motionSupported(player, current)) {
           releaseMotion(player, 'crest');
           continue;
         }
@@ -551,11 +555,11 @@ export function stepMotionPlayer(player, input = {}) {
         let event = null,
           time = remaining;
         const beyond = candidate.x < span[0] || candidate.x > span[1];
-        const reaction = motionReaction(
+        const supported = motionSupported(
           candidate,
           sampleMotionExtension(player.scenario, candidate.x)
         );
-        if (beyond || reaction < -1e-6) {
+        if (beyond || !supported) {
           let lo = 0,
             hi = remaining;
           for (let n = 0; n < 30; n++) {
@@ -565,7 +569,7 @@ export function stepMotionPlayer(player, input = {}) {
             if (
               q.x < span[0] ||
               q.x > span[1] ||
-              motionReaction(q, sampleMotionExtension(q.scenario, q.x)) < -1e-6
+              !motionSupported(q, sampleMotionExtension(q.scenario, q.x))
             )
               hi = mid;
             else lo = mid;
@@ -626,8 +630,7 @@ export function stepMotionPlayer(player, input = {}) {
           a.vy -= into * n.ny;
         }
         if (n.kind === 'floor' && n.canLand) {
-          const q = { ...player, speed: a.vx * n.surface.tx + a.vy * n.surface.ty };
-          if (motionReaction(q, n.surface) >= -1e-6 && landMotion(player, n, incoming)) {
+          if (landMotion(player, n, incoming)) {
             controls = null;
             continue;
           }
@@ -673,7 +676,7 @@ export function stepMotionPlayer(player, input = {}) {
 
 export function initializeRuntimeModule() {
   motionTuning = Object.freeze({
-    revision: 'AIR-1 / GROUND-3',
+    revision: 'AIR-2 / GROUND-4',
     jumpImpulse: 10.5,
     cutRatio: 0.4,
     airAcceleration: 0.08,

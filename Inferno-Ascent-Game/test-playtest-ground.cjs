@@ -81,6 +81,19 @@ test('steep downhill gravity builds useful rolling speed under held countersteer
     }
   }
 });
+test('opposite roll input uncurls promptly at low speed without snapping velocity or bypassing clearance', () => {
+ const a=scene();for(const direction of [-1,1]){
+ a.run(`var q=createMotionPlayer('flat');Object.assign(q,{speed:${direction*0.8},posture:'rolling'});stepMotionPlayer(q,{direction:${-direction}})`);
+ assert.equal(a.run('q.posture'),'standing','countersteer should not wait at near-rest');
+ assert.ok(direction*a.run('q.speed')>0&&direction*a.run('q.speed')<0.8,'uncurl preserves residual speed before reversing');
+ a.run(`for(let i=0;i<8;i++)stepMotionPlayer(q,{direction:${-direction}})`);
+ assert.ok(direction*a.run('q.speed')<0,'standing control reverses naturally after braking');
+ a.run(`q=createMotionPlayer('flat');Object.assign(q,{speed:${direction*12},posture:'rolling'});var uncurl=null,reversal=null;for(let i=1;i<=90;i++){stepMotionPlayer(q,{direction:${-direction}});if(q.posture==='standing'&&uncurl===null)uncurl=i;if(${direction}*q.speed<0&&reversal===null)reversal=i}`);
+ assert.ok(a.run('uncurl')<=65&&a.run('reversal')<=69,'full-speed roll turn avoids the old 81-tick uncurl delay');
+ }
+ a.run(`q=createMotionPlayer('ceiling');Object.assign(q,{x:300,speed:0.8,posture:'rolling'});stepMotionPlayer(q,{direction:-1})`);
+ assert.equal(a.run('q.posture'),'rolling','intentional turn cannot expand into ceiling');
+});
 test('posture changes preserve contact; curve joins are continuous and share render/collision sampling', () => {
   const a=scene();
   a.run(`trial=createGroundPlayer('flat',0,6);var before=groundContact(trial);stepGroundPlayer(trial,{down:true});var after=groundContact(trial)`);

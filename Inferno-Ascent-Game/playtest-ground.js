@@ -135,7 +135,14 @@ function finishGroundTick(
   player.ticks++;
   if (Math.abs(player.speed) > 0.02) player.facing = Math.sign(player.speed);
   const slopeForce = Math.abs(t.gravity * sampler(player.scenario, player.x).ty);
-  if (rolling && Math.abs(player.speed) < t.restSpeed && slopeForce <= t.rollResistance) {
+  const turning =
+    controls.direction * player.facing < 0 && Math.abs(player.speed) <= t.rollTurnSpeed;
+  // Deliberate turns can stand before the passive rest timer, retaining the
+  // remaining velocity. A steep gravity-driven reversal must stay rolled.
+  if (rolling && turning && slopeForce <= t.rollResistance && canStand) {
+    player.posture = 'standing';
+    player.restTicks = 0;
+  } else if (rolling && Math.abs(player.speed) < t.restSpeed && slopeForce <= t.rollResistance) {
     player.restTicks++;
     if (player.restTicks >= t.uncurlTicks && canStand) {
       player.posture = 'standing';
@@ -159,7 +166,7 @@ function stepGroundPlayer(player, input = {}) {
 }
 
 const groundTuning = Object.freeze({
-    revision: 'GROUND-3',
+    revision: 'GROUND-4',
     hz: 60,
     substeps: 4,
     runRange: 14,
@@ -170,6 +177,7 @@ const groundTuning = Object.freeze({
     rollResistance: 0.025,
     rollBrake: 0.18,
     rollBrakeFadeSpeed: 2,
+    rollTurnSpeed: 1,
     rollEntrySpeed: 2,
     restSpeed: 0.08,
     uncurlTicks: 12,
