@@ -23,6 +23,7 @@
     {
       "file": "act2.js",
       "kinds": {
+        "GAMEPLAY_ZOOM": "const",
         "cameraTracking": "const",
         "skylineSmokeSprites": "const"
       }

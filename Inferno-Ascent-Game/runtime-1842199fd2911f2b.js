@@ -340,6 +340,7 @@
   // src/act2.js
   var act2_exports = {};
   __export(act2_exports, {
+    GAMEPLAY_ZOOM: () => GAMEPLAY_ZOOM,
     beginLoop: () => beginLoop,
     cameraTracking: () => cameraTracking,
     cityFlame: () => cityFlame,
@@ -3846,7 +3847,7 @@
       };
       recoveredSpriteTextures.set(key, sprite);
     }
-    const transform = ctx.getTransform(), worldScale = Math.hypot(transform.a, transform.b), integerScale = Math.max(1, Math.round(worldScale)), ratio = integerScale / worldScale;
+    const transform = ctx.getTransform(), worldScale = Math.hypot(transform.a, transform.b), integerScale = Math.max(1, Math.round(worldScale)), ratio = q.preserveCameraScale ? 1 : integerScale / worldScale;
     const foot = q.pivotY ?? (q.ball ? p.ground ? 20 - Math.floor(sprite.height / 2) : 1 : 20);
     ctx.save();
     ctx.setTransform(
@@ -14994,8 +14995,10 @@
     resetBoostMonitors();
     state.coyote = tuning.coyote;
     state.jumpBuffer = 0;
-    state.cam = Math.max(0, p.x - 230);
-    state.camY = state.level.act === 2 ? p.y - H * 0.6 : 0;
+    const cinematic = state.bossCheckpoint && state.level.act === 2;
+    if (!cinematic) state.zoom = GAMEPLAY_ZOOM;
+    state.cam = Math.max(0, p.x - (cinematic ? 230 : W / state.zoom * 0.46));
+    state.camY = cinematic ? p.y - H * 0.6 : p.y - H / state.zoom * 0.64;
     resetStageRuntime();
     resetCameraTracking();
     resetBossAttempt();
@@ -15534,6 +15537,7 @@
   function sonic() {
     if (p.inv > 0 && state.step % 10 < 4 && state.mode === "playing") return;
     const q = sonicPose();
+    q.preserveCameraScale = !state.boss;
     ctx.save();
     ctx.translate(p.x, p.y);
     const transform = ctx.getTransform?.();
@@ -17075,6 +17079,7 @@
   // src/act2.js
   var cameraTracking;
   var skylineSmokeSprites;
+  var GAMEPLAY_ZOOM;
   function selectAct(act) {
     state.selectedAct = act === 2 ? 2 : 1;
     setup();
@@ -17299,23 +17304,29 @@
     cameraTracking.prediction = 0;
     cameraTracking.velocity = 0;
     cameraTracking.lastY = p.y;
+    cameraTracking.lastX = p.x;
+    cameraTracking.lead = 0;
   }
   __name(resetCameraTracking, "resetCameraTracking");
   function updateCamera() {
     if (frameBossCamera()) return;
-    const speed = p.loop ? p.loop.speed : Math.abs(p.vx), act2 = state.level.act === 2;
-    const speedBlend = Math.max(0, Math.min(1, (speed - 8) / 16)), targetZoom = 0.94 - 0.18 * speedBlend * speedBlend * (3 - 2 * speedBlend);
-    state.zoom += (targetZoom - state.zoom) * 0.025;
-    const vw = W / state.zoom, lead = Math.min(act2 ? 340 : 230, Math.max(-180, p.vx * (act2 ? 12 : 9))), anchor = act2 ? W / state.zoom * 0.38 : 280;
-    state.cam += (Math.max(0, Math.min(state.END - vw + 260, p.x - anchor + lead)) - state.cam) * 0.15;
-    const groundBlend = Math.max(0, Math.min(1, (speed - 6) / 6)), groundAnchor = 0.68 - 0.08 * groundBlend * groundBlend * (3 - 2 * groundBlend);
-    if (!act2) {
-      state.camY += (Math.max(-110, Math.min(190, p.y - 350)) - state.camY) * 0.08;
-      return;
+    const speed = p.loop ? Math.abs(p.loop.speed) : Math.abs(p.vx);
+    state.zoom = GAMEPLAY_ZOOM;
+    const vw = W / state.zoom, vh = H / state.zoom, movementX = cameraTracking.lastX === null ? 0 : p.x - cameraTracking.lastX, right = Math.max(0, state.END - vw + 260);
+    cameraTracking.lastX = p.x;
+    let lead = Math.max(-vw * 0.14, Math.min(vw * 0.14, p.vx * 4));
+    const motion = p.ground && p.surface?.motion;
+    if (motion?.axis === "x" && Math.abs(p.vx) < 0.5) {
+      const direction = motion.type === "flight" ? motion.distance : surfaceVelocity(p.surface).x;
+      lead = Math.sign(direction) * vw * 0.14;
     }
+    cameraTracking.lead += (lead - cameraTracking.lead) * 0.08;
+    const targetX = Math.max(0, Math.min(right, p.x - vw * 0.46 + cameraTracking.lead)), carriedX = state.cam + (targetX > 0 && targetX < right ? movementX : 0);
+    state.cam = Math.max(0, Math.min(right, carriedX + (targetX - carriedX) * 0.12));
+    const groundBlend = Math.max(0, Math.min(1, (speed - 6) / 6)), groundAnchor = motion?.type === "flight" && motion.axis === "x" ? 0.52 : 0.68 - 0.08 * groundBlend * groundBlend * (3 - 2 * groundBlend);
     cameraTracking.anchor += ((p.ground ? groundAnchor : 0.6) - cameraTracking.anchor) * 0.05;
-    cameraTracking.lift += (Math.max(-100, Math.min(0, p.vy * 6)) - cameraTracking.lift) * 0.08;
-    const baseY = p.y - H / state.zoom * cameraTracking.anchor + cameraTracking.lift, landing = predictLanding();
+    cameraTracking.lift += (Math.max(-vh * 0.15, Math.min(0, p.vy * 6)) - cameraTracking.lift) * 0.08;
+    const baseY = p.y - vh * cameraTracking.anchor + cameraTracking.lift, landing = predictLanding();
     let prediction = 0;
     if (landing) {
       const confidence = Math.max(0, Math.min(1, (speed - 9) / 5));
@@ -17323,20 +17334,19 @@
         p.y - H / state.zoom * 0.3,
         Math.max(baseY, landing.y - H / state.zoom * 0.82)
       );
-      prediction = (framed - baseY) * confidence * confidence * (3 - 2 * confidence);
+      const descending = Math.max(0, Math.min(1, (p.vy + 3) / 6));
+      prediction = Math.min(vh * 0.18, framed - baseY) * confidence * confidence * (3 - 2 * confidence) * descending;
     }
     cameraTracking.prediction += (prediction - cameraTracking.prediction) * 0.045;
-    let targetY = baseY + cameraTracking.prediction;
-    if (state.level.verticalCity)
-      targetY = Math.max(
-        p.y - H / state.zoom * 0.78,
-        Math.min(p.y - H / state.zoom * 0.25, targetY)
-      );
+    const top = p.y - vh * 0.78, bottom = p.y - vh * 0.3, targetY = Math.max(top, Math.min(bottom, baseY + cameraTracking.prediction));
     const movement = cameraTracking.lastY === null ? 0 : p.y - cameraTracking.lastY;
     cameraTracking.lastY = p.y;
-    const limit = Math.min(25, Math.max(3, Math.max(Math.abs(p.vy), Math.abs(movement)) * 1.05 + 2));
+    const limit = Math.max(3, Math.max(Math.abs(p.vy), Math.abs(movement)) * 1.05 + 2);
     cameraTracking.velocity += (Math.max(-limit, Math.min(limit, (targetY - state.camY) * 0.14)) - cameraTracking.velocity) * 0.3;
-    state.camY += Math.max(-limit, Math.min(limit, cameraTracking.velocity));
+    state.camY = Math.max(
+      top,
+      Math.min(bottom, state.camY + Math.max(-limit, Math.min(limit, cameraTracking.velocity)))
+    );
   }
   __name(updateCamera, "updateCamera");
   function cityFlame(x, y, w, h, seed = 0, alpha = 1) {
@@ -17573,7 +17583,16 @@
   }
   __name(drawClimbCue, "drawClimbCue");
   function initializeRuntimeModule25() {
-    cameraTracking = { anchor: 0.64, lift: 0, prediction: 0, velocity: 0, lastY: null };
+    GAMEPLAY_ZOOM = 1.6;
+    cameraTracking = {
+      anchor: 0.64,
+      lift: 0,
+      prediction: 0,
+      velocity: 0,
+      lastY: null,
+      lastX: null,
+      lead: 0
+    };
     skylineSmokeSprites = /* @__PURE__ */ new Map();
   }
   __name(initializeRuntimeModule25, "initializeRuntimeModule");

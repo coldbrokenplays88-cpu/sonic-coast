@@ -39,12 +39,14 @@ import {
   yOn,
   loopPhysics,
   surfaceTravelSpeed,
+  surfaceVelocity,
   groundSlopeForce,
   surfaceNormalReaction,
 } from './surface-collision.js';
 import { resolveMotionInteractions } from './world-interactions.js';
 import { beginTraversalLaunch } from './traversal-animations.js';
-export let cameraTracking, skylineSmokeSprites;
+export let cameraTracking, skylineSmokeSprites, GAMEPLAY_ZOOM;
+// A 59-unit standing pose occupies 17.48% of the 540-unit viewport.
 
 export function selectAct(act) {
   runtimeState.selectedAct = act === 2 ? 2 : 1;
@@ -335,35 +337,45 @@ export function resetCameraTracking() {
   cameraTracking.prediction = 0;
   cameraTracking.velocity = 0;
   cameraTracking.lastY = p.y;
+  cameraTracking.lastX = p.x;
+  cameraTracking.lead = 0;
 }
 
 export function updateCamera() {
   if (frameBossCamera()) return;
-  const speed = p.loop ? p.loop.speed : Math.abs(p.vx),
-    act2 = runtimeState.level.act === 2;
-  // Ease across the speed range, including the old threshold, without a target jump.
-  const speedBlend = Math.max(0, Math.min(1, (speed - 8) / 16)),
-    targetZoom = 0.94 - 0.18 * speedBlend * speedBlend * (3 - 2 * speedBlend);
-  runtimeState.zoom += (targetZoom - runtimeState.zoom) * 0.025;
+  const speed = p.loop ? Math.abs(p.loop.speed) : Math.abs(p.vx);
+  runtimeState.zoom = GAMEPLAY_ZOOM;
   const vw = W / runtimeState.zoom,
-    lead = Math.min(act2 ? 340 : 230, Math.max(-180, p.vx * (act2 ? 12 : 9))),
-    anchor = act2 ? (W / runtimeState.zoom) * 0.38 : 280;
-  runtimeState.cam +=
-    (Math.max(0, Math.min(runtimeState.END - vw + 260, p.x - anchor + lead)) - runtimeState.cam) *
-    0.15;
+    vh = H / runtimeState.zoom,
+    movementX = cameraTracking.lastX === null ? 0 : p.x - cameraTracking.lastX,
+    right = Math.max(0, runtimeState.END - vw + 260);
+  cameraTracking.lastX = p.x;
+  let lead = Math.max(-vw * 0.14, Math.min(vw * 0.14, p.vx * 4));
+  const motion = p.ground && p.surface?.motion;
+  if (motion?.axis === 'x' && Math.abs(p.vx) < 0.5) {
+    // Riders need to see the destination even when standing still. A docked
+    // carrier retains its travel direction instead of hiding its landing.
+    const direction = motion.type === 'flight' ? motion.distance : surfaceVelocity(p.surface).x;
+    lead = Math.sign(direction) * vw * 0.14;
+  }
+  cameraTracking.lead += (lead - cameraTracking.lead) * 0.08;
+  const targetX = Math.max(0, Math.min(right, p.x - vw * 0.46 + cameraTracking.lead)),
+    carriedX = runtimeState.cam + (targetX > 0 && targetX < right ? movementX : 0);
+  // Carry actual travel, then ease the framing offset. High speed must not leave
+  // Sonic behind a camera that advances only a fraction of his velocity.
+  runtimeState.cam = Math.max(0, Math.min(right, carriedX + (targetX - carriedX) * 0.12));
   // Ground framing must ease too: the former speed<9 switch jerked the
   // entire scene during ordinary acceleration and braking, despite smooth zoom.
   const groundBlend = Math.max(0, Math.min(1, (speed - 6) / 6)),
-    groundAnchor = 0.68 - 0.08 * groundBlend * groundBlend * (3 - 2 * groundBlend);
-  if (!act2) {
-    runtimeState.camY += (Math.max(-110, Math.min(190, p.y - 350)) - runtimeState.camY) * 0.08;
-    return;
-  }
+    groundAnchor =
+      motion?.type === 'flight' && motion.axis === 'x'
+        ? 0.52
+        : 0.68 - 0.08 * groundBlend * groundBlend * (3 - 2 * groundBlend);
   // Both takeoff lookahead and landing framing are continuous state, so changes
   // in contact or predicted deck cannot immediately reframe the whole scene.
   cameraTracking.anchor += ((p.ground ? groundAnchor : 0.6) - cameraTracking.anchor) * 0.05;
-  cameraTracking.lift += (Math.max(-100, Math.min(0, p.vy * 6)) - cameraTracking.lift) * 0.08;
-  const baseY = p.y - (H / runtimeState.zoom) * cameraTracking.anchor + cameraTracking.lift,
+  cameraTracking.lift += (Math.max(-vh * 0.15, Math.min(0, p.vy * 6)) - cameraTracking.lift) * 0.08;
+  const baseY = p.y - vh * cameraTracking.anchor + cameraTracking.lift,
     landing = predictLanding();
   let prediction = 0;
   if (landing) {
@@ -372,23 +384,27 @@ export function updateCamera() {
       p.y - (H / runtimeState.zoom) * 0.3,
       Math.max(baseY, landing.y - (H / runtimeState.zoom) * 0.82)
     );
-    prediction = (framed - baseY) * confidence * confidence * (3 - 2 * confidence);
+    // A distant lower deck must not pull the camera down during an ascent.
+    const descending = Math.max(0, Math.min(1, (p.vy + 3) / 6));
+    prediction =
+      Math.min(vh * 0.18, framed - baseY) * confidence * confidence *
+      (3 - 2 * confidence) * descending;
   }
   cameraTracking.prediction += (prediction - cameraTracking.prediction) * 0.045;
-  let targetY = baseY + cameraTracking.prediction;
-  if (runtimeState.level.verticalCity)
-    targetY = Math.max(
-      p.y - (H / runtimeState.zoom) * 0.78,
-      Math.min(p.y - (H / runtimeState.zoom) * 0.25, targetY)
-    );
+  const top = p.y - vh * 0.78,
+    bottom = p.y - vh * 0.3,
+    targetY = Math.max(top, Math.min(bottom, baseY + cameraTracking.prediction));
   const movement = cameraTracking.lastY === null ? 0 : p.y - cameraTracking.lastY;
   cameraTracking.lastY = p.y;
-  const limit = Math.min(25, Math.max(3, Math.max(Math.abs(p.vy), Math.abs(movement)) * 1.05 + 2));
+  const limit = Math.max(3, Math.max(Math.abs(p.vy), Math.abs(movement)) * 1.05 + 2);
   cameraTracking.velocity +=
     (Math.max(-limit, Math.min(limit, (targetY - runtimeState.camY) * 0.14)) -
       cameraTracking.velocity) *
     0.3;
-  runtimeState.camY += Math.max(-limit, Math.min(limit, cameraTracking.velocity));
+  runtimeState.camY = Math.max(
+    top,
+    Math.min(bottom, runtimeState.camY + Math.max(-limit, Math.min(limit, cameraTracking.velocity)))
+  );
 }
 
 // Small deterministic pixel effects keep fire and smoke anchored to the artwork.
@@ -682,7 +698,10 @@ export function drawClimbCue(s, left, right) {
   ctx.stroke();
 }
 export function initializeRuntimeModule() {
-  cameraTracking = { anchor: 0.64, lift: 0, prediction: 0, velocity: 0, lastY: null };
+  GAMEPLAY_ZOOM = 1.6;
+  cameraTracking = {
+    anchor: 0.64, lift: 0, prediction: 0, velocity: 0, lastY: null, lastX: null, lead: 0,
+  };
 
   skylineSmokeSprites = new Map();
 }

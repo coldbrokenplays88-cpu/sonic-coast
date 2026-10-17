@@ -314,8 +314,10 @@ function respawn() {
   resetBoostMonitors();
   coyote = tuning.coyote;
   jumpBuffer = 0;
-  cam = Math.max(0, p.x - 230);
-  camY = level.act === 2 ? p.y - H * 0.6 : 0;
+  const cinematic = bossCheckpoint && level.act === 2;
+  if (!cinematic) zoom = GAMEPLAY_ZOOM;
+  cam = Math.max(0, p.x - (cinematic ? 230 : (W / zoom) * 0.46));
+  camY = cinematic ? p.y - H * 0.6 : p.y - (H / zoom) * 0.64;
   resetStageRuntime();
   resetCameraTracking();
   resetBossAttempt();
@@ -919,6 +921,9 @@ function drawSonicFrame(q) {
 function sonic() {
   if (p.inv > 0 && step % 10 < 4 && mode === 'playing') return;
   const q = sonicPose();
+  // Cinematic actors keep their authored raster scale; gameplay follows the
+  // fixed camera exactly, with no independent half-step magnification.
+  q.preserveCameraScale = !boss;
   ctx.save();
   ctx.translate(p.x, p.y);
   const transform = ctx.getTransform?.();
