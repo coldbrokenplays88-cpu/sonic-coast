@@ -1,4 +1,4 @@
-# PLAYTEST ground movement — GROUND-2
+# PLAYTEST ground movement — GROUND-3
 
 ## Checkpoint and provenance
 
@@ -8,7 +8,7 @@ The scaffold handoff is `docs/playtest-scaffold.md`. The user approved its
 access/switching checkpoint in this conversation ("yeah it works") before Task 2.
 
 **Exact tested implementation commit:**
-`b4329ca0f487a77a5e4fecb1c77f589435c739bf`.
+`805b52e25ea8329827a3f585963d162768844074`.
 This document is a subsequent documentation-only commit; no runtime change is
 needed to add these verification records. Node v24.19.0, npm 11.9.0, existing
 installed lockfile dependencies; no dependency changes.
@@ -62,7 +62,7 @@ within that scheduling domain, not across arbitrary multi-second suspension.
 | Released standing resistance | 0.10/tick | Stable flat coast-down |
 | Gravity | 0.35/tick² | Projected onto the actual tangent in either direction |
 | Rolling resistance | 0.025/tick | One quarter of released standing resistance |
-| Rolling opposite-input brake | Up to 0.18/tick | Full above speed 2; tapers linearly to zero below it |
+| Rolling opposite-input brake | Up to 0.18/tick | Flat strength; multiplied by `1-abs(sin(angle))` on slopes |
 | Rolling brake fade speed | 2 | Kinetic braking cannot become extra static slope friction |
 | Roll entry | Fresh Down/S edge at speed ≥2 | No charge or Spin Dash |
 | Automatic uncurl | Speed <0.08 for 12 eligible ticks | 0.2 s sustained near-rest hysteresis |
@@ -173,9 +173,9 @@ their isolation, lifecycle and Act 1/2 comparisons. Nine ground-controller
 regressions were added. Source/build manifests and generated compatibility files
 are synchronized; generated JS was not manually edited.
 
-Player ZIP: `dist/Neon-Express-player.zip`, 52,314,593 bytes, 37 files.
-SHA-256: `fe75414a4632f1ec67c06639e5cbded6a82177693d160664e8c55a77b5e8f448`.
-Runtime: `runtime-ab1e349e80edf06e.js`; CSS: `style-c9f48a6e01dc8ece.css`.
+Player ZIP: `dist/Neon-Express-player.zip`, 52,314,603 bytes, 37 files.
+SHA-256: `9715df83a12a26d39a1d4efd92b56fb704960e3d4204ecaec9ef6f44f53ecb3f`.
+Runtime: `runtime-7f4077fc3e1c62d7.js`; CSS: `style-c9f48a6e01dc8ece.css`.
 Integrity checked; freshly extracted outside the repository. Its index matches
 committed `PLAY.html`, and its runtime matches the committed generated bundle.
 
@@ -215,7 +215,7 @@ Stop at this ground-only slice. Wait for explicit feedback/approval on feel
 before adding airborne physics or any other feature; continue this same branch.
 
 
-## GROUND-2 follow-up: held countersteer on a downhill roll
+## GROUND-2 history: held countersteer on a downhill roll (superseded below)
 
 Started from `52a50e6b7638fe941314c57cb02e42436081a7d7` after the user's ground-feel
 feedback. GROUND-1 applied 0.18 braking plus 0.025 friction even at very low
@@ -247,3 +247,51 @@ through the actual PLAYTEST scene update, plus both legacy acts and lifecycle
 checks. HTTP passes with no page errors; direct-file access remains blocked by
 this environment's browser policy. No PR creation, merge, deployment, airborne
 feature or change to Act 1/2 physics was made.
+
+
+## GROUND-3: useful downhill acceleration under countersteer
+
+Started from `30f54bb0a5321d48ce6f1e109a2097e6ffbb2a4c`. Inspected the entire supplied
+8-second recording (30 fps), including its HUD at 3 seconds: `GROUND-1`, surface
+speed -0.052, world velocity (-0.043, 0.028), angle -33.02°, input KeyD+KeyS.
+This records the original near-stall. GROUND-2 fixed sticking but could still
+converge to a slow downhill crawl, so its nonzero-speed acceptance test was
+insufficient for the intended feel.
+
+Only the **opposing rolling control force** now also multiplies by
+`1 - abs(surface.ty)` (equivalently `1 - abs(sin(angle))`). This is an explicitly
+authored experimental control-strength law, not a claim of Genesis historical
+accuracy. It varies continuously with inclination, preserves flat braking
+exactly, and leaves gravity, passive roll resistance, running, posture rules,
+collision, camera and geometry unchanged. The existing near-rest taper below
+speed 2 remains to avoid extra static friction on gentle grades. No minimum
+speed, forced launch, propulsion or direct world-axis velocity override is added.
+
+On the designated 33.02° grade, opposing brake at speed ≥2 is 0.0819021 instead
+of 0.18. Gravity is still 0.1907459, passive resistance 0.025, so net downhill
+acceleration remains approximately 0.0838438 even while holding uphill.
+
+Production-controller comparisons, right slope x=1700, rolling, 60 ticks / 1 s:
+
+| Initial speed | Input | Final surface speed | Final world vx | Final x |
+| --- | --- | ---: | ---: | ---: |
+| 0 | released | -9.944755 | -8.338117 | 1449.856501 |
+| 0 | hold right/uphill | -5.642489 | -4.730909 | 1545.365108 |
+| -4 | released | -13.944755 | -11.691891 | 1248.630033 |
+| -4 | hold right/uphill | -9.030630 | -7.571674 | 1372.236555 |
+
+Both mirrored slopes and both initial speeds pass the stronger regression:
+held countersteer retains at least 40% of the released speed gain during the
+same one-second constant-grade interval (measured about 51–57%). Braking still
+reduces acceleration and total energy compared with release; travel does not
+stop/jitter or reverse uphill. Tests stay within |x|>1000 to avoid confusing a
+natural crossing of the valley/reversal with a braking failure. All no-input
+energy, flat coast/uncurl, control-isolation and rendering-schedule tests pass.
+
+All six required commands pass: 438 gameplay tests, nine build tests, generated
+compatibility/player checks and packaging. Freshly extracted ZIP smoke passes
+in Chromium over local HTTP; its test asserts the `GROUND-3` revision, actual
+countersteered surface speed >8 and world-horizontal speed >6 in magnitude
+from initial speed 4 after one second, plus the existing scene/legacy checks.
+Direct-file navigation remains policy-blocked. Runtime/package identity above
+is for GROUND-3. No Act 1/2 physics, PR, merge, deployment or airborne work changed.
