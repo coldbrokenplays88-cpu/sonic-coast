@@ -1,4 +1,53 @@
-# PLAYTEST physics — Act 1 integration checkpoint
+# PLAYTEST physics — shared rolling transitions / GROUND-6
+
+## Current correction: shared momentum posture rules
+
+Starting SHA: `62fa7a4ffa11638e5bbe4cf4b750048b5e7956d0` on the same
+`codex/playtest-physics` branch. The user requested this across the shared momentum
+physics, not just Act 1. `beginGroundTick` now uncurls a moving roll immediately
+on opposite-direction input when standing clearance exists, using the existing
+.5 standing brake and brake artwork. Held Down cannot silently recurl that turn.
+Both PLAYTEST and Act 1 use this rule; future integrations inherit it.
+
+Ground, curved-path and moving-platform landings share `landingGroundPosture`:
+resume standing when it fits, retaining the roll only for constrained clearance.
+This replaces restoration of a stale pre-flight roll after upright falling or
+launch animations. Continuous grounded rolls and their downhill multiplier,
+friction, momentum, jump/Boost values and geometry are unchanged. Just-departed
+rolled crests still require physical separation before upright grip can reattach.
+PLAYTEST now draws the existing brake frames for its standing countersteer.
+Act 2 remains on its existing legacy controller pending the separate migration.
+
+Verification: seven new regressions failed before implementation and pass now;
+**543/543 gameplay tests,10/10 build tests**, `build:player`, generated checks and
+`package` pass. Earlier rolling-countersteer assertions now explicitly cover the
+remaining rolled case with obstructed standing clearance; unobstructed turns are
+covered by the new standing-brake tests. No force constants or test thresholds
+were weakened. The input-only Act 1 replay brakes before closely spaced hazards
+to reflect the new standing transitions; it still uses actual production inputs.
+
+Fresh ZIP browser smoke passed in Chromium151: shared standing posture, actual
+brake-atlas draw, low-clearance/crest regressions, all earlier benchmark fixtures,
+Act 1 completion at tick2117 with0 hits/deaths, both express routes, Act 2 flow and
+scene switching. Zero page errors. This is automated verification, not user feel
+approval. Direct-file loading remains blocked by the browser environment policy;
+the extracted package loads through the verified Python3 HTTP fallback.
+
+Current ZIP: `dist/Neon-Express-player.zip`,37 files,52,342,802 bytes.
+SHA256: `9bada43b1a6b6ec4ef0549400c2109286775fd6c13db2fa262925fd819194a2b`.
+Runtime: `runtime-38d6781cee9f412a.js`; CSS remains `style-c9f48a6e01dc8ece.css`.
+The source archive uses `Inferno-Ascent-Game/PLAY.html`; the player ZIP uses
+`index.html`. No attachment service or public preview is available. No PR,
+merge, deployment or Act 2 migration. **Stop for user feedback.**
+
+Manual check: roll quickly and press the opposite direction in PLAYTEST and Act 1;
+look for immediate standing braking without losing the contact anchor. Jump or
+fall from a roll and check the clear landing resumes running. Repeat under a low
+ceiling, where standing must remain blocked until Sonic has room.
+
+---
+
+## Earlier Act 1 integration record
 
 ## Current stage: Act 1 only
 

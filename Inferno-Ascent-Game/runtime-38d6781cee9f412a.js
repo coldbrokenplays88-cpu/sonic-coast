@@ -412,6 +412,7 @@
     groundResist: () => groundResist,
     groundTuning: () => groundTuning,
     initializeRuntimeModule: () => initializeRuntimeModule2,
+    landingGroundPosture: () => landingGroundPosture,
     sampleGround: () => sampleGround,
     stepGroundPlayer: () => stepGroundPlayer
   });
@@ -483,18 +484,28 @@
     return Math.sign(speed) * Math.max(0, Math.abs(speed) - amount);
   }
   __name(groundResist, "groundResist");
-  function beginGroundTick(player, input = {}, allowRoll = true) {
+  function beginGroundTick(player, input = {}, allowRoll = true, canStand2 = true) {
     const t = groundTuning, direction = Math.sign(input.direction || 0), down = !!input.down;
-    if (down && !player.downHeld && Math.abs(player.speed) >= t.rollEntrySpeed && allowRoll) {
+    const unrolled = player.posture === "rolling" && direction * player.speed < 0 && !player.dash && canStand2;
+    if (unrolled) {
+      player.posture = "standing";
+      player.restTicks = 0;
+    } else if (down && !player.downHeld && Math.abs(player.speed) >= t.rollEntrySpeed && allowRoll) {
       player.posture = "rolling";
       player.restTicks = 0;
     }
     player.downHeld = down;
     const rolling = player.posture === "rolling";
     const braking = direction * player.speed < 0;
-    return { direction, rolling, braking };
+    player.braking = braking && !rolling;
+    player.brakeTicks = player.braking ? (player.brakeTicks || 0) + 1 : 0;
+    return { direction, rolling, braking, unrolled };
   }
   __name(beginGroundTick, "beginGroundTick");
+  function landingGroundPosture(canOccupy) {
+    return ["standing", "rolling"].find(canOccupy);
+  }
+  __name(landingGroundPosture, "landingGroundPosture");
   function advanceGroundSubstep(player, controls, dt, sampler = sampleGround, arcLength = false) {
     const t = controls.physics || groundTuning, { direction, rolling, braking } = controls;
     const position = arcLength ? player.pathS : player.x;
@@ -547,7 +558,7 @@
   __name(stepGroundPlayer, "stepGroundPlayer");
   function initializeRuntimeModule2() {
     groundTuning = Object.freeze({
-      revision: "GROUND-5",
+      revision: "GROUND-6",
       hz: 60,
       substeps: 4,
       runRange: 14,
@@ -2200,7 +2211,7 @@
         y: support.y1,
         restTicks: 0
       };
-      const posture2 = [player.air.restorePosture, player.posture].find(
+      const posture2 = landingGroundPosture(
         (posture3) => motionPostureClear({ ...candidate2, posture: posture3 }, posture3, time)
       );
       if (!posture2) return false;
@@ -2245,7 +2256,7 @@
         air: null,
         speed: speed2
       };
-      const posture2 = [player.air.restorePosture, player.posture].find((posture3) => {
+      const posture2 = landingGroundPosture((posture3) => {
         candidate2.posture = posture3;
         return motionSupported(candidate2, surface) && motionPostureClear(candidate2, posture3);
       });
@@ -2267,7 +2278,6 @@
       resetExperimentalAirBoost(player);
       return true;
     }
-    const restore = player.air.restorePosture;
     let x = hit.surface.x;
     if (player.posture === "standing") {
       x = player.x;
@@ -2282,7 +2292,9 @@
     if (!s) return false;
     const speed = incoming.vx * s.tx + incoming.vy * s.ty;
     const candidate = { ...player, mode: "grounded", x, y: s.y, speed, air: null };
-    const posture = [restore, player.posture].find((posture2) => {
+    if (player.posture === "rolling" && player.air.separation?.id === s.id && !player.air.separation.cleared && !motionSupported({ ...candidate, posture: "rolling" }, s))
+      return false;
+    const posture = landingGroundPosture((posture2) => {
       candidate.posture = posture2;
       return motionPostureClear(candidate, posture2) && motionSupported(candidate, s);
     });
@@ -2472,7 +2484,8 @@
       controls = beginGroundTick(
         player,
         input,
-        !player.railId && motionPostureClear(player, "rolling")
+        !player.railId && motionPostureClear(player, "rolling"),
+        motionPostureClear(player, "standing")
       );
       if (player.dash) controls = { direction: 0, rolling: false, braking: true };
       if (input.jumpPressed && !dashAction) releaseMotion(player, "jump", true);
@@ -2727,7 +2740,7 @@
   __name(stepMotionPlayer, "stepMotionPlayer");
   function initializeRuntimeModule7() {
     motionTuning = Object.freeze({
-      revision: "RAIL-BOOST-1 / DEVICES-2 / PATH-1 / AIR-2 / GROUND-5",
+      revision: "RAIL-BOOST-1 / DEVICES-2 / PATH-1 / AIR-2 / GROUND-6",
       steepGripSpeed: 2.5,
       jumpImpulse: 10.5,
       cutRatio: 0.4,
@@ -9032,8 +9045,9 @@
     const s = act1Surface(surface, x, time), previous = m.surface;
     const speed = seam ? m.speed : (incoming.vx - s.vx) * s.tx + (incoming.vy - s.vy) * s.ty;
     const candidate = { ...m, mode: "grounded", surface, x, y: s.y, speed, air: null };
-    const restore = m.air?.restorePosture || "standing";
-    if (!seam) candidate.posture = act1Clear(candidate, restore, time) ? restore : "rolling";
+    if (!seam)
+      candidate.posture = landingGroundPosture((posture) => act1Clear(candidate, posture, time));
+    if (!candidate.posture) return false;
     if (!act1Clear(candidate, candidate.posture, time)) return false;
     Object.assign(m, candidate);
     m.restTicks = 0;
@@ -9275,7 +9289,8 @@
     if (startedGrounded && m.rollBuffer > 0) m.downHeld = false;
     const dash = updateExperimentalDash(m, input, surface, () => act1Clear(m, "rolling"));
     if (dash) m.jumpBuffer = 0;
-    let controls = startedGrounded ? beginGroundTick(m, input, act1Clear(m, "rolling")) : null;
+    let controls = startedGrounded ? beginGroundTick(m, input, act1Clear(m, "rolling"), act1Clear(m, "standing")) : null;
+    if (controls?.unrolled) m.rollBuffer = 0;
     if (m.dash) controls = { direction: 0, rolling: false, braking: true };
     if (previousPosture !== "rolling" && m.posture === "rolling") state.stats.rolls++;
     if (startedGrounded && m.posture === "rolling") m.rollBuffer = 0;
@@ -20379,13 +20394,13 @@ Boost ${player.boost.meter.toFixed(2)}/90${c.infiniteBoost && player.railId ? " 
   }
   __name(readPlaytestState, "readPlaytestState");
   function drawGroundPlayer(player) {
-    const c = motionContact(player), rolling = player.posture === "rolling";
+    const c = motionContact(player), rolling = player.posture === "rolling", braking = c.grounded && !rolling && player.braking && !player.boost.active && !player.railId;
     ctx.save();
     const footShift = c.grounded ? Math.hypot(c.center.x - c.x, c.center.y - c.y) - c.height / 2 : 0;
     ctx.translate(c.x + c.nx * footShift, c.y + c.ny * footShift);
     ctx.rotate(c.angle);
     const sheet = (player.railId || player.boost.active) && art.supplemental ? "supplemental" : art.recoveredSpeedster ? "recoveredSpeedster" : "recoveredPeelout";
-    const index = sheet === "supplemental" ? (player.railId ? 16 : 8) + Math.floor(player.ticks / 3) % 8 : rolling ? 26 + Math.floor(player.dash ? player.ticks / 2 : player.distance / 10) % 3 : Math.abs(player.speed) > 0.1 ? Math.floor(player.distance / 12) % 8 : 16;
+    const index = sheet === "supplemental" ? (player.railId ? 16 : 8) + Math.floor(player.ticks / 3) % 8 : braking ? 32 + Math.min(5, Math.floor((player.brakeTicks || 0) / 4)) : rolling ? 26 + Math.floor(player.dash ? player.ticks / 2 : player.distance / 10) % 3 : Math.abs(player.speed) > 0.1 ? Math.floor(player.distance / 12) % 8 : 16;
     const im = art[sheet], descriptor = recoveredSpriteFrames[sheet]?.[index];
     if (im && descriptor) {
       const [left, top, right, bottom] = descriptor.bounds, sw = right - left, sh = bottom - top;

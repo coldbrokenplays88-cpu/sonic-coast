@@ -67,9 +67,9 @@ test('downhill force tuning leaves flat rolling and uphill motion unchanged',()=
  const uphill=simulate(a,'valley',side*1700,side*14,'rolling',{},30);assert.ok(Math.abs(uphill.speed-side*7.527622318748)<1e-8,'uphill loss retains approved value');
  }
 });
-test('downhill rolling keeps the approved opposing-input braking force',()=>{
+test('a roll with blocked standing clearance keeps its downhill countersteer force',()=>{
  const a=scene();for(const side of [-1,1]){
- a.run(`var free=createMotionPlayer('valley'),braked=createMotionPlayer('valley');for(const q of [free,braked])Object.assign(q,{x:${side*1700},speed:${-side*14},posture:'rolling'});var ty=motionContact(free).ty;stepMotionPlayer(free,{});stepMotionPlayer(braked,{direction:${side}})`);
+ a.run(`var free=createGroundPlayer('valley'),braked=createGroundPlayer('valley');for(const q of [free,braked])Object.assign(q,{x:${side*1700},speed:${-side*14},posture:'rolling'});var ty=groundContact(free).ty;stepGroundPlayer(free,{});var controls=beginGroundTick(braked,{direction:${side}},true,false);for(let i=0;i<groundTuning.substeps;i++)advanceGroundSubstep(braked,controls,1/groundTuning.substeps);finishGroundTick(braked,controls,sampleGround,false)`);
  assert.ok(Math.abs(Math.abs(a.run('free.speed'))-Math.abs(a.run('braked.speed'))-0.18*(1-Math.abs(a.run('ty'))))<1e-8,'countersteer removes the same speed per tick on the constant grade');
  }
 });
@@ -84,12 +84,12 @@ test('rolling survives a continuous downhill reversal but uncurls after sustaine
   a.run(`trial=createGroundPlayer('flat',0,0,'rolling');for(let i=0;i<60;i++)stepGroundPlayer(trial,{down:true})`);
   assert.equal(a.run('trial.posture'),'standing','held down cannot repeatedly recurl at rest');
 });
-test('steep downhill gravity builds useful rolling speed under held countersteer', () => {
+test('steep downhill countersteer still accelerates a roll when standing is obstructed', () => {
   const a=scene();
   for(const side of [-1,1]) {
     for(const initial of [0,4]) {
       a.run(`trial=createGroundPlayer('valley',${side*1700},${-side*initial},'rolling');var free=createGroundPlayer('valley',${side*1700},${-side*initial},'rolling'),backtracks=0,previousX=trial.x;
-        for(let i=0;i<30;i++){stepGroundPlayer(trial,{direction:${side}});stepGroundPlayer(free,{});if(${side}*(trial.x-previousX)>=0)backtracks++;previousX=trial.x}`);
+        for(let i=0;i<30;i++){var controls=beginGroundTick(trial,{direction:${side}},true,false);for(let j=0;j<groundTuning.substeps;j++)advanceGroundSubstep(trial,controls,1/groundTuning.substeps);finishGroundTick(trial,controls,sampleGround,false);stepGroundPlayer(free,{});if(${side}*(trial.x-previousX)>=0)backtracks++;previousX=trial.x}`);
       const gain=-side*a.run('trial.speed')-initial,freeGain=-side*a.run('free.speed')-initial;
       assert.ok(gain>=freeGain*0.4,'countersteer must preserve at least 40% of released acceleration on the designated steep grade');
       assert.ok(gain<freeGain,'opposite input must still brake');

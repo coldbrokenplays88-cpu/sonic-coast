@@ -237,3 +237,42 @@ test('input-only replay completes Act 1 and both authored Boost express routes r
   assert.equal(route.burst,true);
  }
 });
+
+test('countersteering a fast roll immediately enters standing braking in either direction',()=>{
+ for(const direction of [-1,1]){
+  const a=boot(1);place(a,1500,14*direction,true);
+  a.run(`art.recoveredSpeedster={};press('${direction===1?'ArrowLeft':'ArrowRight'}',true);update()`);
+  assert.equal(a.run('p.act1Motion.posture'),'standing');
+  assert.equal(a.run('p.rolling'),false);
+  assert.equal(a.run('recoveredSonicPose().state'),'brake');
+  assert.ok(Math.abs(a.run('p.act1Motion.speed')-13.5*direction)<1e-8,'normal .5 standing brake, without reversal or speed replacement');
+ }
+});
+
+test('held Down cannot immediately recurl a countersteering standing brake',()=>{
+ const a=boot(1);place(a,1500,14,true);
+ a.run(`press('ArrowDown',true);press('ArrowLeft',true);for(let i=0;i<10;i++)update()`);
+ assert.equal(a.run('p.act1Motion.posture'),'standing');
+ assert.ok(a.run('p.act1Motion.speed')>0);
+});
+
+test('landing after an upright falling animation clears the stale pre-jump roll',()=>{
+ const a=boot(1);place(a,1200,10,true);
+ a.run(`art.recoveredSpeedster={};press('ArrowRight',true);press('Space',true);while(p.vy<3)update()`);
+ assert.equal(a.run('recoveredSonicPose().state'),'fall');
+ a.run(`while(!p.ground)update()`);
+ assert.equal(a.run('p.act1Motion.posture'),'standing');
+ assert.equal(a.run('p.rolling'),false);
+ assert.equal(a.run('bodyHeight()'),48);
+ assert.ok(a.run('p.act1Motion.speed')>=10,'landing preserves earned horizontal momentum');
+});
+
+test('countersteer keeps a safe rolled collider inside a tunnel, then stands when clear',()=>{
+ const a=boot(1);place(a,2300,10,true);
+ a.run(`press('ArrowLeft',true);update()`);
+ assert.equal(a.run('p.act1Motion.posture'),'rolling','standing cannot fit beneath this ceiling');
+ assert.equal(a.run('bodyHeight()'),38);
+ place(a,2500,10,true);
+ a.run('update()');
+ assert.equal(a.run('p.act1Motion.posture'),'standing');
+});

@@ -27,6 +27,7 @@ import {
   finishGroundTick,
   groundContact,
   groundTuning,
+  landingGroundPosture,
   sampleGround,
 } from './playtest-ground.js';
 import {
@@ -868,7 +869,7 @@ export function landMotion(player, hit, incoming, time = player.ticks) {
       y: support.y1,
       restTicks: 0,
     };
-    const posture = [player.air.restorePosture, player.posture].find((posture) =>
+    const posture = landingGroundPosture((posture) =>
       motionPostureClear({ ...candidate, posture }, posture, time)
     );
     if (!posture) return false;
@@ -916,7 +917,7 @@ export function landMotion(player, hit, incoming, time = player.ticks) {
       air: null,
       speed,
     };
-    const posture = [player.air.restorePosture, player.posture].find((posture) => {
+    const posture = landingGroundPosture((posture) => {
       candidate.posture = posture;
       return motionSupported(candidate, surface) && motionPostureClear(candidate, posture);
     });
@@ -938,7 +939,6 @@ export function landMotion(player, hit, incoming, time = player.ticks) {
     resetExperimentalAirBoost(player);
     return true;
   }
-  const restore = player.air.restorePosture;
   let x = hit.surface.x;
   if (player.posture === 'standing') {
     // The upright sweep reports the first bottom-corner contact. That witness
@@ -956,7 +956,16 @@ export function landMotion(player, hit, incoming, time = player.ticks) {
   if (!s) return false;
   const speed = incoming.vx * s.tx + incoming.vy * s.ty;
   const candidate = { ...player, mode: 'grounded', x, y: s.y, speed, air: null };
-  const posture = [restore, player.posture].find((posture) => {
+  // Posture expansion must not grant upright grip immediately after a rolled
+  // crest departure, before physical separation from the departing surface.
+  if (
+    player.posture === 'rolling' &&
+    player.air.separation?.id === s.id &&
+    !player.air.separation.cleared &&
+    !motionSupported({ ...candidate, posture: 'rolling' }, s)
+  )
+    return false;
+  const posture = landingGroundPosture((posture) => {
     candidate.posture = posture;
     return motionPostureClear(candidate, posture) && motionSupported(candidate, s);
   });
@@ -1183,7 +1192,8 @@ export function stepMotionPlayer(player, input = {}) {
     controls = beginGroundTick(
       player,
       input,
-      !player.railId && motionPostureClear(player, 'rolling')
+      !player.railId && motionPostureClear(player, 'rolling'),
+      motionPostureClear(player, 'standing')
     );
     if (player.dash) controls = { direction: 0, rolling: false, braking: true };
     if (input.jumpPressed && !dashAction) releaseMotion(player, 'jump', true);
@@ -1497,7 +1507,7 @@ export function stepMotionPlayer(player, input = {}) {
 
 export function initializeRuntimeModule() {
   motionTuning = Object.freeze({
-    revision: 'RAIL-BOOST-1 / DEVICES-2 / PATH-1 / AIR-2 / GROUND-5',
+    revision: 'RAIL-BOOST-1 / DEVICES-2 / PATH-1 / AIR-2 / GROUND-6',
     steepGripSpeed: 2.5,
     jumpImpulse: 10.5,
     cutRatio: 0.4,

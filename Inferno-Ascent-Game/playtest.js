@@ -251,7 +251,8 @@ function readPlaytestState() {
 
 function drawGroundPlayer(player) {
   const c = motionContact(player),
-    rolling = player.posture === 'rolling';
+    rolling = player.posture === 'rolling',
+    braking = c.grounded && !rolling && player.braking && !player.boost.active && !player.railId;
   ctx.save();
   const footShift = c.grounded ? Math.hypot(c.center.x - c.x, c.center.y - c.y) - c.height / 2 : 0;
   ctx.translate(c.x + c.nx * footShift, c.y + c.ny * footShift);
@@ -265,11 +266,13 @@ function drawGroundPlayer(player) {
   const index =
     sheet === 'supplemental'
       ? (player.railId ? 16 : 8) + (Math.floor(player.ticks / 3) % 8)
-      : rolling
-        ? 26 + (Math.floor(player.dash ? player.ticks / 2 : player.distance / 10) % 3)
-        : Math.abs(player.speed) > 0.1
-          ? Math.floor(player.distance / 12) % 8
-          : 16;
+      : braking
+        ? 32 + Math.min(5, Math.floor((player.brakeTicks || 0) / 4))
+        : rolling
+          ? 26 + (Math.floor(player.dash ? player.ticks / 2 : player.distance / 10) % 3)
+          : Math.abs(player.speed) > 0.1
+            ? Math.floor(player.distance / 12) % 8
+            : 16;
   const im = art[sheet],
     descriptor = recoveredSpriteFrames[sheet]?.[index];
   if (im && descriptor) {

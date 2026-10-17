@@ -29,7 +29,7 @@ async function smoke(browser, url) {
     assert.match(await page.locator('#playtest-status').textContent(), /Static-surface/);
     const state = await page.evaluate(() => readGameState());
     assert.equal(state.act, 'playtest');
-    assert.equal(state.tuning, 'RAIL-BOOST-1 / DEVICES-2 / PATH-1 / AIR-2 / GROUND-5', 'the extracted package must contain the current tuning');
+    assert.equal(state.tuning, 'RAIL-BOOST-1 / DEVICES-2 / PATH-1 / AIR-2 / GROUND-6', 'the extracted package must contain the current tuning');
     assert.equal(state.movementImplemented, true);
     assert.equal(state.player.x, 0);
     assert.equal(state.contact.height, 48);
@@ -88,6 +88,22 @@ async function smoke(browser, url) {
       draw();
     });
     assert.equal((await page.evaluate(() => readGameState())).player.posture, 'rolling');
+    await page.keyboard.down('ArrowLeft');
+    const standingBrake = await page.evaluate(() => {
+      update();
+      const original = ctx.drawImage, frames = [];
+      ctx.drawImage = function(...args) {
+        if(args[0] === art.recoveredSpeedster) frames.push(args.slice(1,5));
+        return original.apply(this,args);
+      };
+      try { draw(); } finally { ctx.drawImage = original; }
+      const descriptor = recoveredSpriteFrames.recoveredSpeedster[32].bounds;
+      return {state:readGameState(),frames,expected:[descriptor[0],descriptor[1],descriptor[2]-descriptor[0],descriptor[3]-descriptor[1]]};
+    });
+    await page.keyboard.up('ArrowLeft');
+    assert.equal(standingBrake.state.player.posture,'standing');
+    assert.equal(standingBrake.state.player.braking,true);
+    assert.ok(standingBrake.frames.some(frame=>JSON.stringify(frame)===JSON.stringify(standingBrake.expected)), 'PLAYTEST draws its existing standing brake frame');
     await page.click('#playtest-valley');
     await page.evaluate(() => draw());
     assert.equal((await page.evaluate(() => readGameState())).player.scenario, 'valley');
@@ -116,11 +132,12 @@ async function smoke(browser, url) {
     // Reproduce held uphill countersteering on supported ground, through the real scene update.
     await page.evaluate(() => Object.assign(playtestState.player, { x: 1700, speed: -4, posture: 'rolling' }));
     await page.keyboard.down('ArrowRight');
-    await page.evaluate(() => { for(let i=0;i<60;i++)update(); draw(); });
+    await page.evaluate(() => { update(); draw(); });
     await page.keyboard.up('ArrowRight');
     const countersteer = await page.evaluate(() => readGameState());
-    assert.ok(countersteer.player.speed < -8, 'held countersteer must allow useful downhill acceleration');
-    assert.ok(countersteer.contact.vx < -6, 'world-horizontal travel must be substantial, not near zero');
+    assert.equal(countersteer.player.posture,'standing','countersteering now requests the normal standing brake');
+    assert.equal(countersteer.player.braking,true);
+    assert.ok(countersteer.player.speed > -4 && countersteer.player.speed < 0,'braking reduces downhill speed without instantly reversing it');
     const downhill=[];
     for(const posture of ['standing','rolling']) {
       await page.click('#playtest-valley');

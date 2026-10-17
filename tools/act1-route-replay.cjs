@@ -25,7 +25,11 @@ function act1RouteReplay() {
     }
     if (!gate && p.ground && p.roll && Math.abs(p.vx) < 5) turning = true;
     if (turning && !p.roll) turning = false;
-    if (turning) {
+    const preciseBrake =
+      p.ground &&
+      p.vx > 14 &&
+      level.hazards.some((h) => h.type === 'spikes' && h.x > p.x && h.x - p.x < 350);
+    if (turning || preciseBrake) {
       release('ArrowRight', true);
       press('ArrowLeft', true);
     } else {
@@ -52,7 +56,13 @@ function act1RouteReplay() {
           pose(s).x2 > q.x2 + 1 &&
           Math.abs(yOn(s, q.x2) - q.y2) < 1
       );
-      if (!jumping && !gate && !turning && ((q.x2 - p.x < 60 && !join) || danger || enemy)) {
+      if (
+        !jumping &&
+        !gate &&
+        !turning &&
+        !preciseBrake &&
+        ((q.x2 - p.x < 60 && !join) || danger || enemy)
+      ) {
         press('Space', true);
         jumping = true;
       }

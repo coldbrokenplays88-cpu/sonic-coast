@@ -8,6 +8,7 @@ import {
   advanceGroundSubstep,
   finishGroundTick,
   groundTuning,
+  landingGroundPosture,
 } from './playtest-ground.js';
 import {
   motionTuning,
@@ -291,8 +292,9 @@ export function attachAct1(m, surface, x, incoming, time, seam = false) {
     previous = m.surface;
   const speed = seam ? m.speed : (incoming.vx - s.vx) * s.tx + (incoming.vy - s.vy) * s.ty;
   const candidate = { ...m, mode: 'grounded', surface, x, y: s.y, speed, air: null };
-  const restore = m.air?.restorePosture || 'standing';
-  if (!seam) candidate.posture = act1Clear(candidate, restore, time) ? restore : 'rolling';
+  if (!seam)
+    candidate.posture = landingGroundPosture((posture) => act1Clear(candidate, posture, time));
+  if (!candidate.posture) return false;
   if (!act1Clear(candidate, candidate.posture, time)) return false;
   Object.assign(m, candidate);
   m.restTicks = 0;
@@ -563,7 +565,10 @@ export function updateAct1Movement() {
   if (startedGrounded && m.rollBuffer > 0) m.downHeld = false;
   const dash = updateExperimentalDash(m, input, surface, () => act1Clear(m, 'rolling'));
   if (dash) m.jumpBuffer = 0;
-  let controls = startedGrounded ? beginGroundTick(m, input, act1Clear(m, 'rolling')) : null;
+  let controls = startedGrounded
+    ? beginGroundTick(m, input, act1Clear(m, 'rolling'), act1Clear(m, 'standing'))
+    : null;
+  if (controls?.unrolled) m.rollBuffer = 0;
   if (m.dash) controls = { direction: 0, rolling: false, braking: true };
   if (previousPosture !== 'rolling' && m.posture === 'rolling') runtimeState.stats.rolls++;
   if (startedGrounded && m.posture === 'rolling') m.rollBuffer = 0;

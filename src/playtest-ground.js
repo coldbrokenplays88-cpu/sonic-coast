@@ -78,11 +78,16 @@ export function groundResist(speed, amount) {
 
 // Shared primitives keep the approved ground integrator unchanged while a single
 // transition controller can partition a tick at an actual takeoff/collision.
-export function beginGroundTick(player, input = {}, allowRoll = true) {
+export function beginGroundTick(player, input = {}, allowRoll = true, canStand = true) {
   const t = groundTuning,
     direction = Math.sign(input.direction || 0),
     down = !!input.down;
-  if (down && !player.downHeld && Math.abs(player.speed) >= t.rollEntrySpeed && allowRoll) {
+  const unrolled =
+    player.posture === 'rolling' && direction * player.speed < 0 && !player.dash && canStand;
+  if (unrolled) {
+    player.posture = 'standing';
+    player.restTicks = 0;
+  } else if (down && !player.downHeld && Math.abs(player.speed) >= t.rollEntrySpeed && allowRoll) {
     player.posture = 'rolling';
     player.restTicks = 0;
   }
@@ -90,7 +95,15 @@ export function beginGroundTick(player, input = {}, allowRoll = true) {
   const rolling = player.posture === 'rolling';
   // A standing braking tick cannot become reverse propulsion partway through.
   const braking = direction * player.speed < 0;
-  return { direction, rolling, braking };
+  player.braking = braking && !rolling;
+  player.brakeTicks = player.braking ? (player.brakeTicks || 0) + 1 : 0;
+  return { direction, rolling, braking, unrolled };
+}
+
+// An upright landing resumes ordinary locomotion. Only insufficient clearance
+// may retain a curled body; pre-flight rolling is not a persistent mode latch.
+export function landingGroundPosture(canOccupy) {
+  return ['standing', 'rolling'].find(canOccupy);
 }
 
 export function advanceGroundSubstep(
@@ -192,7 +205,7 @@ export function stepGroundPlayer(player, input = {}) {
 
 export function initializeRuntimeModule() {
   groundTuning = Object.freeze({
-    revision: 'GROUND-5',
+    revision: 'GROUND-6',
     hz: 60,
     substeps: 4,
     runRange: 14,
