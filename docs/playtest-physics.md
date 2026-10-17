@@ -9,8 +9,9 @@ this stage. **RAIL-BOOST-1 awaits personal feel approval.**
 
 Starting SHA: `ef7881abf183e6c5c552c4550bf45681c9fbdd52`, clean working tree.
 Node v24.19.0, npm11.9.0; existing lockfile dependencies reused, no dependency or
-asset generation changes. Exact tested source/runtime/package identities are
-recorded in the build and package sections below.
+asset generation changes. **Exact tested implementation commit: `cda7abda45c9eb1a4f0882ebfd6135f07535f76e`.**
+This commit-identity record is a subsequent documentation-only change; runtime
+and package hashes below identify the same tested player build.
 
 GitHub API access now succeeds. `gh pr list --head codex/playtest-physics
 --state open` returned an empty list: no matching open PR was available to mark
