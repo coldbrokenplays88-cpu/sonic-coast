@@ -28,7 +28,7 @@ async function smoke(browser, url) {
     assert.match(await page.locator('#playtest-status').textContent(), /Static-surface/);
     const state = await page.evaluate(() => readGameState());
     assert.equal(state.act, 'playtest');
-    assert.equal(state.tuning, 'AIR-2 / GROUND-5', 'the extracted package must contain the current tuning');
+    assert.equal(state.tuning, 'PATH-1 / AIR-2 / GROUND-5', 'the extracted package must contain the current tuning');
     assert.equal(state.movementImplemented, true);
     assert.equal(state.player.x, 0);
     assert.equal(state.contact.height, 48);
@@ -205,6 +205,54 @@ async function smoke(browser, url) {
     const ceiling=await page.evaluate(() => readGameState());
     assert.equal(ceiling.player.air.jumpLift,0,'head impact clears lift budget');
     assert.ok(ceiling.player.y>=375.999,'ceiling blocks circle body');
+    const pathChecks=[];
+    for(const scenario of ['loop','loop-reverse','loop-wide','wall-ceiling','wall-ceiling-reverse']){
+      await page.click('#playtest-'+scenario);
+      const direction=scenario.endsWith('reverse')?'ArrowLeft':'ArrowRight';
+      await page.keyboard.down(direction);
+      const result=await page.evaluate((scenario)=>{
+        let seenInverted=false,seenWall=false,worst=0;
+        const ticks=scenario.startsWith('wall')?240:180;
+        const entryResets=readGameState().resetCount;
+        for(let i=0;i<ticks;i++){
+          const t=performance.now();update();worst=Math.max(worst,performance.now()-t);
+          const state=readGameState();
+          if(state.player.mode==='grounded'){
+            if(state.contact.ny>.8)seenInverted=true;
+            if(Math.abs(state.contact.nx)>.95)seenWall=true;
+          }
+          if(state.resetCount!==entryResets)break;
+        }
+        draw();return {state:readGameState(),seenInverted,seenWall,worst,entryResets};
+      },scenario);
+      await page.keyboard.up(direction);
+      assert.equal(result.state.player.scenario,scenario);
+      assert.equal(result.state.player.mode,'grounded');
+      assert.equal(result.state.player.transitionCount,0,'earned running remains supported through intended path');
+      assert.equal(result.state.resetCount,result.entryResets,'fixture did not secretly reset during traversal');
+      assert.ok(result.seenInverted&&result.seenWall,'actual route visited wall and ceiling');
+      assert.equal(result.state.contact.piece.kind,'line','exited curved portion');
+
+      pathChecks.push({scenario,frames:result.state.frame,worstUpdateMs:result.worst});
+    }
+    if(process.env.PLAYTEST_PATH_CAPTURE){
+      await page.click('#playtest-wall-ceiling');await page.keyboard.down('ArrowRight');
+      await page.evaluate(()=>{for(let i=0;i<180;i++){update();const s=readGameState();if(s.player.mode==='grounded'&&s.contact.ny>.99)break;}draw();});
+      await page.keyboard.up('ArrowRight');await page.screenshot({path:process.env.PLAYTEST_PATH_CAPTURE});
+    }
+    await page.click('#playtest-loop');
+    await page.evaluate(()=>Object.assign(playtestState.player,{pathS:1002,speed:3,posture:'rolling'}));
+    const failure=await page.evaluate(()=>{let reversed=false;for(let i=0;i<80;i++){update();if(playtestState.player.mode==='airborne'||playtestState.player.speed<0)reversed=true;}draw();return {reversed,state:readGameState()};});
+    assert.ok(failure.reversed,'insufficient momentum visibly fails rather than auto-completing');
+    await page.keyboard.down('Space');
+    await page.evaluate(()=>update());
+    await page.keyboard.up('Space');
+    assert.equal((await page.evaluate(()=>readGameState())).player.mode,'airborne');
+    await page.keyboard.press('KeyP');
+    await page.click('#play');
+    await page.click('#restart');
+    assert.equal((await page.evaluate(()=>readGameState())).player.ticks,0);
+    await page.click('#playtest-flat');
     await page.click('#restart');
     for (const act of ['1', '2']) {
       await page.keyboard.down('Space');
@@ -264,6 +312,7 @@ async function smoke(browser, url) {
       result: 'PASS',
       checks:
         'selection, rendered Sonic/contact, approved ground/rollback, held/tap jump, crest detachment, gap landing, swept wall, upright landing, ceiling/uncurl, two-axis camera, isolation, pause/resume/reset, flight exit, Act 1/2 running/jump/boost, clean return',
+      pathChecks,
       pageErrors: errors,
     };
   } finally {

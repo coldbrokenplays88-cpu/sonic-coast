@@ -20,8 +20,12 @@ Left/right or A/D runs or steers in air. Tap Down/S while moving to roll.
 Space/Up/W jumps; release early for a short hop. No coyote time or buffered
 landing jumps. Jumping adds a surface-normal impulse to earned momentum.
 Holding forward while curled adds no running propulsion. Boost/Spin Dash
-remain disabled. The accepted GROUND-3 ground tuning is preserved.
+remain disabled. Approved AIR-2 / GROUND-5 ground and air tuning is preserved.
 Use Flat, Valley, Crest, Gap, Wall, or Low ceiling to select/reset fixtures.
+Loop → / ← and Walls / ceiling → / ← reset to either approach; Wide loop
+tests a larger radius. Hold travel direction through a loop; low-speed entries
+can roll back or fall. Jump from walls/ceilings with Space. PATH-1 adds only
+connected static surfaces; no Boost, Spin Dash, rails or springs.
 R/Restart returns to the selected safe spawn; boundaries and deep falls reset.
 P/Escape pauses/resumes, F toggles fullscreen. The HUD shows grounded/airborne
 state, velocity, contact normal and latest transition. Yellow marks ground

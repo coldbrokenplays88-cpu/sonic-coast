@@ -162,6 +162,12 @@
       }
     },
     {
+      "file": "playtest-path.js",
+      "kinds": {
+        "playtestPaths": "const"
+      }
+    },
+    {
       "file": "playtest-motion.js",
       "kinds": {
         "motionTuning": "const",

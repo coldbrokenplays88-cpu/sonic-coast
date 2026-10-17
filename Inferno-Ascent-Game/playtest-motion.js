@@ -7,6 +7,7 @@ function motionBounds(scenario) {
 }
 
 function motionSpans(scenario) {
+  if (playtestPaths[scenario]) return [];
   const b = motionBounds(scenario);
   return scenario === 'gap'
     ? [
@@ -53,11 +54,14 @@ function sampleMotionGround(scenario, x) {
 function createMotionPlayer(scenario = 'flat') {
   motionBounds(scenario);
   const x = motionFixtures[scenario].spawn;
+  const path = playtestPaths[scenario];
+  const spawn = path ? samplePath(path, x) : sampleMotionExtension(scenario, x);
   return {
     ...createGroundPlayer(),
     scenario,
-    x,
-    y: sampleMotionExtension(scenario, x).y,
+    x: spawn.x,
+    y: spawn.y,
+    ...(path ? { pathS: x } : {}),
     mode: 'grounded',
     air: null,
     latestTransition: 'reset',
@@ -65,6 +69,35 @@ function createMotionPlayer(scenario = 'flat') {
     lastTakeoff: null,
     lastLanding: null,
   };
+}
+
+function motionSpawn(scenario) {
+  return playtestPaths[scenario]
+    ? samplePath(playtestPaths[scenario], motionFixtures[scenario].spawn)
+    : sampleMotionExtension(scenario, motionFixtures[scenario].spawn);
+}
+
+function motionSurface(player) {
+  return playtestPaths[player.scenario]
+    ? samplePath(playtestPaths[player.scenario], player.pathS)
+    : sampleMotionGround(player.scenario, player.x);
+}
+
+function sampleMotionPath(scenario, s) {
+  return samplePath(playtestPaths[scenario], s);
+}
+
+function advanceMotionGround(player, controls, dt) {
+  const path = playtestPaths[player.scenario];
+  advanceGroundSubstep(
+    player,
+    controls,
+    dt,
+    path ? sampleMotionPath : sampleMotionExtension,
+    !!path
+  );
+  if (path) syncPathPlayer(player);
+  else player.y = sampleMotionExtension(player.scenario, player.x).y;
 }
 
 function motionReaction(player, surface) {
@@ -80,18 +113,42 @@ function motionReaction(player, surface) {
 function motionSupported(player, surface) {
   // Explicit upright crest grip requested for this experiment. Rolling still
   // requires nonnegative physical support; no grip extends across open ledges.
+  if (surface.pathS !== undefined) {
+    const steep = surface.ny >= -Math.SQRT1_2;
+    if (steep && Math.abs(player.speed) < motionTuning.steepGripSpeed) return false;
+    if (steep && Math.abs(surface.curvature) < 1e-9) return true;
+    return (
+      (player.posture === 'standing' && surface.ny < -Math.SQRT1_2 && surface.curvature >= 0) ||
+      motionReaction(player, surface) >= -1e-6
+    );
+  }
   return player.posture === 'standing' || motionReaction(player, surface) >= -1e-6;
 }
 
 function motionContact(player) {
   if (player.mode === 'grounded') {
-    const c = groundContact(player, sampleMotionExtension);
+    const path = playtestPaths[player.scenario];
+    const surface = path ? motionSurface(player) : null;
+    const body = path ? pathBody(player) : null;
+    const c = path
+      ? {
+          ...surface,
+          anchor: { x: surface.x, y: surface.y },
+          center: { x: body.x, y: body.y },
+          width: body.hw * 2,
+          height: body.hh * 2,
+          speed: player.speed,
+          vx: player.speed * surface.tx,
+          vy: player.speed * surface.ty,
+        }
+      : groundContact(player, sampleMotionExtension);
     const reaction = motionReaction(player, c);
     return {
       ...c,
       grounded: true,
       normalReaction: reaction,
-      uprightGrip: player.posture === 'standing' && reaction < -1e-6,
+      uprightGrip: player.posture === 'standing' && c.ny < -Math.SQRT1_2 && reaction < -1e-6,
+      steepGrip: !!path && c.ny >= -Math.SQRT1_2 && Math.abs(c.curvature) < 1e-9,
     };
   }
   const height = player.posture === 'rolling' ? 38 : 48,
@@ -118,6 +175,8 @@ function motionContact(player) {
 }
 
 function motionBody(player, posture = player.posture) {
+  if (player.mode === 'grounded' && playtestPaths[player.scenario])
+    return pathBody(player, posture);
   const height = posture === 'rolling' ? 38 : 48,
     width = posture === 'rolling' ? 38 : 22;
   const s = player.mode === 'grounded' ? sampleMotionExtension(player.scenario, player.x) : null;
@@ -192,6 +251,15 @@ function motionPostureClear(player, posture) {
     )
       return false;
   }
+  if (
+    playtestPaths[player.scenario] &&
+    pathDistances(
+      playtestPaths[player.scenario],
+      body,
+      player.mode === 'grounded' ? player.pathS : null
+    ).some((q) => q.distance < -motionTuning.skin)
+  )
+    return false;
   return true;
 }
 
@@ -344,6 +412,69 @@ function firstAirImpact(player, ax, ay, duration) {
     });
     if (result && (!hit || result.time < hit.time)) hit = result;
   }
+  const path = playtestPaths[player.scenario];
+  if (path)
+    for (const piece of path.pieces) {
+      const accept = (q) => {
+        if (a.departure?.includes(q.id) && Math.abs(q.surface.pathS - a.pathOrigin) > a.pathReach)
+          return false;
+        return !(
+          a.separation?.id === q.id &&
+          !a.separation.cleared &&
+          Math.abs(q.distance) <= motionTuning.separation
+        );
+      };
+      if (piece.kind === 'arc') {
+        const face = pathArcImpact(
+          body,
+          a.vx,
+          a.vy,
+          ax,
+          ay,
+          duration,
+          piece,
+          path,
+          motionTuning.skin,
+          accept
+        );
+        if (face && (!hit || face.time < hit.time)) hit = face;
+        for (const cap of pathArcCaps(piece, path)) {
+          const result = sweepMotionDistance(
+            body,
+            a.vx,
+            a.vy,
+            ax,
+            ay,
+            duration,
+            (b) => {
+              const q = {
+                ...pathLineDistance(b, cap, { ...path, thickness: 0 }),
+                kind: 'box',
+                canLand: false,
+              };
+              return accept(q) ? q : null;
+            },
+            true
+          );
+          if (result && (!hit || result.time < hit.time)) hit = result;
+        }
+      } else {
+        const result = sweepMotionDistance(
+          body,
+          a.vx,
+          a.vy,
+          ax,
+          ay,
+          duration,
+          (b) => {
+            const q = pathLineDistance(b, piece, path);
+            return accept(q) ? q : null;
+          },
+          true
+        );
+        if (result && (!hit || result.time < hit.time)) hit = result;
+      }
+    }
   return hit;
 }
 
@@ -415,7 +546,8 @@ function releaseMotion(player, reason, jump = false) {
   let center = c.center;
   if (jump && motionPostureClear(player, 'rolling')) {
     player.posture = 'rolling';
-    center = { x: c.x + c.nx * 19, y: c.y + c.ny * 19 };
+    const body = motionBody(player);
+    center = { x: body.x, y: body.y };
   }
   const impulse = jump ? motionTuning.jumpImpulse : 0;
   const after = { vx: before.vx + c.nx * impulse, vy: before.vy + c.ny * impulse };
@@ -427,12 +559,24 @@ function releaseMotion(player, reason, jump = false) {
     anchor: c.anchor,
     reaction: c.normalReaction,
   };
+  const path = playtestPaths[player.scenario];
+  const pathOrigin = player.pathS;
+  const shape = motionBody(player);
+  const pathReach = shape.hw + shape.hh + (path?.thickness || 0) + 2;
+  const departure = path
+    ? pathDistances(path, { ...motionBody(player), x: center.x, y: center.y, angle: 0 })
+        .filter((q) => q.distance < 0 && Math.abs(q.surface.pathS - player.pathS) > pathReach)
+        .map((q) => q.id)
+    : [];
+  if (path) player.pathS = null;
   player.x = center.x;
   player.y = center.y;
   player.speed = null;
   player.mode = 'airborne';
   player.air = {
     ...after,
+    departure,
+    ...(path ? { pathOrigin, pathReach } : {}),
     jumpLift: Math.max(0, -c.ny * impulse),
     cutEligible: jump,
     restorePosture: previous,
@@ -450,7 +594,21 @@ function moveAirTime(player, ax, ay, time) {
   a.vx += ax * time;
   a.vy += ay * time;
   a.jumpLift = Math.max(0, a.jumpLift - groundTuning.gravity * time);
+  const path = playtestPaths[player.scenario];
+  if (path && a.departure?.length) {
+    const distances = pathDistances(path, motionBody(player));
+    a.departure = a.departure.filter((id) =>
+      distances.some((q) => q.id === id && q.distance <= motionTuning.separation)
+    );
+  }
   if (a.separation && !a.separation.cleared) {
+    if (playtestPaths[player.scenario]) {
+      const q = pathDistances(playtestPaths[player.scenario], motionBody(player)).find(
+        (q) => q.id === a.separation.id
+      );
+      if (!q || q.distance > motionTuning.separation) a.separation.cleared = true;
+      return;
+    }
     const span = motionSpans(player.scenario).find(
       (s, i) => player.scenario + '-floor-' + i === a.separation.id
     );
@@ -467,6 +625,55 @@ function moveAirTime(player, ax, ay, time) {
 }
 
 function landMotion(player, hit, incoming) {
+  const path = playtestPaths[player.scenario];
+  if (path) {
+    const piece = hit.surface.piece;
+    let pathS;
+    if (piece.kind === 'line')
+      pathS =
+        piece.start +
+        Math.max(
+          0,
+          Math.min(piece.length, (player.x - piece.x) * piece.tx + (player.y - piece.y) * piece.ty)
+        );
+    else {
+      let angle = Math.atan2(player.x - piece.cx, player.y - piece.cy);
+      while (angle < piece.a - 1e-9) angle += Math.PI * 2;
+      angle = Math.max(piece.a, Math.min(piece.b, angle));
+      pathS = piece.start + (angle - piece.a) * piece.r;
+    }
+    const surface = samplePath(path, pathS),
+      speed = incoming.vx * surface.tx + incoming.vy * surface.ty;
+    const candidate = {
+      ...player,
+      pathS,
+      x: surface.x,
+      y: surface.y,
+      mode: 'grounded',
+      air: null,
+      speed,
+    };
+    const posture = [player.air.restorePosture, player.posture].find((posture) => {
+      candidate.posture = posture;
+      return motionSupported(candidate, surface) && motionPostureClear(candidate, posture);
+    });
+    if (!posture) return false;
+    Object.assign(player, candidate, {
+      posture,
+      restTicks: 0,
+      latestTransition: 'landing',
+      transitionCount: player.transitionCount + 1,
+    });
+    player.lastLanding = {
+      incoming,
+      speed,
+      tx: surface.tx,
+      ty: surface.ty,
+      normal: { x: surface.nx, y: surface.ny },
+      anchor: { x: surface.x, y: surface.y },
+    };
+    return true;
+  }
   const restore = player.air.restorePosture;
   let x = hit.surface.x;
   if (player.posture === 'standing') {
@@ -530,56 +737,81 @@ function stepMotionPlayer(player, input = {}) {
           rolling: player.posture === 'rolling',
           braking: direction * player.speed < 0,
         };
-        const current = sampleMotionGround(player.scenario, player.x);
+        const path = playtestPaths[player.scenario];
+        const current = motionSurface(player);
         if (!current) {
           releaseMotion(player, 'ledge');
           continue;
         }
         if (!motionSupported(player, current)) {
-          releaseMotion(player, 'crest');
+          releaseMotion(player, path ? 'lost support / traction' : 'crest');
           continue;
         }
+        const duration = path
+          ? Math.min(
+              remaining,
+              0.04 / Math.max(1e-9, Math.abs(player.speed) * Math.abs(current.curvature))
+            )
+          : remaining;
         const candidate = { ...player };
-        advanceGroundSubstep(candidate, controls, remaining, sampleMotionExtension);
-        const span = motionSpans(player.scenario).find(([a, b]) => player.x >= a && player.x <= b);
+        advanceMotionGround(candidate, controls, duration);
+        const position = (p) => (path ? p.pathS : p.x);
+        const span = path
+          ? [0, path.length]
+          : motionSpans(player.scenario).find(([a, b]) => player.x >= a && player.x <= b);
         let event = null,
-          time = remaining;
-        const beyond = candidate.x < span[0] || candidate.x > span[1];
+          time = duration;
+        const beyond = position(candidate) < span[0] || position(candidate) > span[1];
         const supported = motionSupported(
           candidate,
-          sampleMotionExtension(player.scenario, candidate.x)
+          path
+            ? sampleMotionPath(player.scenario, candidate.pathS)
+            : sampleMotionExtension(player.scenario, candidate.x)
         );
         if (beyond || !supported) {
           let lo = 0,
-            hi = remaining;
+            hi = duration;
           for (let n = 0; n < 30; n++) {
             const mid = (lo + hi) / 2,
               q = { ...player };
-            advanceGroundSubstep(q, controls, mid, sampleMotionExtension);
+            advanceMotionGround(q, controls, mid);
             if (
-              q.x < span[0] ||
-              q.x > span[1] ||
-              !motionSupported(q, sampleMotionExtension(q.scenario, q.x))
+              position(q) < span[0] ||
+              position(q) > span[1] ||
+              !motionSupported(
+                q,
+                path
+                  ? sampleMotionPath(q.scenario, q.pathS)
+                  : sampleMotionExtension(q.scenario, q.x)
+              )
             )
               hi = mid;
             else lo = mid;
           }
           time = hi;
-          event = beyond ? 'ledge' : 'crest';
+          event = beyond
+            ? path
+              ? 'path boundary'
+              : 'ledge'
+            : path
+              ? 'lost support / traction'
+              : 'crest';
         }
         for (const box of motionFixtures[player.scenario].boxes) {
-          const hit = sweepGroundBox(motionBody(player), motionBody(candidate), box, remaining);
+          const hit = sweepGroundBox(motionBody(player), motionBody(candidate), box, duration);
           if (hit && hit.time <= time) {
             time = hit.time;
             event = 'block';
           }
         }
-        if (time > 0) advanceGroundSubstep(player, controls, time, sampleMotionExtension);
-        player.y = sampleMotionExtension(player.scenario, player.x).y;
+        if (time > 0) advanceMotionGround(player, controls, time);
         remaining -= time;
         if (event === 'block') {
           player.speed = 0;
           player.latestTransition = 'wall / clearance block';
+          remaining = 0;
+        } else if (event === 'path boundary') {
+          player.boundary = 'test path boundary reset';
           remaining = 0;
         } else if (event) releaseMotion(player, event);
       } else {
@@ -643,9 +875,10 @@ function stepMotionPlayer(player, input = {}) {
     finishGroundTick(
       player,
       controls || { rolling: player.posture === 'rolling' },
-      sampleMotionExtension,
+      playtestPaths[player.scenario] ? sampleMotionPath : sampleMotionExtension,
       motionPostureClear(player, 'standing'),
-      motionBounds
+      motionBounds,
+      !!playtestPaths[player.scenario]
     );
   else {
     player.ticks++;
@@ -665,7 +898,8 @@ function stepMotionPlayer(player, input = {}) {
 }
 
 const motionTuning = Object.freeze({
-    revision: 'AIR-2 / GROUND-5',
+    revision: 'PATH-1 / AIR-2 / GROUND-5',
+    steepGripSpeed: 2.5,
     jumpImpulse: 10.5,
     cutRatio: 0.4,
     airAcceleration: 0.08,
@@ -675,6 +909,12 @@ const motionTuning = Object.freeze({
     separation: 0.002,
   });
 const motionFixtures = Object.freeze({
+    ...Object.fromEntries(
+      Object.entries(playtestPaths).map(([id, path]) => [
+        id,
+        { bounds: 1300, spawn: id.endsWith('reverse') ? path.length - 140 : 140, boxes: [], path },
+      ])
+    ),
     flat: { bounds: 5000, spawn: 0, boxes: [] },
     valley: { bounds: 2400, spawn: 0, boxes: [] },
     crest: { bounds: 1800, spawn: -600, boxes: [] },

@@ -8,7 +8,7 @@ function selectAct(act) {
     updatePlaytestHud();
     show(
       'PLAYTEST',
-      'Isolated static-surface experiment.<br>Jumping, air control and six test fixtures · No boost or Spin Dash.',
+      'Isolated static-surface experiment.<br>Ground, air and curved-surface fixtures · No boost or Spin Dash.',
       'OPEN PLAYTEST'
     );
     return;

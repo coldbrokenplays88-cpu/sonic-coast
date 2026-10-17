@@ -331,8 +331,8 @@
     addMiddleSection: () => addMiddleSection,
     beginWrongRouteDrop: () => beginWrongRouteDrop,
     drawMiddleSection: () => drawMiddleSection,
-    getRuntimeBindings: () => getRuntimeBindings29,
-    initializeRuntimeModule: () => initializeRuntimeModule29,
+    getRuntimeBindings: () => getRuntimeBindings30,
+    initializeRuntimeModule: () => initializeRuntimeModule30,
     updateMiddleMotion: () => updateMiddleMotion,
     updateMiddleSection: () => updateMiddleSection
   });
@@ -352,8 +352,8 @@
     drawClimbCue: () => drawClimbCue,
     drawGrindRail: () => drawGrindRail,
     drawSkylineSmoke: () => drawSkylineSmoke,
-    getRuntimeBindings: () => getRuntimeBindings28,
-    initializeRuntimeModule: () => initializeRuntimeModule28,
+    getRuntimeBindings: () => getRuntimeBindings29,
+    initializeRuntimeModule: () => initializeRuntimeModule29,
     launchAirDevice: () => launchAirDevice,
     predictLanding: () => predictLanding,
     resetAct2: () => resetAct2,
@@ -373,9 +373,9 @@
     drawPlaytest: () => drawPlaytest,
     exitPlaytest: () => exitPlaytest,
     framePlaytest: () => framePlaytest,
-    getRuntimeBindings: () => getRuntimeBindings27,
+    getRuntimeBindings: () => getRuntimeBindings28,
     handlePlaytestInput: () => handlePlaytestInput,
-    initializeRuntimeModule: () => initializeRuntimeModule27,
+    initializeRuntimeModule: () => initializeRuntimeModule28,
     isPlaytest: () => isPlaytest,
     playtestState: () => playtestState,
     readPlaytestState: () => readPlaytestState,
@@ -384,6 +384,405 @@
     updatePlaytest: () => updatePlaytest,
     updatePlaytestHud: () => updatePlaytestHud
   });
+
+  // src/playtest-path.js
+  var playtest_path_exports = {};
+  __export(playtest_path_exports, {
+    getRuntimeBindings: () => getRuntimeBindings2,
+    initializeRuntimeModule: () => initializeRuntimeModule2,
+    makePath: () => makePath,
+    pathArcCaps: () => pathArcCaps,
+    pathArcDistance: () => pathArcDistance,
+    pathArcFaceDistance: () => pathArcFaceDistance,
+    pathArcImpact: () => pathArcImpact,
+    pathBody: () => pathBody,
+    pathCorners: () => pathCorners,
+    pathDistances: () => pathDistances,
+    pathLineDistance: () => pathLineDistance,
+    pathPolynomialRoots: () => pathPolynomialRoots,
+    playtestPaths: () => playtestPaths,
+    samplePath: () => samplePath,
+    syncPathPlayer: () => syncPathPlayer
+  });
+  var playtestPaths;
+  function makePath(id, radius, chamber = false) {
+    const pieces = [];
+    let length = 0;
+    const add = /* @__PURE__ */ __name((p2) => {
+      p2.start = length;
+      length += p2.length;
+      p2.end = length;
+      p2.id = id + "-" + pieces.length;
+      pieces.push(p2);
+    }, "add");
+    const line = /* @__PURE__ */ __name((x, y, x2, y2) => {
+      const d = Math.hypot(x2 - x, y2 - y);
+      add({ kind: "line", x, y, tx: (x2 - x) / d, ty: (y2 - y) / d, length: d });
+    }, "line");
+    const arc = /* @__PURE__ */ __name((cx, cy, a, b) => add({ kind: "arc", cx, cy, r: radius, a, b, length: radius * (b - a) }), "arc");
+    const floor = chamber ? 440 : 600;
+    line(-1e3, floor, 0, floor);
+    const entry = length;
+    let ceiling = null;
+    if (!chamber) arc(0, floor - radius, 0, Math.PI * 2);
+    else {
+      arc(0, floor - radius, 0, Math.PI / 2);
+      line(radius, floor - radius, radius, 260);
+      arc(0, 260, Math.PI / 2, Math.PI);
+      line(0, 260 - radius, -360, 260 - radius);
+      ceiling = length - 180;
+      arc(-360, 260, Math.PI, Math.PI * 1.5);
+      line(-360 - radius, 260, -360 - radius, floor - radius);
+      arc(-360, floor - radius, Math.PI * 1.5, Math.PI * 2);
+    }
+    const exit = length;
+    line(chamber ? -360 : 0, floor, 1e3, floor);
+    return { id, pieces, length, entry, exit, ceiling, thickness: 12 };
+  }
+  __name(makePath, "makePath");
+  function samplePath(path, distance) {
+    const s = Math.max(0, Math.min(path.length, distance));
+    const p2 = path.pieces.find((p3) => s < p3.end - 1e-9) || path.pieces.at(-1), u = s - p2.start;
+    let x, y, tx, ty, curvature = 0;
+    if (p2.kind === "line") {
+      x = p2.x + u * p2.tx;
+      y = p2.y + u * p2.ty;
+      tx = p2.tx;
+      ty = p2.ty;
+    } else {
+      const angle = p2.a + u / p2.r;
+      x = p2.cx + p2.r * Math.sin(angle);
+      y = p2.cy + p2.r * Math.cos(angle);
+      tx = Math.cos(angle);
+      ty = -Math.sin(angle);
+      curvature = -1 / p2.r;
+    }
+    return {
+      x,
+      y,
+      tx,
+      ty,
+      nx: ty,
+      ny: -tx,
+      angle: Math.atan2(ty, tx),
+      curvature,
+      id: p2.id,
+      pathS: s,
+      piece: p2
+    };
+  }
+  __name(samplePath, "samplePath");
+  function pathCorners(body) {
+    const c = Math.cos(body.angle), s = Math.sin(body.angle), out = [];
+    for (const x of [-body.hw, body.hw])
+      for (const y of [-body.hh, body.hh])
+        out.push({ x: body.x + c * x - s * y, y: body.y + s * x + c * y });
+    return out;
+  }
+  __name(pathCorners, "pathCorners");
+  function pathLineDistance(body, p2, path) {
+    const nx = p2.ty, ny = -p2.tx, dx = body.x - p2.x, dy = body.y - p2.y;
+    const u = dx * p2.tx + dy * p2.ty, v = dx * nx + dy * ny;
+    let distance, normalX, normalY, front = false;
+    if (body.circle) {
+      const cu = Math.max(0, Math.min(p2.length, u)), cv = Math.max(-path.thickness, Math.min(0, v));
+      const du = u - cu, dv = v - cv, d = Math.hypot(du, dv);
+      if (d > 1e-10) {
+        distance = d - body.hw;
+        normalX = (du * p2.tx + dv * nx) / d;
+        normalY = (du * p2.ty + dv * ny) / d;
+        front = cv === 0 && v >= 0;
+      } else {
+        const faces = [
+          { d: -v, x: nx, y: ny, front: true },
+          { d: v + path.thickness, x: -nx, y: -ny },
+          { d: u, x: -p2.tx, y: -p2.ty },
+          { d: p2.length - u, x: p2.tx, y: p2.ty }
+        ].sort((a, b) => a.d - b.d);
+        distance = -faces[0].d - body.hw;
+        normalX = faces[0].x;
+        normalY = faces[0].y;
+        front = !!faces[0].front;
+      }
+    } else {
+      const c = Math.cos(body.angle), s = Math.sin(body.angle), cx = p2.x + p2.tx * p2.length / 2 - nx * path.thickness / 2, cy = p2.y + p2.ty * p2.length / 2 - ny * path.thickness / 2;
+      distance = -Infinity;
+      for (const [ax, ay] of [
+        [1, 0],
+        [0, 1],
+        [c, s],
+        [-s, c],
+        [p2.tx, p2.ty],
+        [nx, ny]
+      ]) {
+        const offset = (body.x - cx) * ax + (body.y - cy) * ay;
+        const extent = body.hw * Math.abs(c * ax + s * ay) + body.hh * Math.abs(-s * ax + c * ay) + p2.length / 2 * Math.abs(p2.tx * ax + p2.ty * ay) + path.thickness / 2 * Math.abs(nx * ax + ny * ay);
+        const gap = Math.abs(offset) - extent;
+        if (gap > distance) {
+          distance = gap;
+          normalX = Math.sign(offset) * ax;
+          normalY = Math.sign(offset) * ay;
+        }
+      }
+      front = normalX * nx + normalY * ny > 0.999;
+    }
+    const surface = samplePath(path, p2.start + Math.max(0, Math.min(p2.length, u)));
+    return {
+      distance,
+      nx: normalX,
+      ny: normalY,
+      curvature: 0.04,
+      kind: "floor",
+      canLand: front,
+      surface,
+      id: p2.id,
+      convex: true
+    };
+  }
+  __name(pathLineDistance, "pathLineDistance");
+  function pathArcFaceDistance(body, p2, path) {
+    const dx = body.x - p2.cx, dy = body.y - p2.cy;
+    const inside = Math.hypot(dx, dy) < p2.r + path.thickness / 2;
+    let point, extent;
+    if (body.circle) {
+      point = { x: body.x, y: body.y };
+      extent = body.hw;
+    } else if (inside) {
+      point = pathCorners(body).sort(
+        (a, b) => Math.hypot(b.x - p2.cx, b.y - p2.cy) - Math.hypot(a.x - p2.cx, a.y - p2.cy)
+      )[0];
+      extent = 0;
+    } else {
+      const c = Math.cos(body.angle), s = Math.sin(body.angle), u = (p2.cx - body.x) * c + (p2.cy - body.y) * s, v = -(p2.cx - body.x) * s + (p2.cy - body.y) * c;
+      const x = Math.max(-body.hw, Math.min(body.hw, u)), y = Math.max(-body.hh, Math.min(body.hh, v));
+      point = { x: body.x + c * x - s * y, y: body.y + s * x + c * y };
+      extent = 0;
+    }
+    let angle = Math.atan2(point.x - p2.cx, point.y - p2.cy);
+    while (angle < p2.a - 1e-9) angle += Math.PI * 2;
+    if (angle > p2.b + 1e-9) return null;
+    angle = Math.max(p2.a, Math.min(p2.b, angle));
+    const radial = Math.hypot(point.x - p2.cx, point.y - p2.cy), rx = Math.sin(angle), ry = Math.cos(angle);
+    const surface = samplePath(path, p2.start + (angle - p2.a) * p2.r);
+    return {
+      distance: (inside ? p2.r - radial : radial - p2.r - path.thickness) - extent,
+      nx: inside ? -rx : rx,
+      ny: inside ? -ry : ry,
+      curvature: 0.04,
+      kind: "floor",
+      canLand: inside,
+      surface,
+      id: p2.id,
+      convex: !inside
+    };
+  }
+  __name(pathArcFaceDistance, "pathArcFaceDistance");
+  function pathArcDistance(body, p2, path) {
+    const candidates = [];
+    const face = pathArcFaceDistance(body, p2, path);
+    if (face) candidates.push(face);
+    if (p2.b - p2.a < Math.PI * 2 - 1e-8)
+      for (const angle of [p2.a, p2.b]) {
+        const rx = Math.sin(angle), ry = Math.cos(angle);
+        const cap = {
+          kind: "line",
+          x: p2.cx + p2.r * rx,
+          y: p2.cy + p2.r * ry,
+          tx: rx,
+          ty: ry,
+          length: path.thickness,
+          start: p2.start,
+          id: p2.id
+        };
+        const q2 = pathLineDistance(body, cap, { ...path, thickness: 0 });
+        candidates.push({ ...q2, canLand: false, kind: "box", convex: false });
+      }
+    if (!candidates.length) return null;
+    const q = candidates.sort((a, b) => a.distance - b.distance)[0];
+    return { ...q, curvature: 0.08, far: q.distance > 2 };
+  }
+  __name(pathArcDistance, "pathArcDistance");
+  function pathDistances(path, body, nearS = null) {
+    const results = [];
+    for (const original of path.pieces) {
+      let p2 = original;
+      if (nearS != null) {
+        const reach = body.hw + body.hh + path.thickness + 2;
+        const lo = Math.max(p2.start, nearS - reach), hi = Math.min(p2.end, nearS + reach);
+        if (lo >= hi) continue;
+        if (p2.kind === "arc")
+          p2 = {
+            ...p2,
+            start: lo,
+            end: hi,
+            length: hi - lo,
+            a: p2.a + (lo - p2.start) / p2.r,
+            b: p2.a + (hi - p2.start) / p2.r
+          };
+        else
+          p2 = {
+            ...p2,
+            start: lo,
+            end: hi,
+            length: hi - lo,
+            x: p2.x + (lo - p2.start) * p2.tx,
+            y: p2.y + (lo - p2.start) * p2.ty
+          };
+      }
+      const q = p2.kind === "line" ? pathLineDistance(body, p2, path) : pathArcDistance(body, p2, path);
+      if (q) results.push(q);
+    }
+    return results;
+  }
+  __name(pathDistances, "pathDistances");
+  function pathBody(player, posture = player.posture) {
+    const path = playtestPaths[player.scenario], s = samplePath(path, player.pathS), height = posture === "rolling" ? 38 : 48;
+    const body = {
+      x: s.x + s.nx * height / 2,
+      y: s.y + s.ny * height / 2,
+      hw: (posture === "rolling" ? 38 : 22) / 2,
+      hh: height / 2,
+      circle: posture === "rolling",
+      angle: s.angle
+    };
+    if (!body.circle) {
+      const clear = /* @__PURE__ */ __name((shift) => {
+        const b = { ...body, x: body.x + s.nx * shift, y: body.y + s.ny * shift };
+        return pathDistances(path, b, player.pathS).every((q) => q.distance >= -1e-7);
+      }, "clear");
+      if (!clear(0)) {
+        let lo = 0, hi = 2;
+        for (let i = 0; i < 20; i++) {
+          const mid = (lo + hi) / 2;
+          if (clear(mid)) hi = mid;
+          else lo = mid;
+        }
+        body.x += s.nx * hi;
+        body.y += s.ny * hi;
+      }
+    }
+    return body;
+  }
+  __name(pathBody, "pathBody");
+  function syncPathPlayer(player) {
+    const s = samplePath(playtestPaths[player.scenario], player.pathS);
+    player.x = s.x;
+    player.y = s.y;
+  }
+  __name(syncPathPlayer, "syncPathPlayer");
+  function initializeRuntimeModule2() {
+    const loop = makePath("loop", 96), wide = makePath("loop-wide", 140), chamber = makePath("wall-ceiling", 120, true);
+    playtestPaths = Object.freeze({
+      loop,
+      "loop-reverse": loop,
+      "loop-wide": wide,
+      "wall-ceiling": chamber,
+      "wall-ceiling-reverse": chamber
+    });
+  }
+  __name(initializeRuntimeModule2, "initializeRuntimeModule");
+  function getRuntimeBindings2() {
+    return {};
+  }
+  __name(getRuntimeBindings2, "getRuntimeBindings");
+  function pathPolynomialRoots(coefficients, lo, hi) {
+    const c = [...coefficients];
+    while (c.length > 1 && Math.abs(c.at(-1)) < 1e-14) c.pop();
+    const value = /* @__PURE__ */ __name((t) => c.reduceRight((v, x) => v * t + x, 0), "value");
+    if (c.length <= 1) return [];
+    if (c.length === 2) {
+      const r = -c[0] / c[1];
+      return r >= lo - 1e-10 && r <= hi + 1e-10 ? [Math.max(lo, Math.min(hi, r))] : [];
+    }
+    const points = [
+      lo,
+      ...pathPolynomialRoots(
+        c.slice(1).map((x, i) => x * (i + 1)),
+        lo,
+        hi
+      ),
+      hi
+    ], roots = [];
+    for (const t of points) if (Math.abs(value(t)) < 1e-8) roots.push(t);
+    for (let i = 1; i < points.length; i++) {
+      let a = points[i - 1], b = points[i], fa = value(a), fb = value(b);
+      if (fa * fb >= 0) continue;
+      for (let n = 0; n < 48; n++) {
+        const m = (a + b) / 2, fm = value(m);
+        if (fa * fm <= 0) {
+          b = m;
+          fb = fm;
+        } else {
+          a = m;
+          fa = fm;
+        }
+      }
+      roots.push((a + b) / 2);
+    }
+    return roots.sort((a, b) => a - b).filter((x, i, a) => !i || x - a[i - 1] > 1e-9);
+  }
+  __name(pathPolynomialRoots, "pathPolynomialRoots");
+  function pathArcImpact(body, vx, vy, ax, ay, duration, p2, path, skin, accept) {
+    const times = [0], x = body.x - p2.cx, y = body.y - p2.cy;
+    const circle = /* @__PURE__ */ __name((dx, dy, r) => times.push(
+      ...pathPolynomialRoots(
+        [
+          dx * dx + dy * dy - r * r,
+          2 * (dx * vx + dy * vy),
+          vx * vx + vy * vy + dx * ax + dy * ay,
+          vx * ax + vy * ay,
+          (ax * ax + ay * ay) / 4
+        ],
+        0,
+        duration
+      )
+    ), "circle");
+    if (body.circle) {
+      circle(x, y, p2.r - body.hw);
+      circle(x, y, p2.r + path.thickness + body.hw);
+    } else {
+      for (const corner of pathCorners(body)) {
+        circle(corner.x - p2.cx, corner.y - p2.cy, p2.r);
+        circle(corner.x - p2.cx, corner.y - p2.cy, p2.r + path.thickness);
+      }
+      const r = p2.r + path.thickness;
+      for (const sign2 of [-1, 1]) {
+        times.push(...pathPolynomialRoots([x - sign2 * (r + body.hw), vx, ax / 2], 0, duration));
+        times.push(...pathPolynomialRoots([y - sign2 * (r + body.hh), vy, ay / 2], 0, duration));
+      }
+    }
+    for (const time of times.sort((a, b) => a - b)) {
+      const at = {
+        ...body,
+        x: body.x + vx * time + ax * time * time / 2,
+        y: body.y + vy * time + ay * time * time / 2
+      };
+      const q = pathArcFaceDistance(at, p2, path);
+      if (!q || !accept(q)) continue;
+      const into = (vx + ax * time) * q.nx + (vy + ay * time) * q.ny;
+      if (time === 0 && q.distance < -skin || Math.abs(q.distance) <= skin + 1e-6 && (into < -1e-8 || Math.abs(into) < 1e-8 && ax * q.nx + ay * q.ny < -1e-8))
+        return { time, q };
+    }
+    return null;
+  }
+  __name(pathArcImpact, "pathArcImpact");
+  function pathArcCaps(p2, path) {
+    if (p2.b - p2.a >= Math.PI * 2 - 1e-8) return [];
+    return [p2.a, p2.b].map((angle) => {
+      const tx = Math.sin(angle), ty = Math.cos(angle);
+      return {
+        kind: "line",
+        x: p2.cx + p2.r * tx,
+        y: p2.cy + p2.r * ty,
+        tx,
+        ty,
+        length: path.thickness,
+        start: p2.start,
+        id: p2.id
+      };
+    });
+  }
+  __name(pathArcCaps, "pathArcCaps");
 
   // src/game.js
   var game_exports = {};
@@ -420,10 +819,10 @@
     finishAct: () => finishAct,
     frame: () => frame,
     gameSound: () => gameSound,
-    getRuntimeBindings: () => getRuntimeBindings24,
+    getRuntimeBindings: () => getRuntimeBindings25,
     grindFrames: () => grindFrames,
     hurt: () => hurt,
-    initializeRuntimeModule: () => initializeRuntimeModule24,
+    initializeRuntimeModule: () => initializeRuntimeModule25,
     keys: () => keys,
     legacySonicArt: () => legacySonicArt,
     loadActArt: () => loadActArt,
@@ -463,15 +862,15 @@
   var hud_exports = {};
   __export(hud_exports, {
     drawPixelBoostBar: () => drawPixelBoostBar,
-    getRuntimeBindings: () => getRuntimeBindings2,
-    initializeRuntimeModule: () => initializeRuntimeModule2,
+    getRuntimeBindings: () => getRuntimeBindings3,
+    initializeRuntimeModule: () => initializeRuntimeModule3,
     toggleGameFullscreen: () => toggleGameFullscreen,
     updatePixelHud: () => updatePixelHud
   });
   var updatePixelHud;
   var drawPixelBoostBar;
   var toggleGameFullscreen;
-  function initializeRuntimeModule2() {
+  function initializeRuntimeModule3() {
     (function() {
       "use strict";
       const W2 = 320, H2 = 84;
@@ -836,8 +1235,8 @@
       }
     })();
   }
-  __name(initializeRuntimeModule2, "initializeRuntimeModule");
-  function getRuntimeBindings2() {
+  __name(initializeRuntimeModule3, "initializeRuntimeModule");
+  function getRuntimeBindings3() {
     return {
       updatePixelHud: {
         get: /* @__PURE__ */ __name(() => updatePixelHud, "get"),
@@ -859,19 +1258,19 @@
       }
     };
   }
-  __name(getRuntimeBindings2, "getRuntimeBindings");
+  __name(getRuntimeBindings3, "getRuntimeBindings");
 
   // src/game-music.js
   var game_music_exports = {};
   __export(game_music_exports, {
-    getRuntimeBindings: () => getRuntimeBindings3,
-    initializeRuntimeModule: () => initializeRuntimeModule3,
+    getRuntimeBindings: () => getRuntimeBindings4,
+    initializeRuntimeModule: () => initializeRuntimeModule4,
     setGameMusicVolume: () => setGameMusicVolume,
     syncGameMusic: () => syncGameMusic
   });
   var syncGameMusic;
   var setGameMusicVolume;
-  function initializeRuntimeModule3() {
+  function initializeRuntimeModule4() {
     (function(root) {
       "use strict";
       const SOURCES = { 1: "assets/neon-express-act1-music.mp3", 2: "assets/city-music.mp3" }, MAX_VOLUME = 0.3;
@@ -1008,8 +1407,8 @@
       root.setGameMusicVolume = setGameMusicVolume2;
     })(window);
   }
-  __name(initializeRuntimeModule3, "initializeRuntimeModule");
-  function getRuntimeBindings3() {
+  __name(initializeRuntimeModule4, "initializeRuntimeModule");
+  function getRuntimeBindings4() {
     return {
       syncGameMusic: {
         get: /* @__PURE__ */ __name(() => syncGameMusic, "get"),
@@ -1025,19 +1424,19 @@
       }
     };
   }
-  __name(getRuntimeBindings3, "getRuntimeBindings");
+  __name(getRuntimeBindings4, "getRuntimeBindings");
 
   // src/game-audio.js
   var game_audio_exports = {};
   __export(game_audio_exports, {
-    getRuntimeBindings: () => getRuntimeBindings4,
-    initializeRuntimeModule: () => initializeRuntimeModule4,
+    getRuntimeBindings: () => getRuntimeBindings5,
+    initializeRuntimeModule: () => initializeRuntimeModule5,
     playGameSound: () => playGameSound,
     setGameSoundEnabled: () => setGameSoundEnabled
   });
   var setGameSoundEnabled;
   var playGameSound;
-  function initializeRuntimeModule4() {
+  function initializeRuntimeModule5() {
     (function(root) {
       "use strict";
       const MAX_VOICES = 18, MAX_EVENTS = 8, MASTER_LEVEL = 0.22;
@@ -1642,8 +2041,8 @@
       root.playGameSound = playGameSound2;
     })(window);
   }
-  __name(initializeRuntimeModule4, "initializeRuntimeModule");
-  function getRuntimeBindings4() {
+  __name(initializeRuntimeModule5, "initializeRuntimeModule");
+  function getRuntimeBindings5() {
     return {
       setGameSoundEnabled: {
         get: /* @__PURE__ */ __name(() => setGameSoundEnabled, "get"),
@@ -1659,7 +2058,7 @@
       }
     };
   }
-  __name(getRuntimeBindings4, "getRuntimeBindings");
+  __name(getRuntimeBindings5, "getRuntimeBindings");
 
   // src/boost-rules.js
   var boost_rules_exports = {};
@@ -1668,8 +2067,8 @@
     collectBoostMonitors: () => collectBoostMonitors,
     configureBoostMonitors: () => configureBoostMonitors,
     freeRailBoost: () => freeRailBoost,
-    getRuntimeBindings: () => getRuntimeBindings21,
-    initializeRuntimeModule: () => initializeRuntimeModule21,
+    getRuntimeBindings: () => getRuntimeBindings22,
+    initializeRuntimeModule: () => initializeRuntimeModule22,
     measurementSpeed: () => measurementSpeed,
     monitorPose: () => monitorPose,
     resetBoostMonitors: () => resetBoostMonitors,
@@ -1683,8 +2082,8 @@
     addBlimpRoute: () => addBlimpRoute,
     blimpTextures: () => blimpTextures,
     drawBlimpRoute: () => drawBlimpRoute,
-    getRuntimeBindings: () => getRuntimeBindings20,
-    initializeRuntimeModule: () => initializeRuntimeModule20,
+    getRuntimeBindings: () => getRuntimeBindings21,
+    initializeRuntimeModule: () => initializeRuntimeModule21,
     invalidateBlimpEntry: () => invalidateBlimpEntry,
     onBlimpLanding: () => onBlimpLanding,
     qualifyingBlimpEntry: () => qualifyingBlimpEntry,
@@ -1713,8 +2112,8 @@
     drawPixelCityLoop: () => drawPixelCityLoop,
     drawPixelCityStructures: () => drawPixelCityStructures,
     drawPixelRing: () => drawPixelRing,
-    getRuntimeBindings: () => getRuntimeBindings19,
-    initializeRuntimeModule: () => initializeRuntimeModule19,
+    getRuntimeBindings: () => getRuntimeBindings20,
+    initializeRuntimeModule: () => initializeRuntimeModule20,
     paintCityFacade: () => paintCityFacade,
     paintCityPillar: () => paintCityPillar,
     paintPixelCityDeck: () => paintPixelCityDeck,
@@ -1733,9 +2132,9 @@
     bodyHeight: () => bodyHeight,
     canStand: () => canStand,
     feet: () => feet,
-    getRuntimeBindings: () => getRuntimeBindings18,
+    getRuntimeBindings: () => getRuntimeBindings19,
     groundSlopeForce: () => groundSlopeForce,
-    initializeRuntimeModule: () => initializeRuntimeModule18,
+    initializeRuntimeModule: () => initializeRuntimeModule19,
     integrateSurfaceStep: () => integrateSurfaceStep,
     land: () => land,
     leaveSurface: () => leaveSurface,
@@ -1763,8 +2162,8 @@
   var player_movement_exports = {};
   __export(player_movement_exports, {
     beginBubbleSlam: () => beginBubbleSlam,
-    getRuntimeBindings: () => getRuntimeBindings16,
-    initializeRuntimeModule: () => initializeRuntimeModule16,
+    getRuntimeBindings: () => getRuntimeBindings17,
+    initializeRuntimeModule: () => initializeRuntimeModule17,
     jump: () => jump,
     reboundBubbleShield: () => reboundBubbleShield,
     resetPlayerAbilities: () => resetPlayerAbilities,
@@ -1782,9 +2181,9 @@
   __export(stage_runtime_exports, {
     afterStageLanding: () => afterStageLanding,
     beforeStageLanding: () => beforeStageLanding,
-    getRuntimeBindings: () => getRuntimeBindings15,
+    getRuntimeBindings: () => getRuntimeBindings16,
     handleStageEnemyDamage: () => handleStageEnemyDamage,
-    initializeRuntimeModule: () => initializeRuntimeModule15,
+    initializeRuntimeModule: () => initializeRuntimeModule16,
     neonExpressAct1Runtime: () => neonExpressAct1Runtime,
     neonExpressAct2Runtime: () => neonExpressAct2Runtime,
     resetStageRuntime: () => resetStageRuntime,
@@ -1802,8 +2201,8 @@
     bossOwnsControls: () => bossOwnsControls,
     drawBossEncounter: () => drawBossEncounter,
     frameBossCamera: () => frameBossCamera,
-    getRuntimeBindings: () => getRuntimeBindings14,
-    initializeRuntimeModule: () => initializeRuntimeModule14,
+    getRuntimeBindings: () => getRuntimeBindings15,
+    initializeRuntimeModule: () => initializeRuntimeModule15,
     resetBossAttempt: () => resetBossAttempt,
     setupBossEncounter: () => setupBossEncounter,
     updateBossEncounter: () => updateBossEncounter,
@@ -1816,15 +2215,15 @@
     ENDING_BEATS: () => ENDING_BEATS,
     createEndingScene: () => createEndingScene,
     endingPose: () => endingPose,
-    getRuntimeBindings: () => getRuntimeBindings5,
-    initializeRuntimeModule: () => initializeRuntimeModule5,
+    getRuntimeBindings: () => getRuntimeBindings6,
+    initializeRuntimeModule: () => initializeRuntimeModule6,
     tickEndingScene: () => tickEndingScene
   });
   var ENDING_BEATS;
   var createEndingScene;
   var tickEndingScene;
   var endingPose;
-  function initializeRuntimeModule5() {
+  function initializeRuntimeModule6() {
     (function(root) {
       "use strict";
       const ENDING_BEATS2 = Object.freeze(
@@ -2421,8 +2820,8 @@
       else Object.assign(root, api);
     })(typeof window !== "undefined" ? window : globalThis);
   }
-  __name(initializeRuntimeModule5, "initializeRuntimeModule");
-  function getRuntimeBindings5() {
+  __name(initializeRuntimeModule6, "initializeRuntimeModule");
+  function getRuntimeBindings6() {
     return {
       ENDING_BEATS: {
         get: /* @__PURE__ */ __name(() => ENDING_BEATS, "get"),
@@ -2450,15 +2849,15 @@
       }
     };
   }
-  __name(getRuntimeBindings5, "getRuntimeBindings");
+  __name(getRuntimeBindings6, "getRuntimeBindings");
 
   // src/egg-scorpion.js
   var egg_scorpion_exports = {};
   __export(egg_scorpion_exports, {
     createEggScorpion: () => createEggScorpion,
     damageEggScorpion: () => damageEggScorpion,
-    getRuntimeBindings: () => getRuntimeBindings6,
-    initializeRuntimeModule: () => initializeRuntimeModule6,
+    getRuntimeBindings: () => getRuntimeBindings7,
+    initializeRuntimeModule: () => initializeRuntimeModule7,
     scorpionDanger: () => scorpionDanger,
     scorpionGeometry: () => scorpionGeometry,
     tickEggScorpion: () => tickEggScorpion
@@ -2468,7 +2867,7 @@
   var scorpionGeometry;
   var damageEggScorpion;
   var scorpionDanger;
-  function initializeRuntimeModule6() {
+  function initializeRuntimeModule7() {
     (function(root) {
       "use strict";
       const clamp = /* @__PURE__ */ __name((v, a, z) => Math.max(a, Math.min(z, v)), "clamp"), ease = /* @__PURE__ */ __name((t) => {
@@ -2657,8 +3056,8 @@
       else Object.assign(root, api);
     })(typeof window !== "undefined" ? window : globalThis);
   }
-  __name(initializeRuntimeModule6, "initializeRuntimeModule");
-  function getRuntimeBindings6() {
+  __name(initializeRuntimeModule7, "initializeRuntimeModule");
+  function getRuntimeBindings7() {
     return {
       createEggScorpion: {
         get: /* @__PURE__ */ __name(() => createEggScorpion, "get"),
@@ -2692,14 +3091,14 @@
       }
     };
   }
-  __name(getRuntimeBindings6, "getRuntimeBindings");
+  __name(getRuntimeBindings7, "getRuntimeBindings");
 
   // src/boss-art.js
   var boss_art_exports = {};
   __export(boss_art_exports, {
     drawScorpionLink: () => drawScorpionLink,
-    getRuntimeBindings: () => getRuntimeBindings7,
-    initializeRuntimeModule: () => initializeRuntimeModule7,
+    getRuntimeBindings: () => getRuntimeBindings8,
+    initializeRuntimeModule: () => initializeRuntimeModule8,
     prepareScorpionArt: () => prepareScorpionArt,
     renderEggScorpion: () => renderEggScorpion,
     scorpionBounds: () => scorpionBounds,
@@ -2868,7 +3267,7 @@
     ctx.restore();
   }
   __name(renderEggScorpion, "renderEggScorpion");
-  function initializeRuntimeModule7() {
+  function initializeRuntimeModule8() {
     scorpionParts = /* @__PURE__ */ new Map();
     scorpionStamps = /* @__PURE__ */ new Map();
     scorpionBounds = {
@@ -2882,8 +3281,8 @@
       eyes: [1176, 674, 1535, 991, 74]
     };
   }
-  __name(initializeRuntimeModule7, "initializeRuntimeModule");
-  function getRuntimeBindings7() {
+  __name(initializeRuntimeModule8, "initializeRuntimeModule");
+  function getRuntimeBindings8() {
     return {
       scorpionParts: {
         get: /* @__PURE__ */ __name(() => scorpionParts, "get"),
@@ -2935,7 +3334,7 @@
       }
     };
   }
-  __name(getRuntimeBindings7, "getRuntimeBindings");
+  __name(getRuntimeBindings8, "getRuntimeBindings");
 
   // src/city-polish.js
   var city_polish_exports = {};
@@ -2952,8 +3351,8 @@
     drawPolishedSpring: () => drawPolishedSpring,
     drawPolishedVent: () => drawPolishedVent,
     drawPoolBooster: () => drawPoolBooster,
-    getRuntimeBindings: () => getRuntimeBindings8,
-    initializeRuntimeModule: () => initializeRuntimeModule8,
+    getRuntimeBindings: () => getRuntimeBindings9,
+    initializeRuntimeModule: () => initializeRuntimeModule9,
     polishCached: () => polishCached,
     polishCompile: () => polishCompile,
     polishDirection: () => polishDirection,
@@ -3684,7 +4083,7 @@
     }
   }
   __name(drawPlayerAbilities, "drawPlayerAbilities");
-  function initializeRuntimeModule8() {
+  function initializeRuntimeModule9() {
     polishSpriteCache = /* @__PURE__ */ new Map();
     polishFont = {
       A: ["01110", "10001", "10001", "11111", "10001", "10001", "10001"],
@@ -3732,8 +4131,8 @@
       ":": ["00000", "00100", "00100", "00000", "00100", "00100", "00000"]
     };
   }
-  __name(initializeRuntimeModule8, "initializeRuntimeModule");
-  function getRuntimeBindings8() {
+  __name(initializeRuntimeModule9, "initializeRuntimeModule");
+  function getRuntimeBindings9() {
     return {
       polishSpriteCache: {
         get: /* @__PURE__ */ __name(() => polishSpriteCache, "get"),
@@ -3869,7 +4268,7 @@
       }
     };
   }
-  __name(getRuntimeBindings8, "getRuntimeBindings");
+  __name(getRuntimeBindings9, "getRuntimeBindings");
 
   // src/ending-art.js
   var ending_art_exports = {};
@@ -3884,8 +4283,8 @@
     endingSheets: () => endingSheets,
     endingSprites: () => endingSprites,
     endingStar: () => endingStar,
-    getRuntimeBindings: () => getRuntimeBindings13,
-    initializeRuntimeModule: () => initializeRuntimeModule13,
+    getRuntimeBindings: () => getRuntimeBindings14,
+    initializeRuntimeModule: () => initializeRuntimeModule14,
     loadEndingArt: () => loadEndingArt,
     prepareEndingArt: () => prepareEndingArt,
     prepareEndingEmerald: () => prepareEndingEmerald,
@@ -3896,29 +4295,29 @@
   var ending_frames_exports = {};
   __export(ending_frames_exports, {
     endingFrames: () => endingFrames,
-    getRuntimeBindings: () => getRuntimeBindings9,
-    initializeRuntimeModule: () => initializeRuntimeModule9
+    getRuntimeBindings: () => getRuntimeBindings10,
+    initializeRuntimeModule: () => initializeRuntimeModule10
   });
   var endingFrames;
-  function initializeRuntimeModule9() {
+  function initializeRuntimeModule10() {
     endingFrames = { "shadow": [{ "bounds": [24, 32, 178, 218], "seed": [119, 32], "anchor": [41, 218], "scale": 0.2857142857142857 }, { "bounds": [209, 35, 361, 236], "seed": [273, 35], "anchor": [236, 236], "scale": 0.2857142857142857 }, { "bounds": [393, 31, 546, 253], "seed": [451, 31], "anchor": [455.5, 253], "scale": 0.2857142857142857 }, { "bounds": [568, 34, 751, 244], "seed": [627, 34], "anchor": [620.5, 244], "scale": 0.2857142857142857 }, { "bounds": [742, 25, 927, 250], "seed": [798, 25], "anchor": [785, 250], "scale": 0.2857142857142857 }, { "bounds": [932, 35, 1090, 234], "seed": [999, 35], "anchor": [1050, 234], "scale": 0.2857142857142857 }, { "bounds": [1109, 32, 1264, 246], "seed": [1186, 32], "anchor": [1152, 246], "scale": 0.2857142857142857 }, { "bounds": [1286, 49, 1445, 253], "seed": [1339, 49], "anchor": [1359.5, 253], "scale": 0.2857142857142857 }, { "bounds": [19, 300, 184, 487], "seed": [85, 300], "anchor": [111.5, 487], "scale": 0.2857142857142857 }, { "bounds": [195, 302, 373, 487], "seed": [316, 302], "anchor": [288, 487], "scale": 0.2857142857142857 }, { "bounds": [390, 291, 554, 493], "seed": [457, 291], "anchor": [428, 493], "scale": 0.2857142857142857 }, { "bounds": [579, 282, 733, 493], "seed": [618, 282], "anchor": [659.5, 493], "scale": 0.2857142857142857 }, { "bounds": [746, 288, 902, 493], "seed": [789, 288], "anchor": [827.5, 493], "scale": 0.2857142857142857 }, { "bounds": [923, 288, 1078, 499], "seed": [975, 288], "anchor": [1015.5, 499], "scale": 0.2857142857142857 }, { "bounds": [1113, 290, 1254, 496], "seed": [1184, 290], "anchor": [1174, 496], "scale": 0.2857142857142857 }, { "bounds": [1286, 284, 1429, 499], "seed": [1358, 284], "anchor": [1348.5, 499], "scale": 0.2857142857142857 }, { "bounds": [23, 538, 169, 755], "seed": [96, 538], "anchor": [84, 755], "scale": 0.2857142857142857 }, { "bounds": [190, 533, 364, 752], "seed": [296, 533], "anchor": [270, 752], "scale": 0.2857142857142857 }, { "bounds": [363, 536, 544, 750], "seed": [471, 536], "anchor": [457, 750], "scale": 0.2857142857142857 }, { "bounds": [553, 536, 731, 750], "seed": [660, 536], "anchor": [648.5, 750], "scale": 0.2857142857142857, "gem": [579, 622] }, { "bounds": [736, 536, 902, 751], "seed": [831, 536], "anchor": [812, 751], "scale": 0.2857142857142857, "gem": [765, 641] }, { "bounds": [905, 538, 1068, 752], "seed": [994, 538], "anchor": [987, 752], "scale": 0.2857142857142857, "gem": [941, 641] }, { "bounds": [1080, 538, 1246, 752], "seed": [1177, 538], "anchor": [1166.5, 752], "scale": 0.2857142857142857, "gem": [1110, 641] }, { "bounds": [1257, 538, 1425, 752], "seed": [1355, 538], "anchor": [1345.5, 752], "scale": 0.2857142857142857, "gem": [1288, 639] }, { "bounds": [16, 803, 189, 1027], "seed": [112, 803], "anchor": [92.5, 1027], "scale": 0.2857142857142857, "gem": [41, 938] }, { "bounds": [213, 814, 394, 1026], "seed": [271, 814], "anchor": [291.5, 1026], "scale": 0.2857142857142857, "gem": [372, 867] }, { "bounds": [387, 770, 551, 1031], "seed": [408, 770], "anchor": [476.5, 1031], "scale": 0.2857142857142857, "gem": [416, 792] }, { "bounds": [575, 780, 726, 1031], "seed": [601, 780], "anchor": [654.5, 1031], "scale": 0.2857142857142857, "gem": [611, 804] }, { "bounds": [745, 804, 899, 1030], "seed": [809, 804], "anchor": [828, 1030], "scale": 0.2857142857142857, "gem": [768, 924] }, { "bounds": [921, 814, 1079, 1031], "seed": [980, 814], "anchor": [1009, 1031], "scale": 0.2857142857142857, "gem": [947, 923] }, { "bounds": [1100, 801, 1256, 1031], "seed": [1181, 801], "anchor": [1186, 1031], "scale": 0.2857142857142857, "gem": [1128, 921] }, { "bounds": [1279, 812, 1434, 1032], "seed": [1339, 812], "anchor": [1364, 1032], "scale": 0.2857142857142857 }], "sonic": [{ "bounds": [37, 21, 205, 241], "seed": [105, 21], "anchor": [135.5, 241], "scale": 0.27802690582959644 }, { "bounds": [288, 21, 505, 241], "seed": [355, 21], "anchor": [393.5, 241], "scale": 0.27802690582959644 }, { "bounds": [549, 23, 761, 241], "seed": [610, 23], "anchor": [649.5, 241], "scale": 0.27802690582959644 }, { "bounds": [803, 25, 1022, 241], "seed": [864, 25], "anchor": [907, 241], "scale": 0.27802690582959644 }, { "bounds": [1059, 25, 1278, 241], "seed": [1119, 25], "anchor": [1163, 241], "scale": 0.27802690582959644 }, { "bounds": [1317, 18, 1526, 241], "seed": [1448, 18], "anchor": [1423.5, 241], "scale": 0.27802690582959644 }, { "bounds": [42, 268, 213, 493], "seed": [104, 268], "anchor": [138.5, 493], "scale": 0.27802690582959644 }, { "bounds": [295, 268, 478, 491], "seed": [362, 268], "anchor": [406.5, 491], "scale": 0.27802690582959644 }, { "bounds": [553, 268, 726, 491], "seed": [621, 268], "anchor": [653.5, 491], "scale": 0.27802690582959644 }, { "bounds": [805, 272, 990, 491], "seed": [871, 272], "anchor": [914.5, 491], "scale": 0.27802690582959644 }, { "bounds": [1056, 272, 1279, 492], "seed": [1120, 272], "anchor": [1169.5, 492], "scale": 0.27802690582959644 }, { "bounds": [1317, 272, 1531, 492], "seed": [1381, 272], "anchor": [1425, 492], "scale": 0.27802690582959644 }, { "bounds": [34, 524, 253, 748], "seed": [99, 524], "anchor": [143, 748], "scale": 0.27802690582959644 }, { "bounds": [292, 523, 474, 747], "seed": [428, 523], "anchor": [401.5, 747], "scale": 0.27802690582959644 }, { "bounds": [555, 516, 737, 749], "seed": [616, 516], "anchor": [663.5, 749], "scale": 0.27802690582959644 }, { "bounds": [808, 524, 1018, 748], "seed": [876, 524], "anchor": [909, 748], "scale": 0.27802690582959644 }, { "bounds": [1067, 525, 1276, 747], "seed": [1134, 525], "anchor": [1166.5, 747], "scale": 0.27802690582959644 }, { "bounds": [1322, 524, 1525, 748], "seed": [1389, 524], "anchor": [1420, 748], "scale": 0.27802690582959644 }, { "bounds": [37, 776, 240, 1004], "seed": [105, 776], "anchor": [138.5, 1004], "scale": 0.27802690582959644 }, { "bounds": [291, 778, 478, 1004], "seed": [360, 778], "anchor": [397, 1004], "scale": 0.27802690582959644 }, { "bounds": [551, 776, 761, 1004], "seed": [620, 776], "anchor": [654.5, 1004], "scale": 0.27802690582959644 }, { "bounds": [806, 776, 1029, 1004], "seed": [881, 776], "anchor": [912.5, 1004], "scale": 0.27802690582959644 }, { "bounds": [1081, 763, 1282, 994], "seed": [1142, 763], "anchor": [1115.5, 994], "scale": 0.27802690582959644 }, { "bounds": [1333, 768, 1518, 992], "seed": [1388, 768], "anchor": [1432.5, 992], "scale": 0.27802690582959644 }], "eggman": [{ "bounds": [23, 50, 341, 402], "seed": [144, 50], "anchor": [182, 402], "scale": 0.29 }, { "bounds": [374, 53, 697, 404], "seed": [488, 53], "anchor": [535.5, 404], "scale": 0.29 }, { "bounds": [745, 78, 1071, 402], "seed": [944, 78], "anchor": [908, 402], "scale": 0.29 }, { "bounds": [1109, 50, 1428, 402], "seed": [1230, 50], "anchor": [1268.5, 402], "scale": 0.29 }, { "bounds": [17, 446, 355, 785], "seed": [104, 446], "anchor": [186, 785], "scale": 0.29 }, { "bounds": [400, 454, 694, 726], "seed": [629, 454], "anchor": [547, 726], "scale": 0.29 }, { "bounds": [770, 453, 1046, 753], "seed": [863, 453], "anchor": [908, 753], "scale": 0.29 }, { "bounds": [1153, 443, 1397, 756], "seed": [1281, 443], "anchor": [1275, 756], "scale": 0.29 }, { "bounds": [23, 844, 307, 1002], "seed": [198, 844], "anchor": [165, 1002], "scale": 0.17 }, { "bounds": [346, 844, 712, 1002], "seed": [519, 844], "anchor": [529, 1002], "scale": 0.17 }, { "bounds": [749, 764, 1083, 1074], "seed": [852, 764], "anchor": [916, 1074], "scale": 0.29 }, { "bounds": [1130, 805, 1435, 1035], "anchor": [1282.5, 1035], "scale": 0.29, "islands": true }] };
   }
-  __name(initializeRuntimeModule9, "initializeRuntimeModule");
-  function getRuntimeBindings9() {
+  __name(initializeRuntimeModule10, "initializeRuntimeModule");
+  function getRuntimeBindings10() {
     return {
       "endingFrames": { get: /* @__PURE__ */ __name(() => endingFrames, "get"), set: /* @__PURE__ */ __name((value) => {
         endingFrames = value;
       }, "set") }
     };
   }
-  __name(getRuntimeBindings9, "getRuntimeBindings");
+  __name(getRuntimeBindings10, "getRuntimeBindings");
 
   // src/recovered-art.js
   var recovered_art_exports = {};
   __export(recovered_art_exports, {
     drawRecoveredSonicFrame: () => drawRecoveredSonicFrame,
-    getRuntimeBindings: () => getRuntimeBindings12,
-    initializeRuntimeModule: () => initializeRuntimeModule12,
+    getRuntimeBindings: () => getRuntimeBindings13,
+    initializeRuntimeModule: () => initializeRuntimeModule13,
     recoveredSonicPose: () => recoveredSonicPose,
     recoveredSpriteFrames: () => recoveredSpriteFrames,
     recoveredSpriteTextures: () => recoveredSpriteTextures
@@ -3927,44 +4326,44 @@
   // src/supplemental-frames.js
   var supplemental_frames_exports = {};
   __export(supplemental_frames_exports, {
-    getRuntimeBindings: () => getRuntimeBindings10,
-    initializeRuntimeModule: () => initializeRuntimeModule10,
+    getRuntimeBindings: () => getRuntimeBindings11,
+    initializeRuntimeModule: () => initializeRuntimeModule11,
     supplementalSpriteFrames: () => supplementalSpriteFrames
   });
   var supplementalSpriteFrames;
-  function initializeRuntimeModule10() {
+  function initializeRuntimeModule11() {
     supplementalSpriteFrames = { "supplemental": [{ "bounds": [22, 32, 215, 219], "anchor": [109, 196], "scale": 0.2720781661029688 }, { "bounds": [237, 32, 435, 227], "anchor": [113, 196], "scale": 0.2720781661029688 }, { "bounds": [459, 32, 665, 230], "anchor": [117, 196], "scale": 0.2720781661029688 }, { "bounds": [680, 32, 879, 230], "anchor": [113, 196], "scale": 0.2720781661029688 }, { "bounds": [900, 32, 1099, 227], "anchor": [114, 196], "scale": 0.2720781661029688 }, { "bounds": [1120, 30, 1339, 227], "anchor": [116, 198], "scale": 0.2720781661029688 }, { "bounds": [1351, 30, 1546, 226], "anchor": [113, 198], "scale": 0.2720781661029688 }, { "bounds": [1561, 30, 1760, 229], "anchor": [118, 198], "scale": 0.2720781661029688 }, { "bounds": [22, 245, 226, 422], "anchor": [118, 186], "scale": 0.2720781661029688 }, { "bounds": [238, 247, 445, 417], "anchor": [123, 184], "scale": 0.2720781661029688 }, { "bounds": [458, 247, 664, 426], "anchor": [121, 184], "scale": 0.2720781661029688 }, { "bounds": [687, 248, 880, 431], "anchor": [107, 183], "scale": 0.2720781661029688 }, { "bounds": [902, 248, 1110, 426], "anchor": [124, 183], "scale": 0.2720781661029688 }, { "bounds": [1121, 247, 1335, 433], "anchor": [128, 184], "scale": 0.2720781661029688 }, { "bounds": [1342, 247, 1550, 431], "anchor": [123, 184], "scale": 0.2720781661029688 }, { "bounds": [1564, 246, 1760, 431], "anchor": [112, 185], "scale": 0.2720781661029688 }, { "bounds": [18, 447, 215, 633], "anchor": [106, 186], "scale": 0.2720781661029688 }, { "bounds": [233, 448, 429, 633], "anchor": [106, 185], "scale": 0.2720781661029688 }, { "bounds": [456, 448, 659, 633], "anchor": [113, 185], "scale": 0.2720781661029688 }, { "bounds": [685, 451, 881, 633], "anchor": [107, 182], "scale": 0.2720781661029688 }, { "bounds": [904, 449, 1104, 633], "anchor": [103, 184], "scale": 0.2720781661029688 }, { "bounds": [1125, 447, 1328, 633], "anchor": [111, 186], "scale": 0.2720781661029688 }, { "bounds": [1349, 449, 1548, 635], "anchor": [108, 184], "scale": 0.2720781661029688 }, { "bounds": [1563, 449, 1759, 633], "anchor": [104, 184], "scale": 0.2720781661029688 }, { "bounds": [16, 647, 214, 864], "anchor": [112, 223], "scale": 0.2720781661029688 }, { "bounds": [236, 653, 430, 867], "anchor": [104, 217], "scale": 0.2720781661029688 }, { "bounds": [461, 647, 677, 864], "anchor": [107, 223], "scale": 0.2720781661029688 }, { "bounds": [688, 658, 886, 872], "anchor": [94, 212], "scale": 0.2720781661029688 }, { "bounds": [927, 683, 1104, 872], "anchor": [87, 187], "scale": 0.2720781661029688 }, { "bounds": [1147, 658, 1318, 872], "anchor": [81, 212], "scale": 0.2720781661029688 }, { "bounds": [1360, 702, 1547, 872], "anchor": [84, 168], "scale": 0.2720781661029688 }, { "bounds": [1580, 702, 1754, 872], "anchor": [71, 168], "scale": 0.2720781661029688 }], "peeloutCycle": [{ "bounds": [42, 103, 406, 441], "anchor": [207, 344], "scale": 0.1360390830514844 }, { "bounds": [483, 103, 848, 447], "anchor": [208, 344], "scale": 0.1360390830514844 }, { "bounds": [925, 103, 1291, 449], "anchor": [209, 344], "scale": 0.1360390830514844 }, { "bounds": [1370, 103, 1732, 449], "anchor": [205, 344], "scale": 0.1360390830514844 }, { "bounds": [34, 489, 399, 825], "anchor": [210, 334], "scale": 0.1360390830514844 }, { "bounds": [482, 486, 848, 825], "anchor": [209, 337], "scale": 0.1360390830514844 }, { "bounds": [925, 485, 1291, 821], "anchor": [208, 338], "scale": 0.1360390830514844 }, { "bounds": [1370, 485, 1733, 825], "anchor": [206, 338], "scale": 0.1360390830514844 }] };
   }
-  __name(initializeRuntimeModule10, "initializeRuntimeModule");
-  function getRuntimeBindings10() {
+  __name(initializeRuntimeModule11, "initializeRuntimeModule");
+  function getRuntimeBindings11() {
     return {
       "supplementalSpriteFrames": { get: /* @__PURE__ */ __name(() => supplementalSpriteFrames, "get"), set: /* @__PURE__ */ __name((value) => {
         supplementalSpriteFrames = value;
       }, "set") }
     };
   }
-  __name(getRuntimeBindings10, "getRuntimeBindings");
+  __name(getRuntimeBindings11, "getRuntimeBindings");
 
   // src/traversal-frames.js
   var traversal_frames_exports = {};
   __export(traversal_frames_exports, {
-    getRuntimeBindings: () => getRuntimeBindings11,
-    initializeRuntimeModule: () => initializeRuntimeModule11,
+    getRuntimeBindings: () => getRuntimeBindings12,
+    initializeRuntimeModule: () => initializeRuntimeModule12,
     traversalSpriteFrames: () => traversalSpriteFrames
   });
   var traversalSpriteFrames;
-  function initializeRuntimeModule11() {
+  function initializeRuntimeModule12() {
     traversalSpriteFrames = { "traversalActing": [{ "bounds": [38, 47, 235, 272], "anchor": [70, 225], "scale": 0.2608695652173913 }, { "bounds": [276, 44, 515, 272], "anchor": [103, 228], "scale": 0.2608695652173913 }, { "bounds": [527, 47, 781, 272], "anchor": [123, 225], "scale": 0.2608695652173913, "trim": [[249, 93, 5, 25]] }, { "bounds": [776, 38, 1032, 272], "anchor": [154, 234], "scale": 0.2608695652173913, "trim": [[0, 170, 5, 19]] }, { "bounds": [1037, 34, 1263, 272], "anchor": [134, 238], "scale": 0.2608695652173913 }, { "bounds": [1299, 44, 1530, 272], "anchor": [96, 228], "scale": 0.2608695652173913 }, { "bounds": [1553, 42, 1764, 272], "anchor": [85, 230], "scale": 0.2608695652173913 }, { "bounds": [1810, 45, 2029, 272], "anchor": [94, 227], "scale": 0.2608695652173913 }, { "bounds": [28, 290, 235, 522], "anchor": [78, 232], "scale": 0.2608695652173913 }, { "bounds": [279, 290, 516, 522], "anchor": [108, 232], "scale": 0.2608695652173913 }, { "bounds": [532, 293, 772, 522], "anchor": [121, 229], "scale": 0.2608695652173913 }, { "bounds": [777, 282, 1034, 522], "anchor": [167, 240], "scale": 0.2608695652173913, "trim": [[248, 42, 9, 70]] }, { "bounds": [1025, 282, 1286, 522], "anchor": [167, 240], "scale": 0.2608695652173913, "trim": [[0, 179, 9, 25]] }, { "bounds": [1314, 297, 1536, 522], "anchor": [107, 225], "scale": 0.2608695652173913 }, { "bounds": [1573, 290, 1785, 522], "anchor": [99, 232], "scale": 0.2608695652173913 }, { "bounds": [1817, 292, 2026, 522], "anchor": [89, 230], "scale": 0.2608695652173913 }, { "bounds": [39, 544, 254, 757], "anchor": [161, 213], "scale": 0.2608695652173913 }, { "bounds": [275, 539, 518, 757], "anchor": [189, 218], "scale": 0.2608695652173913 }, { "bounds": [522, 542, 780, 757], "anchor": [204, 215], "scale": 0.2608695652173913 }, { "bounds": [782, 545, 1021, 757], "anchor": [185, 212], "scale": 0.2608695652173913 }, { "bounds": [1050, 545, 1289, 757], "anchor": [185, 212], "scale": 0.2608695652173913 }, { "bounds": [1305, 539, 1532, 757], "anchor": [173, 218], "scale": 0.2608695652173913 }, { "bounds": [1546, 539, 1788, 757], "anchor": [188, 218], "scale": 0.2608695652173913 }, { "bounds": [1819, 541, 2037, 756], "anchor": [164, 215], "scale": 0.2608695652173913 }], "traversalLaunch": [{ "bounds": [23, 22, 200, 258], "anchor": [88, 236], "scale": 0.2510460251046025 }, { "bounds": [246, 19, 424, 257], "anchor": [79, 238], "scale": 0.2510460251046025 }, { "bounds": [460, 18, 652, 253], "anchor": [100, 235], "scale": 0.2510460251046025 }, { "bounds": [692, 19, 869, 257], "anchor": [92, 238], "scale": 0.2510460251046025 }, { "bounds": [917, 19, 1091, 258], "anchor": [84, 239], "scale": 0.2510460251046025 }, { "bounds": [1127, 19, 1310, 257], "anchor": [72, 238], "scale": 0.2510460251046025 }, { "bounds": [1338, 18, 1541, 256], "anchor": [102, 238], "scale": 0.2510460251046025 }, { "bounds": [1574, 19, 1761, 257], "anchor": [112, 238], "scale": 0.2510460251046025 }, { "bounds": [14, 287, 214, 422], "anchor": [100, 68], "scale": 0.2510460251046025 }, { "bounds": [219, 292, 432, 428], "anchor": [106, 68], "scale": 0.2510460251046025 }, { "bounds": [438, 293, 662, 424], "anchor": [112, 66], "scale": 0.2510460251046025 }, { "bounds": [676, 291, 887, 424], "anchor": [106, 66], "scale": 0.2510460251046025 }, { "bounds": [902, 292, 1116, 422], "anchor": [107, 65], "scale": 0.2510460251046025 }, { "bounds": [1125, 292, 1328, 424], "anchor": [102, 66], "scale": 0.2510460251046025 }, { "bounds": [1346, 295, 1546, 421], "anchor": [100, 63], "scale": 0.2510460251046025 }, { "bounds": [1560, 289, 1758, 426], "anchor": [99, 68], "scale": 0.2510460251046025 }, { "bounds": [17, 456, 209, 640], "anchor": [96, 92], "scale": 0.2510460251046025 }, { "bounds": [231, 456, 424, 642], "anchor": [96, 93], "scale": 0.2510460251046025 }, { "bounds": [448, 458, 643, 643], "anchor": [98, 92], "scale": 0.2510460251046025 }, { "bounds": [678, 461, 863, 641], "anchor": [92, 90], "scale": 0.2510460251046025 }, { "bounds": [886, 467, 1098, 642], "anchor": [106, 88], "scale": 0.2510460251046025 }, { "bounds": [1117, 462, 1326, 644], "anchor": [104, 91], "scale": 0.2510460251046025 }, { "bounds": [1345, 465, 1549, 647], "anchor": [102, 91], "scale": 0.2510460251046025 }, { "bounds": [1560, 462, 1747, 648], "anchor": [94, 93], "scale": 0.2510460251046025 }, { "bounds": [18, 677, 216, 864], "anchor": [99, 94], "scale": 0.2510460251046025 }, { "bounds": [252, 680, 428, 858], "anchor": [88, 89], "scale": 0.2510460251046025 }, { "bounds": [450, 673, 653, 860], "anchor": [102, 94], "scale": 0.2510460251046025 }, { "bounds": [676, 676, 876, 861], "anchor": [100, 92], "scale": 0.2510460251046025 }, { "bounds": [896, 676, 1102, 862], "anchor": [103, 93], "scale": 0.2510460251046025 }, { "bounds": [1128, 674, 1325, 856], "anchor": [98, 91], "scale": 0.2510460251046025 }, { "bounds": [1344, 672, 1542, 860], "anchor": [99, 94], "scale": 0.2510460251046025 }, { "bounds": [1563, 674, 1757, 860], "anchor": [97, 93], "scale": 0.2510460251046025 }] };
   }
-  __name(initializeRuntimeModule11, "initializeRuntimeModule");
-  function getRuntimeBindings11() {
+  __name(initializeRuntimeModule12, "initializeRuntimeModule");
+  function getRuntimeBindings12() {
     return {
       "traversalSpriteFrames": { get: /* @__PURE__ */ __name(() => traversalSpriteFrames, "get"), set: /* @__PURE__ */ __name((value) => {
         traversalSpriteFrames = value;
       }, "set") }
     };
   }
-  __name(getRuntimeBindings11, "getRuntimeBindings");
+  __name(getRuntimeBindings12, "getRuntimeBindings");
 
   // src/recovered-art.js
   var recoveredSpriteTextures;
@@ -4117,13 +4516,13 @@
     ctx.restore();
   }
   __name(drawRecoveredSonicFrame, "drawRecoveredSonicFrame");
-  function initializeRuntimeModule12() {
+  function initializeRuntimeModule13() {
     recoveredSpriteTextures = /* @__PURE__ */ new Map();
     recoveredSpriteFrames = { "recoveredSpeedster": [{ "bounds": [20, 30, 168, 175], "anchor": [79, 153] }, { "bounds": [197, 29, 346, 183], "anchor": [83, 154] }, { "bounds": [382, 29, 536, 185], "anchor": [84, 154] }, { "bounds": [560, 28, 710, 183], "anchor": [90, 155] }, { "bounds": [737, 30, 891, 183], "anchor": [92, 153] }, { "bounds": [916, 26, 1082, 183], "anchor": [92, 157] }, { "bounds": [1107, 28, 1254, 180], "anchor": [88, 155] }, { "bounds": [1282, 24, 1434, 183], "anchor": [96, 159] }, { "bounds": [22, 200, 179, 344], "anchor": [81, 149] }, { "bounds": [198, 203, 356, 338], "anchor": [87, 146] }, { "bounds": [376, 202, 538, 347], "anchor": [89, 147] }, { "bounds": [562, 205, 716, 347], "anchor": [88, 144] }, { "bounds": [740, 206, 903, 350], "anchor": [89, 143] }, { "bounds": [914, 205, 1078, 350], "anchor": [95, 144] }, { "bounds": [1100, 203, 1256, 350], "anchor": [94, 146] }, { "bounds": [1281, 203, 1431, 351], "anchor": [89, 146] }, { "bounds": [20, 362, 151, 540], "anchor": [74, 177] }, { "bounds": [202, 360, 344, 540], "anchor": [76, 179] }, { "bounds": [385, 364, 527, 541], "anchor": [78, 175] }, { "bounds": [558, 364, 709, 541], "anchor": [89, 175] }, { "bounds": [737, 363, 913, 540], "anchor": [89, 176] }, { "bounds": [919, 364, 1090, 540], "anchor": [90, 175] }, { "bounds": [1103, 360, 1251, 540], "anchor": [85, 179] }, { "bounds": [1284, 370, 1427, 540], "anchor": [91, 169] }, { "bounds": [21, 594, 163, 721], "anchor": [84, 125] }, { "bounds": [185, 555, 356, 721], "anchor": [92, 164] }, { "bounds": [406, 607, 525, 721], "anchor": [59, 112] }, { "bounds": [585, 606, 706, 722], "anchor": [65, 113] }, { "bounds": [762, 605, 883, 721], "anchor": [67, 114] }, { "bounds": [905, 547, 1086, 713], "anchor": [98, 172] }, { "bounds": [1104, 567, 1258, 718], "anchor": [96, 152] }, { "bounds": [1279, 596, 1434, 721], "anchor": [91, 123] }, { "bounds": [20, 734, 171, 880], "anchor": [80, 147] }, { "bounds": [190, 732, 365, 882], "anchor": [92, 149] }, { "bounds": [372, 734, 547, 882], "anchor": [94, 147] }, { "bounds": [551, 747, 744, 882], "anchor": [94, 134] }, { "bounds": [744, 735, 921, 877], "anchor": [81, 146] }, { "bounds": [914, 745, 1097, 882], "anchor": [93, 136] }, { "bounds": [1112, 732, 1251, 883], "anchor": [68, 149] }, { "bounds": [1271, 743, 1440, 878], "anchor": [89, 138] }, { "bounds": [21, 892, 193, 1073], "anchor": [74, 181] }, { "bounds": [208, 889, 342, 1072], "anchor": [75, 184] }, { "bounds": [379, 894, 531, 1072], "anchor": [88, 179] }, { "bounds": [555, 901, 722, 1073], "anchor": [93, 172] }, { "bounds": [741, 892, 895, 1073], "anchor": [86, 181] }, { "bounds": [929, 890, 1067, 1075], "anchor": [79, 183] }, { "bounds": [1114, 897, 1243, 1075], "anchor": [71, 176] }, { "bounds": [1273, 899, 1432, 1075], "anchor": [102, 174] }], "recoveredPeelout": [{ "bounds": [18, 29, 174, 177], "anchor": [81, 154] }, { "bounds": [193, 27, 354, 184], "anchor": [87, 156] }, { "bounds": [375, 27, 541, 187], "anchor": [91, 156] }, { "bounds": [555, 28, 713, 187], "anchor": [95, 155] }, { "bounds": [732, 29, 895, 184], "anchor": [97, 154] }, { "bounds": [911, 26, 1088, 185], "anchor": [97, 157] }, { "bounds": [1099, 27, 1260, 184], "anchor": [96, 156] }, { "bounds": [1270, 25, 1436, 187], "anchor": [108, 158] }, { "bounds": [20, 200, 182, 346], "anchor": [83, 149] }, { "bounds": [197, 202, 360, 341], "anchor": [88, 147] }, { "bounds": [375, 202, 542, 349], "anchor": [90, 147] }, { "bounds": [563, 204, 718, 350], "anchor": [87, 145] }, { "bounds": [740, 206, 905, 354], "anchor": [89, 143] }, { "bounds": [917, 203, 1084, 354], "anchor": [92, 146] }, { "bounds": [1101, 201, 1261, 352], "anchor": [93, 148] }, { "bounds": [1278, 202, 1432, 356], "anchor": [92, 147] }, { "bounds": [19, 362, 156, 541], "anchor": [75, 177] }, { "bounds": [199, 360, 350, 542], "anchor": [79, 179] }, { "bounds": [386, 364, 531, 543], "anchor": [77, 175] }, { "bounds": [557, 364, 713, 543], "anchor": [90, 175] }, { "bounds": [739, 363, 915, 542], "anchor": [87, 176] }, { "bounds": [923, 364, 1095, 543], "anchor": [86, 175] }, { "bounds": [1107, 363, 1255, 542], "anchor": [81, 176] }, { "bounds": [1282, 371, 1429, 541], "anchor": [93, 168] }, { "bounds": [19, 592, 164, 723], "anchor": [86, 127] }, { "bounds": [185, 553, 362, 723], "anchor": [92, 166] }, { "bounds": [404, 605, 532, 727], "anchor": [61, 114] }, { "bounds": [583, 605, 711, 726], "anchor": [67, 114] }, { "bounds": [758, 605, 888, 728], "anchor": [71, 114] }, { "bounds": [906, 548, 1091, 715], "anchor": [97, 171] }, { "bounds": [1104, 566, 1261, 720], "anchor": [96, 153] }, { "bounds": [1279, 594, 1436, 722], "anchor": [91, 125] }, { "bounds": [18, 733, 174, 880], "anchor": [82, 148] }, { "bounds": [188, 733, 370, 885], "anchor": [94, 148] }, { "bounds": [372, 735, 551, 885], "anchor": [94, 146] }, { "bounds": [550, 746, 750, 884], "anchor": [95, 135] }, { "bounds": [746, 735, 925, 879], "anchor": [79, 146] }, { "bounds": [915, 744, 1099, 884], "anchor": [92, 137] }, { "bounds": [1115, 732, 1255, 885], "anchor": [65, 149] }, { "bounds": [1273, 740, 1443, 879], "anchor": [87, 141] }, { "bounds": [20, 891, 193, 1074], "anchor": [75, 182] }, { "bounds": [207, 889, 348, 1074], "anchor": [76, 184] }, { "bounds": [376, 895, 535, 1074], "anchor": [91, 178] }, { "bounds": [555, 899, 725, 1074], "anchor": [93, 174] }, { "bounds": [742, 891, 897, 1074], "anchor": [85, 182] }, { "bounds": [928, 891, 1072, 1076], "anchor": [80, 182] }, { "bounds": [1114, 895, 1246, 1076], "anchor": [71, 178] }, { "bounds": [1275, 898, 1435, 1076], "anchor": [100, 175] }] };
     Object.assign(recoveredSpriteFrames, supplementalSpriteFrames, traversalSpriteFrames);
   }
-  __name(initializeRuntimeModule12, "initializeRuntimeModule");
-  function getRuntimeBindings12() {
+  __name(initializeRuntimeModule13, "initializeRuntimeModule");
+  function getRuntimeBindings13() {
     return {
       recoveredSonicPose: {
         get: /* @__PURE__ */ __name(() => recoveredSonicPose, "get"),
@@ -4151,7 +4550,7 @@
       }
     };
   }
-  __name(getRuntimeBindings12, "getRuntimeBindings");
+  __name(getRuntimeBindings13, "getRuntimeBindings");
 
   // src/ending-art.js
   var endingSprites;
@@ -4429,14 +4828,14 @@
     }
   }
   __name(drawEndingScene, "drawEndingScene");
-  function initializeRuntimeModule13() {
+  function initializeRuntimeModule14() {
     endingSprites = /* @__PURE__ */ new Map();
     endingLoadErrors = /* @__PURE__ */ new Set();
     endingSheets = ["sonic", "shadow", "eggman", "sonic-polish", "shadow-polish", "eggman-polish"];
     for (const name of endingSheets) loadEndingArt(name);
   }
-  __name(initializeRuntimeModule13, "initializeRuntimeModule");
-  function getRuntimeBindings13() {
+  __name(initializeRuntimeModule14, "initializeRuntimeModule");
+  function getRuntimeBindings14() {
     return {
       endingSprites: {
         get: /* @__PURE__ */ __name(() => endingSprites, "get"),
@@ -4524,7 +4923,7 @@
       }
     };
   }
-  __name(getRuntimeBindings13, "getRuntimeBindings");
+  __name(getRuntimeBindings14, "getRuntimeBindings");
 
   // src/boss-game.js
   function setupBossEncounter() {
@@ -4727,13 +5126,13 @@
     }
   }
   __name(drawBossEncounter, "drawBossEncounter");
-  function initializeRuntimeModule14() {
+  function initializeRuntimeModule15() {
     state.boss = null;
     state.bossCheckpoint = false;
     state.ending = null;
   }
-  __name(initializeRuntimeModule14, "initializeRuntimeModule");
-  function getRuntimeBindings14() {
+  __name(initializeRuntimeModule15, "initializeRuntimeModule");
+  function getRuntimeBindings15() {
     return {
       setupBossEncounter: {
         get: /* @__PURE__ */ __name(() => setupBossEncounter, "get"),
@@ -4785,7 +5184,7 @@
       }
     };
   }
-  __name(getRuntimeBindings14, "getRuntimeBindings");
+  __name(getRuntimeBindings15, "getRuntimeBindings");
 
   // src/stage-runtime.js
   var neonExpressAct1Runtime;
@@ -4829,7 +5228,7 @@
     state.stageRuntime.completion();
   }
   __name(updateStageCompletion, "updateStageCompletion");
-  function initializeRuntimeModule15() {
+  function initializeRuntimeModule16() {
     state.stageRuntime = null;
     neonExpressAct1Runtime = {
       reset() {
@@ -4893,8 +5292,8 @@
       }
     };
   }
-  __name(initializeRuntimeModule15, "initializeRuntimeModule");
-  function getRuntimeBindings15() {
+  __name(initializeRuntimeModule16, "initializeRuntimeModule");
+  function getRuntimeBindings16() {
     return {
       neonExpressAct1Runtime: {
         get: /* @__PURE__ */ __name(() => neonExpressAct1Runtime, "get"),
@@ -4964,7 +5363,7 @@
       }
     };
   }
-  __name(getRuntimeBindings15, "getRuntimeBindings");
+  __name(getRuntimeBindings16, "getRuntimeBindings");
 
   // src/player-movement.js
   function jump() {
@@ -5330,10 +5729,10 @@
     return true;
   }
   __name(reboundBubbleShield, "reboundBubbleShield");
-  function initializeRuntimeModule16() {
+  function initializeRuntimeModule17() {
   }
-  __name(initializeRuntimeModule16, "initializeRuntimeModule");
-  function getRuntimeBindings16() {
+  __name(initializeRuntimeModule17, "initializeRuntimeModule");
+  function getRuntimeBindings17() {
     return {
       jump: {
         get: /* @__PURE__ */ __name(() => jump, "get"),
@@ -5397,7 +5796,7 @@
       }
     };
   }
-  __name(getRuntimeBindings16, "getRuntimeBindings");
+  __name(getRuntimeBindings17, "getRuntimeBindings");
 
   // src/world-interactions.js
   var world_interactions_exports = {};
@@ -5405,8 +5804,8 @@
     activateWorldDevices: () => activateWorldDevices,
     collectWorldRings: () => collectWorldRings,
     configureDirectionalSpikes: () => configureDirectionalSpikes,
-    getRuntimeBindings: () => getRuntimeBindings17,
-    initializeRuntimeModule: () => initializeRuntimeModule17,
+    getRuntimeBindings: () => getRuntimeBindings18,
+    initializeRuntimeModule: () => initializeRuntimeModule18,
     resolveMotionInteractions: () => resolveMotionInteractions,
     resolveSpringContact: () => resolveSpringContact,
     springFace: () => springFace,
@@ -5587,10 +5986,10 @@
     );
   }
   __name(updateWorldCheckpoints, "updateWorldCheckpoints");
-  function initializeRuntimeModule17() {
+  function initializeRuntimeModule18() {
   }
-  __name(initializeRuntimeModule17, "initializeRuntimeModule");
-  function getRuntimeBindings17() {
+  __name(initializeRuntimeModule18, "initializeRuntimeModule");
+  function getRuntimeBindings18() {
     return {
       updateWorldPlatforms: {
         get: /* @__PURE__ */ __name(() => updateWorldPlatforms, "get"),
@@ -5624,7 +6023,7 @@
       }
     };
   }
-  __name(getRuntimeBindings17, "getRuntimeBindings");
+  __name(getRuntimeBindings18, "getRuntimeBindings");
 
   // src/surface-collision.js
   var staticSurfacePoses;
@@ -6167,11 +6566,11 @@
     p.roll = p.rolling || state.charge > 0 || !p.ground;
   }
   __name(integrateSurfaceStep, "integrateSurfaceStep");
-  function initializeRuntimeModule18() {
+  function initializeRuntimeModule19() {
     staticSurfacePoses = /* @__PURE__ */ new WeakMap();
   }
-  __name(initializeRuntimeModule18, "initializeRuntimeModule");
-  function getRuntimeBindings18() {
+  __name(initializeRuntimeModule19, "initializeRuntimeModule");
+  function getRuntimeBindings19() {
     return {
       staticSurfacePoses: {
         get: /* @__PURE__ */ __name(() => staticSurfacePoses, "get"),
@@ -6277,7 +6676,7 @@
       }
     };
   }
-  __name(getRuntimeBindings18, "getRuntimeBindings");
+  __name(getRuntimeBindings19, "getRuntimeBindings");
 
   // src/pixel-world.js
   var cityMaterials;
@@ -6855,7 +7254,7 @@
     }
   }
   __name(drawCityBreakable, "drawCityBreakable");
-  function initializeRuntimeModule19() {
+  function initializeRuntimeModule20() {
     state.cityRasterContext = null;
     cityMaterials = [
       {
@@ -6922,8 +7321,8 @@
     ringPalette = { g: "#efa900", y: "#f4ef00", w: "#f4f1ec", s: "#954100" };
     pixelRingTextures = /* @__PURE__ */ new Map();
   }
-  __name(initializeRuntimeModule19, "initializeRuntimeModule");
-  function getRuntimeBindings19() {
+  __name(initializeRuntimeModule20, "initializeRuntimeModule");
+  function getRuntimeBindings20() {
     return {
       cityPixelRect: {
         get: /* @__PURE__ */ __name(() => cityPixelRect, "get"),
@@ -7077,7 +7476,7 @@
       }
     };
   }
-  __name(getRuntimeBindings19, "getRuntimeBindings");
+  __name(getRuntimeBindings20, "getRuntimeBindings");
 
   // src/blimp-route.js
   var blimpTextures;
@@ -7318,11 +7717,11 @@
     }
   }
   __name(drawBlimpRoute, "drawBlimpRoute");
-  function initializeRuntimeModule20() {
+  function initializeRuntimeModule21() {
     blimpTextures = /* @__PURE__ */ new Map();
   }
-  __name(initializeRuntimeModule20, "initializeRuntimeModule");
-  function getRuntimeBindings20() {
+  __name(initializeRuntimeModule21, "initializeRuntimeModule");
+  function getRuntimeBindings21() {
     return {
       addBlimpRoute: {
         get: /* @__PURE__ */ __name(() => addBlimpRoute, "get"),
@@ -7368,7 +7767,7 @@
       }
     };
   }
-  __name(getRuntimeBindings20, "getRuntimeBindings");
+  __name(getRuntimeBindings21, "getRuntimeBindings");
 
   // src/boost-rules.js
   function freeRailBoost() {
@@ -7527,10 +7926,10 @@
     return { ...d, x: d.x + q.x1 - s.x1, y: q.y1 + (d.x - s.x1) * q.slope };
   }
   __name(airDevicePose, "airDevicePose");
-  function initializeRuntimeModule21() {
+  function initializeRuntimeModule22() {
   }
-  __name(initializeRuntimeModule21, "initializeRuntimeModule");
-  function getRuntimeBindings21() {
+  __name(initializeRuntimeModule22, "initializeRuntimeModule");
+  function getRuntimeBindings22() {
     return {
       freeRailBoost: {
         get: /* @__PURE__ */ __name(() => freeRailBoost, "get"),
@@ -7588,14 +7987,14 @@
       }
     };
   }
-  __name(getRuntimeBindings21, "getRuntimeBindings");
+  __name(getRuntimeBindings22, "getRuntimeBindings");
 
   // src/level2.js
   var level2_exports = {};
   __export(level2_exports, {
     act2LevelTemplate: () => act2LevelTemplate,
-    getRuntimeBindings: () => getRuntimeBindings22,
-    initializeRuntimeModule: () => initializeRuntimeModule22,
+    getRuntimeBindings: () => getRuntimeBindings23,
+    initializeRuntimeModule: () => initializeRuntimeModule23,
     makeLevel2: () => makeLevel2
   });
   var act2LevelTemplate;
@@ -7614,7 +8013,7 @@
     return level;
   }
   __name(makeLevel2, "makeLevel2");
-  function initializeRuntimeModule22() {
+  function initializeRuntimeModule23() {
     act2LevelTemplate = {
       blimpRoute: {
         entered: false,
@@ -15016,8 +15415,8 @@
       ]
     };
   }
-  __name(initializeRuntimeModule22, "initializeRuntimeModule");
-  function getRuntimeBindings22() {
+  __name(initializeRuntimeModule23, "initializeRuntimeModule");
+  function getRuntimeBindings23() {
     return {
       act2LevelTemplate: {
         get: /* @__PURE__ */ __name(() => act2LevelTemplate, "get"),
@@ -15033,14 +15432,14 @@
       }
     };
   }
-  __name(getRuntimeBindings22, "getRuntimeBindings");
+  __name(getRuntimeBindings23, "getRuntimeBindings");
 
   // src/traversal-animations.js
   var traversal_animations_exports = {};
   __export(traversal_animations_exports, {
     beginTraversalLaunch: () => beginTraversalLaunch,
-    getRuntimeBindings: () => getRuntimeBindings23,
-    initializeRuntimeModule: () => initializeRuntimeModule23,
+    getRuntimeBindings: () => getRuntimeBindings24,
+    initializeRuntimeModule: () => initializeRuntimeModule24,
     resetTraversalAnimation: () => resetTraversalAnimation,
     traversalAnimation: () => traversalAnimation,
     traversalGroundState: () => traversalGroundState,
@@ -15146,11 +15545,11 @@
     );
   }
   __name(traversalSonicPose, "traversalSonicPose");
-  function initializeRuntimeModule23() {
+  function initializeRuntimeModule24() {
     traversalAnimation = { state: null, since: 0, launch: null };
   }
-  __name(initializeRuntimeModule23, "initializeRuntimeModule");
-  function getRuntimeBindings23() {
+  __name(initializeRuntimeModule24, "initializeRuntimeModule");
+  function getRuntimeBindings24() {
     return {
       traversalAnimation: {
         get: /* @__PURE__ */ __name(() => traversalAnimation, "get"),
@@ -15196,7 +15595,7 @@
       }
     };
   }
-  __name(getRuntimeBindings23, "getRuntimeBindings");
+  __name(getRuntimeBindings24, "getRuntimeBindings");
 
   // src/game.js
   var canvas;
@@ -16400,7 +16799,7 @@
     return { ...readGameState(), framesAdvanced };
   }
   __name(stepGameFrames, "stepGameFrames");
-  function initializeRuntimeModule24() {
+  function initializeRuntimeModule25() {
     canvas = document.querySelector("#game");
     ctx = canvas.getContext("2d");
     $ = /* @__PURE__ */ __name((s) => document.querySelector(s), "$");
@@ -16726,8 +17125,8 @@
     if (state.selectedAct === 2) selectAct(2);
     requestAnimationFrame(frame);
   }
-  __name(initializeRuntimeModule24, "initializeRuntimeModule");
-  function getRuntimeBindings24() {
+  __name(initializeRuntimeModule25, "initializeRuntimeModule");
+  function getRuntimeBindings25() {
     return {
       canvas: {
         get: /* @__PURE__ */ __name(() => canvas, "get"),
@@ -17133,7 +17532,7 @@
       }
     };
   }
-  __name(getRuntimeBindings24, "getRuntimeBindings");
+  __name(getRuntimeBindings25, "getRuntimeBindings");
 
   // src/playtest-ground.js
   var playtest_ground_exports = {};
@@ -17142,13 +17541,13 @@
     beginGroundTick: () => beginGroundTick,
     createGroundPlayer: () => createGroundPlayer,
     finishGroundTick: () => finishGroundTick,
-    getRuntimeBindings: () => getRuntimeBindings25,
+    getRuntimeBindings: () => getRuntimeBindings26,
     groundBounds: () => groundBounds,
     groundContact: () => groundContact,
     groundEnergy: () => groundEnergy,
     groundResist: () => groundResist,
     groundTuning: () => groundTuning,
-    initializeRuntimeModule: () => initializeRuntimeModule25,
+    initializeRuntimeModule: () => initializeRuntimeModule26,
     sampleGround: () => sampleGround,
     stepGroundPlayer: () => stepGroundPlayer
   });
@@ -17232,29 +17631,33 @@
     return { direction, rolling, braking };
   }
   __name(beginGroundTick, "beginGroundTick");
-  function advanceGroundSubstep(player, controls, dt, sampler = sampleGround) {
+  function advanceGroundSubstep(player, controls, dt, sampler = sampleGround, arcLength = false) {
     const t = groundTuning, { direction, rolling, braking } = controls;
-    const before = sampler(player.scenario, player.x);
+    const position = arcLength ? player.pathS : player.x;
+    const before = sampler(player.scenario, position);
     const rollBrake = direction * player.speed < 0 ? t.rollBrake * (1 - Math.abs(before.ty)) * Math.min(1, Math.abs(player.speed) / t.rollBrakeFadeSpeed) : 0;
     const resistance = rolling ? t.rollResistance + rollBrake : (direction ? 0 : t.coastResistance) + (braking ? t.brake : 0);
     const drive = !rolling && direction && !braking ? direction * Math.min(t.acceleration, Math.max(0, t.runRange - player.speed * direction) / dt) : 0;
-    const midpointX = player.x + player.speed * before.tx * dt / 2;
+    const midpointX = position + player.speed * (arcLength ? 1 : before.tx) * dt / 2;
     const midpoint = sampler(player.scenario, midpointX);
     const slopeFactor = rolling && player.speed * midpoint.ty > 0 ? t.rollDownhillMultiplier : 1;
     const nextSpeed = groundResist(
       player.speed + (t.gravity * midpoint.ty * slopeFactor + drive) * dt,
       resistance * dt
     );
-    player.x += (player.speed + nextSpeed) * 0.5 * midpoint.tx * dt;
+    if (arcLength) player.pathS += (player.speed + nextSpeed) * 0.5 * dt;
+    else player.x += (player.speed + nextSpeed) * 0.5 * midpoint.tx * dt;
     player.distance += Math.abs((player.speed + nextSpeed) * 0.5 * dt);
     player.speed = nextSpeed;
   }
   __name(advanceGroundSubstep, "advanceGroundSubstep");
-  function finishGroundTick(player, controls, sampler = sampleGround, canStand2 = true, bounds = groundBounds) {
+  function finishGroundTick(player, controls, sampler = sampleGround, canStand2 = true, bounds = groundBounds, arcLength = false) {
     const t = groundTuning, { rolling } = controls;
     player.ticks++;
     if (Math.abs(player.speed) > 0.02) player.facing = Math.sign(player.speed);
-    const slopeForce = Math.abs(t.gravity * sampler(player.scenario, player.x).ty);
+    const slopeForce = Math.abs(
+      t.gravity * sampler(player.scenario, arcLength ? player.pathS : player.x).ty
+    );
     const turning = controls.direction * player.facing < 0 && Math.abs(player.speed) <= t.rollTurnSpeed;
     if (rolling && turning && slopeForce <= t.rollResistance && canStand2) {
       player.posture = "standing";
@@ -17278,7 +17681,7 @@
     finishGroundTick(player, controls);
   }
   __name(stepGroundPlayer, "stepGroundPlayer");
-  function initializeRuntimeModule25() {
+  function initializeRuntimeModule26() {
     groundTuning = Object.freeze({
       revision: "GROUND-5",
       hz: 60,
@@ -17302,21 +17705,22 @@
       rollDiameter: 38
     });
   }
-  __name(initializeRuntimeModule25, "initializeRuntimeModule");
-  function getRuntimeBindings25() {
+  __name(initializeRuntimeModule26, "initializeRuntimeModule");
+  function getRuntimeBindings26() {
     return {};
   }
-  __name(getRuntimeBindings25, "getRuntimeBindings");
+  __name(getRuntimeBindings26, "getRuntimeBindings");
 
   // src/playtest-motion.js
   var playtest_motion_exports = {};
   __export(playtest_motion_exports, {
+    advanceMotionGround: () => advanceMotionGround,
     bodyBoxDistance: () => bodyBoxDistance,
     createMotionPlayer: () => createMotionPlayer,
     firstAirImpact: () => firstAirImpact,
     floorBodyDistance: () => floorBodyDistance,
-    getRuntimeBindings: () => getRuntimeBindings26,
-    initializeRuntimeModule: () => initializeRuntimeModule26,
+    getRuntimeBindings: () => getRuntimeBindings27,
+    initializeRuntimeModule: () => initializeRuntimeModule27,
     landMotion: () => landMotion,
     motionBody: () => motionBody,
     motionBounds: () => motionBounds,
@@ -17325,13 +17729,16 @@
     motionPostureClear: () => motionPostureClear,
     motionReaction: () => motionReaction,
     motionSpans: () => motionSpans,
+    motionSpawn: () => motionSpawn,
     motionSupported: () => motionSupported,
+    motionSurface: () => motionSurface,
     motionTrajectory: () => motionTrajectory,
     motionTuning: () => motionTuning,
     moveAirTime: () => moveAirTime,
     releaseMotion: () => releaseMotion,
     sampleMotionExtension: () => sampleMotionExtension,
     sampleMotionGround: () => sampleMotionGround,
+    sampleMotionPath: () => sampleMotionPath,
     stepMotionPlayer: () => stepMotionPlayer,
     sweepGroundBox: () => sweepGroundBox,
     sweepMotionDistance: () => sweepMotionDistance
@@ -17345,6 +17752,7 @@
   }
   __name(motionBounds, "motionBounds");
   function motionSpans(scenario) {
+    if (playtestPaths[scenario]) return [];
     const b = motionBounds(scenario);
     return scenario === "gap" ? [
       [-b, 100],
@@ -17386,11 +17794,14 @@
   function createMotionPlayer(scenario = "flat") {
     motionBounds(scenario);
     const x = motionFixtures[scenario].spawn;
+    const path = playtestPaths[scenario];
+    const spawn = path ? samplePath(path, x) : sampleMotionExtension(scenario, x);
     return {
       ...createGroundPlayer(),
       scenario,
-      x,
-      y: sampleMotionExtension(scenario, x).y,
+      x: spawn.x,
+      y: spawn.y,
+      ...path ? { pathS: x } : {},
       mode: "grounded",
       air: null,
       latestTransition: "reset",
@@ -17400,6 +17811,31 @@
     };
   }
   __name(createMotionPlayer, "createMotionPlayer");
+  function motionSpawn(scenario) {
+    return playtestPaths[scenario] ? samplePath(playtestPaths[scenario], motionFixtures[scenario].spawn) : sampleMotionExtension(scenario, motionFixtures[scenario].spawn);
+  }
+  __name(motionSpawn, "motionSpawn");
+  function motionSurface(player) {
+    return playtestPaths[player.scenario] ? samplePath(playtestPaths[player.scenario], player.pathS) : sampleMotionGround(player.scenario, player.x);
+  }
+  __name(motionSurface, "motionSurface");
+  function sampleMotionPath(scenario, s) {
+    return samplePath(playtestPaths[scenario], s);
+  }
+  __name(sampleMotionPath, "sampleMotionPath");
+  function advanceMotionGround(player, controls, dt) {
+    const path = playtestPaths[player.scenario];
+    advanceGroundSubstep(
+      player,
+      controls,
+      dt,
+      path ? sampleMotionPath : sampleMotionExtension,
+      !!path
+    );
+    if (path) syncPathPlayer(player);
+    else player.y = sampleMotionExtension(player.scenario, player.x).y;
+  }
+  __name(advanceMotionGround, "advanceMotionGround");
   function motionReaction(player, surface) {
     const radius = player.posture === "rolling" ? 19 : 24;
     const normalAcceleration = player.speed * player.speed * surface.curvature * (1 + radius * surface.curvature);
@@ -17407,18 +17843,37 @@
   }
   __name(motionReaction, "motionReaction");
   function motionSupported(player, surface) {
+    if (surface.pathS !== void 0) {
+      const steep = surface.ny >= -Math.SQRT1_2;
+      if (steep && Math.abs(player.speed) < motionTuning.steepGripSpeed) return false;
+      if (steep && Math.abs(surface.curvature) < 1e-9) return true;
+      return player.posture === "standing" && surface.ny < -Math.SQRT1_2 && surface.curvature >= 0 || motionReaction(player, surface) >= -1e-6;
+    }
     return player.posture === "standing" || motionReaction(player, surface) >= -1e-6;
   }
   __name(motionSupported, "motionSupported");
   function motionContact(player) {
     if (player.mode === "grounded") {
-      const c = groundContact(player, sampleMotionExtension);
+      const path = playtestPaths[player.scenario];
+      const surface = path ? motionSurface(player) : null;
+      const body = path ? pathBody(player) : null;
+      const c = path ? {
+        ...surface,
+        anchor: { x: surface.x, y: surface.y },
+        center: { x: body.x, y: body.y },
+        width: body.hw * 2,
+        height: body.hh * 2,
+        speed: player.speed,
+        vx: player.speed * surface.tx,
+        vy: player.speed * surface.ty
+      } : groundContact(player, sampleMotionExtension);
       const reaction = motionReaction(player, c);
       return {
         ...c,
         grounded: true,
         normalReaction: reaction,
-        uprightGrip: player.posture === "standing" && reaction < -1e-6
+        uprightGrip: player.posture === "standing" && c.ny < -Math.SQRT1_2 && reaction < -1e-6,
+        steepGrip: !!path && c.ny >= -Math.SQRT1_2 && Math.abs(c.curvature) < 1e-9
       };
     }
     const height = player.posture === "rolling" ? 38 : 48, width = player.posture === "rolling" ? 38 : 22;
@@ -17444,6 +17899,8 @@
   }
   __name(motionContact, "motionContact");
   function motionBody(player, posture = player.posture) {
+    if (player.mode === "grounded" && playtestPaths[player.scenario])
+      return pathBody(player, posture);
     const height = posture === "rolling" ? 38 : 48, width = posture === "rolling" ? 38 : 22;
     const s = player.mode === "grounded" ? sampleMotionExtension(player.scenario, player.x) : null;
     return {
@@ -17499,6 +17956,12 @@
       ))
         return false;
     }
+    if (playtestPaths[player.scenario] && pathDistances(
+      playtestPaths[player.scenario],
+      body,
+      player.mode === "grounded" ? player.pathS : null
+    ).some((q) => q.distance < -motionTuning.skin))
+      return false;
     return true;
   }
   __name(motionPostureClear, "motionPostureClear");
@@ -17621,6 +18084,65 @@
       });
       if (result && (!hit || result.time < hit.time)) hit = result;
     }
+    const path = playtestPaths[player.scenario];
+    if (path)
+      for (const piece of path.pieces) {
+        const accept = /* @__PURE__ */ __name((q) => {
+          if (a.departure?.includes(q.id) && Math.abs(q.surface.pathS - a.pathOrigin) > a.pathReach)
+            return false;
+          return !(a.separation?.id === q.id && !a.separation.cleared && Math.abs(q.distance) <= motionTuning.separation);
+        }, "accept");
+        if (piece.kind === "arc") {
+          const face = pathArcImpact(
+            body,
+            a.vx,
+            a.vy,
+            ax,
+            ay,
+            duration,
+            piece,
+            path,
+            motionTuning.skin,
+            accept
+          );
+          if (face && (!hit || face.time < hit.time)) hit = face;
+          for (const cap of pathArcCaps(piece, path)) {
+            const result = sweepMotionDistance(
+              body,
+              a.vx,
+              a.vy,
+              ax,
+              ay,
+              duration,
+              (b) => {
+                const q = {
+                  ...pathLineDistance(b, cap, { ...path, thickness: 0 }),
+                  kind: "box",
+                  canLand: false
+                };
+                return accept(q) ? q : null;
+              },
+              true
+            );
+            if (result && (!hit || result.time < hit.time)) hit = result;
+          }
+        } else {
+          const result = sweepMotionDistance(
+            body,
+            a.vx,
+            a.vy,
+            ax,
+            ay,
+            duration,
+            (b) => {
+              const q = pathLineDistance(b, piece, path);
+              return accept(q) ? q : null;
+            },
+            true
+          );
+          if (result && (!hit || result.time < hit.time)) hit = result;
+        }
+      }
     return hit;
   }
   __name(firstAirImpact, "firstAirImpact");
@@ -17673,7 +18195,8 @@
     let center = c.center;
     if (jump2 && motionPostureClear(player, "rolling")) {
       player.posture = "rolling";
-      center = { x: c.x + c.nx * 19, y: c.y + c.ny * 19 };
+      const body = motionBody(player);
+      center = { x: body.x, y: body.y };
     }
     const impulse = jump2 ? motionTuning.jumpImpulse : 0;
     const after = { vx: before.vx + c.nx * impulse, vy: before.vy + c.ny * impulse };
@@ -17685,12 +18208,20 @@
       anchor: c.anchor,
       reaction: c.normalReaction
     };
+    const path = playtestPaths[player.scenario];
+    const pathOrigin = player.pathS;
+    const shape = motionBody(player);
+    const pathReach = shape.hw + shape.hh + (path?.thickness || 0) + 2;
+    const departure = path ? pathDistances(path, { ...motionBody(player), x: center.x, y: center.y, angle: 0 }).filter((q) => q.distance < 0 && Math.abs(q.surface.pathS - player.pathS) > pathReach).map((q) => q.id) : [];
+    if (path) player.pathS = null;
     player.x = center.x;
     player.y = center.y;
     player.speed = null;
     player.mode = "airborne";
     player.air = {
       ...after,
+      departure,
+      ...path ? { pathOrigin, pathReach } : {},
       jumpLift: Math.max(0, -c.ny * impulse),
       cutEligible: jump2,
       restorePosture: previous,
@@ -17708,7 +18239,21 @@
     a.vx += ax * time;
     a.vy += ay * time;
     a.jumpLift = Math.max(0, a.jumpLift - groundTuning.gravity * time);
+    const path = playtestPaths[player.scenario];
+    if (path && a.departure?.length) {
+      const distances = pathDistances(path, motionBody(player));
+      a.departure = a.departure.filter(
+        (id) => distances.some((q) => q.id === id && q.distance <= motionTuning.separation)
+      );
+    }
     if (a.separation && !a.separation.cleared) {
+      if (playtestPaths[player.scenario]) {
+        const q2 = pathDistances(playtestPaths[player.scenario], motionBody(player)).find(
+          (q3) => q3.id === a.separation.id
+        );
+        if (!q2 || q2.distance > motionTuning.separation) a.separation.cleared = true;
+        return;
+      }
       const span = motionSpans(player.scenario).find(
         (s, i) => player.scenario + "-floor-" + i === a.separation.id
       );
@@ -17723,6 +18268,52 @@
   }
   __name(moveAirTime, "moveAirTime");
   function landMotion(player, hit, incoming) {
+    const path = playtestPaths[player.scenario];
+    if (path) {
+      const piece = hit.surface.piece;
+      let pathS;
+      if (piece.kind === "line")
+        pathS = piece.start + Math.max(
+          0,
+          Math.min(piece.length, (player.x - piece.x) * piece.tx + (player.y - piece.y) * piece.ty)
+        );
+      else {
+        let angle = Math.atan2(player.x - piece.cx, player.y - piece.cy);
+        while (angle < piece.a - 1e-9) angle += Math.PI * 2;
+        angle = Math.max(piece.a, Math.min(piece.b, angle));
+        pathS = piece.start + (angle - piece.a) * piece.r;
+      }
+      const surface = samplePath(path, pathS), speed2 = incoming.vx * surface.tx + incoming.vy * surface.ty;
+      const candidate2 = {
+        ...player,
+        pathS,
+        x: surface.x,
+        y: surface.y,
+        mode: "grounded",
+        air: null,
+        speed: speed2
+      };
+      const posture2 = [player.air.restorePosture, player.posture].find((posture3) => {
+        candidate2.posture = posture3;
+        return motionSupported(candidate2, surface) && motionPostureClear(candidate2, posture3);
+      });
+      if (!posture2) return false;
+      Object.assign(player, candidate2, {
+        posture: posture2,
+        restTicks: 0,
+        latestTransition: "landing",
+        transitionCount: player.transitionCount + 1
+      });
+      player.lastLanding = {
+        incoming,
+        speed: speed2,
+        tx: surface.tx,
+        ty: surface.ty,
+        normal: { x: surface.nx, y: surface.ny },
+        anchor: { x: surface.x, y: surface.y }
+      };
+      return true;
+    }
     const restore = player.air.restorePosture;
     let x = hit.surface.x;
     if (player.posture === "standing") {
@@ -17782,49 +18373,60 @@
             rolling: player.posture === "rolling",
             braking: direction * player.speed < 0
           };
-          const current = sampleMotionGround(player.scenario, player.x);
+          const path = playtestPaths[player.scenario];
+          const current = motionSurface(player);
           if (!current) {
             releaseMotion(player, "ledge");
             continue;
           }
           if (!motionSupported(player, current)) {
-            releaseMotion(player, "crest");
+            releaseMotion(player, path ? "lost support / traction" : "crest");
             continue;
           }
+          const duration = path ? Math.min(
+            remaining,
+            0.04 / Math.max(1e-9, Math.abs(player.speed) * Math.abs(current.curvature))
+          ) : remaining;
           const candidate = { ...player };
-          advanceGroundSubstep(candidate, controls, remaining, sampleMotionExtension);
-          const span = motionSpans(player.scenario).find(([a, b]) => player.x >= a && player.x <= b);
-          let event = null, time = remaining;
-          const beyond = candidate.x < span[0] || candidate.x > span[1];
+          advanceMotionGround(candidate, controls, duration);
+          const position = /* @__PURE__ */ __name((p2) => path ? p2.pathS : p2.x, "position");
+          const span = path ? [0, path.length] : motionSpans(player.scenario).find(([a, b]) => player.x >= a && player.x <= b);
+          let event = null, time = duration;
+          const beyond = position(candidate) < span[0] || position(candidate) > span[1];
           const supported = motionSupported(
             candidate,
-            sampleMotionExtension(player.scenario, candidate.x)
+            path ? sampleMotionPath(player.scenario, candidate.pathS) : sampleMotionExtension(player.scenario, candidate.x)
           );
           if (beyond || !supported) {
-            let lo = 0, hi = remaining;
+            let lo = 0, hi = duration;
             for (let n = 0; n < 30; n++) {
               const mid = (lo + hi) / 2, q = { ...player };
-              advanceGroundSubstep(q, controls, mid, sampleMotionExtension);
-              if (q.x < span[0] || q.x > span[1] || !motionSupported(q, sampleMotionExtension(q.scenario, q.x)))
+              advanceMotionGround(q, controls, mid);
+              if (position(q) < span[0] || position(q) > span[1] || !motionSupported(
+                q,
+                path ? sampleMotionPath(q.scenario, q.pathS) : sampleMotionExtension(q.scenario, q.x)
+              ))
                 hi = mid;
               else lo = mid;
             }
             time = hi;
-            event = beyond ? "ledge" : "crest";
+            event = beyond ? path ? "path boundary" : "ledge" : path ? "lost support / traction" : "crest";
           }
           for (const box of motionFixtures[player.scenario].boxes) {
-            const hit = sweepGroundBox(motionBody(player), motionBody(candidate), box, remaining);
+            const hit = sweepGroundBox(motionBody(player), motionBody(candidate), box, duration);
             if (hit && hit.time <= time) {
               time = hit.time;
               event = "block";
             }
           }
-          if (time > 0) advanceGroundSubstep(player, controls, time, sampleMotionExtension);
-          player.y = sampleMotionExtension(player.scenario, player.x).y;
+          if (time > 0) advanceMotionGround(player, controls, time);
           remaining -= time;
           if (event === "block") {
             player.speed = 0;
             player.latestTransition = "wall / clearance block";
+            remaining = 0;
+          } else if (event === "path boundary") {
+            player.boundary = "test path boundary reset";
             remaining = 0;
           } else if (event) releaseMotion(player, event);
         } else {
@@ -17881,9 +18483,10 @@
       finishGroundTick(
         player,
         controls || { rolling: player.posture === "rolling" },
-        sampleMotionExtension,
+        playtestPaths[player.scenario] ? sampleMotionPath : sampleMotionExtension,
         motionPostureClear(player, "standing"),
-        motionBounds
+        motionBounds,
+        !!playtestPaths[player.scenario]
       );
     else {
       player.ticks++;
@@ -17896,9 +18499,10 @@
       player.boundary = "test boundary / fall recovery reset";
   }
   __name(stepMotionPlayer, "stepMotionPlayer");
-  function initializeRuntimeModule26() {
+  function initializeRuntimeModule27() {
     motionTuning = Object.freeze({
-      revision: "AIR-2 / GROUND-5",
+      revision: "PATH-1 / AIR-2 / GROUND-5",
+      steepGripSpeed: 2.5,
       jumpImpulse: 10.5,
       cutRatio: 0.4,
       airAcceleration: 0.08,
@@ -17908,6 +18512,12 @@
       separation: 2e-3
     });
     motionFixtures = Object.freeze({
+      ...Object.fromEntries(
+        Object.entries(playtestPaths).map(([id, path]) => [
+          id,
+          { bounds: 1300, spawn: id.endsWith("reverse") ? path.length - 140 : 140, boxes: [], path }
+        ])
+      ),
       flat: { bounds: 5e3, spawn: 0, boxes: [] },
       valley: { bounds: 2400, spawn: 0, boxes: [] },
       crest: { bounds: 1800, spawn: -600, boxes: [] },
@@ -17927,11 +18537,11 @@
       }
     });
   }
-  __name(initializeRuntimeModule26, "initializeRuntimeModule");
-  function getRuntimeBindings26() {
+  __name(initializeRuntimeModule27, "initializeRuntimeModule");
+  function getRuntimeBindings27() {
     return {};
   }
-  __name(getRuntimeBindings26, "getRuntimeBindings");
+  __name(getRuntimeBindings27, "getRuntimeBindings");
 
   // src/playtest.js
   var playtestState;
@@ -17953,14 +18563,15 @@
   __name(clearPlaytestInput, "clearPlaytestInput");
   function resetPlaytest(scenario = playtestState.player?.scenario || "flat", reason = "manual reset") {
     keys.clear();
+    const spawn = motionSpawn(scenario);
     Object.assign(playtestState, {
       frames: 0,
       rollPressed: false,
       jumpPressed: false,
       player: createMotionPlayer(scenario),
       camera: {
-        x: motionFixtures[scenario].spawn - W / 2,
-        y: sampleMotionExtension(scenario, motionFixtures[scenario].spawn).y - H * 0.66,
+        x: spawn.x - W / 2,
+        y: spawn.y - H * 0.66,
         zoom: 1
       },
       resetCount: (playtestState.resetCount ?? -1) + 1,
@@ -17997,7 +18608,7 @@
     });
     $("#game-shell").classList.add("playtest");
     $("#playtest-status").hidden = false;
-    $("#playtest-status").textContent = "Static-surface experiment \xB7 Space: jump / release: short hop \xB7 No boost or Spin Dash. R resets fixture.";
+    $("#playtest-status").textContent = "Static-surface experiment \xB7 Space: jump / release: short hop \xB7 Down: roll \xB7 Hold direction through loops. R resets.";
     $("#game-controls").hidden = true;
     $("#playtest-controls").hidden = false;
     $("#game-hint").hidden = true;
@@ -18075,8 +18686,20 @@
       if (player.boundary) resetPlaytest(player.scenario, player.boundary);
       else {
         const contact = motionContact(player), camera = playtestState.camera;
-        camera.x += (contact.x - W / 2 + contact.vx * 8 - camera.x) * 0.12;
+        const path = motionFixtures[player.scenario].path;
+        const look = path ? Math.max(-W * 0.25, Math.min(W * 0.25, contact.vx * 8)) : contact.vx * 8;
+        camera.x += (contact.x - W / 2 + look - camera.x) * 0.12;
         camera.y += (contact.y - H * 0.66 - camera.y) * 0.12;
+        if (path) {
+          camera.x = Math.max(
+            contact.center.x - W * 0.9,
+            Math.min(contact.center.x - W * 0.1, camera.x)
+          );
+          camera.y = Math.max(
+            contact.center.y - H * 0.85,
+            Math.min(contact.center.y - H * 0.42, camera.y)
+          );
+        }
       }
     }
     updatePlaytestHud();
@@ -18104,8 +18727,8 @@
     $("#playtest-frame").textContent = String(playtestState.frames);
     $("#playtest-input").textContent = [...keys].join(", ") || "none";
     $("#playtest-debug").textContent = `${motionTuning.revision} \xB7 ${player.scenario} \xB7 gsp ${c.grounded ? c.speed.toFixed(3) : "\u2014"} \xB7 v(${c.vx.toFixed(3)}, ${c.vy.toFixed(3)}) \xB7 angle ${(c.angle * 180 / Math.PI).toFixed(2)}\xB0
-${c.grounded ? "CONTACT" : "AIR REF"} (${c.x.toFixed(2)}, ${c.y.toFixed(2)}) \xB7 body ${c.width}\xD7${c.height} \xB7 center (${c.center.x.toFixed(2)}, ${c.center.y.toFixed(2)}) \xB7 normal ${c.grounded ? `(${c.nx.toFixed(3)}, ${c.ny.toFixed(3)})` : "none"} \xB7 N ${c.normalReaction.toFixed(3)}${c.uprightGrip ? " \xB7 UPRIGHT CREST GRIP" : ""}
-${player.latestTransition} \xB7 controller ticks ${player.ticks} \xB7 reset ${playtestState.resetCount}: ${playtestState.resetReason}`;
+${c.grounded ? "CONTACT" : "AIR REF"} (${c.x.toFixed(2)}, ${c.y.toFixed(2)}) \xB7 body ${c.width}\xD7${c.height} \xB7 center (${c.center.x.toFixed(2)}, ${c.center.y.toFixed(2)}) \xB7 normal ${c.grounded ? `(${c.nx.toFixed(3)}, ${c.ny.toFixed(3)})` : "none"} \xB7 N ${c.normalReaction.toFixed(3)}${c.uprightGrip ? " \xB7 UPRIGHT CREST GRIP" : ""}${c.steepGrip ? " \xB7 STEEP GRIP \u22652.5" : ""}
+${player.pathS != null ? "path s " + player.pathS.toFixed(2) + " \xB7 " : ""}${player.latestTransition} \xB7 controller ticks ${player.ticks} \xB7 reset ${playtestState.resetCount}: ${playtestState.resetReason}`;
   }
   __name(updatePlaytestHud, "updatePlaytestHud");
   function readPlaytestState() {
@@ -18118,7 +18741,7 @@ ${player.latestTransition} \xB7 controller ticks ${player.ticks} \xB7 reset ${pl
       frame: playtestState.frames,
       player: { ...player },
       contact: motionContact(player),
-      energy: player.mode === "grounded" ? groundEnergy(player, sampleMotionExtension) : null,
+      energy: player.mode === "grounded" ? motionFixtures[player.scenario].path ? player.speed ** 2 / 2 + groundTuning.gravity * (650 - player.y) : groundEnergy(player, sampleMotionExtension) : null,
       camera: { ...playtestState.camera },
       inputs: [...keys],
       resetCount: playtestState.resetCount,
@@ -18129,7 +18752,8 @@ ${player.latestTransition} \xB7 controller ticks ${player.ticks} \xB7 reset ${pl
   function drawGroundPlayer(player) {
     const c = motionContact(player), rolling = player.posture === "rolling";
     ctx.save();
-    ctx.translate(c.x, c.y);
+    const footShift = c.grounded ? Math.hypot(c.center.x - c.x, c.center.y - c.y) - c.height / 2 : 0;
+    ctx.translate(c.x + c.nx * footShift, c.y + c.ny * footShift);
     ctx.rotate(c.angle);
     const sheet = art.recoveredSpeedster ? "recoveredSpeedster" : "recoveredPeelout";
     const index = rolling ? 26 + Math.floor(player.distance / 10) % 3 : Math.abs(player.speed) > 0.1 ? Math.floor(player.distance / 12) % 8 : 16;
@@ -18164,11 +18788,11 @@ ${player.latestTransition} \xB7 controller ticks ${player.ticks} \xB7 reset ${pl
       ctx.stroke();
     } else ctx.strokeRect(-c.width / 2, -c.height, c.width, c.height);
     ctx.fillStyle = c.grounded ? "#ffd54a" : "#f48bdf";
-    ctx.fillRect(-3, c.grounded ? -3 : -c.height / 2 - 3, 6, 6);
+    ctx.fillRect(-3, c.grounded ? footShift - 3 : -c.height / 2 - 3, 6, 6);
     if (c.grounded) {
       ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(0, -65);
+      ctx.moveTo(0, footShift);
+      ctx.lineTo(0, footShift - 65);
       ctx.stroke();
     }
     ctx.restore();
@@ -18210,6 +18834,25 @@ ${player.latestTransition} \xB7 controller ticks ${player.ticks} \xB7 reset ${pl
       ctx.lineTo(b, sampleMotionExtension(player.scenario, b).y);
       ctx.stroke();
     }
+    const path = motionFixtures[player.scenario].path;
+    if (path)
+      for (const piece of path.pieces) {
+        const samples = [];
+        for (let s = piece.start; s < piece.end; s += 4) samples.push(samplePath(path, s));
+        samples.push(samplePath(path, piece.end));
+        ctx.beginPath();
+        samples.forEach((p2, i) => i ? ctx.lineTo(p2.x, p2.y) : ctx.moveTo(p2.x, p2.y));
+        for (const p2 of [...samples].reverse())
+          ctx.lineTo(p2.x - p2.nx * path.thickness, p2.y - p2.ny * path.thickness);
+        ctx.closePath();
+        ctx.fillStyle = "#39355f";
+        ctx.fill();
+        ctx.beginPath();
+        samples.forEach((p2, i) => i ? ctx.lineTo(p2.x, p2.y) : ctx.moveTo(p2.x, p2.y));
+        ctx.strokeStyle = "#61d9f1";
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
     for (const box of motionFixtures[player.scenario].boxes) {
       ctx.fillStyle = "#6d396c";
       ctx.fillRect(box.x1, box.y1, box.x2 - box.x1, box.y2 - box.y1);
@@ -18220,23 +18863,24 @@ ${player.latestTransition} \xB7 controller ticks ${player.ticks} \xB7 reset ${pl
     ctx.textAlign = "center";
     ctx.font = "14px monospace";
     for (const x of [-limit, limit]) {
-      const y = sampleMotionExtension(player.scenario, x).y;
+      const marker = path ? samplePath(path, x < 0 ? 0 : path.length) : sampleMotionExtension(player.scenario, x);
+      const markerX = marker.x, y = marker.y;
       ctx.fillStyle = "#ffae44";
-      ctx.fillRect(x - 2, y - 170, 4, 170);
-      ctx.fillText("TEST BOUNDARY \u2192 RESET", x - Math.sign(x) * 120, y - 130);
+      ctx.fillRect(markerX - 2, y - 170, 4, 170);
+      ctx.fillText("TEST BOUNDARY \u2192 RESET", markerX - Math.sign(x) * 120, y - 130);
     }
-    const spawn = sampleMotionExtension(player.scenario, motionFixtures[player.scenario].spawn);
+    const spawn = motionSpawn(player.scenario);
     ctx.fillStyle = "#b4b9d2";
     ctx.fillText("SAFE SPAWN \xB7 R RESET", spawn.x, spawn.y + 45);
     drawGroundPlayer(player);
     ctx.restore();
   }
   __name(drawPlaytest, "drawPlaytest");
-  function initializeRuntimeModule27() {
+  function initializeRuntimeModule28() {
     playtestState = null;
   }
-  __name(initializeRuntimeModule27, "initializeRuntimeModule");
-  function getRuntimeBindings27() {
+  __name(initializeRuntimeModule28, "initializeRuntimeModule");
+  function getRuntimeBindings28() {
     return {
       playtestState: {
         get: /* @__PURE__ */ __name(() => playtestState, "get"),
@@ -18246,7 +18890,7 @@ ${player.latestTransition} \xB7 controller ticks ${player.ticks} \xB7 reset ${pl
       }
     };
   }
-  __name(getRuntimeBindings27, "getRuntimeBindings");
+  __name(getRuntimeBindings28, "getRuntimeBindings");
 
   // src/act2.js
   var cameraTracking;
@@ -18259,7 +18903,7 @@ ${player.latestTransition} \xB7 controller ticks ${player.ticks} \xB7 reset ${pl
       updatePlaytestHud();
       show(
         "PLAYTEST",
-        "Isolated static-surface experiment.<br>Jumping, air control and six test fixtures \xB7 No boost or Spin Dash.",
+        "Isolated static-surface experiment.<br>Ground, air and curved-surface fixtures \xB7 No boost or Spin Dash.",
         "OPEN PLAYTEST"
       );
       return;
@@ -18760,12 +19404,12 @@ ${player.latestTransition} \xB7 controller ticks ${player.ticks} \xB7 reset ${pl
     ctx.stroke();
   }
   __name(drawClimbCue, "drawClimbCue");
-  function initializeRuntimeModule28() {
+  function initializeRuntimeModule29() {
     cameraTracking = { anchor: 0.64, lift: 0, prediction: 0, velocity: 0, lastY: null };
     skylineSmokeSprites = /* @__PURE__ */ new Map();
   }
-  __name(initializeRuntimeModule28, "initializeRuntimeModule");
-  function getRuntimeBindings28() {
+  __name(initializeRuntimeModule29, "initializeRuntimeModule");
+  function getRuntimeBindings29() {
     return {
       selectAct: {
         get: /* @__PURE__ */ __name(() => selectAct, "get"),
@@ -18895,7 +19539,7 @@ ${player.latestTransition} \xB7 controller ticks ${player.ticks} \xB7 reset ${pl
       }
     };
   }
-  __name(getRuntimeBindings28, "getRuntimeBindings");
+  __name(getRuntimeBindings29, "getRuntimeBindings");
 
   // src/midsection.js
   function addMiddleSection(l) {
@@ -19300,10 +19944,10 @@ ${player.latestTransition} \xB7 controller ticks ${player.ticks} \xB7 reset ${pl
     if (typeof drawPoolBooster === "function") drawPoolBooster(airDevicePose(pool.booster));
   }
   __name(drawMiddleSection, "drawMiddleSection");
-  function initializeRuntimeModule29() {
+  function initializeRuntimeModule30() {
   }
-  __name(initializeRuntimeModule29, "initializeRuntimeModule");
-  function getRuntimeBindings29() {
+  __name(initializeRuntimeModule30, "initializeRuntimeModule");
+  function getRuntimeBindings30() {
     return {
       addMiddleSection: {
         get: /* @__PURE__ */ __name(() => addMiddleSection, "get"),
@@ -19337,22 +19981,22 @@ ${player.latestTransition} \xB7 controller ticks ${player.ticks} \xB7 reset ${pl
       }
     };
   }
-  __name(getRuntimeBindings29, "getRuntimeBindings");
+  __name(getRuntimeBindings30, "getRuntimeBindings");
 
   // src/ending-polish-frames.js
   var ending_polish_frames_exports = {};
   __export(ending_polish_frames_exports, {
-    getRuntimeBindings: () => getRuntimeBindings30,
-    initializeRuntimeModule: () => initializeRuntimeModule30
+    getRuntimeBindings: () => getRuntimeBindings31,
+    initializeRuntimeModule: () => initializeRuntimeModule31
   });
-  function initializeRuntimeModule30() {
+  function initializeRuntimeModule31() {
     Object.assign(endingFrames, { "sonic-polish": [{ "bounds": [38, 23, 207, 242], "seed": [109, 23], "anchor": [136, 242], "scale": 0.27802690582959644 }, { "bounds": [289, 23, 465, 242], "seed": [359, 23], "anchor": [393.5, 242], "scale": 0.27802690582959644 }, { "bounds": [551, 23, 721, 242], "seed": [620, 23], "anchor": [648.5, 242], "scale": 0.27802690582959644 }, { "bounds": [802, 20, 1016, 242], "seed": [873, 20], "anchor": [904.5, 242], "scale": 0.27802690582959644 }, { "bounds": [1063, 21, 1249, 242], "seed": [1133, 21], "anchor": [1160.5, 242], "scale": 0.27802690582959644 }, { "bounds": [1320, 25, 1491, 243], "seed": [1394, 25], "anchor": [1408, 243], "scale": 0.27802690582959644 }, { "bounds": [38, 267, 212, 492], "seed": [111, 267], "anchor": [137, 492], "scale": 0.27802690582959644 }, { "bounds": [296, 268, 477, 492], "seed": [367, 268], "anchor": [402.5, 492], "scale": 0.27802690582959644 }, { "bounds": [550, 267, 726, 492], "seed": [621, 267], "anchor": [652, 492], "scale": 0.27802690582959644 }, { "bounds": [801, 267, 1007, 492], "seed": [873, 267], "anchor": [907, 492], "scale": 0.27802690582959644 }, { "bounds": [1056, 267, 1272, 493], "seed": [1126, 267], "anchor": [1163.5, 493], "scale": 0.27802690582959644 }, { "bounds": [1312, 280, 1513, 493], "seed": [1388, 280], "anchor": [1411.5, 493], "scale": 0.27802690582959644 }, { "bounds": [37, 523, 217, 749], "seed": [108, 523], "anchor": [143.5, 749], "scale": 0.27802690582959644 }, { "bounds": [293, 520, 474, 749], "seed": [427, 520], "anchor": [400.5, 749], "scale": 0.27802690582959644 }, { "bounds": [556, 514, 737, 749], "seed": [614, 514], "anchor": [662.5, 749], "scale": 0.27802690582959644 }, { "bounds": [804, 523, 984, 749], "seed": [877, 523], "anchor": [910, 749], "scale": 0.27802690582959644 }, { "bounds": [1078, 523, 1253, 749], "seed": [1147, 523], "anchor": [1165.5, 749], "scale": 0.27802690582959644 }, { "bounds": [1320, 523, 1496, 749], "seed": [1389, 523], "anchor": [1422.5, 749], "scale": 0.27802690582959644 }, { "bounds": [36, 777, 214, 1004], "seed": [106, 777], "anchor": [137, 1004], "scale": 0.27802690582959644 }, { "bounds": [291, 777, 477, 1004], "seed": [362, 777], "anchor": [397.5, 1004], "scale": 0.27802690582959644 }, { "bounds": [554, 774, 762, 1004], "seed": [623, 774], "anchor": [657.5, 1004], "scale": 0.27802690582959644 }, { "bounds": [808, 762, 1021, 1001], "seed": [882, 762], "anchor": [878, 1001], "scale": 0.27802690582959644 }, { "bounds": [1075, 763, 1279, 993], "seed": [1138, 763], "anchor": [1150.5, 993], "scale": 0.27802690582959644 }, { "bounds": [1326, 760, 1515, 993], "seed": [1391, 760], "anchor": [1427, 993], "scale": 0.27802690582959644 }], "shadow-polish": [{ "bounds": [33, 23, 206, 234], "seed": [131, 23], "anchor": [96, 234], "scale": 0.26 }, { "bounds": [266, 32, 465, 267], "seed": [354, 32], "anchor": [325.5, 267], "scale": 0.26 }, { "bounds": [483, 22, 745, 260], "seed": [578, 22], "anchor": [551.5, 260], "scale": 0.26 }, { "bounds": [766, 29, 962, 262], "seed": [854, 29], "anchor": [912, 262], "scale": 0.26 }, { "bounds": [980, 35, 1184, 269], "seed": [1073, 35], "anchor": [1133, 269], "scale": 0.26 }, { "bounds": [1239, 70, 1415, 266], "seed": [1319, 70], "anchor": [1332.5, 266], "scale": 0.26 }, { "bounds": [24, 323, 223, 514], "seed": [117, 323], "anchor": [118, 514], "scale": 0.26 }, { "bounds": [266, 294, 448, 519], "seed": [342, 294], "anchor": [357, 519], "scale": 0.26 }, { "bounds": [522, 289, 694, 514], "seed": [580, 289], "anchor": [615, 514], "scale": 0.26 }, { "bounds": [740, 289, 917, 522], "seed": [841, 289], "anchor": [817, 522], "scale": 0.26 }, { "bounds": [966, 289, 1165, 525], "seed": [1089, 289], "anchor": [1069, 525], "scale": 0.26 }, { "bounds": [1244, 289, 1428, 524], "seed": [1352, 289], "anchor": [1329.5, 524], "scale": 0.26, "gem": [1276, 397] }, { "bounds": [28, 543, 216, 779], "seed": [139, 543], "anchor": [113, 779], "scale": 0.26, "gem": [59, 666] }, { "bounds": [265, 541, 454, 777], "seed": [386, 541], "anchor": [352.5, 777], "scale": 0.26, "gem": [295, 690] }, { "bounds": [479, 540, 698, 777], "seed": [621, 540], "anchor": [586.5, 777], "scale": 0.26, "gem": [507, 605] }, { "bounds": [727, 551, 944, 779], "seed": [858, 551], "anchor": [829.5, 779], "scale": 0.26, "gem": [753, 610] }, { "bounds": [977, 547, 1178, 779], "seed": [1102, 547], "anchor": [1073, 779], "scale": 0.26, "gem": [1002, 566] }, { "bounds": [1235, 544, 1429, 780], "seed": [1350, 544], "anchor": [1330, 780], "scale": 0.26, "gem": [1266, 658] }, { "bounds": [21, 796, 217, 1049], "seed": [135, 796], "anchor": [116, 1049], "scale": 0.243, "gem": [53, 925] }, { "bounds": [271, 796, 459, 1049], "seed": [379, 796], "anchor": [361, 1049], "scale": 0.243, "gem": [303, 930] }, { "bounds": [498, 800, 694, 1050], "seed": [604, 800], "anchor": [588.5, 1050], "scale": 0.243, "gem": [532, 932] }, { "bounds": [740, 798, 929, 1050], "seed": [847, 798], "anchor": [831, 1050], "scale": 0.243, "gem": [774, 940] }, { "bounds": [983, 801, 1167, 1050], "seed": [1080, 801], "anchor": [1073.5, 1050], "scale": 0.243, "gem": [1015, 958] }, { "bounds": [1230, 802, 1421, 1050], "seed": [1336, 802], "anchor": [1321.5, 1050], "scale": 0.243, "gem": [1263, 951] }], "eggman-polish": [{ "bounds": [22, 58, 410, 473], "seed": [164, 58], "anchor": [216, 473], "scale": 0.246 }, { "bounds": [443, 59, 826, 473], "seed": [581, 59], "anchor": [634.5, 473], "scale": 0.246 }, { "bounds": [833, 59, 1223, 474], "seed": [973, 59], "anchor": [1028, 474], "scale": 0.246 }, { "bounds": [1246, 59, 1638, 475], "seed": [1387, 59], "anchor": [1442, 475], "scale": 0.246 }, { "bounds": [20, 497, 410, 914], "seed": [164, 497], "anchor": [215, 914], "scale": 0.246 }, { "bounds": [436, 498, 830, 914], "seed": [581, 498], "anchor": [633, 914], "scale": 0.246 }, { "bounds": [843, 499, 1239, 916], "seed": [992, 499], "anchor": [1041, 916], "scale": 0.246 }, { "bounds": [1266, 499, 1656, 914], "seed": [1423, 499], "anchor": [1461, 914], "scale": 0.246 }] });
   }
-  __name(initializeRuntimeModule30, "initializeRuntimeModule");
-  function getRuntimeBindings30() {
+  __name(initializeRuntimeModule31, "initializeRuntimeModule");
+  function getRuntimeBindings31() {
     return {};
   }
-  __name(getRuntimeBindings30, "getRuntimeBindings");
+  __name(getRuntimeBindings31, "getRuntimeBindings");
 
   // src/main.js
   var modules = [
@@ -19383,6 +20027,7 @@ ${player.latestTransition} \xB7 controller ticks ${player.ticks} \xB7 reset ${pl
     world_interactions_exports,
     stage_runtime_exports,
     playtest_ground_exports,
+    playtest_path_exports,
     playtest_motion_exports,
     playtest_exports,
     game_exports

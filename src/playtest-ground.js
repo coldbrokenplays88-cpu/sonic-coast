@@ -93,10 +93,17 @@ export function beginGroundTick(player, input = {}, allowRoll = true) {
   return { direction, rolling, braking };
 }
 
-export function advanceGroundSubstep(player, controls, dt, sampler = sampleGround) {
+export function advanceGroundSubstep(
+  player,
+  controls,
+  dt,
+  sampler = sampleGround,
+  arcLength = false
+) {
   const t = groundTuning,
     { direction, rolling, braking } = controls;
-  const before = sampler(player.scenario, player.x);
+  const position = arcLength ? player.pathS : player.x;
+  const before = sampler(player.scenario, position);
   // Keep flat braking, but continuously relieve countersteer with inclination.
   // Braking strength is independent of the downhill rolling slope factor.
   // The near-rest fade also prevents extra static friction on gentle grades.
@@ -114,7 +121,7 @@ export function advanceGroundSubstep(player, controls, dt, sampler = sampleGroun
       ? direction *
         Math.min(t.acceleration, Math.max(0, t.runRange - player.speed * direction) / dt)
       : 0;
-  const midpointX = player.x + (player.speed * before.tx * dt) / 2;
+  const midpointX = position + (player.speed * (arcLength ? 1 : before.tx) * dt) / 2;
   const midpoint = sampler(player.scenario, midpointX);
   // Sonic 2 uses 0x50 downhill roll / 0x20 running slope force. Preserve
   // approved uphill loss: only velocity aligned with downhill gets the ratio.
@@ -124,7 +131,8 @@ export function advanceGroundSubstep(player, controls, dt, sampler = sampleGroun
     resistance * dt
   );
   // Trapezoidal travel plus midpoint tangent; all velocities derive from speed.
-  player.x += (player.speed + nextSpeed) * 0.5 * midpoint.tx * dt;
+  if (arcLength) player.pathS += (player.speed + nextSpeed) * 0.5 * dt;
+  else player.x += (player.speed + nextSpeed) * 0.5 * midpoint.tx * dt;
   player.distance += Math.abs((player.speed + nextSpeed) * 0.5 * dt);
   player.speed = nextSpeed;
 }
@@ -134,13 +142,16 @@ export function finishGroundTick(
   controls,
   sampler = sampleGround,
   canStand = true,
-  bounds = groundBounds
+  bounds = groundBounds,
+  arcLength = false
 ) {
   const t = groundTuning,
     { rolling } = controls;
   player.ticks++;
   if (Math.abs(player.speed) > 0.02) player.facing = Math.sign(player.speed);
-  const slopeForce = Math.abs(t.gravity * sampler(player.scenario, player.x).ty);
+  const slopeForce = Math.abs(
+    t.gravity * sampler(player.scenario, arcLength ? player.pathS : player.x).ty
+  );
   const turning =
     controls.direction * player.facing < 0 && Math.abs(player.speed) <= t.rollTurnSpeed;
   // Deliberate turns can stand before the passive rest timer, retaining the

@@ -1,3 +1,4 @@
+import { samplePath } from './playtest-path.js';
 // Isolated static-surface experiment. Legacy player state is never advanced here.
 import { state as runtimeState } from './state.js';
 import { $, H, W, art, canvas, ctx, frame, keys, p, pause, restart } from './game.js';
@@ -9,6 +10,7 @@ import {
   motionContact,
   motionFixtures,
   motionSpans,
+  motionSpawn,
   motionTuning,
   sampleMotionExtension,
   stepMotionPlayer,
@@ -37,14 +39,15 @@ export function resetPlaytest(
   reason = 'manual reset'
 ) {
   keys.clear();
+  const spawn = motionSpawn(scenario);
   Object.assign(playtestState, {
     frames: 0,
     rollPressed: false,
     jumpPressed: false,
     player: createMotionPlayer(scenario),
     camera: {
-      x: motionFixtures[scenario].spawn - W / 2,
-      y: sampleMotionExtension(scenario, motionFixtures[scenario].spawn).y - H * 0.66,
+      x: spawn.x - W / 2,
+      y: spawn.y - H * 0.66,
       zoom: 1,
     },
     resetCount: (playtestState.resetCount ?? -1) + 1,
@@ -83,7 +86,7 @@ export function setupPlaytest() {
   $('#game-shell').classList.add('playtest');
   $('#playtest-status').hidden = false;
   $('#playtest-status').textContent =
-    'Static-surface experiment · Space: jump / release: short hop · No boost or Spin Dash. R resets fixture.';
+    'Static-surface experiment · Space: jump / release: short hop · Down: roll · Hold direction through loops. R resets.';
   $('#game-controls').hidden = true;
   $('#playtest-controls').hidden = false;
   $('#game-hint').hidden = true;
@@ -169,8 +172,20 @@ export function updatePlaytest() {
       const contact = motionContact(player),
         camera = playtestState.camera;
       // Tick-based following: render schedules cannot alter camera or physics.
-      camera.x += (contact.x - W / 2 + contact.vx * 8 - camera.x) * 0.12;
+      const path = motionFixtures[player.scenario].path;
+      const look = path ? Math.max(-W * 0.25, Math.min(W * 0.25, contact.vx * 8)) : contact.vx * 8;
+      camera.x += (contact.x - W / 2 + look - camera.x) * 0.12;
       camera.y += (contact.y - H * 0.66 - camera.y) * 0.12;
+      if (path) {
+        camera.x = Math.max(
+          contact.center.x - W * 0.9,
+          Math.min(contact.center.x - W * 0.1, camera.x)
+        );
+        camera.y = Math.max(
+          contact.center.y - H * 0.85,
+          Math.min(contact.center.y - H * 0.42, camera.y)
+        );
+      }
     }
   }
   updatePlaytestHud();
@@ -206,8 +221,8 @@ export function updatePlaytestHud() {
   $('#playtest-input').textContent = [...keys].join(', ') || 'none';
   $('#playtest-debug').textContent =
     `${motionTuning.revision} · ${player.scenario} · gsp ${c.grounded ? c.speed.toFixed(3) : '—'} · v(${c.vx.toFixed(3)}, ${c.vy.toFixed(3)}) · angle ${((c.angle * 180) / Math.PI).toFixed(2)}°\n` +
-    `${c.grounded ? 'CONTACT' : 'AIR REF'} (${c.x.toFixed(2)}, ${c.y.toFixed(2)}) · body ${c.width}×${c.height} · center (${c.center.x.toFixed(2)}, ${c.center.y.toFixed(2)}) · normal ${c.grounded ? `(${c.nx.toFixed(3)}, ${c.ny.toFixed(3)})` : 'none'} · N ${c.normalReaction.toFixed(3)}${c.uprightGrip ? ' · UPRIGHT CREST GRIP' : ''}\n` +
-    `${player.latestTransition} · controller ticks ${player.ticks} · reset ${playtestState.resetCount}: ${playtestState.resetReason}`;
+    `${c.grounded ? 'CONTACT' : 'AIR REF'} (${c.x.toFixed(2)}, ${c.y.toFixed(2)}) · body ${c.width}×${c.height} · center (${c.center.x.toFixed(2)}, ${c.center.y.toFixed(2)}) · normal ${c.grounded ? `(${c.nx.toFixed(3)}, ${c.ny.toFixed(3)})` : 'none'} · N ${c.normalReaction.toFixed(3)}${c.uprightGrip ? ' · UPRIGHT CREST GRIP' : ''}${c.steepGrip ? ' · STEEP GRIP ≥2.5' : ''}\n` +
+    `${player.pathS != null ? 'path s ' + player.pathS.toFixed(2) + ' · ' : ''}${player.latestTransition} · controller ticks ${player.ticks} · reset ${playtestState.resetCount}: ${playtestState.resetReason}`;
 }
 
 export function readPlaytestState() {
@@ -220,7 +235,12 @@ export function readPlaytestState() {
     frame: playtestState.frames,
     player: { ...player },
     contact: motionContact(player),
-    energy: player.mode === 'grounded' ? groundEnergy(player, sampleMotionExtension) : null,
+    energy:
+      player.mode === 'grounded'
+        ? motionFixtures[player.scenario].path
+          ? player.speed ** 2 / 2 + groundTuning.gravity * (650 - player.y)
+          : groundEnergy(player, sampleMotionExtension)
+        : null,
     camera: { ...playtestState.camera },
     inputs: [...keys],
     resetCount: playtestState.resetCount,
@@ -232,7 +252,8 @@ export function drawGroundPlayer(player) {
   const c = motionContact(player),
     rolling = player.posture === 'rolling';
   ctx.save();
-  ctx.translate(c.x, c.y);
+  const footShift = c.grounded ? Math.hypot(c.center.x - c.x, c.center.y - c.y) - c.height / 2 : 0;
+  ctx.translate(c.x + c.nx * footShift, c.y + c.ny * footShift);
   ctx.rotate(c.angle);
   const sheet = art.recoveredSpeedster ? 'recoveredSpeedster' : 'recoveredPeelout';
   const index = rolling
@@ -276,11 +297,11 @@ export function drawGroundPlayer(player) {
     ctx.stroke();
   } else ctx.strokeRect(-c.width / 2, -c.height, c.width, c.height);
   ctx.fillStyle = c.grounded ? '#ffd54a' : '#f48bdf';
-  ctx.fillRect(-3, c.grounded ? -3 : -c.height / 2 - 3, 6, 6);
+  ctx.fillRect(-3, c.grounded ? footShift - 3 : -c.height / 2 - 3, 6, 6);
   if (c.grounded) {
     ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(0, -65);
+    ctx.moveTo(0, footShift);
+    ctx.lineTo(0, footShift - 65);
     ctx.stroke();
   }
   ctx.restore();
@@ -325,6 +346,25 @@ export function drawPlaytest() {
     ctx.lineTo(b, sampleMotionExtension(player.scenario, b).y);
     ctx.stroke();
   }
+  const path = motionFixtures[player.scenario].path;
+  if (path)
+    for (const piece of path.pieces) {
+      const samples = [];
+      for (let s = piece.start; s < piece.end; s += 4) samples.push(samplePath(path, s));
+      samples.push(samplePath(path, piece.end));
+      ctx.beginPath();
+      samples.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+      for (const p of [...samples].reverse())
+        ctx.lineTo(p.x - p.nx * path.thickness, p.y - p.ny * path.thickness);
+      ctx.closePath();
+      ctx.fillStyle = '#39355f';
+      ctx.fill();
+      ctx.beginPath();
+      samples.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+      ctx.strokeStyle = '#61d9f1';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
   for (const box of motionFixtures[player.scenario].boxes) {
     ctx.fillStyle = '#6d396c';
     ctx.fillRect(box.x1, box.y1, box.x2 - box.x1, box.y2 - box.y1);
@@ -335,12 +375,16 @@ export function drawPlaytest() {
   ctx.textAlign = 'center';
   ctx.font = '14px monospace';
   for (const x of [-limit, limit]) {
-    const y = sampleMotionExtension(player.scenario, x).y;
+    const marker = path
+      ? samplePath(path, x < 0 ? 0 : path.length)
+      : sampleMotionExtension(player.scenario, x);
+    const markerX = marker.x,
+      y = marker.y;
     ctx.fillStyle = '#ffae44';
-    ctx.fillRect(x - 2, y - 170, 4, 170);
-    ctx.fillText('TEST BOUNDARY → RESET', x - Math.sign(x) * 120, y - 130);
+    ctx.fillRect(markerX - 2, y - 170, 4, 170);
+    ctx.fillText('TEST BOUNDARY → RESET', markerX - Math.sign(x) * 120, y - 130);
   }
-  const spawn = sampleMotionExtension(player.scenario, motionFixtures[player.scenario].spawn);
+  const spawn = motionSpawn(player.scenario);
   ctx.fillStyle = '#b4b9d2';
   ctx.fillText('SAFE SPAWN · R RESET', spawn.x, spawn.y + 45);
   drawGroundPlayer(player);
