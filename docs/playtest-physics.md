@@ -11,8 +11,8 @@ platform correction. **DEVICES-2 awaits approval of that correction.**
 Starting SHA: `9106f4135c1393cc3c01d77fdfd1ffcb86d9c5fb`, clean working tree.
 Runtime build: `runtime-aec96acc2019fc07.js`. Node v24.19.0, npm11.9.0;
 existing lockfile dependencies reused, no new dependencies or asset generation.
-The current tested build is identified by its runtime and package hashes; the
-source commit is recorded in the delivery note below.
+**Exact tested implementation commit: `c424392cd93c6e4cb63494eced2e8c992598c3e0`.**
+This build-identity record is a subsequent documentation-only commit.
 
 GitHub API access now succeeds. `gh pr list --head codex/playtest-physics
 --state open` returned an empty list: no matching open PR was available to mark
