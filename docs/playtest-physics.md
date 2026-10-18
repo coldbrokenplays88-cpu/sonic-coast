@@ -71,6 +71,9 @@ or human playtest is claimed. Seven hoist phases and secret/recovery routes also
 pass production-controller Node replays. Broad feel/route tuning is deferred.
 
 Tested browser runtime: `runtime-f7fd326837b25fc4.js`; CSS unchanged.
+Exact tested implementation: `9cef1c60c2a6aeca77016e786a4eb278b4fca6bf`.
+All37 packaged files match that commit byte-for-byte. This identity record is
+a subsequent documentation-only change; the tested runtime and ZIP are unchanged.
 Player ZIP:37 files,52,347,337 bytes; SHA256
 `e83b05a4ca1620bf736ffcffa604cd60bed6bcc2192786da759224fd39505e98`.
 No artifact-upload or public-preview service is available. Player ZIP location:
