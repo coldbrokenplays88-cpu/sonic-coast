@@ -6,6 +6,22 @@ Starting SHA: `ddbffe594739cc3406b4a5afc757d70ab800843b`.
 No new PR, ready-state change, merge, main change or deployment. GitHub returned
 no matching open PR; none was created.
 
+## Follow-up: first-tower freeze
+
+Starting SHA: `b5a1cf9aec144da7fcc71e498db1d3a4370b9f34`. Reproduced
+`Authored movement failed to converge` when running off the first tower cap:
+the body still overlapped the solid top after the contact anchor left its end,
+causing repeated zero-time landing/release transitions and stopping the frame loop.
+Finite-surface attachment now rejects anchors beyond the surface or moving outward
+at its endpoint; solid contact response remains active. No force or geometry tuning.
+Regression covers all four tower caps, both directions and postures. Extracted-ZIP
+Chromium also covers eight first-tower exits at14/24 speed, alongside the existing
+PLAYTEST, Act1 and Act2 route smoke checks, with zero page errors.
+Final checks:557 gameplay/10 build tests, generated-output checks and package pass.
+Tested runtime: `runtime-c24cab94e8093afb.js`. Player ZIP:52,347,369 bytes;
+SHA256 `fae1ba1a8a444f6ce18d36c097bf2302936f303baec2422e939ae3cc49ca8ee7`.
+The integration/package evidence below records the preceding build.
+
 ## Ownership and compatibility
 
 Both acts now use the finite authored adapter in `src/act1-motion.js` (historical

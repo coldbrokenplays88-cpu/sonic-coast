@@ -592,6 +592,17 @@ function attachAct1(m, surface, x, incoming, time, seam = false) {
   const s = act1Surface(surface, x, time),
     previous = m.surface;
   const speed = seam ? m.speed : (incoming.vx - s.vx) * s.tx + (incoming.vy - s.vy) * s.ty;
+  // A swept body can still overlap a block after its contact anchor has left
+  // the finite top. Reattaching at an outward-moving endpoint would release
+  // again at time zero, then repeatedly recapture that same top without time
+  // advancing. Keep the solid collision response, but do not ground there.
+  if (
+    x < s.x1 - 1e-6 ||
+    x > s.x2 + 1e-6 ||
+    (speed > 0 && x >= s.x2 - 1e-6) ||
+    (speed < 0 && x <= s.x1 + 1e-6)
+  )
+    return false;
   const candidate = {
     ...m,
     mode: 'grounded',

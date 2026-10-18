@@ -127,3 +127,15 @@ test('earned momentum breaks the actual Skyline wall and awards its event once',
  assert.equal(a.run('wall.broken'),true);
  assert.equal(a.run('(stats.barriers||0)-barriersBefore'),1);
 });
+
+test('tower caps release at either edge without zero-time solid-top reattachment',()=>{
+ for(const faceId of ['under-attack-tower-face-21','skyline-fork-tower-face-58','split-skyline-tower-face-215','city-climax-tower-face-243']){
+  const a=boot();
+  for(const direction of [-1,1])for(const rolling of [false,true]){
+   a.run(`start();keys.clear();var cap=level.surfaces.find(s=>s.faceId==='${faceId}');var edge=${direction}>0?cap.x2:cap.x1;Object.assign(p,{x:edge-(${direction})*2,y:yOn(cap,edge-(${direction})*2)-20,vx:${direction}*14,vy:0,ground:true,surface:cap,rolling:${rolling},roll:${rolling},inv:9999});resetAct1Motion();keys.add('${direction>0?'ArrowRight':'ArrowLeft'}')`);
+   assert.doesNotThrow(()=>a.run('for(let i=0;i<6;i++)update()'),`${faceId} direction ${direction} rolling ${rolling}`);
+   assert.ok(a.run(`(p.x-edge)*${direction}>60`),'movement advances beyond the cap');
+   assert.ok(a.run('p.act1Motion.updates>=6'),'all requested ticks complete');
+  }
+ }
+});

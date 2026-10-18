@@ -7,6 +7,24 @@ const { aimHighSource } = require('../Inferno-Ascent-Game/route-test-helpers.cjs
 async function act2RouteSmoke(page) {
   const checks = [];
   const run = (source) => page.evaluate((source) => (0, eval)(source), source);
+  const tower = await run(`selectAct(2);start();var towerChecks=[];
+    for(var direction of [-1,1])for(var rolling of [false,true])for(var speed of [14,24]){
+      start();keys.clear();var cap=level.surfaces.find(s=>s.faceId==='under-attack-tower-face-21');
+      var edge=direction>0?cap.x2:cap.x1;
+      Object.assign(p,{x:edge-direction*2,y:yOn(cap,edge-direction*2)-20,vx:direction*speed,
+        vy:0,ground:true,surface:cap,rolling,roll:rolling,inv:9999});
+      press(direction>0?'ArrowRight':'ArrowLeft',true);
+      var towerBefore=p.act1Motion.updates;
+      for(var tick=0;tick<6;tick++)update();draw();
+      towerChecks.push({direction,rolling,speed,travel:(p.x-edge)*direction,ticks:p.act1Motion.updates-towerBefore});
+    }
+    ({scenario:'first tower finite-cap exits',cases:towerChecks});`);
+  assert.equal(tower.cases.length, 8);
+  for (const result of tower.cases) {
+    assert.ok(result.travel > 60, 'running off the tower must keep advancing');
+    assert.equal(result.ticks, 6, 'tower exits must consume every tick without freezing');
+  }
+  checks.push(tower);
   for (const cautious of [false, true]) {
     const result = await run(`selectAct(2);start();${startLoopSource}${blimpReplaySource}
       startLoop();var replayStart=performance.now();var result=replayBlimps(${cautious});draw();

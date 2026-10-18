@@ -9347,6 +9347,8 @@
   function attachAct1(m, surface, x, incoming, time, seam = false) {
     const s = act1Surface(surface, x, time), previous = m.surface;
     const speed = seam ? m.speed : (incoming.vx - s.vx) * s.tx + (incoming.vy - s.vy) * s.ty;
+    if (x < s.x1 - 1e-6 || x > s.x2 + 1e-6 || speed > 0 && x >= s.x2 - 1e-6 || speed < 0 && x <= s.x1 + 1e-6)
+      return false;
     const candidate = {
       ...m,
       mode: "grounded",
