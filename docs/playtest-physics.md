@@ -36,6 +36,7 @@ the normal entry jump and a1000-tick budget (previous850 stopped just before the
 junction after the changed entry). No tests are skipped or route assertions removed.
 No human/full-act clear is claimed. Broader force tuning remains pending feedback.
 
+Tested implementation: `076003c3292b5ff7a58f71d7ca9b5a25e6848fb9` (all37 packaged files match).
 Tested runtime: `runtime-81ff374ec706e7e9.js`. Player ZIP:37 files,52,347,326 bytes;
 SHA256 `397e143048e3faf790f57faf97513e738e4fdaa316187c8f4339ce4fee994e6b`.
 Older build records below are historical. No merge, PR creation or deployment.
