@@ -26,7 +26,8 @@ Extracted HTTP Chromium verification includes every native cel, full966-frame
 ending with pixel reads denied, failed-load/retry recovery and existing routes.
 Direct-file browser navigation remains blocked by this environment's admin policy;
 the equivalent readback restriction was explicitly tested rather than claiming a
-direct-file playtest. Runtime: `runtime-cdb527f265a0647e.js`.
+direct-file playtest. Tested implementation: `2b434d869029ceb3142aab3e5531a20ff0d0b578`
+(all44 packaged files match). Runtime: `runtime-cdb527f265a0647e.js`.
 Player ZIP:44 files,62,614,361 bytes; SHA256
 `58750c8998e578d526cfe5c77666407f61586adcf90e1e1ae4bf0a7a0e34e53d`.
 No merge or deployment; stop for personal feedback.
