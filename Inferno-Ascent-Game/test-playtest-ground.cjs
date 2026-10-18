@@ -108,7 +108,7 @@ test('opposite roll input uncurls promptly at low speed without snapping velocit
  const a=scene();for(const direction of [-1,1]){
  a.run(`var q=createMotionPlayer('flat');Object.assign(q,{speed:${direction*0.8},posture:'rolling'});stepMotionPlayer(q,{direction:${-direction}})`);
  assert.equal(a.run('q.posture'),'standing','countersteer should not wait at near-rest');
- assert.ok(direction*a.run('q.speed')>0&&direction*a.run('q.speed')<0.8,'uncurl preserves residual speed before reversing');
+ assert.equal(Math.abs(a.run('q.speed')),0,'the0.9 standing brake stops0.8 without an instantaneous reversal');
  a.run(`for(let i=0;i<8;i++)stepMotionPlayer(q,{direction:${-direction}})`);
  assert.ok(direction*a.run('q.speed')<0,'standing control reverses naturally after braking');
  a.run(`q=createMotionPlayer('flat');Object.assign(q,{speed:${direction*12},posture:'rolling'});var uncurl=null,reversal=null;for(let i=1;i<=90;i++){stepMotionPlayer(q,{direction:${-direction}});if(q.posture==='standing'&&uncurl===null)uncurl=i;if(${direction}*q.speed<0&&reversal===null)reversal=i}`);

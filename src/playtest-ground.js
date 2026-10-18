@@ -229,7 +229,7 @@ export function initializeRuntimeModule() {
     substeps: 4,
     runRange: 14,
     acceleration: 0.16,
-    brake: 0.5,
+    brake: 0.9,
     coastResistance: 0.1,
     standingGripSpeed: 0.3,
     standingGripAngle: (38 * Math.PI) / 180,

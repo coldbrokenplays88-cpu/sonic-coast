@@ -7,7 +7,7 @@ test('shared momentum countersteering uncurls at speed, using standing brake and
  for(const side of [-1,1]){
   a.run(`var q=createMotionPlayer('flat');Object.assign(q,{x:0,speed:${14*side},posture:'rolling'});stepMotionPlayer(q,{direction:${-side}})`);
   assert.equal(a.run('q.posture'),'standing');
-  assert.ok(Math.abs(a.run('q.speed')-side*13.5)<1e-8);
+  assert.ok(Math.abs(a.run('q.speed')-side*13.1)<1e-8);
   assert.equal(a.run('motionContact(q).anchor.y'),400);
   assert.equal(a.run('q.braking'),true);
  }

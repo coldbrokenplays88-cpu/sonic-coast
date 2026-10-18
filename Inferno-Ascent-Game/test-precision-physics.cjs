@@ -85,7 +85,7 @@ for(const act of [1,2]){
  test(`act ${act}: retry clears propulsion protection and restores ordinary ground control`,()=>{
   const a=fixture(act);a.run('launchAirDevice({x:p.x,y:feet(),power:18,launchX:9});respawn();p.vx=9');
   // Respawn selects the approved controller in either migrated act.
-  close(advance(a,-1),8.5,'respawn restores the selected controller countersteering');
+  close(advance(a,-1),8.1,'respawn restores the selected controller countersteering');
  });
  test(`act ${act}: rolling, boost exits and grind braking retain strength while full spin dash gains speed`,()=>{
   const roll=fixture(act,{speed:10,rolling:true});roll.run("keys.add('ArrowDown')");

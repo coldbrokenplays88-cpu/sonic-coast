@@ -53,3 +53,16 @@ test('air control preserves jump dimensions and coasting momentum',()=>{
  assert.equal(a.run('q.air.vx'),23,'no automatic air friction');
  assert.equal(a.run('motionTuning.jumpImpulse'),10.5);assert.equal(a.run('motionTuning.cutRatio'),.4);assert.equal(a.run('motionTuning.airRange'),14);
 });
+
+test('standing braking stops14 in16 ticks and reverses within115 in both directions',()=>{
+ for(const side of [-1,1]){
+  assert.equal(probe({speed:side*14,input:{direction:-side},stopAtRest:true}).ticks,16);
+  assert.ok(probe({speed:side*14,input:{direction:-side},target:13.9}).ticks<=115);
+ }
+});
+test('stronger standing braking leaves constrained rolling braking unchanged',()=>{
+ const a=boot();a.run(`var q=createGroundPlayer('flat',0,10,'rolling');var c=beginGroundTick(q,{direction:-1},true,false);for(let i=0;i<4;i++)advanceGroundSubstep(q,c,.25)`);
+ assert.ok(Math.abs(a.run('q.speed')-9.795)<1e-8);
+ assert.equal(a.run('groundTuning.rollBrake'),.18);
+ assert.equal(a.run('groundTuning.acceleration'),.16);
+});

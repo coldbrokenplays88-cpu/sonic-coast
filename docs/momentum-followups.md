@@ -13,7 +13,7 @@ edits, new dependencies, main pushes, merges or deployments.
 - [x] 1. Cap ground-rolling slope acceleration at32, preserving external momentum.
 - [x] 2. Hold idle standing contact below0.3 speed on slopes through38 degrees.
 - [x] 3. Air acceleration0.16/brake0.2 in both acts and PLAYTEST.
-- [ ] 4. Standing ground brake0.9; rolling brake unchanged.
+- [x] 4. Standing ground brake0.9; rolling brake unchanged.
 - [ ] 5. Rolling uphill multiplier0.625; downhill multiplier2.5 unchanged.
 
 Skip the optional30-tick slide input lock: it adds a control-state change beyond
@@ -64,3 +64,20 @@ preserves `secret exploration collects its monitor and returns through the low
 route to the retained tower using ordinary input` and all its rewards, hits,
 deaths, checkpoint and reconnection assertions. No production enemies or geometry
 changed. These are intentional input adjustments for stronger air control.
+
+## Item4 evidence
+
+571 game tests,10 build tests,build passed. Stops from14 take16 ticks in either
+direction (before28); reversing14 to the opposite13.9 takes103 ticks (before115).
+Constrained rolling still loses0.205 per flat tick:0.18 brake+0.025 friction.
+Existing tests deliberately updated for the0.9 standing brake:
+- `countersteering a fast roll immediately enters standing braking in either direction`:
+  first tick14→13.1, previously13.5; brake artwork/uncurl assertions unchanged.
+- `shared momentum countersteering uncurls at speed, using standing brake and preserving the anchor`:
+ 14→13.1, previously13.5; contact/standing checks unchanged.
+- `opposite roll input uncurls promptly at low speed without snapping velocity or bypassing clearance`:
+ 0.8 now stops at zero on the first tick, then reverses on later ticks; previously
+ expected residual positive speed. Both signed zeros mean stopped.
+- `act1: retry clears propulsion protection and restores ordinary ground control`
+ and its Act2 counterpart:9→8.1 on one brake tick, previously8.5.
+No rolling-brake, rail-brake, acceleration or artwork values changed.
