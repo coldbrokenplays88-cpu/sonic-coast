@@ -18,3 +18,21 @@ test('rolling cap preserves externally earned excess speed and does not alter or
   assert.deepEqual(probe(spec),probe({...spec,physics:{rollSpeedCap:null}}),'below-cap behavior remains identical');
  }
 });
+
+test('idle standing grip holds exact contact through38 degrees and permits steeper sliding',()=>{
+ for(const side of [-1,1]){
+  for(const angle of [10,20,30,38])for(const speed of [0,side*.29]){
+   const r=probe({angle:side*angle,speed,ticks:300});
+   assert.equal(r.speed,0);assert.equal(r.x,0,`${side*angle}°`);
+  }
+  assert.ok(side*probe({angle:side*45,ticks:300}).speed>20,'45-degree floor still slides');
+ }
+});
+test('standing grip does not change deliberate input or rolling rollback',()=>{
+ for(const posture of ['standing','rolling'])for(const angle of [20,30]){
+  const spec={angle,speed:0,posture,ticks:30,input:posture==='standing'?{direction:-1}:{}};
+  assert.deepEqual(probe(spec),probe({...spec,physics:{standingGripSpeed:0}}));
+ }
+ assert.ok(probe({angle:30,posture:'rolling',ticks:30}).speed>0,'a stationary roll accelerates downhill');
+ assert.deepEqual(probe({speed:.29,ticks:1}),probe({speed:.29,ticks:1,physics:{standingGripSpeed:0}}),'flat coasting remains unchanged');
+});

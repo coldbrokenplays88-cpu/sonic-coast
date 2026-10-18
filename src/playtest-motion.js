@@ -172,7 +172,7 @@ export function advanceMotionGround(player, controls, dt, time = player.ticks) {
   if (rail || boosted)
     controls = {
       ...controls,
-      ...(rail ? { physics: experimentalRailTuning, rolling: false } : {}),
+      ...(rail ? { physics: experimentalRailTuning, rolling: false, standingGrip: false } : {}),
       ...(boosted ? { boost: { ...experimentalBoostTuning, facing: player.facing } } : {}),
     };
   if (rail) {

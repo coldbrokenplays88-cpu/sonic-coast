@@ -112,6 +112,16 @@ function advanceGroundSubstep(
     { direction, rolling, braking } = controls;
   const position = arcLength ? player.pathS : player.x;
   const before = sampler(player.scenario, position);
+  // Static grip is a standing contact rule, not extra resistance while moving.
+  // Rails opt out: grinding must still roll back under its own slope forces.
+  if (
+    !rolling && !direction && !controls.boost && controls.standingGrip !== false &&
+    before.ty !== 0 && Math.abs(player.speed) < t.standingGripSpeed &&
+    Math.abs(before.angle) <= t.standingGripAngle
+  ) {
+    player.speed = 0;
+    return;
+  }
   // Keep flat braking, but continuously relieve countersteer with inclination.
   // Braking strength is independent of the downhill rolling slope factor.
   // The near-rest fade also prevents extra static friction on gentle grades.
@@ -215,6 +225,8 @@ const groundTuning = Object.freeze({
     acceleration: 0.16,
     brake: 0.5,
     coastResistance: 0.1,
+    standingGripSpeed: 0.3,
+    standingGripAngle: (38 * Math.PI) / 180,
     gravity: 0.35,
     rollResistance: 0.025,
     rollSpeedCap: 32,

@@ -11,7 +11,7 @@ All three now share the approved controller. No controller migration, level-data
 edits, new dependencies, main pushes, merges or deployments.
 
 - [x] 1. Cap ground-rolling slope acceleration at32, preserving external momentum.
-- [ ] 2. Hold idle standing contact below0.3 speed on slopes through38 degrees.
+- [x] 2. Hold idle standing contact below0.3 speed on slopes through38 degrees.
 - [ ] 3. Air acceleration0.16/brake0.2 in Act1 and PLAYTEST.
 - [ ] 4. Standing ground brake0.9; rolling brake unchanged.
 - [ ] 5. Rolling uphill multiplier0.625; downhill multiplier2.5 unchanged.
@@ -31,3 +31,16 @@ and friction across smooth joins` previously equated all downhill work to energy
 even beyond32. It now requires exact local work below the cap, no unexplained
 energy gain throughout, the32 peak, and continuous joins. The cap intentionally
 rejects some downhill work; the integration tolerance remains0.05.
+
+## Item2 evidence
+
+567 game tests,10 build tests,build passed. Idle probes at10/20/30/38 degrees
+stay at exact zero speed and displacement for300 ticks in both directions.
+45-degree sliding remains44.246212 speed/4693.019485 pixels at300 ticks.
+Explicit direction input and stationary rolling match the previous forces.
+Flat coast-down remains80/140/230 ticks from8/14/23; rails opt out of standing
+static grip. No input lock is added.
+Existing test changed: `slope gravity slows uphill travel and accelerates downhill
+in both directions; rest rolls back` used to require idle sliding on the33-degree
+valley. It now requires zero idle speed/displacement there, while keeping its
+moving uphill/downhill checks. New tests cover steeper sliding and rolling rollback.

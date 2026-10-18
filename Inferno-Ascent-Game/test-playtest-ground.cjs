@@ -40,7 +40,7 @@ test('flat coast reaches stable rest; rolling coasts farther and receives no for
   const over=simulate(a,'flat',0,22,'standing',{direction:1},20);
   assert.ok(over.speed>21, 'running input does not clamp earned speed to the drive range');
 });
-test('slope gravity slows uphill travel and accelerates downhill in both directions; rest rolls back', () => {
+test('slope gravity slows uphill travel and accelerates downhill; idle standing grips the valley grade', () => {
   const a=scene();
   for(const side of [-1,1]) {
     const downhill=simulate(a,'valley',side*1700,-side*6,'rolling',{},30);
@@ -48,7 +48,8 @@ test('slope gravity slows uphill travel and accelerates downhill in both directi
     const uphill=simulate(a,'valley',side*1700,side*6,'rolling',{},30);
     assert.ok(side*uphill.speed<6);
     const rest=simulate(a,'valley',side*1700,0,'standing',{},60);
-    assert.ok(-side*rest.speed>4, 'designated steep grade overcomes standing friction');
+    assert.equal(rest.speed,0,'the33-degree valley grade is below the38-degree standing threshold');
+    assert.equal(rest.x,side*1700,'static grip preserves the contact anchor');
   }
 });
 test('a deliberate downhill roll beats powered running from identical starts without a velocity kick',()=>{

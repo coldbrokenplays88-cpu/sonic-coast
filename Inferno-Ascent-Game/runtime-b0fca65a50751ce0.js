@@ -510,6 +510,10 @@
     const t = controls.physics || groundTuning, { direction, rolling, braking } = controls;
     const position = arcLength ? player.pathS : player.x;
     const before = sampler(player.scenario, position);
+    if (!rolling && !direction && !controls.boost && controls.standingGrip !== false && before.ty !== 0 && Math.abs(player.speed) < t.standingGripSpeed && Math.abs(before.angle) <= t.standingGripAngle) {
+      player.speed = 0;
+      return;
+    }
     const rollBrake = direction * player.speed < 0 ? t.rollBrake * (1 - Math.abs(before.ty)) * Math.min(1, Math.abs(player.speed) / t.rollBrakeFadeSpeed) : 0;
     const resistance = controls.boost ? rolling ? t.rollResistance : 0 : rolling ? t.rollResistance + rollBrake : (direction ? 0 : t.coastResistance) + (braking ? t.brake : 0);
     const drive = controls.boost ? controls.boost.facing * Math.max(0, controls.boost.speed - player.speed * controls.boost.facing) * (1 - (1 - controls.boost.response) ** dt) / dt : !rolling && direction && !braking ? direction * Math.min(t.acceleration, Math.max(0, t.runRange - player.speed * direction) / dt) : 0;
@@ -571,6 +575,8 @@
       acceleration: 0.16,
       brake: 0.5,
       coastResistance: 0.1,
+      standingGripSpeed: 0.3,
+      standingGripAngle: 38 * Math.PI / 180,
       gravity: 0.35,
       rollResistance: 0.025,
       rollSpeedCap: 32,
@@ -1631,7 +1637,7 @@
     if (rail || boosted)
       controls = {
         ...controls,
-        ...rail ? { physics: experimentalRailTuning, rolling: false } : {},
+        ...rail ? { physics: experimentalRailTuning, rolling: false, standingGrip: false } : {},
         ...boosted ? { boost: { ...experimentalBoostTuning, facing: player.facing } } : {}
       };
     if (rail) {
@@ -9528,6 +9534,7 @@
     if (surface.grindable) {
       local.physics = experimentalRailTuning;
       local.rolling = false;
+      local.standingGrip = false;
       m.posture = "standing";
     }
     if (p.underwater) {
