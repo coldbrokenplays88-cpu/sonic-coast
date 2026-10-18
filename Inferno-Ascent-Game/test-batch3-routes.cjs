@@ -11,7 +11,7 @@ test('earned Spin Dash momentum activates the secret spring without a jump or bo
  assert.equal(a.run('stats.jumps'),0);assert.equal(a.run('stats.deaths'),0);assert.ok(a.run('level.blimpRoute.entered'));assert.ok(a.run('level.blimpRoute.departureSpeed')>=24);
 });
 test('upper springs are upright and no longer inject sideways launch velocity',()=>{
- const a=boot();a.run("var high=level.springs.filter(d=>d.id.startsWith('mid-')&&d.id!=='mid-low-spring')");assert.equal(a.run('high.length'),6);assert.equal(a.run('high.every(d=>polishDirection(d)===0&&d.launchX===0)'),true);
+ const a=boot();a.run("var high=level.springs.filter(d=>d.id.startsWith('mid-')&&d.id!=='mid-low-spring')");assert.equal(a.run('high.length'),6);assert.equal(a.run('high.every(d=>polishDirection(d)===0&&(d.launchX??0)===0)'),true);
 });
 test('spring route contains only the four authored reward ledges and no spring boost box',()=>{
  const a=boot();assert.equal(a.run("level.surfaces.filter(s=>s.secretDepth).length"),4);assert.equal(a.run("level.monitors.some(m=>m.id==='mid-rail-monitor')"),false);assert.ok(a.run("level.monitors.some(m=>m.id==='mid-secret-monitor')"));assert.equal(a.run("surfaceById('mid-wrong-decision').x2-surfaceById('mid-wrong-decision').x1"),58);

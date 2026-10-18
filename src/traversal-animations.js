@@ -60,7 +60,8 @@ export function traversalGroundState() {
     for (const h of runtimeState.level.hazards) {
       if (h.broken || h.type === 'spikes' || foot <= h.y + 2 || top >= h.y + h.h - 2) continue;
       const wall = dir > 0 ? h.x : h.x + h.w;
-      if (Math.abs(p.x + dir * 14 - wall) < 1.1) return 'push';
+      const halfWidth = p.act1Motion?.act === runtimeState.selectedAct ? 11 : 14;
+      if (Math.abs(p.x + dir * halfWidth - wall) < 1.1) return 'push';
     }
     return null;
   }

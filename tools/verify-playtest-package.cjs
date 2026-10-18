@@ -6,6 +6,7 @@ const { pathToFileURL } = require('node:url');
 const { spawn } = require('node:child_process');
 const { chromium } = require('playwright');
 const { act1RouteReplay, act1ExpressReplay } = require('./act1-route-replay.cjs');
+const { act2RouteSmoke } = require('./act2-route-replay.cjs');
 
 async function smoke(browser, url) {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
@@ -484,6 +485,7 @@ async function smoke(browser, url) {
       assert.equal(route.state.hits, 0);
       act1Checks.push(route);
     }
+    const act2Checks = await act2RouteSmoke(page);
     assert.deepEqual(errors, []);
     return {
       url,
@@ -493,6 +495,7 @@ async function smoke(browser, url) {
       pathChecks,
       deviceChecks,
       act1Checks,
+      act2Checks,
       pageErrors: errors,
     };
   } finally {

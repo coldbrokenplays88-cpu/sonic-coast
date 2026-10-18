@@ -108,7 +108,7 @@ function resetBlimpRoute() {
       departureFrame: -100,
       departureSpeed: 0,
     });
-    for (const d of level.springs)
+    for (const d of [...level.springs, ...level.pads])
       if (d.id === 'blimp-entry-spring' || d.id === 'blimp-return-spring') delete d.firedAt;
   }
 }

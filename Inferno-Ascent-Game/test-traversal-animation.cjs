@@ -13,7 +13,7 @@ for(const act of [1,2])test(`Act ${act}: ledge balance distinguishes facing and 
  a.run('p.vx=12');assert.notEqual(state(a),'balance-backward');
 });
 test('pushing requires directional input into a solid side, never a spike or broken wall',()=>{
- const a=fixture();a.run("p.x=286;keys.add('ArrowRight');level.hazards=[{type:'gate',x:300,y:240,w:30,h:60}]");assert.equal(state(a),'push');
+ const a=fixture();a.run("p.x=289;keys.add('ArrowRight');level.hazards=[{type:'gate',x:300,y:240,w:30,h:60}]");assert.equal(state(a),'push');
  a.run('keys.clear()');assert.notEqual(state(a),'push');a.run("keys.add('ArrowRight');level.hazards[0].broken=true");assert.notEqual(state(a),'push');
  a.run("level.hazards[0].broken=false;level.hazards[0].type='spikes'");assert.notEqual(state(a),'push');
  a.run("level.hazards[0].type='gate';level.hazards[0].y=180;level.hazards[0].h=20");assert.notEqual(state(a),'push');
@@ -26,7 +26,7 @@ test('new poses defer to hurt, charge, rolling, landing and unavailable artwork'
  a.run('p.poseLandingFrame=-100;delete art.traversalActing');assert.equal(state(a),'idle');
 });
 test('sustained wall input advances all pushing frames across real collision ticks',()=>{
- const a=fixture();a.run("p.x=286;keys.add('ArrowRight');level.hazards=[{type:'gate',x:300,y:240,w:30,h:60}];updateTraversalAnimation()");
+ const a=fixture();a.run("p.x=289;keys.add('ArrowRight');level.hazards=[{type:'gate',x:300,y:240,w:30,h:60}];updateTraversalAnimation()");
  const frames=new Set();for(let i=0;i<40;i++){
   a.run('runFrames++;updateMovement();updateTraversalAnimation()');
   assert.equal(a.run('sonicPose().state'),'push');frames.add(a.run('sonicPose().frame'));

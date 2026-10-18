@@ -124,7 +124,7 @@ function topAt(x, below = -Infinity) {
 }
 
 function bodyHeight() {
-  if (selectedAct === 1 && p.act1Motion)
+  if (p.act1Motion && p.act1Motion.act === selectedAct)
     return p.act1Motion.posture === 'rolling' ? 38 : 48;
   return p.ground && p.roll ? 26 : !p.ground ? 38 : 48;
 }
@@ -273,7 +273,7 @@ function spikeContact(h, oldX, oldY) {
   const direction = h.direction ?? 'up',
     height = bodyHeight(),
     halfWidth =
-      selectedAct === 1 && p.act1Motion
+      p.act1Motion && p.act1Motion.act === selectedAct
         ? p.act1Motion.posture === 'rolling'
           ? 19
           : 11

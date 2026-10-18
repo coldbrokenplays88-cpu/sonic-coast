@@ -1,7 +1,7 @@
 // Generated from src/player-movement.js; run npm run build:compat after source edits.
 'use strict';
 function jump() {
-  if (usesAct1Motion()) {
+  if (usesStageMovement()) {
     adoptAct1Interaction(p.act1Motion);
     if (p.act1Motion.mode === 'grounded') {
       releaseAct1(p.act1Motion, 'jump', true, runFrames);
@@ -95,7 +95,7 @@ function updateRoll(down) {
 }
 
 function updateMovement() {
-  if (usesAct1Motion()) return updateAct1Movement();
+  if (usesStageMovement()) return updateAct1Movement();
   updateWaterState();
   if (updateStageMotion()) return true;
   if (p.loop) return updateLoop();

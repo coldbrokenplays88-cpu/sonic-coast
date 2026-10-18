@@ -341,7 +341,8 @@ export function beginWrongRouteDrop() {
 
 export function updateMiddleMotion() {
   if (p.wrongRouteDrop) {
-    const spring = runtimeState.level.springs.find((d) => d.id === 'mid-low-spring');
+    const spring = runtimeState.level.pads.find((d) => d.id === 'mid-low-spring') ||
+      runtimeState.level.springs.find((d) => d.id === 'mid-low-spring');
     p.vx = p.x > spring.x + 2 ? -18 : 0;
   }
 

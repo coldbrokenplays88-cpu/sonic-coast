@@ -94,7 +94,9 @@ export function activateWorldDevices() {
       Math.abs(p.x - pad.x) < 25 &&
       Math.abs(feet() - pad.y) < 8 &&
       (pad.cityVent || pad.poolBooster || p.vx > 0) &&
-      (!pad.sealedBy || runtimeState.level.hazards.find((h) => h.id === pad.sealedBy)?.broken)
+      (!pad.sealedBy || runtimeState.level.hazards.find((h) => h.id === pad.sealedBy)?.broken) &&
+      (pad.id !== 'blimp-entry-spring' || qualifyingBlimpEntry()) &&
+      (pad.id !== 'blimp-return-spring' || runtimeState.level.blimpRoute?.entered)
     ) {
       if (pad.poolBooster) {
         p.vx = Math.max(p.vx, pad.launchX);
@@ -104,8 +106,10 @@ export function activateWorldDevices() {
         p.poolExit = true;
         pad.firedAt = runtimeState.runFrames;
         gameSound('pool', { launch: true });
-      } else if (pad.cityVent) launchAirDevice(pad);
-      else p.vx = Math.max(p.vx, 18.5);
+      } else if (pad.cityVent) {
+        if (pad.id === 'blimp-entry-spring') runtimeState.level.blimpRoute.entered = true;
+        launchAirDevice(pad);
+      } else p.vx = Math.max(p.vx, 18.5);
     }
 }
 
@@ -242,6 +246,9 @@ export function updateWorldCheckpoints(oldX = p.x, oldY = p.y, oldSurface = null
 export function initializeRuntimeModule() {}
 export function getRuntimeBindings() {
   return {
+    springFace: {
+      get: () => springFace,
+    },
     updateWorldPlatforms: {
       get: () => updateWorldPlatforms,
       set: (value) => {

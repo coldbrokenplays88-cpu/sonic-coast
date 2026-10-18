@@ -1,10 +1,11 @@
 import {
-  usesAct1Motion,
+  usesStageMovement,
   resetAct1Motion,
   clearAct1Input,
   inputAct1Motion,
   updateAct1Movement,
   act1Body,
+  configureAct2Launches,
 } from './act1-motion.js';
 import { updatePixelHud } from './hud.js';
 import { syncGameMusic } from './game-music.js';
@@ -348,7 +349,9 @@ export function setup() {
   });
   runtimeState.testControlled = false;
   runtimeState.level = configureBoostMonitors(
-    runtimeState.selectedAct === 2 ? addMiddleSection(makeLevel2()) : makeLevel()
+    runtimeState.selectedAct === 2
+      ? configureAct2Launches(addMiddleSection(makeLevel2()))
+      : makeLevel()
   );
   configureDirectionalSpikes(runtimeState.level);
   selectStageRuntime();
@@ -590,7 +593,7 @@ export function press(k, automated = false) {
     return;
   }
   if (
-    !usesAct1Motion() &&
+    !usesStageMovement() &&
     (k === 'ArrowDown' || k === 'KeyS') &&
     !keys.has(k) &&
     runtimeState.mode === 'playing'
@@ -607,7 +610,7 @@ export function press(k, automated = false) {
     return;
   }
   if (bossOwnsControls() && runtimeState.mode === 'playing') return;
-  if (usesAct1Motion() && runtimeState.mode === 'playing') {
+  if (usesStageMovement() && runtimeState.mode === 'playing') {
     inputAct1Motion(k, true);
     return;
   }
@@ -661,7 +664,7 @@ export function release(k, automated = false) {
     handlePlaytestInput(k, false);
     return;
   }
-  if (usesAct1Motion()) {
+  if (usesStageMovement()) {
     inputAct1Motion(k, false);
     return;
   }
@@ -750,6 +753,7 @@ export function update() {
   if (runtimeState.toastTime > 0 && !--runtimeState.toastTime) $('#toast').style.display = 'none';
   updateWorldPlatforms();
   if (bossOwnsControls()) {
+    if (usesStageMovement()) clearAct1Input();
     if (runtimeState.boss.state === 'destroyed') updateMovement();
     updateParticles();
     updateBossEncounter();
@@ -759,7 +763,7 @@ export function update() {
     return;
   }
   if (
-    !(usesAct1Motion() ? updateAct1Movement() : updateMovement()) ||
+    !(usesStageMovement() ? updateAct1Movement() : updateMovement()) ||
     runtimeState.mode !== 'playing'
   ) {
     updateHud();
@@ -1122,7 +1126,7 @@ export function sonic() {
   if (p.inv > 0 && runtimeState.step % 10 < 4 && runtimeState.mode === 'playing') return;
   const q = sonicPose();
   ctx.save();
-  if (usesAct1Motion()) {
+  if (usesStageMovement()) {
     const body = act1Body();
     ctx.translate(body.x, body.y + (p.ground ? body.hh - 20 : -1));
     if (p.ground) {
@@ -1141,7 +1145,7 @@ export function sonic() {
       Math.round(transform.e),
       Math.round(transform.f)
     );
-  if (p.loop) {
+  if (p.loop && !usesStageMovement()) {
     ctx.translate(0, 20);
     ctx.rotate(-p.loop.theta);
     ctx.translate(0, -20);

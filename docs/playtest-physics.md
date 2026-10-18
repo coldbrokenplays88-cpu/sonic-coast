@@ -1,4 +1,93 @@
-# PLAYTEST physics — shared rolling transitions / GROUND-6
+# PLAYTEST physics — Act 2 integration
+
+The user approved Act 1 and authorized Act 2 on `codex/playtest-physics`.
+Starting SHA: `ddbffe594739cc3406b4a5afc757d70ab800843b`.
+**Act 2 is integrated; personal approval and subsequent physics tuning are pending.**
+No new PR, ready-state change, merge, main change or deployment. GitHub returned
+no matching open PR; none was created.
+
+## Ownership and compatibility
+
+Both acts now use the finite authored adapter in `src/act1-motion.js` (historical
+filename and `p.act1Motion` retained, with an explicit `act` identity). Contact
+speed is signed tangent speed; airborne world velocity is authoritative. Legacy
+movement never advances alongside it. PLAYTEST stays the approved reference.
+Shared force/Boost/Spin Dash tuning, approved collision dimensions, all terrain,
+character artwork, boss/cutscene sequences and camera framing remain intact.
+Camera landing prediction now uses actual gravity; no magnification change.
+
+Act 2's three loops use analytic path contact, shared forces/support rules and
+swept entry/air reattachment; reverse travel, low-speed failure, jumps, re-entry
+and once-only score are covered. Thirteen rail segments use approved rail forces
+and existing free-Boost metadata, including zero meter. Springs have swept solid
+casings and visible active caps; moving mounts transfer relative/world momentum
+once. Ordinary springs use shared normal impulse18 and preserve tangent velocity.
+
+The user authorized custom launchers as vents. Blimp entry, blimp return and the
+lower pool launcher are now visible grates in `level.pads`; their historical IDs
+are retained. Other springs, including all six upper-route springs, remain ordinary.
+Vent power is the old power times `sqrt(.35/.58)`, adding the former cap's fixed
+height to the apex budget for converted springs. This is fixed authored tuning,
+not speed-dependent aiming. Resulting upward impulses:
+
+| Vent | Impulse | Prescribed X / existing aiming limit |
+| --- | ---: | --- |
+| momentum | 14.604203 | inherited |
+| downhill / interior | 22.527761 | inherited |
+| drop | 19.808893 | inherited |
+| hidden pit | 27.965496 | inherited |
+| neon roof | 24.081399 | inherited /6.5 |
+| fracture high | 24.081399 | inherited |
+| blimp entry | 16.909160 | -20 |
+| blimp return | 25.253317 | 28 |
+| lower pool replacement | 14.879041 | 7.5 /7.5 |
+
+The lower vent's prior9-unit flight overshot the existing pool dash panel;7.5
+lands before it. The panel remains a grounded22-unit propulsion device.
+Water retains .5 entry horizontal/.25 entry vertical, .5 input and2/7 gravity
+ratios, breathing/shield rules and upward surface-exit restoration. A medium
+crossing preserves purchased air-burst time and jump-cut state. Pool rolling is
+an entry transition, not forced again at every seam. Earned momentum now breaks
+eligible walls and awards the event, matching collision eligibility.
+
+## Verification and access
+
+Baseline:543 gameplay/10 build tests and both generated-output checks passed;
+Node24.19.0/npm11.9.0, unchanged dependencies. Final:556 gameplay/10 build tests,
+`build:player`, `check:compat`, `check:player`, and `package` pass. An independent
+read-only production review found the momentum-wall event mismatch, now fixed
+and regression-tested. Historical legacy math fixtures remain explicit; current
+route tests use the real migrated owner. Obsolete launch-cap probes now test the
+replacement grates; replay steering uses actual .35 gravity, braking/run-up,
+controlled spring arrival and normal crest release rather than old auto-grip.
+
+Extracted-package Chromium151 smoke: zero page errors; all prior PLAYTEST
+fixtures; Act 1 completion and both express routes; Act 2 fast/cautious blimps
+with both rewards (500/694 ticks after entry vent, wait198), six-spring/free-rail
+routes at phases0/120 (695/847 ticks), lower vent/pool (156 ticks), and boss
+entrance/control return plus the complete rendered ending. Defeat is an explicit
+integration fixture, not a claimed boss-fight clear. No full-act completion time
+or human playtest is claimed. Seven hoist phases and secret/recovery routes also
+pass production-controller Node replays. Broad feel/route tuning is deferred.
+
+Tested browser runtime: `runtime-f7fd326837b25fc4.js`; CSS unchanged.
+Player ZIP:37 files,52,347,337 bytes; SHA256
+`e83b05a4ca1620bf736ffcffa604cd60bed6bcc2192786da759224fd39505e98`.
+No artifact-upload or public-preview service is available. Player ZIP location:
+`dist/Neon-Express-player.zip`, entry `index.html`. A source archive instead uses
+`Inferno-Ascent-Game/PLAY.html`. Direct-file loading is blocked by the verification
+browser's policy (`ERR_BLOCKED_BY_ADMINISTRATOR`); extracted HTTP launch with
+Python3 is verified: run `python3 -m http.server 8000 --bind 127.0.0.1` from the
+entry's directory. Windows batch launch was not executed on Linux. No Pages job.
+
+Manual checklist: run/roll/brake and uncurl; both loop directions and ramp exits;
+upper spring chain/hoist; lower grate/pool; blimp fast versus waiting choices;
+free-Boost rail ends and a fresh air burst; water/shield, retry/checkpoints;
+boss entrance, battle and ending. **Stop for Act 2 feedback before physics tuning.**
+
+---
+
+## Historical shared rolling correction
 
 ## Current correction: shared momentum posture rules
 

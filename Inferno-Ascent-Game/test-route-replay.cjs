@@ -19,5 +19,5 @@ test('the four-platform reward detour returns to the low route without invented 
  assert.equal(a.run('p.surface.id'),'mid-low-transfer-1');assert.equal(a.run('stats.deaths'),0);assert.equal(a.run('level.surfaces.some(s=>s.secretDepth>4)'),false);
 });
 test('lower and moving recovery decks allow low-speed stops without sliding off',()=>{
- for(const kind of ['lower','recovery','moving']){const a=boot();a.run(`const s={id:'precision',x1:100,x2:380,y1:420,y2:420,kind:'${kind}'};level.surfaces=[s];level.rings=[];rings=[];enemies=[];level.pads=[];level.springs=[];level.monitors=[];level.hazards=[];level.deathZones=[];p.surface=s;p.x=180;p.y=400;p.ground=true;p.vx=5;keys.clear()`);a.call('step_game_frames',{keys:[],frames:35});assert.equal(a.run('p.surface.id'),'precision');assert.equal(a.run('p.vx'),0);assert.ok(a.run('p.x')<205)}
+ for(const kind of ['lower','recovery','moving']){const a=boot();a.run(`const s={id:'precision',x1:100,x2:380,y1:420,y2:420,kind:'${kind}'};level.surfaces=[s];level.rings=[];rings=[];enemies=[];level.pads=[];level.springs=[];level.monitors=[];level.hazards=[];level.deathZones=[];p.surface=s;p.x=180;p.y=400;p.ground=true;p.vx=5;keys.clear()`);a.call('step_game_frames',{keys:[],frames:60});assert.equal(a.run('p.surface.id'),'precision');assert.equal(a.run('p.vx'),0);assert.ok(a.run('p.x')<310)}
 });

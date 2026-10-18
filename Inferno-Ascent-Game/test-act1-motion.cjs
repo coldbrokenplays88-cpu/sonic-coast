@@ -26,16 +26,16 @@ test('only the five approved Act 1 tunnel ceilings change, clearing the 38-unit 
  }
 });
 
-test('Act 2 retains its legacy movement owner and PLAYTEST remains independent',()=>{
+test('Both authored acts use explicit owners and PLAYTEST remains independent',()=>{
  const a=boot(2);
- assert.equal(a.run('p.act1Motion ?? null'),null);
+ assert.equal(a.run('p.act1Motion.act'),2);
  a.run(`press('ArrowRight',true);for(let i=0;i<20;i++)update()`);
  assert.ok(a.run('p.vx')>0);
  a.run(`selectAct(1);start();press('ArrowRight',true);update();selectAct('playtest');start()`);
  assert.equal(a.run('p.act1Motion ?? null'),null);
  assert.equal(a.run('playtestState.player.ticks'),0);
  a.run(`selectAct(2);start()`);
- assert.equal(a.run('p.act1Motion ?? null'),null);
+ assert.equal(a.run('p.act1Motion.act'),2);
 });
 
 function place(a,x,speed=14,rolling=false){

@@ -12,7 +12,25 @@ function boot(act=2){
  return {c,tools,events,rects,run:s=>vm.runInContext(s,c),call:(name,arg={})=>{assert.ok(tools.has(name),'Missing tool: '+name);return tools.get(name).execute(arg)}};
 }
 // Historical force/collision unit fixtures intentionally exercise the preserved
-// legacy controller (still shipped for Act 2), even when using Act 1 geometry.
-// New Act 1 runtime coverage uses boot(), never this helper.
-function bootLegacy(act=2){const a=boot(act);if(act===1)a.run('p.act1Motion=null');return a;}
+// legacy math functions explicitly; neither authored act uses that integrator.
+// Current runtime/route coverage uses boot(), never this helper.
+function bootLegacy(act=2){
+ const a=boot(act);
+ a.run(`p.act1Motion=null;
+ // Historical unit probes retain their original device fixtures. Current route
+ // tests use boot() and the real migrated vents/standard springs unchanged.
+ if(level.act===2){
+  const converted=level.pads.filter(d=>d.replacesSpring);
+  level.pads=level.pads.filter(d=>!d.replacesSpring);
+  level.springs.push(...converted);
+  for(const d of [...level.pads,...level.springs]){
+   if(d.authoredPower!==undefined)d.power=d.authoredPower;
+   if(d.authoredLaunchX!==undefined)d.launchX=d.authoredLaunchX;
+   if(d.authoredAirSpeedLimit!==undefined)d.airSpeedLimit=d.authoredAirSpeedLimit;
+   if(d.replacesSpring)delete d.cityVent;
+  }
+ }
+ `);
+ return a;
+}
 module.exports={boot,bootLegacy};

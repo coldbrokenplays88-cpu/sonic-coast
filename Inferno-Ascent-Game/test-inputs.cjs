@@ -77,7 +77,7 @@ for(const axis of ['x','y'])test('rider stays on an authored moving platform on 
  const a=boot();
  a.run(`const ride=level.surfaces.find(s=>s.kind==='moving'&&s.motion.axis==='${axis}');
  level.surfaces=[ride];level.hazards=[];level.deathZones=[];level.floorAt=()=>1e6;
- p.x=(pose(ride).x1+pose(ride).x2)/2;p.y=yOn(ride,p.x)-20;p.vx=0;p.vy=0;p.ground=true;p.surface=ride;
+ p.x=(pose(ride).x1+pose(ride).x2)/2;p.y=yOn(ride,p.x)-20;p.vx=act1Surface(ride,p.x,runFrames).vx;p.vy=0;p.ground=true;p.surface=ride;resetAct1Motion();
  for(let i=0;i<60;i++){runFrames++;updateMovement();}`);
  assert.equal(a.run('p.surface.id'),a.run('ride.id'));
  assert.equal(a.run('p.ground'),true);

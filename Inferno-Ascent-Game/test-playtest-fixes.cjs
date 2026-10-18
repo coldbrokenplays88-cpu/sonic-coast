@@ -8,7 +8,7 @@ test('skill spring decks match the spring foot width, including the moving hoist
  }
 });
 test('early spring caps accept air aiming but the third landing still needs aiming',()=>{
- const a=boot();a.run("const d=level.springs.find(d=>d.id==='mid-upper-spring');p.x=d.x;p.y=d.y-20;p.surface=surfaceById(d.surfaceId);p.ground=true;{const f=springFace(d);p.x=f.x+f.nx*23;p.y=f.y+f.ny*23-1;}launchAirDevice(d)");
+ const a=boot();a.run("const d=level.springs.find(d=>d.id==='mid-upper-spring');p.x=d.x;p.y=d.y-20;p.surface=surfaceById(d.surfaceId);p.ground=true;launchAirDevice(d)");
  a.run(require('./route-test-helpers.cjs').aimHighSource);a.run("for(let i=0;i<300;i++){if(level.springs.find(d=>d.id==='mid-spring-2').firedAt===undefined)aimHigh();else keys.clear();update()}");
  assert.equal(a.run("level.springs.find(d=>d.id==='mid-spring-1').firedAt!==undefined"),true);
  assert.equal(a.run("level.springs.find(d=>d.id==='mid-spring-2').firedAt!==undefined"),true);
@@ -22,20 +22,20 @@ test('pool collision forms a connected bowl from burned tower to tilted roof',()
  const roof=a.run("surfaceById('mid-tilted-glass-roof')");assert.equal(segments.at(-1).x2,roof.x1);assert.equal(segments.at(-1).y2,roof.y1);
 });
 test('upright decision spring permits repeated bounces while waiting for the hoist',()=>{
- const a=boot();a.run("runFrames=130;const d=level.springs.find(d=>d.id==='mid-left-spring');p.x=d.x;p.y=d.y-60;p.surface=null;p.ground=false;count=20;launchAirDevice(d);const firstBounce=d.firedAt;keys.clear()");
+ const a=boot();a.run("runFrames=130;const d=level.springs.find(d=>d.id==='mid-left-spring');p.x=d.x;p.y=springFace(d).y-20;p.surface=null;p.ground=false;count=20;launchAirDevice(d);const firstBounce=d.firedAt;keys.clear();var originalDeviceLaunch=launchAirDevice;var tangentTransfer=null;launchAirDevice=(device,time)=>{const before=p.vx;originalDeviceLaunch(device,time);if(device.id==='mid-left-spring')tangentTransfer={before,after:p.vx}}");
  for(let f=0;f<160;f++){a.run('update()');if(a.run('d.firedAt>firstBounce'))break}
- assert.ok(a.run('d.firedAt>firstBounce'));assert.equal(a.run('stats.deaths'),0);assert.equal(a.run('p.vx'),0);
+ assert.ok(a.run('d.firedAt>firstBounce'));assert.equal(a.run('stats.deaths'),0);assert.ok(a.run('tangentTransfer'));assert.ok(Math.abs(a.run('tangentTransfer.after-tangentTransfer.before'))<1e-9,'upright spring preserves horizontal momentum');
 });
 test('lower spring reaches the curved pool and exits by ground momentum without a midair pull',()=>{
- const a=boot();a.run("const d=level.springs.find(d=>d.id==='mid-low-spring');p.x=d.x;p.y=d.y-20;p.surface=surfaceById(d.surfaceId);p.ground=true;count=20;boost=0;{const f=springFace(d);p.x=f.x+f.nx*23;p.y=f.y+f.ny*23-1;}launchAirDevice(d);keys.add('ArrowRight');keys.add('ArrowDown')");
+ const a=boot();a.run("const d=[...level.springs,...level.pads].find(d=>d.id==='mid-low-spring');p.x=d.x;p.y=d.y-20;p.surface=surfaceById(d.surfaceId);p.ground=true;count=20;boost=0;launchAirDevice(d);keys.add('ArrowRight');keys.add('ArrowDown')");
  let entered=false,panel=false,exited=false;
  for(let i=0;i<260;i++){
   const before=a.run('p.x');a.run('update()');assert.ok(Math.abs(a.run('p.x')-before)<=24.01,'no scripted position pull');
   assert.ok(!a.run('p.poolTransfer'));if(a.run('p.surface?.poolCurve'))entered=true;
-  if(a.run('p.poolExit')){panel=true;assert.equal(a.run('p.ground'),true,'dash panel must accelerate along the floor')}
-  if(a.run("p.surface?.id==='mid-tilted-glass-roof'")){exited=true;break}
+  if(a.run('p.poolExit')&&!panel){panel=true;assert.equal(a.run('p.ground'),true,'dash panel must accelerate along the floor')}
+  if(a.run("p.poolExit&&!p.ground&&p.act1Motion.lastTakeoff?.reason==='rolled crest'")){exited=true;break}
  }
- assert.ok(entered&&panel&&exited,'spring → bowl roll → dash panel → roof');assert.equal(a.run('stats.deaths'),0);
+ assert.ok(entered&&panel&&exited,'vent → bowl roll → grounded dash panel → physical crest exit');assert.equal(a.run('stats.deaths'),0);
 });
 test('post-pool layout rises through the zigzag choice before the guard and junction stairs',()=>{
  const a=boot();const ids=['mid-pool-roof-exit','mid-low-transfer-1','mid-right-guard-roof','mid-low-transfer-2','mid-low-transfer-3'];

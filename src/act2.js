@@ -45,6 +45,7 @@ import {
 } from './surface-collision.js';
 import { resolveMotionInteractions } from './world-interactions.js';
 import { beginTraversalLaunch } from './traversal-animations.js';
+import { usesStageMovement, acceptAct1Launch } from './act1-motion.js';
 export let cameraTracking, skylineSmokeSprites;
 
 export function selectAct(act) {
@@ -91,7 +92,7 @@ export function resetAct2() {
       h.broken = !!h.broken && h.x < runtimeState.level.checkpoints[runtimeState.checkpoint].x;
 }
 
-export function launchAirDevice(device) {
+export function launchAirDevice(device, time = runtimeState.runFrames) {
   // A spring/vent takes over the trajectory without granting another airborne burst.
   p.airBoostFrames = 0;
   p.airBoostActive = false;
@@ -118,7 +119,8 @@ export function launchAirDevice(device) {
   runtimeState.jumpBuffer = 0;
   p.airLaunchUntil = runtimeState.runFrames + Math.ceil(device.power / 0.58);
   device.firedAt = runtimeState.runFrames;
-  const anchor = airDevicePose(device);
+  acceptAct1Launch(device, time);
+  const anchor = airDevicePose(device, time);
   sparks(anchor.x, anchor.y - 10, 6, device.cityVent ? '#9be3ef' : '#ffe68b');
   gameSound(device.poolBooster ? 'pool' : device.cityVent ? 'vent' : 'spring', {
     launch: !!device.poolBooster,
@@ -257,6 +259,7 @@ export function updateAct2() {
       if (Math.hypot(p.x - l.x, feet() - l.y) > FOOT_RADIUS + 18) l.entryLocked = false;
       continue;
     }
+    if (usesStageMovement()) continue; // Entry is swept by the single movement owner.
     const direction = Math.sign(p.vx);
     if (
       !p.loop &&
@@ -324,12 +327,13 @@ export function predictLanding() {
       continue;
     const q = pose(s),
       floor = q.y1 + (p.x - q.x1) * q.slope,
-      b = p.vy + 0.29 - q.slope * p.vx,
+      gravity = usesStageMovement() ? 0.35 * (p.underwater ? 2 / 7 : 1) : 0.58,
+      b = p.vy + (usesStageMovement() ? 0 : 0.29) - q.slope * p.vx,
       c = feet() - floor,
-      d = b * b - 1.16 * c;
+      d = b * b - 2 * gravity * c;
     if (d < 0) continue;
-    let t = (-b + Math.sqrt(d)) / 0.58;
-    const cap = Math.max(0, (20 - p.vy) / 0.58);
+    let t = (-b + Math.sqrt(d)) / gravity;
+    const cap = usesStageMovement() ? Infinity : Math.max(0, (20 - p.vy) / gravity);
     if (t > cap) {
       const rise = p.vy * cap + 0.29 * cap * (cap + 1),
         den = 20 - q.slope * p.vx;

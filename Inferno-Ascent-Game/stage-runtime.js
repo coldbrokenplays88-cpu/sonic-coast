@@ -81,7 +81,7 @@ const neonExpressAct2Runtime = {
     },
     afterLanding(s) {
       onBlimpLanding(s);
-      if (s.poolCurve) {
+      if (s.poolCurve && p.poolApproach) {
         p.poolApproach = false;
         p.rolling = true;
         p.roll = true;

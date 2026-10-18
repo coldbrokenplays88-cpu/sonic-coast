@@ -90,7 +90,7 @@ test('wrong-route landing corrects speed before landing effects and contact assi
  assert.deepEqual(read(a,'observed'),[0,false,false,null]);assert.equal(a.run('p.surface.id'),'fallen');
 });
 test('pool entry establishes roll state before a buffered jump consumes the landing',()=>{
- const a=boot();a.run(`const poolSurface={id:'pool',x1:0,x2:500,y1:400,y2:400,kind:'main',poolCurve:true};
+ const a=boot();a.run(`p.act1Motion=null;const poolSurface={id:'pool',x1:0,x2:500,y1:400,y2:400,kind:'main',poolCurve:true};
   afterStageLanding(poolSurface);const originalJump=jump;let atJump=null;
   jump=()=>{atJump=[p.surface.id,p.poolApproach,p.rolling,p.roll,p.rollAge,p.lowRollFrames];originalJump()};
   Object.assign(p,{vx:8,ground:false,surface:null,poolApproach:true,rolling:false,rollAge:90,lowRollFrames:4});
@@ -152,7 +152,7 @@ for(const state of ['entrance','destroyed'])test(`boss-owned ${state} keeps its 
  assert.equal(a.run('runFrames'),1);near(a.run('clock'),1/60);
 });
 for(const changedMode of [false,true])test(`movement ${changedMode?'death':'failure'} returns before stage work`,()=>{
- const a=phaseBoot();a.run(`updateMovement=()=>{calls.push('movement');${changedMode?"mode='over';return true":"return false"}};update()`);
+ const a=phaseBoot();a.run(`updateAct1Movement=()=>{calls.push('movement');${changedMode?"mode='over';return true":"return false"}};update()`);
  assert.deepEqual(read(a,'calls'),['platforms','movement','hud']);
 });
 test('post-stage death keeps the shared interior update before the mode guard',()=>{

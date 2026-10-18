@@ -208,7 +208,9 @@ function setup() {
   });
   testControlled = false;
   level = configureBoostMonitors(
-    selectedAct === 2 ? addMiddleSection(makeLevel2()) : makeLevel()
+    selectedAct === 2
+      ? configureAct2Launches(addMiddleSection(makeLevel2()))
+      : makeLevel()
   );
   configureDirectionalSpikes(level);
   selectStageRuntime();
@@ -450,7 +452,7 @@ function press(k, automated = false) {
     return;
   }
   if (
-    !usesAct1Motion() &&
+    !usesStageMovement() &&
     (k === 'ArrowDown' || k === 'KeyS') &&
     !keys.has(k) &&
     mode === 'playing'
@@ -467,7 +469,7 @@ function press(k, automated = false) {
     return;
   }
   if (bossOwnsControls() && mode === 'playing') return;
-  if (usesAct1Motion() && mode === 'playing') {
+  if (usesStageMovement() && mode === 'playing') {
     inputAct1Motion(k, true);
     return;
   }
@@ -521,7 +523,7 @@ function release(k, automated = false) {
     handlePlaytestInput(k, false);
     return;
   }
-  if (usesAct1Motion()) {
+  if (usesStageMovement()) {
     inputAct1Motion(k, false);
     return;
   }
@@ -610,6 +612,7 @@ function update() {
   if (toastTime > 0 && !--toastTime) $('#toast').style.display = 'none';
   updateWorldPlatforms();
   if (bossOwnsControls()) {
+    if (usesStageMovement()) clearAct1Input();
     if (boss.state === 'destroyed') updateMovement();
     updateParticles();
     updateBossEncounter();
@@ -619,7 +622,7 @@ function update() {
     return;
   }
   if (
-    !(usesAct1Motion() ? updateAct1Movement() : updateMovement()) ||
+    !(usesStageMovement() ? updateAct1Movement() : updateMovement()) ||
     mode !== 'playing'
   ) {
     updateHud();
@@ -980,7 +983,7 @@ function sonic() {
   if (p.inv > 0 && step % 10 < 4 && mode === 'playing') return;
   const q = sonicPose();
   ctx.save();
-  if (usesAct1Motion()) {
+  if (usesStageMovement()) {
     const body = act1Body();
     ctx.translate(body.x, body.y + (p.ground ? body.hh - 20 : -1));
     if (p.ground) {
@@ -999,7 +1002,7 @@ function sonic() {
       Math.round(transform.e),
       Math.round(transform.f)
     );
-  if (p.loop) {
+  if (p.loop && !usesStageMovement()) {
     ctx.translate(0, 20);
     ctx.rotate(-p.loop.theta);
     ctx.translate(0, -20);

@@ -334,7 +334,8 @@ function beginWrongRouteDrop() {
 
 function updateMiddleMotion() {
   if (p.wrongRouteDrop) {
-    const spring = level.springs.find((d) => d.id === 'mid-low-spring');
+    const spring = level.pads.find((d) => d.id === 'mid-low-spring') ||
+      level.springs.find((d) => d.id === 'mid-low-spring');
     p.vx = p.x > spring.x + 2 ? -18 : 0;
   }
 
