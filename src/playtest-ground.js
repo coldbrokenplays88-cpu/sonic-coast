@@ -147,8 +147,17 @@ export function advanceGroundSubstep(
   // Sonic 2 uses 0x50 downhill roll / 0x20 running slope force. Preserve
   // approved uphill loss: only velocity aligned with downhill gets the ratio.
   const slopeFactor = rolling && player.speed * midpoint.ty > 0 ? t.rollDownhillMultiplier : 1;
+  let slopeStep = t.gravity * midpoint.ty * slopeFactor * dt;
+  // Limit only gravity's addition to a roll, never externally supplied speed.
+  // Include this substep's friction in the allowance so sustained rolling can
+  // settle at the cap without a sawtooth speed or an artificial launch.
+  if (rolling && player.speed * slopeStep >= 0) {
+    const cap = t.rollSpeedCap ?? Infinity;
+    const allowance = Math.abs(player.speed) > cap ? 0 : cap - Math.abs(player.speed) + resistance * dt;
+    slopeStep = Math.sign(slopeStep) * Math.min(Math.abs(slopeStep), allowance);
+  }
   const nextSpeed = groundResist(
-    player.speed + (t.gravity * midpoint.ty * slopeFactor + drive) * dt,
+    player.speed + slopeStep + drive * dt,
     resistance * dt
   );
   // Trapezoidal travel plus midpoint tangent; all velocities derive from speed.
@@ -214,6 +223,7 @@ export function initializeRuntimeModule() {
     coastResistance: 0.1,
     gravity: 0.35,
     rollResistance: 0.025,
+    rollSpeedCap: 32,
     rollDownhillMultiplier: 2.5,
     rollBrake: 0.18,
     rollBrakeFadeSpeed: 2,

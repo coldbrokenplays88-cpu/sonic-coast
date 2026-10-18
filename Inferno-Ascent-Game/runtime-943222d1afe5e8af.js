@@ -516,8 +516,14 @@
     const midpointX = position + player.speed * (arcLength ? 1 : before.tx) * dt / 2;
     const midpoint = sampler(player.scenario, midpointX);
     const slopeFactor = rolling && player.speed * midpoint.ty > 0 ? t.rollDownhillMultiplier : 1;
+    let slopeStep = t.gravity * midpoint.ty * slopeFactor * dt;
+    if (rolling && player.speed * slopeStep >= 0) {
+      const cap = t.rollSpeedCap ?? Infinity;
+      const allowance = Math.abs(player.speed) > cap ? 0 : cap - Math.abs(player.speed) + resistance * dt;
+      slopeStep = Math.sign(slopeStep) * Math.min(Math.abs(slopeStep), allowance);
+    }
     const nextSpeed = groundResist(
-      player.speed + (t.gravity * midpoint.ty * slopeFactor + drive) * dt,
+      player.speed + slopeStep + drive * dt,
       resistance * dt
     );
     if (arcLength) player.pathS += (player.speed + nextSpeed) * 0.5 * dt;
@@ -567,6 +573,7 @@
       coastResistance: 0.1,
       gravity: 0.35,
       rollResistance: 0.025,
+      rollSpeedCap: 32,
       rollDownhillMultiplier: 2.5,
       rollBrake: 0.18,
       rollBrakeFadeSpeed: 2,
