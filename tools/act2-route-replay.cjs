@@ -25,6 +25,31 @@ async function act2RouteSmoke(page) {
     assert.equal(result.ticks, 6, 'tower exits must consume every tick without freezing');
   }
   checks.push(tower);
+  const flat = await run(`selectAct(2);start();var flatChecks=[];
+    for(var speed of [8,14,24])for(var rolling of [false,true]){
+      var ramp=surfaceById('split-skyline-act2-190');keys.clear();
+      Object.assign(p,{x:ramp.x2-50,y:yOn(ramp,ramp.x2-50)-20,vx:speed,vy:0,
+        ground:true,surface:ramp,rolling,roll:rolling,inv:9999});press('ArrowRight',true);
+      for(var tick=0;tick<12;tick++)update();draw();
+      flatChecks.push({speed,rolling,surface:p.surface?.id,ground:p.ground});
+    }({scenario:'Split Skyline ramp to flat',cases:flatChecks});`);
+  for (const result of flat.cases) {
+    assert.equal(result.surface, 'split-skyline-act2-205');
+    assert.equal(result.ground, true);
+  }
+  checks.push(flat);
+  const interior = await run(`selectAct(2);start();keys.clear();
+    level.hazards.find(h=>h.id==='secret-facade-wall').broken=true;
+    var rail=surfaceById('secret-rail-down');boost=0;
+    Object.assign(p,{x:rail.x1+4,y:yOn(rail,rail.x1+4)-20,vx:0,vy:0,ground:true,
+      surface:rail,rolling:false,roll:false,inv:9999});
+    press('ArrowRight',true);press('ShiftLeft',true);var began=runFrames;
+    for(var tick=0;tick<200;tick++){update();if(p.x>=surfaceById('secret-rail-merge').x2)break}
+    draw();({scenario:'interior rail at zero meter',ticks:runFrames-began,
+      exited:p.x>=surfaceById('secret-rail-merge').x2,meter:boost});`);
+  assert.equal(interior.exited, true);
+  assert.equal(interior.meter, 0);
+  checks.push(interior);
   for (const cautious of [false, true]) {
     const result = await run(`selectAct(2);start();${startLoopSource}${blimpReplaySource}
       startLoop();var replayStart=performance.now();var result=replayBlimps(${cautious});draw();
@@ -39,10 +64,11 @@ async function act2RouteSmoke(page) {
   for (const phase of [0, 120]) {
     const result = await run(`selectAct(2);start();${aimHighSource}
       runFrames=${phase};var entry=surfaceById('mid-fallen-building');
-      Object.assign(p,{x:level.middleSection.start+600,y:yOn(entry,level.middleSection.start+600)-20,surface:entry,ground:true,vx:8,vy:0});
-      boost=0;count=20;keys.clear();press('Space',true);var began=runFrames;var replayStart=performance.now();
+      Object.assign(p,{x:level.middleSection.start+700,y:yOn(entry,level.middleSection.start+700)-20,surface:entry,ground:true,vx:6,vy:0,rolling:false,roll:false});
+      boost=0;count=20;keys.clear();press('ArrowRight',true);press('Space',true);var began=runFrames;var replayStart=performance.now();
       for(var frame=0;frame<1000&&mode==='playing';frame++){
-        aimHigh();if(p.surface?.grindable){keys.clear();keys.add('ShiftLeft');keys.add('ArrowRight')}
+        if(level.springs.find(d=>d.id==='mid-upper-spring').firedAt!==undefined)aimHigh();
+        if(p.surface?.grindable){keys.clear();keys.add('ShiftLeft');keys.add('ArrowRight')}
         update();if(p.surface?.id==='mid-junction')break;
       }
       draw();({scenario:'upper chain phase ${phase}',ticks:runFrames-began,ms:performance.now()-replayStart,surface:p.surface?.id,
@@ -56,16 +82,21 @@ async function act2RouteSmoke(page) {
   }
   const lower = await run(`selectAct(2);start();var vent=level.pads.find(d=>d.id==='mid-low-spring');var deck=surfaceById(vent.surfaceId);
     Object.assign(p,{x:vent.x-30,y:yOn(deck,vent.x-30)-20,surface:deck,ground:true,vx:8,vy:0});count=20;boost=0;
-    press('ArrowRight',true);press('ArrowDown',true);var enteredPool=false;var began=runFrames;
-    for(var frame=0;frame<280&&mode==='playing';frame++){
+    press('ArrowRight',true);press('ArrowDown',true);var enteredPool=false,jumpedFromPool=false,roofReached=false;var began=runFrames;
+    for(var frame=0;frame<400&&mode==='playing';frame++){
+      if(!jumpedFromPool&&p.surface?.poolCurve&&p.x>level.middleSection.start+2050){
+        release('ArrowDown',true);press('Space',true);jumpedFromPool=true;
+      }
       update();enteredPool ||= !!p.surface?.poolCurve;
-      if(p.poolExit&&!p.ground&&p.act1Motion.lastTakeoff?.reason==='rolled crest')break;
+      roofReached ||= p.surface?.id==='mid-tilted-glass-roof';if(p.surface?.id==='mid-pool-roof-exit')break;
     }
-    draw();({scenario:'lower vent and pool',ticks:runFrames-began,enteredPool,panel:p.poolExit,takeoff:p.act1Motion.lastTakeoff,state:readGameState()});`);
+    draw();({scenario:'lower vent and pool without pad',ticks:runFrames-began,enteredPool,jumpedFromPool,roofReached,exitSurface:p.surface?.id,panel:p.poolExit,state:readGameState()});`);
   assert.equal(lower.enteredPool, true);
-  assert.equal(lower.panel, true);
+  assert.equal(lower.jumpedFromPool, true);
+  assert.equal(lower.roofReached, true);
+  assert.equal(lower.exitSurface, 'mid-pool-roof-exit');
+  assert.equal(lower.panel, false);
   assert.equal(lower.state.deaths, 0);
-  assert.equal(lower.takeoff.reason, 'rolled crest');
   checks.push(lower);
 
   // Test real entrance/AI control handoff. The defeat below is an explicit

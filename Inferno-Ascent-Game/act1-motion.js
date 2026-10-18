@@ -991,6 +991,10 @@ function moveAct1Ground(m, controls, duration, time) {
     for (const s of level.surfaces) {
       if (s === surface || !active(s)) continue;
       const z = act1Surface(s, m.x, time + dt);
+      // An overlapping deck ending here is not a continuation in this
+      // direction. Keep searching for the surface extending past the seam.
+      if ((m.speed > 0 && z.x2 <= m.x + 1e-4) || (m.speed < 0 && z.x1 >= m.x - 1e-4))
+        continue;
       if (m.x >= z.x1 - 1e-4 && m.x <= z.x2 + 1e-4 && Math.abs(z.y - at.y) < 1e-4) {
         join = s;
         break;

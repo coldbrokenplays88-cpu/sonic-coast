@@ -1,8 +1,7 @@
 // Canonical runtime module. Classic VM compatibility is generated from this source.
 import { state as runtimeState } from './state.js';
 import { cityFlame, citySmoke } from './act2.js';
-import { airDevicePose, surfaceById } from './boost-rules.js';
-import { drawPoolBooster } from './city-polish.js';
+import { surfaceById } from './boost-rules.js';
 import { H, W, ctx, p } from './game.js';
 import { cityPixelLine, cityPixelRect } from './pixel-world.js';
 import { yOn } from './surface-collision.js';
@@ -117,7 +116,9 @@ export function addMiddleSection(l) {
   const approach = deck('approach', 0, 320, 0),
     fallen = deck('fallen-building', 320, 940, 0, -90, { cityType: 'concrete-ramp', fallen: true });
   body(fallen, 'fallen', { damage: 1 });
-  const upper = deck('upper-choice', 761, 819, -185, -185, {
+  // The now-solid spring cap sits 40 units above its deck. Lower only this
+  // mount by that height so a normal jump from the fallen slope clears it.
+  const upper = deck('upper-choice', 761, 819, -145, -145, {
     cityType: 'fire-escape',
     kind: 'express',
     routeType: 'skill',
@@ -216,18 +217,8 @@ export function addMiddleSection(l) {
     floor: base + 220,
     surfaceId: poolFloor.id,
     deckIds: poolDecks.map((s) => s.id),
-    booster: {
-      id: 'mid-pool-booster',
-      x: start + 1810,
-      y: poolFloor.y1 + (poolFloor.y2 - poolFloor.y1) / 4,
-      surfaceId: poolFloor.id,
-      power: 0,
-      launchX: 22,
-      poolBooster: true,
-      targetId: tilted.id,
-    },
+    exitRoofId: tilted.id,
   };
-  l.pads.push(pool.booster);
   l.buildings.push(
     {
       id: 'mid-burned-glass-tower',
@@ -360,7 +351,7 @@ export function drawMiddleSection() {
   const m = runtimeState.level.middleSection;
   if (!m) return;
   const pool = m.pool,
-    glassRoof = surfaceById(pool.booster.targetId),
+    glassRoof = surfaceById(pool.exitRoofId),
     smokeTop = m.base - 360 - 204;
   // Include the burning tower's 54-unit smoke plumes, which rise above its roof.
   if (
@@ -393,7 +384,7 @@ export function drawMiddleSection() {
       }
     }
   }
-  const roof = surfaceById(pool.booster.targetId),
+  const roof = surfaceById(pool.exitRoofId),
     bottom = runtimeState.camY + H / runtimeState.zoom + 80,
     first = Math.max(Math.min(roof.y1, roof.y2) + 26, runtimeState.camY - 40),
     width = roof.x2 - roof.x1;
@@ -444,7 +435,6 @@ export function drawMiddleSection() {
     cityPixelRect(x + 2, y, 2, 2, '#d5fdff');
   }
   ctx.restore();
-  if (typeof drawPoolBooster === 'function') drawPoolBooster(airDevicePose(pool.booster));
 }
 export function initializeRuntimeModule() {}
 export function getRuntimeBindings() {

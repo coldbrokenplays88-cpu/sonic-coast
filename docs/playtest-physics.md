@@ -6,6 +6,40 @@ Starting SHA: `ddbffe594739cc3406b4a5afc757d70ab800843b`.
 No new PR, ready-state change, merge, main change or deployment. GitHub returned
 no matching open PR; none was created.
 
+## Follow-up: Split Skyline and middle-route playability
+
+Starting SHA: `3f388d28ffc4de142d6d065119225caa3229cd83`.
+Reproduced running through the flat roof in the user's screenshot. At the end of
+`split-skyline-act2-190`, seam selection chose overlapping deck185, which ends
+there, rather than continuing deck205. Reject ending candidates before selecting
+a continuation; the earlier tower-edge safeguard remains. Verified standing and
+rolling approaches at8/14/24 speed, preserving momentum without a fall.
+
+All four interior `secret-rail-*` segments now have `infiniteBoost:true`; holding
+Boost climbs from rest at zero meter. The facade's entry restriction is unchanged.
+The original level snapshot changes only these four explicitly approved flags.
+Lower the first upper spring's58-unit mount by40 units (`-185` to`-145` relative
+to the approach), matching the solid cap's added height. Ordinary held jumps from
+the fallen slope at6/8 speed now reach it; other spring positions/impulses remain.
+Remove the pool momentum pad and its rendering/data entirely. The lower route
+enters the bowl naturally and reaches the tilted roof, then its flat exit, using
+a normal jump from the right slope without Boost. Earned high-speed rolls still
+release naturally at the crest; no replacement impulse or position pull.
+
+Final:561 gameplay/10 build tests, `build:player`, compatibility/player checks,
+package and extracted HTTP Chromium smoke pass, with zero page errors. Browser
+coverage includes the pictured seam, interior rail from empty meter, complete
+six-spring routes at hoist phases0/120, vent→bowl→roof exit, both blimp choices,
+the earlier tower fix, Act1 routes, PLAYTEST, and boss/ending handoffs. Historical
+panel assertions now verify its removal/natural traversal; the upper replay uses
+the normal entry jump and a1000-tick budget (previous850 stopped just before the
+junction after the changed entry). No tests are skipped or route assertions removed.
+No human/full-act clear is claimed. Broader force tuning remains pending feedback.
+
+Tested runtime: `runtime-81ff374ec706e7e9.js`. Player ZIP:37 files,52,347,326 bytes;
+SHA256 `397e143048e3faf790f57faf97513e738e4fdaa316187c8f4339ce4fee994e6b`.
+Older build records below are historical. No merge, PR creation or deployment.
+
 ## Follow-up: first-tower freeze
 
 Starting SHA: `b5a1cf9aec144da7fcc71e498db1d3a4370b9f34`. Reproduced

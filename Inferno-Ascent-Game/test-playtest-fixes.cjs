@@ -26,16 +26,14 @@ test('upright decision spring permits repeated bounces while waiting for the hoi
  for(let f=0;f<160;f++){a.run('update()');if(a.run('d.firedAt>firstBounce'))break}
  assert.ok(a.run('d.firedAt>firstBounce'));assert.equal(a.run('stats.deaths'),0);assert.ok(a.run('tangentTransfer'));assert.ok(Math.abs(a.run('tangentTransfer.after-tangentTransfer.before'))<1e-9,'upright spring preserves horizontal momentum');
 });
-test('lower spring reaches the curved pool and exits by ground momentum without a midair pull',()=>{
- const a=boot();a.run("const d=[...level.springs,...level.pads].find(d=>d.id==='mid-low-spring');p.x=d.x;p.y=d.y-20;p.surface=surfaceById(d.surfaceId);p.ground=true;count=20;boost=0;launchAirDevice(d);keys.add('ArrowRight');keys.add('ArrowDown')");
- let entered=false,panel=false,exited=false;
- for(let i=0;i<260;i++){
-  const before=a.run('p.x');a.run('update()');assert.ok(Math.abs(a.run('p.x')-before)<=24.01,'no scripted position pull');
-  assert.ok(!a.run('p.poolTransfer'));if(a.run('p.surface?.poolCurve'))entered=true;
-  if(a.run('p.poolExit')&&!panel){panel=true;assert.equal(a.run('p.ground'),true,'dash panel must accelerate along the floor')}
-  if(a.run("p.poolExit&&!p.ground&&p.act1Motion.lastTakeoff?.reason==='rolled crest'")){exited=true;break}
+test('crossing the former pool pad preserves physical rolling speed without an added impulse',()=>{
+ const a=boot();a.run("const floor=surfaceById('mid-pool-floor');Object.assign(p,{x:floor.x1+2,y:yOn(floor,floor.x1+2)-20,vx:8,vy:0,surface:floor,ground:true,underwater:true,rolling:true,roll:true});resetAct1Motion();keys.add('ArrowRight');keys.add('ArrowDown')");
+ for(let i=0;i<8;i++){
+  const before=a.run('p.x');a.run('update()');
+  assert.ok(a.run('p.x')-before<=8.01,'no hidden panel impulse or position pull');
+  assert.ok(!a.run('p.poolTransfer||p.poolExit'));
  }
- assert.ok(entered&&panel&&exited,'vent → bowl roll → grounded dash panel → physical crest exit');assert.equal(a.run('stats.deaths'),0);
+ assert.equal(a.run('p.ground'),true);assert.equal(a.run('stats.deaths'),0);
 });
 test('post-pool layout rises through the zigzag choice before the guard and junction stairs',()=>{
  const a=boot();const ids=['mid-pool-roof-exit','mid-low-transfer-1','mid-right-guard-roof','mid-low-transfer-2','mid-low-transfer-3'];

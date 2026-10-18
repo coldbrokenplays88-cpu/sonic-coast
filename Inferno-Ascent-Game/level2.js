@@ -614,6 +614,7 @@ const act2LevelTemplate = {
       },
       {
         id: 'secret-rail-down',
+        infiniteBoost: true,
         x1: 48040,
         x2: 48400,
         y1: -5040,
@@ -625,6 +626,7 @@ const act2LevelTemplate = {
       },
       {
         id: 'secret-rail-bottom',
+        infiniteBoost: true,
         x1: 48400,
         x2: 48700,
         y1: -4850,
@@ -636,6 +638,7 @@ const act2LevelTemplate = {
       },
       {
         id: 'secret-rail-up',
+        infiniteBoost: true,
         x1: 48700,
         x2: 49120,
         y1: -4850,
@@ -647,6 +650,7 @@ const act2LevelTemplate = {
       },
       {
         id: 'secret-rail-merge',
+        infiniteBoost: true,
         x1: 49120,
         x2: 49260,
         y1: -5660,

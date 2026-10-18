@@ -9691,6 +9691,8 @@
       for (const s of state.level.surfaces) {
         if (s === surface || !active(s)) continue;
         const z2 = act1Surface(s, m.x, time + dt);
+        if (m.speed > 0 && z2.x2 <= m.x + 1e-4 || m.speed < 0 && z2.x1 >= m.x - 1e-4)
+          continue;
         if (m.x >= z2.x1 - 1e-4 && m.x <= z2.x2 + 1e-4 && Math.abs(z2.y - at.y) < 1e-4) {
           join = s;
           break;
@@ -11682,6 +11684,7 @@
         },
         {
           id: "secret-rail-down",
+          infiniteBoost: true,
           x1: 48040,
           x2: 48400,
           y1: -5040,
@@ -11693,6 +11696,7 @@
         },
         {
           id: "secret-rail-bottom",
+          infiniteBoost: true,
           x1: 48400,
           x2: 48700,
           y1: -4850,
@@ -11704,6 +11708,7 @@
         },
         {
           id: "secret-rail-up",
+          infiniteBoost: true,
           x1: 48700,
           x2: 49120,
           y1: -4850,
@@ -11715,6 +11720,7 @@
         },
         {
           id: "secret-rail-merge",
+          infiniteBoost: true,
           x1: 49120,
           x2: 49260,
           y1: -5660,
@@ -21794,7 +21800,7 @@ Boost ${player.boost.meter.toFixed(2)}/90${c.infiniteBoost && player.railId ? " 
     }, "bot");
     const approach = deck("approach", 0, 320, 0), fallen = deck("fallen-building", 320, 940, 0, -90, { cityType: "concrete-ramp", fallen: true });
     body(fallen, "fallen", { damage: 1 });
-    const upper = deck("upper-choice", 761, 819, -185, -185, {
+    const upper = deck("upper-choice", 761, 819, -145, -145, {
       cityType: "fire-escape",
       kind: "express",
       routeType: "skill"
@@ -21882,18 +21888,8 @@ Boost ${player.boost.meter.toFixed(2)}/90${c.infiniteBoost && player.railId ? " 
       floor: base + 220,
       surfaceId: poolFloor.id,
       deckIds: poolDecks.map((s) => s.id),
-      booster: {
-        id: "mid-pool-booster",
-        x: start2 + 1810,
-        y: poolFloor.y1 + (poolFloor.y2 - poolFloor.y1) / 4,
-        surfaceId: poolFloor.id,
-        power: 0,
-        launchX: 22,
-        poolBooster: true,
-        targetId: tilted.id
-      }
+      exitRoofId: tilted.id
     };
-    l.pads.push(pool.booster);
     l.buildings.push(
       {
         id: "mid-burned-glass-tower",
@@ -22022,7 +22018,7 @@ Boost ${player.boost.meter.toFixed(2)}/90${c.infiniteBoost && player.railId ? " 
   function drawMiddleSection() {
     const m = state.level.middleSection;
     if (!m) return;
-    const pool = m.pool, glassRoof = surfaceById(pool.booster.targetId), smokeTop = m.base - 360 - 204;
+    const pool = m.pool, glassRoof = surfaceById(pool.exitRoofId), smokeTop = m.base - 360 - 204;
     if (glassRoof.x2 < state.cam - 100 || pool.x1 - 400 > state.cam + W / state.zoom + 100 || smokeTop > state.camY + H / state.zoom + 100)
       return;
     const left = pool.x1 - 170;
@@ -22047,7 +22043,7 @@ Boost ${player.boost.meter.toFixed(2)}/90${c.infiniteBoost && player.railId ? " 
         }
       }
     }
-    const roof = surfaceById(pool.booster.targetId), bottom = state.camY + H / state.zoom + 80, first = Math.max(Math.min(roof.y1, roof.y2) + 26, state.camY - 40), width = roof.x2 - roof.x1;
+    const roof = surfaceById(pool.exitRoofId), bottom = state.camY + H / state.zoom + 80, first = Math.max(Math.min(roof.y1, roof.y2) + 26, state.camY - 40), width = roof.x2 - roof.x1;
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(roof.x1 - 400, bottom);
@@ -22094,7 +22090,6 @@ Boost ${player.boost.meter.toFixed(2)}/90${c.infiniteBoost && player.railId ? " 
       cityPixelRect(x + 2, y, 2, 2, "#d5fdff");
     }
     ctx.restore();
-    if (typeof drawPoolBooster === "function") drawPoolBooster(airDevicePose(pool.booster));
   }
   __name(drawMiddleSection, "drawMiddleSection");
   function initializeRuntimeModule34() {
