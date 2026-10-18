@@ -2,9 +2,11 @@
 const fs = require('node:fs'),
   path = require('node:path');
 const { stageSite } = require('./stage-site.cjs');
+const { checkEndingCache } = require('./check-ending-cache.cjs');
 const root = path.resolve(__dirname, '..'),
   game = path.join(root, 'Inferno-Ascent-Game');
 function buildPlayerEntry({ check = false } = {}) {
+  checkEndingCache();
   const { outputDir, resources } = stageSite(),
     html = fs.readFileSync(path.join(outputDir, 'index.html'));
   const entry = path.join(game, 'PLAY.html');

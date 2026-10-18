@@ -58,3 +58,17 @@ test('warm gameplay and boss frames allocate no extra canvases',()=>{
  const r=renderer();r.run("prepareScorpionArt({width:1536,height:1024});drawRecoveredSonicFrame({sheet:'recoveredSpeedster',frame:16});scorpionPart('jaw',400,200,.65)");const count=r.canvases.length;
  r.run("for(let i=0;i<60;i++){drawRecoveredSonicFrame({sheet:'recoveredSpeedster',frame:16});scorpionPart('jaw',400,200,.65)}");assert.equal(r.canvases.length,count);
 });
+
+test('ending preparation works when the browser denies canvas pixel readback',()=>{
+ const r=renderer();
+ r.context.getImageData=()=>{throw new Error('SecurityError: The canvas has been tainted by cross-origin data')};
+ assert.doesNotThrow(()=>r.run("for(const name of endingSheets)prepareEndingArt(name,{width:2048,height:4096})"));
+ assert.equal(r.run('endingArtReady()&&endingSprites.has(\'emerald\')'),true);
+});
+
+test('ending preparation errors expose retry instead of escaping the image callback',()=>{
+ const r=renderer();
+ r.run("Image=class{constructor(){globalThis.pendingEndingImage=this}};prepareEndingArt=()=>{throw Error('decode failed')};loadEndingArt('sonic')");
+ assert.doesNotThrow(()=>r.run('pendingEndingImage.onload()'));
+ assert.equal(r.run("endingLoadErrors.has('sonic')"),true);
+});

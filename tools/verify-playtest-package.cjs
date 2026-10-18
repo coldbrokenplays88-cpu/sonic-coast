@@ -7,6 +7,7 @@ const { spawn } = require('node:child_process');
 const { chromium } = require('playwright');
 const { act1RouteReplay, act1ExpressReplay } = require('./act1-route-replay.cjs');
 const { act2RouteSmoke } = require('./act2-route-replay.cjs');
+const { verifyEndingCache } = require('./verify-ending-cache.cjs');
 
 async function smoke(browser, url) {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
@@ -547,8 +548,9 @@ async function main() {
       });
     });
     results.push(await smoke(browser, `http://127.0.0.1:${port}/`));
+    const endingCacheChecks = await verifyEndingCache(browser, `http://127.0.0.1:${port}/`);
     console.log(
-      JSON.stringify({ chromium: browser.version(), extractedDirectory: root, results }, null, 2)
+      JSON.stringify({ chromium: browser.version(), extractedDirectory: root, results, endingCacheChecks }, null, 2)
     );
   } finally {
     server?.kill();

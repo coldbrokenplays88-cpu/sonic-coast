@@ -6,6 +6,31 @@ Starting SHA: `ddbffe594739cc3406b4a5afc757d70ab800843b`.
 No new PR, ready-state change, merge, main change or deployment. GitHub returned
 no matching open PR; none was created.
 
+## Follow-up: ending stuck at preparation
+
+Starting SHA: `b7ca9d476c139d5ba67aa51ae1d906c847d8d31e`. The screenshot shows
+direct-file launch. Reproduced the same indefinite preparation state with tainted
+sprite canvases: `getImageData` threw, no load-error flag was set, and playback
+never started. Ending playback now draws lossless, native-resolution cached crops
+without pixel readback. All125 cels, including the Emerald, match the previous
+renderer pixel-for-pixel. Original sheets, anchors, animation and physics remain
+unchanged. Preparation failures expose the existing retry action.
+
+Regenerate these derived assets only when source ending sheets/descriptors change:
+`node tools/build-ending-cache.cjs` (optional Playwright/Chromium tools required).
+`build:player` and `check:player` verify source/cache hashes; normal builds and play
+need no new dependency. Source PNGs are retained unchanged.
+
+Verified563 gameplay/10 build tests, generated-output checks and player packaging.
+Extracted HTTP Chromium verification includes every native cel, full966-frame
+ending with pixel reads denied, failed-load/retry recovery and existing routes.
+Direct-file browser navigation remains blocked by this environment's admin policy;
+the equivalent readback restriction was explicitly tested rather than claiming a
+direct-file playtest. Runtime: `runtime-cdb527f265a0647e.js`.
+Player ZIP:44 files,62,614,361 bytes; SHA256
+`58750c8998e578d526cfe5c77666407f61586adcf90e1e1ae4bf0a7a0e34e53d`.
+No merge or deployment; stop for personal feedback.
+
 ## Follow-up: Split Skyline and middle-route playability
 
 Starting SHA: `3f388d28ffc4de142d6d065119225caa3229cd83`.

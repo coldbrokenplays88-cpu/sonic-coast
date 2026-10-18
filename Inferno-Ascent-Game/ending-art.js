@@ -1,49 +1,22 @@
 // Generated from src/ending-art.js; run npm run build:compat after source edits.
 'use strict';
 function prepareEndingArt(name, image) {
-  const source = document.createElement('canvas');
-  source.width = image.width;
-  source.height = image.height;
-  const sc = source.getContext('2d', { willReadFrequently: true });
-  sc.drawImage(image, 0, 0);
-  const frames = [];
-  for (const d of endingFrames[name]) {
+  const definitions = endingFrames[name];
+  const cellWidth = Math.max(...definitions.map((d) => d.bounds[2] - d.bounds[0]));
+  const cellHeight = Math.max(...definitions.map((d) => d.bounds[3] - d.bounds[1]));
+  const frames = definitions.map((d, i) => {
     const [l, t, r, b] = d.bounds,
       w = r - l,
-      h = b - t,
-      data = sc.getImageData(l, t, w, h),
-      pixels = data.data;
-    // A connected-component mask prevents neighboring extended limbs leaking
-    // into a crop even when generated cel bounds overlap. Keep every hard pixel.
-    const keep = new Uint8Array(w * h);
-    if (d.islands) {
-      for (let i = 0; i < keep.length; i++) keep[i] = pixels[i * 4 + 3] > 160 ? 1 : 0;
-    } else {
-      const queue = new Int32Array(w * h),
-        seed = (d.seed[1] - t) * w + d.seed[0] - l;
-      let head = 0,
-        tail = 1;
-      queue[0] = seed;
-      keep[seed] = 1;
-      while (head < tail) {
-        const i = queue[head++],
-          x = i % w;
-        for (const j of [x ? i - 1 : -1, x < w - 1 ? i + 1 : -1, i - w, i + w])
-          if (j >= 0 && j < keep.length && !keep[j] && pixels[j * 4 + 3] > 160) {
-            keep[j] = 1;
-            queue[tail++] = j;
-          }
-      }
-    }
-    for (let i = 0; i < keep.length; i++) pixels[i * 4 + 3] = keep[i] ? 255 : 0;
+      h = b - t;
     const crop = document.createElement('canvas');
     crop.width = w;
     crop.height = h;
-    crop.getContext('2d').putImageData(data, 0, 0);
-    // Retain the complete masked source crop. Scale only in the final draw.
+    crop
+      .getContext('2d')
+      .drawImage(image, (i % 4) * cellWidth, Math.floor(i / 4) * cellHeight, w, h, 0, 0, w, h);
     const width = Math.ceil(w * d.scale),
       height = Math.ceil(h * d.scale);
-    frames.push({
+    return {
       image: crop,
       width,
       height,
@@ -55,50 +28,19 @@ function prepareEndingArt(name, image) {
             y: Math.round((d.gem[1] - b) * d.scale),
           }
         : null,
-    });
-  }
+    };
+  });
+  if (name === 'shadow')
+    prepareEndingEmerald(image, Math.ceil(definitions.length / 4) * cellHeight);
   endingSprites.set(name, frames);
   endingLoadErrors.delete(name);
-  if (name === 'shadow') prepareEndingEmerald(source);
 }
 
-function prepareEndingEmerald(source) {
-  // Extract the existing yellow Emerald at native resolution; the source PNG
-  // stays unchanged. This silhouette excludes the supporting glove and ring.
+function prepareEndingEmerald(source, y = 0) {
   const crop = document.createElement('canvas');
   crop.width = 50;
   crop.height = 40;
-  const c = crop.getContext('2d');
-  c.drawImage(source, 738, 622, 50, 40, 0, 0, 50, 40);
-  const data = c.getImageData(0, 0, 50, 40),
-    poly = [
-      [12, 7],
-      [15, 5],
-      [33, 5],
-      [44, 16],
-      [44, 18],
-      [41, 22],
-      [36, 28],
-      [32, 32],
-      [23, 35],
-      [21, 35],
-      [12, 27],
-      [11, 26],
-      [4, 18],
-      [4, 16],
-      [6, 13],
-    ];
-  for (let y = 0; y < 40; y++)
-    for (let x = 0; x < 50; x++) {
-      let inside = false;
-      for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-        const [xi, yi] = poly[i],
-          [xj, yj] = poly[j];
-        if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
-      }
-      data.data[(y * 50 + x) * 4 + 3] = inside && data.data[(y * 50 + x) * 4 + 3] > 160 ? 255 : 0;
-    }
-  c.putImageData(data, 0, 0);
+  crop.getContext('2d').drawImage(source, 0, y, 50, 40, 0, 0, 50, 40);
   endingSprites.set('emerald', [{ image: crop, width: 14, height: 12, x: 7, y: 6 }]);
 }
 
@@ -115,9 +57,15 @@ function retryEndingArt() {
 
 function loadEndingArt(name, retry = false) {
   const im = new Image();
-  im.onload = () => prepareEndingArt(name, im);
+  im.onload = () => {
+    try {
+      prepareEndingArt(name, im);
+    } catch {
+      endingLoadErrors.add(name);
+    }
+  };
   im.onerror = () => endingLoadErrors.add(name);
-  im.src = 'assets/ending-' + name + '.png' + (retry ? '?retry=' + Date.now() : '');
+  im.src = 'assets/ending-' + name + '-cache.png' + (retry ? '?retry=' + Date.now() : '');
 }
 
 function endingGemAnchor(actor, frame = actor.frame, sheet = actor.sheet) {
