@@ -67,8 +67,8 @@ async function act2RouteSmoke(page) {
       Object.assign(p,{x:level.middleSection.start+700,y:yOn(entry,level.middleSection.start+700)-20,surface:entry,ground:true,vx:6,vy:0,rolling:false,roll:false});
       boost=0;count=20;keys.clear();press('ArrowRight',true);press('Space',true);var began=runFrames;var replayStart=performance.now();
       for(var frame=0;frame<1000&&mode==='playing';frame++){
-        if(level.springs.find(d=>d.id==='mid-upper-spring').firedAt!==undefined)aimHigh();
-        if(p.surface?.grindable){keys.clear();keys.add('ShiftLeft');keys.add('ArrowRight')}
+        aimHigh(true);
+        if(p.surface?.grindable){keys.clear();keys.add('ArrowRight');if(p.vx>.1)keys.add('ShiftLeft')}
         update();if(p.surface?.id==='mid-junction')break;
       }
       draw();({scenario:'upper chain phase ${phase}',ticks:runFrames-began,ms:performance.now()-replayStart,surface:p.surface?.id,

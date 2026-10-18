@@ -30,6 +30,6 @@ test('Split Skyline express approach is physical at low speed and its rail remai
 });
 
 test('the upper route is reachable from the real choice entrance, including an unfavorable hoist phase',()=>{
- for(const phase of [0,120]){const a=boot();a.run(require('./route-test-helpers.cjs').aimHighSource+`runFrames=${phase};const entry=surfaceById('mid-fallen-building');p.x=level.middleSection.start+700;p.y=yOn(entry,p.x)-20;p.surface=entry;p.ground=true;p.vx=6;p.vy=0;p.inv=0;boost=0;count=20;keys.clear();press('ArrowRight',true);press('Space',true);for(let i=0;i<1000;i++){if(level.springs.find(d=>d.id==='mid-upper-spring').firedAt!==undefined)aimHigh();if(p.surface?.grindable){keys.clear();keys.add('ShiftLeft');keys.add('ArrowRight')}update();if(p.surface?.id==='mid-junction')break;}`);
+ for(const phase of [0,120]){const a=boot();a.run(require('./route-test-helpers.cjs').aimHighSource+`runFrames=${phase};const entry=surfaceById('mid-fallen-building');p.x=level.middleSection.start+700;p.y=yOn(entry,p.x)-20;p.surface=entry;p.ground=true;p.vx=6;p.vy=0;p.inv=0;boost=0;count=20;keys.clear();press('ArrowRight',true);press('Space',true);for(let i=0;i<1000;i++){aimHigh(true);if(p.surface?.grindable){keys.clear();keys.add('ArrowRight');if(p.vx>.1)keys.add('ShiftLeft')}update();if(p.surface?.id==='mid-junction')break;}`);
  assert.equal(a.run('p.surface?.id'),'mid-junction');assert.equal(a.run('stats.hits+stats.deaths'),0);assert.equal(a.run("level.springs.filter(d=>d.id.startsWith('mid-')&&d.id!=='mid-low-spring'&&d.firedAt!==undefined).length"),6);}
 });

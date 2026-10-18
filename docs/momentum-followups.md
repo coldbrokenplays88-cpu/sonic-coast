@@ -12,7 +12,7 @@ edits, new dependencies, main pushes, merges or deployments.
 
 - [x] 1. Cap ground-rolling slope acceleration at32, preserving external momentum.
 - [x] 2. Hold idle standing contact below0.3 speed on slopes through38 degrees.
-- [ ] 3. Air acceleration0.16/brake0.2 in Act1 and PLAYTEST.
+- [x] 3. Air acceleration0.16/brake0.2 in both acts and PLAYTEST.
 - [ ] 4. Standing ground brake0.9; rolling brake unchanged.
 - [ ] 5. Rolling uphill multiplier0.625; downhill multiplier2.5 unchanged.
 
@@ -44,3 +44,23 @@ Existing test changed: `slope gravity slows uphill travel and accelerates downhi
 in both directions; rest rolls back` used to require idle sliding on the33-degree
 valley. It now requires zero idle speed/displacement there, while keeping its
 moving uphill/downhill checks. New tests cover steeper sliding and rolling rollback.
+
+## Item3 evidence
+
+569 game tests,10 build tests,build passed. Both actual acts gain4.8 from forward
+air input or lose6 from countersteer over30 ticks. Held jump remains157.5 pixels
+and59 measured airborne ticks; no-input23-speed coasting is unchanged.
+Existing test `no-input air motion conserves horizontal momentum; countersteer
+brakes without a cap` now requires24 after starting at30 for30 ticks, instead of
+its old24<speed<27 band. This directly tests the requested stronger brake.
+`first upper spring is reachable with a held ordinary jump from the fallen slope`
+now uses an ordinary held jump WITH air steering, retaining its no-Boost/no-death
+requirements. `the upper route is reachable from the real choice entrance,
+including an unfavorable hoist phase` likewise steers the entry jump and faces
+right before engaging rail Boost; all6 spring and no-hit/no-death assertions stay.
+Test-player helpers use0.2 air stopping distance/0.16 acceleration, land on the
+clear part of the guarded roof, and hold the jump while aiming a stomp. This
+preserves `secret exploration collects its monitor and returns through the low
+route to the retained tower using ordinary input` and all its rewards, hits,
+deaths, checkpoint and reconnection assertions. No production enemies or geometry
+changed. These are intentional input adjustments for stronger air control.

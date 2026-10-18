@@ -36,3 +36,20 @@ test('standing grip does not change deliberate input or rolling rollback',()=>{
  assert.ok(probe({angle:30,posture:'rolling',ticks:30}).speed>0,'a stationary roll accelerates downhill');
  assert.deepEqual(probe({speed:.29,ticks:1}),probe({speed:.29,ticks:1,physics:{standingGripSpeed:0}}),'flat coasting remains unchanged');
 });
+
+test('air input gains4.8 or brakes6 over30 ticks in both actual acts',()=>{
+ for(const act of [1,2])for(const direction of [-1,1]){
+  const a=boot(act),initial=direction>0?5:10;
+  a.run(`Object.assign(p,{x:300,y:-10000,vx:${initial},vy:0,ground:false,surface:null,rolling:false,roll:false,inv:9999});resetAct1Motion();press('${direction>0?'ArrowRight':'ArrowLeft'}',true);for(let i=0;i<30;i++)update()`);
+  assert.ok(Math.abs(a.run('p.vx')-(direction>0?9.8:4))<1e-8,`act ${act}`);
+  assert.ok(Math.abs(a.run('p.vy')-10.5)<1e-8,'unchanged gravity');
+ }
+});
+test('air control preserves jump dimensions and coasting momentum',()=>{
+ const {measure}=require('../tools/measure-momentum.cjs');
+ const baseline=require('../docs/momentum-followups-before.json'),after=measure();
+ for(const name of ['Held jump height','Held jump airtime'])assert.deepEqual(after.find(r=>r.test===name),baseline.find(r=>r.test===name));
+ const a=boot();a.run(`var q=createMotionPlayer('flat');q.mode='airborne';q.y=-1000;q.air={vx:23,vy:0};for(let i=0;i<30;i++)stepMotionPlayer(q,{})`);
+ assert.equal(a.run('q.air.vx'),23,'no automatic air friction');
+ assert.equal(a.run('motionTuning.jumpImpulse'),10.5);assert.equal(a.run('motionTuning.cutRatio'),.4);assert.equal(a.run('motionTuning.airRange'),14);
+});

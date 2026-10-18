@@ -2769,8 +2769,8 @@
       steepGripSpeed: 2.5,
       jumpImpulse: 10.5,
       cutRatio: 0.4,
-      airAcceleration: 0.08,
-      airBrake: 0.16,
+      airAcceleration: 0.16,
+      airBrake: 0.2,
       airRange: 14,
       skin: 1e-5,
       separation: 2e-3

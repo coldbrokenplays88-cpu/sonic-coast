@@ -17,18 +17,18 @@ const aimHighSource=`function aimHigh(capAtEntry=false){keys.clear();const launc
    aimHigh.flight=launched.firedAt;
    const top=feet()-bodyHeight(),height=top-target.y1,root=p.vy*p.vy-2*gravity*height;
    const up=root>=0?Math.max(0,(-p.vy-Math.sqrt(root))/gravity):0;
-   const obstacle=springFace(spring,runFrames+up),aim=p.x+p.vx*up+Math.sign(x-p.x)*.04*up*up;
+   const obstacle=springFace(spring,runFrames+up),aim=p.x+p.vx*up+Math.sign(x-p.x)*.08*up*up;
    aimHigh.wait=x<lower.x-60||Math.abs(obstacle.x-aim)<48;
   }
   if(aimHigh.wait)x=lower.x;
  }
- const error=x-p.x,brake=.16,stopping=p.vx*p.vx/(2*brake);
+ const error=x-p.x,brake=.2,stopping=p.vx*p.vx/(2*brake);
  // Arrive with a controlled horizontal velocity; a standard spring does not
  // secretly zero it before the next alternating transfer.
  const steer=error*p.vx<0?Math.sign(error):Math.abs(error)<stopping+3?-Math.sign(p.vx):Math.abs(error)>3?Math.sign(error):0;
  if(steer)keys.add(steer>0?'ArrowRight':'ArrowLeft');
 }`;
-const clearGuardSource=`function clearGuard(){const e=enemies.find(e=>e.id==='mid-low-guard');for(let i=0;i<240;i++){keys.clear();if(!e.alive&&p.ground){release('Space',true);return}if(p.ground){if(Math.abs(p.vx)>1)keys.add(p.vx>0?'ArrowLeft':'ArrowRight');else press('Space',true)}else{const error=e.x-p.x;if(Math.abs(error)>12)keys.add(error>0?'ArrowRight':'ArrowLeft');else if(Math.abs(p.vx)>.3)keys.add(p.vx>0?'ArrowLeft':'ArrowRight')}update()}throw Error('guard');}clearGuard();`;
+const clearGuardSource=`function clearGuard(){const e=enemies.find(e=>e.id==='mid-low-guard');for(let i=0;i<240;i++){keys.clear();if(!e.alive&&p.ground){release('Space',true);return}if(p.ground){if(Math.abs(p.vx)>1)keys.add(p.vx>0?'ArrowLeft':'ArrowRight');else press('Space',true)}else{if(p.vy<0)keys.add('Space');const error=e.x-p.x,stopping=p.vx*p.vx/.4;const steer=error*p.vx<0?Math.sign(error):Math.abs(error)<stopping+3?-Math.sign(p.vx):Math.abs(error)>3?Math.sign(error):0;if(steer)keys.add(steer>0?'ArrowRight':'ArrowLeft')}update()}throw Error('guard');}clearGuard();`;
 const transferSource=`function transferTo(id,vertical=false){const target=surfaceById(id);for(let f=0;f<240;f++){
  keys.delete('ArrowLeft');keys.delete('ArrowRight');
  if(level.springs.some(d=>d.surfaceId===id&&d.firedAt===runFrames)){release('Space',true);return f}
@@ -42,7 +42,8 @@ const transferSource=`function transferTo(id,vertical=false){const target=surfac
  else if(vertical||dir*(edge-p.x)<4){press('Space',true);if(!vertical)keys.add(dir>0?'ArrowRight':'ArrowLeft')}
  else {const speed=p.vx*dir;if(speed<6.8)keys.add(dir>0?'ArrowRight':'ArrowLeft');else if(speed>7.4)keys.add(dir>0?'ArrowLeft':'ArrowRight')}
  }else{if(feet()<target.y1&&p.vy< -5&&target.y1>feet()+110&&Math.abs((target.x1+target.x2)/2-p.x)<180)release('Space',true);
- const error=(target.x1+target.x2)/2-p.x,stopping=p.vx*p.vx/.32;
+ const landingX=target.id==='mid-right-guard-roof'?target.x1+40:(target.x1+target.x2)/2;
+ const error=landingX-p.x,stopping=p.vx*p.vx/.4;
  const dir=error*p.vx<0?Math.sign(error):Math.abs(error)<stopping+3?-Math.sign(p.vx):Math.abs(error)>3?Math.sign(error):0;
  if(dir)keys.add(dir>0?'ArrowRight':'ArrowLeft')}
  update();
