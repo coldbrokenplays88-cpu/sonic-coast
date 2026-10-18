@@ -843,6 +843,7 @@ function moveAct1Ground(m, controls, duration, time) {
   if (surface.grindable) {
     local.physics = experimentalRailTuning;
     local.rolling = false;
+    local.standingGrip = false;
     m.posture = 'standing';
   }
   if (p.underwater) {

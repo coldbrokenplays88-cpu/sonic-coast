@@ -1,6 +1,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { boot } = require('./test-support.cjs');
+const {aimHighSource}=require('./route-test-helpers.cjs');
 
 test('Split Skyline ramp joins the continuing flat instead of its overlapping ending deck', () => {
   for (const rolling of [false, true]) for (const speed of [8, 14, 24]) {
@@ -32,7 +33,7 @@ test('Split Skyline interior rails allow held Boost from an empty meter through 
   assert.equal(a.run('stats.deaths'), 0);
 });
 
-test('first upper spring is reachable with a held ordinary jump from the fallen slope', () => {
+test('first upper spring is reachable with an ordinary jump and air steering from the fallen slope', () => {
   for (const speed of [6, 8]) {
     const a = boot();
     a.run(`var floor=surfaceById('mid-fallen-building'),x=level.middleSection.start+700;
@@ -40,7 +41,8 @@ test('first upper spring is reachable with a held ordinary jump from the fallen 
         rolling:false,roll:false,inv:9999});resetAct1Motion();boost=0;
       press('ArrowRight',true);press('Space',true);
       var first=level.springs.find(d=>d.id==='mid-upper-spring');
-      for(let i=0;i<90&&first.firedAt===undefined;i++)update()`);
+      ${aimHighSource}
+      for(let i=0;i<90&&first.firedAt===undefined;i++){aimHigh(true);update()}`);
     assert.ok(a.run('first.firedAt!==undefined'), `approach speed ${speed}`);
     assert.equal(a.run('stats.deaths'), 0);
     assert.equal(a.run('p.act1Motion.boost.bursts'), 0);

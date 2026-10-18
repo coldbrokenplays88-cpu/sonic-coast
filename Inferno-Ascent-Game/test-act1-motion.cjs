@@ -245,7 +245,7 @@ test('countersteering a fast roll immediately enters standing braking in either 
   assert.equal(a.run('p.act1Motion.posture'),'standing');
   assert.equal(a.run('p.rolling'),false);
   assert.equal(a.run('recoveredSonicPose().state'),'brake');
-  assert.ok(Math.abs(a.run('p.act1Motion.speed')-13.5*direction)<1e-8,'normal .5 standing brake, without reversal or speed replacement');
+  assert.ok(Math.abs(a.run('p.act1Motion.speed')-13.1*direction)<1e-8,'normal .9 standing brake, without reversal or speed replacement');
  }
 });
 

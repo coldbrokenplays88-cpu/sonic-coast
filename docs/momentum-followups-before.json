@@ -1,0 +1,122 @@
+[
+  {
+    "test": "Flat acceleration to 3",
+    "value": 19,
+    "unit": "ticks"
+  },
+  {
+    "test": "Flat acceleration to 10",
+    "value": 63,
+    "unit": "ticks"
+  },
+  {
+    "test": "Flat acceleration to 13.9",
+    "value": 87,
+    "unit": "ticks"
+  },
+  {
+    "test": "Coast to rest from 8",
+    "value": 80,
+    "unit": "ticks"
+  },
+  {
+    "test": "Coast to rest from 14",
+    "value": 140,
+    "unit": "ticks"
+  },
+  {
+    "test": "Coast to rest from 23",
+    "value": 230,
+    "unit": "ticks"
+  },
+  {
+    "test": "Idle 10° / 300 ticks: speed",
+    "value": 0,
+    "unit": "speed"
+  },
+  {
+    "test": "Idle 10° / 300 ticks: travel",
+    "value": 0,
+    "unit": "pixels"
+  },
+  {
+    "test": "Idle 20° / 300 ticks: speed",
+    "value": 5.912115049195132,
+    "unit": "speed"
+  },
+  {
+    "test": "Idle 20° / 300 ticks: travel",
+    "value": 833.3356327449029,
+    "unit": "pixels"
+  },
+  {
+    "test": "Idle 30° / 300 ticks: speed",
+    "value": 22.499999999999783,
+    "unit": "speed"
+  },
+  {
+    "test": "Idle 30° / 300 ticks: travel",
+    "value": 2922.835737772434,
+    "unit": "pixels"
+  },
+  {
+    "test": "Idle 45° / 300 ticks: speed",
+    "value": 44.24621202458812,
+    "unit": "speed"
+  },
+  {
+    "test": "Idle 45° / 300 ticks: travel",
+    "value": 4693.019484660606,
+    "unit": "pixels"
+  },
+  {
+    "test": "Roll downhill 20° / 600 ticks: peak",
+    "value": 172.56057524598242,
+    "unit": "speed"
+  },
+  {
+    "test": "Roll downhill 30° / 600 ticks: peak",
+    "value": 255.5000000000099,
+    "unit": "speed"
+  },
+  {
+    "test": "Roll downhill 45° / 600 ticks: peak",
+    "value": 364.23106012294346,
+    "unit": "speed"
+  },
+  {
+    "test": "Air 30 ticks: forward gain",
+    "value": 2.400000000000002,
+    "unit": "speed"
+  },
+  {
+    "test": "Air 30 ticks: countersteer reduction",
+    "value": 4.800000000000004,
+    "unit": "speed"
+  },
+  {
+    "test": "Brake from 14",
+    "value": 28,
+    "unit": "ticks"
+  },
+  {
+    "test": "Reverse 14 to -13.9",
+    "value": 115,
+    "unit": "ticks"
+  },
+  {
+    "test": "Roll uphill 30° from 19 to rest",
+    "value": 96,
+    "unit": "ticks"
+  },
+  {
+    "test": "Held jump height",
+    "value": 157.4999999999997,
+    "unit": "pixels"
+  },
+  {
+    "test": "Held jump airtime",
+    "value": 59,
+    "unit": "ticks"
+  }
+]

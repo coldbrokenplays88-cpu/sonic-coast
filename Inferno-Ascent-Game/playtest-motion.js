@@ -135,7 +135,7 @@ function advanceMotionGround(player, controls, dt, time = player.ticks) {
   if (rail || boosted)
     controls = {
       ...controls,
-      ...(rail ? { physics: experimentalRailTuning, rolling: false } : {}),
+      ...(rail ? { physics: experimentalRailTuning, rolling: false, standingGrip: false } : {}),
       ...(boosted ? { boost: { ...experimentalBoostTuning, facing: player.facing } } : {}),
     };
   if (rail) {
@@ -1470,8 +1470,8 @@ const motionTuning = Object.freeze({
     steepGripSpeed: 2.5,
     jumpImpulse: 10.5,
     cutRatio: 0.4,
-    airAcceleration: 0.08,
-    airBrake: 0.16,
+    airAcceleration: 0.16,
+    airBrake: 0.2,
     airRange: 14,
     skin: 1e-5,
     separation: 0.002,

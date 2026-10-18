@@ -40,7 +40,7 @@ test('flat coast reaches stable rest; rolling coasts farther and receives no for
   const over=simulate(a,'flat',0,22,'standing',{direction:1},20);
   assert.ok(over.speed>21, 'running input does not clamp earned speed to the drive range');
 });
-test('slope gravity slows uphill travel and accelerates downhill in both directions; rest rolls back', () => {
+test('slope gravity slows uphill travel and accelerates downhill; idle standing grips the valley grade', () => {
   const a=scene();
   for(const side of [-1,1]) {
     const downhill=simulate(a,'valley',side*1700,-side*6,'rolling',{},30);
@@ -48,7 +48,8 @@ test('slope gravity slows uphill travel and accelerates downhill in both directi
     const uphill=simulate(a,'valley',side*1700,side*6,'rolling',{},30);
     assert.ok(side*uphill.speed<6);
     const rest=simulate(a,'valley',side*1700,0,'standing',{},60);
-    assert.ok(-side*rest.speed>4, 'designated steep grade overcomes standing friction');
+    assert.equal(rest.speed,0,'the33-degree valley grade is below the38-degree standing threshold');
+    assert.equal(rest.x,side*1700,'static grip preserves the contact anchor');
   }
 });
 test('a deliberate downhill roll beats powered running from identical starts without a velocity kick',()=>{
@@ -107,7 +108,7 @@ test('opposite roll input uncurls promptly at low speed without snapping velocit
  const a=scene();for(const direction of [-1,1]){
  a.run(`var q=createMotionPlayer('flat');Object.assign(q,{speed:${direction*0.8},posture:'rolling'});stepMotionPlayer(q,{direction:${-direction}})`);
  assert.equal(a.run('q.posture'),'standing','countersteer should not wait at near-rest');
- assert.ok(direction*a.run('q.speed')>0&&direction*a.run('q.speed')<0.8,'uncurl preserves residual speed before reversing');
+ assert.equal(Math.abs(a.run('q.speed')),0,'the0.9 standing brake stops0.8 without an instantaneous reversal');
  a.run(`for(let i=0;i<8;i++)stepMotionPlayer(q,{direction:${-direction}})`);
  assert.ok(direction*a.run('q.speed')<0,'standing control reverses naturally after braking');
  a.run(`q=createMotionPlayer('flat');Object.assign(q,{speed:${direction*12},posture:'rolling'});var uncurl=null,reversal=null;for(let i=1;i<=90;i++){stepMotionPlayer(q,{direction:${-direction}});if(q.posture==='standing'&&uncurl===null)uncurl=i;if(${direction}*q.speed<0&&reversal===null)reversal=i}`);
@@ -132,13 +133,15 @@ test('posture changes preserve contact; curve joins are continuous and share ren
 });
 test('no-input valley energy accounts for authored downhill work and friction across smooth joins', () => {
   const a=scene();
-  a.run(`var trial=createMotionPlayer('valley');Object.assign(trial,{x:-1800,posture:'rolling'});var energy0=groundEnergy(trial),lastContact=motionContact(trial),extraWork=0,maxError=0,maxStep=0,maxJump=0,peak=0;
-    for(let i=0;i<400;i++){stepMotionPlayer(trial,{});let c=motionContact(trial);extraWork+=1.5*0.35*Math.max(0,c.y-lastContact.y);maxError=Math.max(maxError,Math.abs(groundEnergy(trial)-energy0-extraWork+0.025*trial.distance));maxStep=Math.max(maxStep,Math.hypot(c.x-lastContact.x,c.y-lastContact.y));maxJump=Math.max(maxJump,Math.abs(c.angle-lastContact.angle));peak=Math.max(peak,Math.abs(c.speed));if(!Number.isFinite(c.speed)||trial.boundary||trial.mode!=='grounded'||c.normalReaction<=0)throw Error('invalid/unsupported valley traversal');lastContact=c;if(c.x>2200)break}`);
+  a.run(`var trial=createMotionPlayer('valley');Object.assign(trial,{x:-1800,posture:'rolling'});var energy0=groundEnergy(trial),lastContact=motionContact(trial),extraWork=0,maxError=0,maxGrowth=0,maxStep=0,maxJump=0,peak=0;
+    for(let i=0;i<400;i++){const beforeEnergy=groundEnergy(trial),beforeDistance=trial.distance;stepMotionPlayer(trial,{});let c=motionContact(trial);const work=1.5*0.35*Math.max(0,c.y-lastContact.y);extraWork+=work;const residual=groundEnergy(trial)-beforeEnergy-work+0.025*(trial.distance-beforeDistance);maxGrowth=Math.max(maxGrowth,residual);if(Math.max(Math.abs(c.speed),Math.abs(lastContact.speed))<groundTuning.rollSpeedCap-1e-6)maxError=Math.max(maxError,Math.abs(residual));maxStep=Math.max(maxStep,Math.hypot(c.x-lastContact.x,c.y-lastContact.y));maxJump=Math.max(maxJump,Math.abs(c.angle-lastContact.angle));peak=Math.max(peak,Math.abs(c.speed));if(!Number.isFinite(c.speed)||trial.boundary||trial.mode!=='grounded'||c.normalReaction<=0)throw Error('invalid/unsupported valley traversal');lastContact=c;if(c.x>2200)break}`);
   assert.ok(a.run('trial.x')>2200,'crosses the valley and climbs the other side before the marked boundary');
   assert.ok(a.run('extraWork')>300,'extra downhill force supplies measurable work');
-  assert.ok(a.run('maxError')<0.05,'base energy change equals extra force work minus friction within integration tolerance');
+  assert.ok(a.run('maxError')<0.05,'below the cap, energy change equals force work minus friction within integration tolerance');
   assert.ok(a.run('groundEnergy(trial)')<a.run('energy0+extraWork')-20,'rolling friction still dissipates energy');
-  assert.ok(a.run('maxStep')<40,'no position discontinuities; energy-derived peak bound is below 37');
+  assert.ok(a.run('maxGrowth')<0.05,'limiting slope work cannot create unexplained energy');
+  assert.ok(a.run('peak')<=a.run('groundTuning.rollSpeedCap')+1e-8,'rolling stays within the slope-speed cap');
+  assert.ok(a.run('maxStep')<33,'no position discontinuities at the32-unit cap');
   assert.ok(a.run('maxJump')<0.04,'no abrupt tangent/pose jumps');
   assert.equal(a.run('trial.transitionCount'),0);
 });
