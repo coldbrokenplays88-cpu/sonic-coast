@@ -18,6 +18,7 @@ Regression covers all four tower caps, both directions and postures. Extracted-Z
 Chromium also covers eight first-tower exits at14/24 speed, alongside the existing
 PLAYTEST, Act1 and Act2 route smoke checks, with zero page errors.
 Final checks:557 gameplay/10 build tests, generated-output checks and package pass.
+Tested implementation: `9017dfe913ad765a8b082e24dc2dc4037ec9f686` (all37 ZIP files match).
 Tested runtime: `runtime-c24cab94e8093afb.js`. Player ZIP:52,347,369 bytes;
 SHA256 `fae1ba1a8a444f6ce18d36c097bf2302936f303baec2422e939ae3cc49ca8ee7`.
 The integration/package evidence below records the preceding build.
